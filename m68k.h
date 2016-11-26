@@ -6,17 +6,17 @@ typedef void (InstrFunc)(Operand *operands);
 
 typedef struct {
 	char *name;
-  InstrFunc *func;
-  Operand *operands;
-  int operandCount;
+	InstrFunc *func;
+	Operand *operands;
+	int operandCount;
 } Instruction;
 
 typedef Instruction (GenFunc)(uint16_t opcode);
 
 typedef struct {
-	  uint16_t pattern;
-	  uint16_t mask;
-	  GenFunc *generator;
+	uint16_t pattern;
+	uint16_t mask;
+	GenFunc *generator;
 } Pattern;
 
 extern Instruction *_instructions;

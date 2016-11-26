@@ -40,12 +40,12 @@ Instruction gen_not(uint16_t opcode)
 		make_operand(fragment(opcode, 5, 0))
 	};
 
-  return (Instruction) {
-	"NOT",
-    not,
-    ops,
-    1
-  };
+	return (Instruction) {
+		"NOT",
+		not,
+		ops,
+		1
+	};
 }
 
 static Pattern _patterns[] =
@@ -55,12 +55,12 @@ static Pattern _patterns[] =
 
 int pattern_match(uint16_t opcode, Pattern pattern)
 {
-  return (opcode & pattern.mask) == pattern.pattern;
+	return (opcode & pattern.mask) == pattern.pattern;
 }
 
 Instruction pattern_generate(uint16_t opcode, Pattern pattern)
 {
-  return pattern.generator(opcode);
+	return pattern.generator(opcode);
 }
 
 char* instruction_tostring(Instruction instr)
@@ -78,16 +78,16 @@ char* instruction_tostring(Instruction instr)
 
 Instruction generate(uint16_t opcode)
 {
-  for (int i = 0; i < 1; ++i)
-    if (pattern_match(opcode, _patterns[i]))
-    {
-      Instruction instr = pattern_generate(opcode, _patterns[i]);
-      printf("opcode %#04X: %s\n", opcode, instruction_tostring(instr));
-      return instr;
-    }
+	for (int i = 0; i < 1; ++i)
+		if (pattern_match(opcode, _patterns[i]))
+		{
+			  Instruction instr = pattern_generate(opcode, _patterns[i]);
+			  printf("opcode %#04X: %s\n", opcode, instruction_tostring(instr));
+			  return instr;
+		}
 
-    //printf("Opcode %d does not match any pattern\n", opcode);
-    return (Instruction) {};
+	//printf("Opcode %d does not match any pattern\n", opcode);
+	return (Instruction) {};
 }
 
 void execute(uint16_t opcode)
