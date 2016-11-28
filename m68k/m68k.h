@@ -21,6 +21,16 @@ typedef struct {
 
 extern Instruction *_instructions;
 
+typedef struct {
+	uint32_t data_registers[8];
+	uint32_t address_registers[7];
+	uint16_t flags;
+	uint32_t sp;
+	uint32_t pc;
+} M68k;
+
+extern M68k _m68k;
+
 void m68k_init();
 
 char* instruction_tostring(Instruction);

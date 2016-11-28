@@ -5,14 +5,8 @@
 #include "m68k.h"
 #include "operands.h"
 
+M68k _m68k;
 Instruction *_instructions;
-
-void not(Operand *operands)
-{
-	//dst.set(dst.get() + src.get());
-
-	// TODO flags
-}
 
 uint16_t fragment(int x, int start, int end)
 {
@@ -34,23 +28,14 @@ Operand make_operand(uint16_t pattern)
 	}
 }
 
-Instruction gen_not(uint16_t opcode)
-{
-	Operand ops[] = {
-		make_operand(fragment(opcode, 5, 0))
-	};
-
-	return (Instruction) {
-		"NOT",
-		not,
-		ops,
-		1
-	};
-}
-
 static Pattern _patterns[] =
 {
-	{0x4600, 0xFF00, &gen_not}
+	{0x4A00, 0xFF00, &gen_tst},
+	{0x4600, 0xFF00, &gen_not},
+	{0x5000, 0xF000, &get_scc},
+	{0x8000, 0xF000, &get_or},
+	{0xB000, 0xF000, &get_eor},
+	{0xC000, 0xF000, &gen_add},
 };
 
 int pattern_match(uint16_t opcode, Pattern pattern)
@@ -98,8 +83,16 @@ void execute(uint16_t opcode)
 
 void m68k_init()
 {
+	// Generate all the possible opcodes
 	_instructions = calloc(0x10000, sizeof(Instruction));
 
 	for (int i = 0; i < 0x10000; i++)
 		_instructions[i] = generate(i);
+
+	// Initialize the chip
+	_m68k.data_registers = calloc(8, sizeof(uint32_t));
+	_m68k.address_registers = calloc(7, sizeof(uint32_t));
+	_m68k.flags = 0;
+	_m68k.pc = 0;
+	_m68k.sp = 0;
 }

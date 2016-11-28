@@ -1,5 +1,14 @@
 # Logs
 
+## 11/28/2016
+
+I wrote a basic proof of concept for generating some instructions. The gist of it:
+
+- A table holds the patterns distinguishing each instruction, each pattern is associated with a *generator function* (eg. `gen_add()`, `gen_or()`, ...)
+- We loop over all possible opcode values in `[0, 0xFFFF]` and call the associated generator for each opcode
+- Generators are short pieces of code that extract the relevant fragments from the bit pattern (operands, size, condition...)
+- The return value of a generator is a structure that holds a pointer to the function emulating the instruction (eg. `add()`, `or()`, ...) as well as pointers to functions emulating the addressing mode of this variation of the instruction
+
 ## 11/26/2016
 
 I'll start by coding the Motorola 68000 CPU (m68k). The first step is to look at some documentations. I found a [nice table](http://goldencrystal.free.fr/M68kOpcodes-v2.3.pdf) with all its opcodes and this seems more manageable than the GameBoy's Z80.
