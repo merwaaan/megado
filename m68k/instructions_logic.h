@@ -1,96 +1,17 @@
 #pragma once
 
-void and(Operand *operands)
-{
-	operands[1].set(operands[0].get() & operands[1].get());
+#include "globals.h"
+#include "instructions_logic.h"
+#include "m68k.h"
+#include "operands.h"
 
-	// TODO flags
-}
+#define GET(operand) (operand.get(operand))
+#define SET(operand, value) (operand.set(operand, value))
 
-Instruction gen_and(uint16_t opcode)
-{
-	Operand ops[] = {
-		make_operand(fragment(opcode, 5, 0))
-	};
+#define Z(x) _m68k.flags = _m68k.flags & (0xFFFF ^ 1 << 2)
+#define V(x) _m68k.flags = _m68k.flags & (0xFFFF ^ 1 << 1)
+#define C(x) _m68k.flags = _m68k.flags & (0xFFFF ^ 1)
 
-	return (Instruction) { "AND", and, ops, 1 };
-}
+#define DEFINE_INSTR(NAME) void NAME(Operand *operands); Instruction gen_ ## NAME (uint16_t opcode);
 
-void eor(Operand *operands)
-{
-	operands[1].set(operands[0].get() ^ operands[1].get());
-
-	// TODO flags
-}
-
-Instruction gen_eor(uint16_t opcode)
-{
-	Operand ops[] = {
-		make_operand(fragment(opcode, 5, 0))
-	};
-
-	return (Instruction) { "EOR", eor, ops, 1 };
-}
-
-void or(Operand *operands)
-{
-	operands[1].set(operands[0].get() | operands[1].get());
-
-	// TODO flags
-}
-
-Instruction gen_or(uint16_t opcode)
-{
-	Operand ops[] = {
-		make_operand(fragment(opcode, 5, 0))
-	};
-
-	return (Instruction) { "OR", or, ops, 1 };
-}
-
-void not(Operand *operands)
-{
-	operands[0].set(~operands[0].get());
-
-	// TODO flags
-}
-
-Instruction gen_not(uint16_t opcode)
-{
-	Operand ops[] = {
-		make_operand(fragment(opcode, 5, 0))
-	};
-
-	return (Instruction) { "NOT", not, ops, 1 };
-}
-
-void scc(Operand *operands)
-{
-	// TODO set value wrt cond
-	// TODO flags
-}
-
-Instruction gen_scc(uint16_t opcode)
-{
-	ConditionFunc cond = make_condition(fragment(opcode, 11, 8));
-
-	Operand ops[] = {
-		make_operand(fragment(opcode, 5, 0))
-	};
-
-	return (Instruction) { "SCC", scc, ops, 1 };
-}
-
-void tst(Operand *operands)
-{
-	// TODO flags
-}
-
-Instruction gen_tst(uint16_t opcode)
-{
-	Operand ops[] = {
-		make_operand(fragment(opcode, 5, 0))
-	};
-
-	return (Instruction) { "TST", tst, ops, 1 };
-}
+DEFINE_INSTR(and)

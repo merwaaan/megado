@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
-extern uint16_t *_memory;
-extern uint16_t *_data_registers;
-extern uint16_t *_address_registers;
+uint16_t *_memory;
+
+uint16_t bit(int x, int position);
+uint16_t fragment(int x, int start, int end);

@@ -1,7 +1,23 @@
 #include <stdio.h>
 
 #include "globals.h"
+#include "m68k.h"
 #include "operands.h"
+
+Operand make_operand(uint16_t pattern)
+{
+	switch (pattern & 0x38)
+	{
+	case 0:
+		return operand_make_data_register(pattern & 7);
+	case 0x8:
+		return operand_make_address_register(pattern & 7);
+	case 0x10:
+		return operand_make_address(pattern & 7);
+	default:
+		return (Operand) {};
+	}
+}
 
 char* operand_tostring(Operand operand)
 {
@@ -25,6 +41,20 @@ char* operand_tostring(Operand operand)
 	return buffer;
 }
 
+/*
+ *
+ */
+
+uint16_t data_register_get(Operand this)
+{
+	return _m68k.data_registers[this.n];
+}
+
+void data_register_set(Operand this, uint16_t value)
+{
+	_m68k.data_registers[this.n] = value;
+}
+
 Operand operand_make_data_register(int n)
 {
 	return (Operand) {
@@ -35,16 +65,19 @@ Operand operand_make_data_register(int n)
 	};
 }
 
-uint16_t data_register_get(Operand* this)
+/*
+ *
+ */
+
+uint16_t address_register_get(Operand this)
 {
-	return _data_registers[this->n];
+	return _m68k.address_registers[this.n];
 }
 
-void data_register_set(Operand* this, uint16_t value)
+void address_register_set(Operand this, uint16_t value)
 {
-	_data_registers[this->n] = value;
+	_m68k.address_registers[this.n] = value;
 }
-
 
 Operand operand_make_address_register(int n)
 {
@@ -56,14 +89,18 @@ Operand operand_make_address_register(int n)
 	};
 }
 
-uint16_t address_register_get(Operand* this)
+/*
+ *
+ */
+
+uint16_t address_get(Operand this)
 {
-	return _address_registers[this->n];
+	return _memory[_m68k.address_registers[this.n]];
 }
 
-void address_register_set(Operand* this, uint16_t value)
+void address_set(Operand this, uint16_t value)
 {
-	_address_registers[this->n] = value;
+	_memory[_m68k.address_registers[this.n]] = value;
 }
 
 Operand operand_make_address(int n)
@@ -74,14 +111,4 @@ Operand operand_make_address(int n)
 		.set = address_set,
 		.n = n
 	};
-}
-
-uint16_t address_get(Operand* this)
-{
-	return _memory[_address_registers[this->n]];
-}
-
-void address_set(Operand* this, uint16_t value)
-{
-	_memory[_address_registers[this->n]] = value;
 }

@@ -1,19 +1,19 @@
-typedef void (ConditionFunc)();
+typedef int (*ConditionFunc)();
 
-void False()
+int False()
 {
 	return 0;
 }
 
-void True()
+int True()
 {
 	return 1;
 }
 
 ConditionFunc _conditions[] = {
 	True,
-	false,
-	Higher,
+	False,
+	/*Higher,
 	LowerOrSame,
 	CarryClear,
 	CarrySet,
@@ -26,7 +26,7 @@ ConditionFunc _conditions[] = {
 	GreaterOrEqual,
 	LessThan,
 	GreaterThan,
-	LessOrEqual
+	LessOrEqual*/
 };
 
 ConditionFunc make_condition(uint8_t pattern)

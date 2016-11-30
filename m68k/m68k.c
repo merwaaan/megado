@@ -2,40 +2,24 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "instructions_logic.h"
 #include "m68k.h"
 #include "operands.h"
 
 M68k _m68k;
+uint16_t *_memory;
+
 Instruction *_instructions;
-
-uint16_t fragment(int x, int start, int end)
-{
-	return (x & ~(0xFFFF << start)) >> end;
-}
-
-Operand make_operand(uint16_t pattern)
-{
-	switch (pattern & 0x38)
-	{
-	case 0:
-		return operand_make_data_register(pattern & 7);
-	case 0x8:
-		return operand_make_address_register(pattern & 7);
-	case 0x10:
-		return operand_make_address(pattern & 7);
-	default:
-		return (Operand) {};
-	}
-}
 
 static Pattern _patterns[] =
 {
-	{0x4A00, 0xFF00, &gen_tst},
+    {0xC000, 0xF000, &gen_and}
+	/*{0x4A00, 0xFF00, &gen_tst},
 	{0x4600, 0xFF00, &gen_not},
-	{0x5000, 0xF000, &get_scc},
-	{0x8000, 0xF000, &get_or},
-	{0xB000, 0xF000, &get_eor},
-	{0xC000, 0xF000, &gen_add},
+	{0x5000, 0xF000, &gen_scc},
+	{0x8000, 0xF000, &gen_or},
+	{0xB000, 0xF000, &gen_eor},*/
+	//{0xC000, 0xF000, &gen_add},
 };
 
 int pattern_match(uint16_t opcode, Pattern pattern)
@@ -88,11 +72,4 @@ void m68k_init()
 
 	for (int i = 0; i < 0x10000; i++)
 		_instructions[i] = generate(i);
-
-	// Initialize the chip
-	_m68k.data_registers = calloc(8, sizeof(uint32_t));
-	_m68k.address_registers = calloc(7, sizeof(uint32_t));
-	_m68k.flags = 0;
-	_m68k.pc = 0;
-	_m68k.sp = 0;
 }
