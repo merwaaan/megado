@@ -2,7 +2,10 @@
 
 #include <stdint.h>
 
-uint16_t *_memory;
+// Get the nth bit of x
+#define BIT(x, n) ((x & (1 << n)) != 0)
 
-uint16_t bit(int x, int position);
-uint16_t fragment(int x, int start, int end);
+// Get the bits of x from start to end
+#define FRAGMENT(x, start, end) ((x & ~(0xFFFF << start)) >> end)
+
+uint16_t *_memory;

@@ -2,26 +2,7 @@
 
 #include "operands.h"
 
-typedef void (InstrFunc)(Operand *operands);
-
-typedef struct {
-	char *name;
-	InstrFunc *func;
-	Operand *operands;
-	int operandCount;
-} Instruction;
-
-typedef Instruction (GenFunc)(uint16_t opcode);
-
-typedef struct {
-	uint16_t pattern;
-	uint16_t mask;
-	GenFunc *generator;
-} Pattern;
-
-extern Instruction *_instructions;
-
-typedef struct {
+typedef struct M68k {
 	uint32_t data_registers[8];
 	uint32_t address_registers[7];
 	uint16_t flags;
@@ -29,8 +10,31 @@ typedef struct {
 	uint32_t pc;
 } M68k;
 
-extern M68k _m68k;
+struct Instruction;
 
-void m68k_init();
+typedef void (InstrFunc)(struct Operand*);
+
+typedef struct Instruction {
+	char* name;
+	InstrFunc* func;
+	Operand* operands;
+	int operand_count;
+} Instruction;
+
+#define EXECUTE(instruction, cpu) instruction.func(instruction, cpu)
+
+typedef Instruction (GenFunc)(uint16_t opcode, M68k* context);
+
+typedef struct {
+	uint16_t pattern;
+	uint16_t mask;
+	GenFunc* generator;
+} Pattern;
+
+extern Instruction *_instructions;
+
+M68k* m68k_init();
+void m68k_free(M68k*);
+void m68k_execute(M68k*, uint16_t opcode);
 
 char* instruction_tostring(Instruction);

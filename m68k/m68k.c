@@ -27,9 +27,9 @@ int pattern_match(uint16_t opcode, Pattern pattern)
 	return (opcode & pattern.mask) == pattern.pattern;
 }
 
-Instruction pattern_generate(uint16_t opcode, Pattern pattern)
+Instruction pattern_generate(Pattern pattern, uint16_t opcode, M68k* context)
 {
-	return pattern.generator(opcode);
+	return pattern.generator(opcode, context);
 }
 
 char* instruction_tostring(Instruction instr)
@@ -39,20 +39,25 @@ char* instruction_tostring(Instruction instr)
 
 	pos += sprintf(buffer, "%s", instr.name);
 
-	for (int i = 0; i < instr.operandCount; ++i)
+	for (int i = 0; i < instr.operand_count; ++i)
 		pos += sprintf(buffer + pos, " %s", operand_tostring(instr.operands[i]));
 
 	return buffer;
 }
 
-Instruction generate(uint16_t opcode)
+Instruction generate(uint16_t opcode, M68k* context)
 {
 	for (int i = 0; i < 1; ++i)
 		if (pattern_match(opcode, _patterns[i]))
 		{
-			  Instruction instr = pattern_generate(opcode, _patterns[i]);
-			  printf("opcode %#04X: %s\n", opcode, instruction_tostring(instr));
-			  return instr;
+			Instruction instr = pattern_generate(_patterns[i], opcode, context);
+
+            printf("opcode %#04X: %s", opcode, instr.name);
+            for (int i = 0; i < instr.operand_count; ++i)
+                printf(" %s", operand_tostring(instr.operands[i]));
+            printf("\n");
+
+          return instr;
 		}
 
 	//printf("Opcode %d does not match any pattern\n", opcode);
@@ -61,15 +66,28 @@ Instruction generate(uint16_t opcode)
 
 void execute(uint16_t opcode)
 {
-	Instruction instr = _instructions[opcode];
-	instr.func(instr.operands);
+
 }
 
-void m68k_init()
+M68k* m68k_init()
 {
-	// Generate all the possible opcodes
-	_instructions = calloc(0x10000, sizeof(Instruction));
+    M68k* m68k = malloc(sizeof(M68k));
 
+	// Generate every possible opcode
+	_instructions = calloc(0x10000, sizeof(Instruction));
 	for (int i = 0; i < 0x10000; i++)
-		_instructions[i] = generate(i);
+		_instructions[i] = generate(i, m68k);
+
+    return m68k;
+}
+
+void m68k_free(M68k* cpu)
+{
+	free(cpu);
+}
+
+void m68k_execute(M68k* cpu, uint16_t opcode)
+{
+    Instruction instr = _instructions[opcode];
+	instr.func(instr.operands);
 }

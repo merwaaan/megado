@@ -55,3 +55,59 @@
 1480510620 source:c:\users\merwan\desktop\genesis\m68k\instructions_logic.c
 	"instructions_logic.h"
 
+1480597293 source:c:\users\merwan\desktop\genesis.js\m68k\instructions_logic.c
+	"instructions_logic.h"
+	"operands.h"
+
+1480595588 c:\users\merwan\desktop\genesis.js\m68k\instructions_logic.h
+	"globals.h"
+	"instructions_logic.h"
+	"m68k.h"
+	"operands.h"
+
+1480594664 c:\users\merwan\desktop\genesis.js\m68k\globals.h
+	<stdint.h>
+
+1480597057 c:\users\merwan\desktop\genesis.js\m68k\m68k.h
+	"operands.h"
+
+1480596771 c:\users\merwan\desktop\genesis.js\m68k\operands.h
+	<stdint.h>
+
+1480590997 source:c:\users\merwan\desktop\genesis.js\m68k\globals.c
+	"globals.h"
+
+1480597470 source:c:\users\merwan\desktop\genesis.js\m68k\m68k.c
+	<stdio.h>
+	<stdint.h>
+	<stdlib.h>
+	"instructions_logic.h"
+	"m68k.h"
+	"operands.h"
+
+1480596846 source:c:\users\merwan\desktop\genesis.js\m68k\main.c
+	"m68k.h"
+
+1480596804 source:c:\users\merwan\desktop\genesis.js\m68k\operands.c
+	<stdio.h>
+	"operands.h"
+	"globals.h"
+	"m68k.h"
+
+1480594495 source:c:\users\merwan\desktop\genesis.js\m68k\test\instructions_logic.c
+	"unity.h"
+	"../instructions_logic.h"
+	"../m68k.h"
+
+1480591789 c:\users\merwan\desktop\genesis.js\deps\unity\src\unity.h
+	"unity_internals.h"
+
+1480591789 c:\users\merwan\desktop\genesis.js\deps\unity\src\unity_internals.h
+	"unity_config.h"
+	<setjmp.h>
+	<math.h>
+	<stdint.h>
+	<limits.h>
+	<stdio.h>
+	<stdio.h>
+

@@ -2,7 +2,11 @@
 
 #include <stdint.h>
 
+#define GET(operand) (operand.get(operand))
+#define SET(operand, value) (operand.set(operand, value))
+
 struct Operand;
+struct M68k;
 
 typedef uint16_t (*GetFunc)(struct Operand this);
 typedef void (*SetFunc)(struct Operand this, uint16_t value);
@@ -16,15 +20,17 @@ typedef enum {
 
 typedef struct Operand {
 	OperandType type;
+
 	GetFunc get;
 	SetFunc set;
 
+	struct M68k* context;
 	int n;
 } Operand;
 
-Operand make_operand(uint16_t pattern);
 char* operand_tostring(Operand operand);
 
-Operand operand_make_data_register(int n);
-Operand operand_make_address_register(int n);
-Operand operand_make_address(int n);
+Operand make_operand(uint16_t pattern, struct M68k* context);
+Operand operand_make_data_register(int n, struct M68k* context);
+//Operand operand_make_address_register(int n);
+//Operand operand_make_address(int n);

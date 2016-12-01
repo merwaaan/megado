@@ -1,4 +1,5 @@
 #include "instructions_logic.h"
+#include "operands.h"
 
 void and(Operand *operands)
 {
@@ -8,17 +9,17 @@ void and(Operand *operands)
     // TODO flags
 }
 
-Instruction gen_and(uint16_t opcode)
+Instruction gen_and(uint16_t opcode, M68k* m)
 {
-    Operand op1 = operand_make_data_register(fragment(opcode, 12, 10));
-    Operand op2 = make_operand(fragment(opcode, 5, 0));
-    int direction = bit(opcode, 8);
+    Operand op1 = operand_make_data_register(FRAGMENT(opcode, 12, 10), m);
+    Operand op2 = make_operand(FRAGMENT(opcode, 5, 0), m);
+    int direction = BIT(opcode, 8);
 
     Operand operands[2];
     operands[direction] = op1;
     operands[direction + 1 % 2] = op2;
 
-	return (Instruction) {"AND", and, operands};
+	return (Instruction) {"AND", and, operands, 2};
 }
 
 /*
