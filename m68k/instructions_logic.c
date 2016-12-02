@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "instruction.h"
 #include "instructions_logic.h"
 #include "operands.h"
 
@@ -17,7 +18,7 @@ Instruction* gen_and(uint16_t opcode, M68k* m)
     i->name = "AND";
     i->func = and;
 
-    Operand op1 = operand_make_data_register(FRAGMENT(opcode, 12, 10), i);
+    Operand op1 = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     Operand op2 = make_operand(FRAGMENT(opcode, 5, 0), i);
     int direction = BIT(opcode, 8);
 

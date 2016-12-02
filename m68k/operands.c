@@ -1,24 +1,24 @@
 #include <stdio.h>
 
-#include "operands.h"
-
 #include "globals.h"
+#include "instruction.h"
+#include "operands.h"
 #include "m68k.h"
 
-char* operand_tostring(Operand operand)
+char* operand_tostring(Operand* operand)
 {
-	char buffer[1024];
+	static char buffer[1024];
 
-	switch (operand.type)
+	switch (operand->type)
 	{
 	case DataRegister:
-		sprintf(buffer, "D%d", operand.n);
+		sprintf(buffer, "D%d", operand->n);
 		break;
 	case AddressRegister:
-		sprintf(buffer, "A%d", operand.n);
+		sprintf(buffer, "A%d", operand->n);
 		break;
 	case Address:
-		sprintf(buffer, "(A%d)", operand.n);
+		sprintf(buffer, "(A%d)", operand->n);
 		break;
 	default:
 		sprintf(buffer, "UNSUPPORTED");
@@ -28,7 +28,9 @@ char* operand_tostring(Operand operand)
 }
 
 
-Operand make_operand(uint16_t pattern, struct Instruction* instr)
+
+
+Operand make_operand(uint16_t pattern, Instruction* instr)
 {
 	switch (pattern & 0x38)
 	{

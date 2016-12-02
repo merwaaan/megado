@@ -29,7 +29,7 @@ typedef struct Operand {
 	struct Instruction* instruction;
 } Operand;
 
-char* operand_tostring(Operand operand);
+char* operand_tostring(Operand* operand);
 
 Operand make_operand(uint16_t pattern, struct Instruction* instr);
 Operand operand_make_data_register(int n, struct Instruction* instr);

@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "bit_utils.h"
+#include "instruction.h"
 #include "instructions_logic.h"
 #include "m68k.h"
 #include "operands.h"
@@ -27,7 +29,7 @@ Instruction* pattern_generate(Pattern pattern, uint16_t opcode, M68k* context)
 	return pattern.generator(opcode, context);
 }
 
-char* instruction_tostring(Instruction instr)
+/*char* instruction_tostring(Instruction instr)
 {
 	char buffer[1024];
 	int pos = 0;
@@ -38,7 +40,7 @@ char* instruction_tostring(Instruction instr)
 		pos += sprintf(buffer + pos, " %s", operand_tostring(instr.operands[i]));
 
 	return buffer;
-}
+}*/
 
 Instruction* generate(uint16_t opcode, M68k* context)
 {
@@ -47,9 +49,12 @@ Instruction* generate(uint16_t opcode, M68k* context)
 		{
 			Instruction* instr = pattern_generate(_patterns[i], opcode, context);
 
+            Operand o1 = instr->operands[0];
+            Operand o2 = instr->operands[1];
+
             printf("opcode %#04X: %s", opcode, instr->name);
             for (int i = 0; i < instr->operand_count; ++i)
-                printf(" %s", operand_tostring(instr->operands[i]));
+                printf(" %s", operand_tostring(instr->operands + i));
             printf("\n");
 
           return instr;
@@ -70,8 +75,11 @@ M68k* m68k_init()
 
 	// Generate every possible opcode
 	m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
-	for (int i = 0; i < 0x10000; i++)
-		m68k->opcode_table[i] = generate(i, m68k);
+
+	int and = parse_bin("1100 011 0 01 000101");
+	m68k->opcode_table[and] = generate(and, m68k);
+	//for (int i = 0; i < 0x10000; i++)
+	//	m68k->opcode_table[i] = generate(i, m68k);
 
     return m68k;
 }

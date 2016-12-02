@@ -30,10 +30,10 @@
 			<Target title="Test">
 				<Option output="bin/Test/m68k" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Test/" />
-				<Option external_deps="../deps/projects/unity/bin/Debug/libunity.a;" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-g" />
 					<Add directory="../deps/unity/src" />
 				</Compiler>
 			</Target>
@@ -43,6 +43,10 @@
 			<Add option="-std=c11" />
 			<Add directory="../deps/minunit" />
 		</Compiler>
+		<Unit filename="bit_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="bit_utils.h" />
 		<Unit filename="conditions.h">
 			<Option target="Debug" />
 			<Option target="Test" />
@@ -56,6 +60,7 @@
 			<Option target="Debug" />
 			<Option target="Test" />
 		</Unit>
+		<Unit filename="instruction.h" />
 		<Unit filename="instructions_arithmetic.h">
 			<Option target="Debug" />
 			<Option target="Test" />
@@ -91,7 +96,13 @@
 			<Option target="Debug" />
 			<Option target="Test" />
 		</Unit>
-		<Unit filename="test/instructions_logic.c">
+		<Unit filename="test/addressing_modes.h">
+			<Option target="Test" />
+		</Unit>
+		<Unit filename="test/bit_utils.h">
+			<Option target="Test" />
+		</Unit>
+		<Unit filename="test/main.c">
 			<Option compilerVar="CC" />
 			<Option target="Test" />
 		</Unit>
