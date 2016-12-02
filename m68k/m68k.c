@@ -6,11 +6,6 @@
 #include "m68k.h"
 #include "operands.h"
 
-M68k _m68k;
-uint16_t *_memory;
-
-Instruction *_instructions;
-
 static Pattern _patterns[] =
 {
     {0xC000, 0xF000, &gen_and}
@@ -27,7 +22,7 @@ int pattern_match(uint16_t opcode, Pattern pattern)
 	return (opcode & pattern.mask) == pattern.pattern;
 }
 
-Instruction pattern_generate(Pattern pattern, uint16_t opcode, M68k* context)
+Instruction* pattern_generate(Pattern pattern, uint16_t opcode, M68k* context)
 {
 	return pattern.generator(opcode, context);
 }
@@ -45,23 +40,23 @@ char* instruction_tostring(Instruction instr)
 	return buffer;
 }
 
-Instruction generate(uint16_t opcode, M68k* context)
+Instruction* generate(uint16_t opcode, M68k* context)
 {
 	for (int i = 0; i < 1; ++i)
 		if (pattern_match(opcode, _patterns[i]))
 		{
-			Instruction instr = pattern_generate(_patterns[i], opcode, context);
+			Instruction* instr = pattern_generate(_patterns[i], opcode, context);
 
-            printf("opcode %#04X: %s", opcode, instr.name);
-            for (int i = 0; i < instr.operand_count; ++i)
-                printf(" %s", operand_tostring(instr.operands[i]));
+            printf("opcode %#04X: %s", opcode, instr->name);
+            for (int i = 0; i < instr->operand_count; ++i)
+                printf(" %s", operand_tostring(instr->operands[i]));
             printf("\n");
 
           return instr;
 		}
 
 	//printf("Opcode %d does not match any pattern\n", opcode);
-	return (Instruction) {};
+	return NULL;
 }
 
 void execute(uint16_t opcode)
@@ -74,9 +69,9 @@ M68k* m68k_init()
     M68k* m68k = malloc(sizeof(M68k));
 
 	// Generate every possible opcode
-	_instructions = calloc(0x10000, sizeof(Instruction));
+	m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
 	for (int i = 0; i < 0x10000; i++)
-		_instructions[i] = generate(i, m68k);
+		m68k->opcode_table[i] = generate(i, m68k);
 
     return m68k;
 }
@@ -88,6 +83,12 @@ void m68k_free(M68k* cpu)
 
 void m68k_execute(M68k* cpu, uint16_t opcode)
 {
-    Instruction instr = _instructions[opcode];
-	instr.func(instr.operands);
+    Instruction* instr = cpu->opcode_table[opcode];
+    if (instr == NULL)
+    {
+        printf("Opcode %#08X cannot be found in the opcode table\n", opcode);
+        return;
+    }
+
+	instr->func(instr->operands);
 }

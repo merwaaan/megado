@@ -6,7 +6,7 @@
 #define SET(operand, value) (operand.set(operand, value))
 
 struct Operand;
-struct M68k;
+struct Instruction;
 
 typedef uint16_t (*GetFunc)(struct Operand this);
 typedef void (*SetFunc)(struct Operand this, uint16_t value);
@@ -24,13 +24,14 @@ typedef struct Operand {
 	GetFunc get;
 	SetFunc set;
 
-	struct M68k* context;
 	int n;
+
+	struct Instruction* instruction;
 } Operand;
 
 char* operand_tostring(Operand operand);
 
-Operand make_operand(uint16_t pattern, struct M68k* context);
-Operand operand_make_data_register(int n, struct M68k* context);
+Operand make_operand(uint16_t pattern, struct Instruction* instr);
+Operand operand_make_data_register(int n, struct Instruction* instr);
 //Operand operand_make_address_register(int n);
 //Operand operand_make_address(int n);

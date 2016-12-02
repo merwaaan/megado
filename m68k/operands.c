@@ -28,12 +28,12 @@ char* operand_tostring(Operand operand)
 }
 
 
-Operand make_operand(uint16_t pattern, struct M68k* context)
+Operand make_operand(uint16_t pattern, struct Instruction* instr)
 {
 	switch (pattern & 0x38)
 	{
 	case 0:
-		return operand_make_data_register(pattern & 7, context);
+		return operand_make_data_register(pattern & 7, instr);
 	/*case 0x8:
 		return operand_make_address_register(pattern & 7);
 	case 0x10:
@@ -49,22 +49,22 @@ Operand make_operand(uint16_t pattern, struct M68k* context)
 
 uint16_t data_register_get(Operand this)
 {
-	return this.context->data_registers[this.n];
+	return this.instruction->context->data_registers[this.n];
 }
 
 void data_register_set(Operand this, uint16_t value)
 {
-	this.context->data_registers[this.n] = value;
+	this.instruction->context->data_registers[this.n] = value;
 }
 
-Operand operand_make_data_register(int n, M68k* context)
+Operand operand_make_data_register(int n, Instruction* instr)
 {
 	return (Operand) {
 		.type = DataRegister,
 		.get = data_register_get,
 		.set = data_register_set,
-		.context = context,
-		.n = n
+		.n = n,
+		.instruction = instr
 	};
 }
 
