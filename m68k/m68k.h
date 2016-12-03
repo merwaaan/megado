@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 struct Instruction;
 typedef struct Instruction Instruction;
 

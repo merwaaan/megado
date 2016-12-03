@@ -71,7 +71,7 @@ void execute(uint16_t opcode)
 
 M68k* m68k_init()
 {
-    M68k* m68k = malloc(sizeof(M68k));
+    M68k* m68k = calloc(1, sizeof(M68k));
 
 	// Generate every possible opcode
 	m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
