@@ -32,6 +32,34 @@ MU_TEST(test_fragment)
     mu_assert_int_eq(0x0F, FRAGMENT(0xFF, 7, 4));
 }
 
+MU_TEST(test_mask_below)
+{
+    /*mu_assert_int_eq(0, MASK_BELOW(0, 0));
+    mu_assert_int_eq(0, MASK_BELOW(1, 0));
+    mu_assert_int_eq(2, MASK_BELOW(3, 0));
+    mu_assert_int_eq(0, MASK_BELOW(3, 1));
+    mu_assert_int_eq(0xFE, MASK_BELOW(0xFF, 0));
+    mu_assert_int_eq(0xF0, MASK_BELOW(0xFF, 3));*/
+}
+
+MU_TEST(test_mask_below_inc)
+{
+    /*mu_assert_int_eq(0, MASK_BELOW_INC(0, 0));
+    mu_assert_int_eq(1, MASK_BELOW_INC(1, 0));
+    mu_assert_int_eq(3, MASK_BELOW_INC(3, 0));
+    mu_assert_int_eq(2, MASK_BELOW_INC(3, 1));
+    mu_assert_int_eq(0xFF, MASK_BELOW_INC(0xFF, 0));
+    mu_assert_int_eq(0xF8, MASK_BELOW_INC(0xFF, 3));*/
+}
+
+MU_TEST(test_mask_above)
+{
+}
+
+MU_TEST(test_mask_above_inc)
+{
+}
+
 MU_TEST(test_parse_bin)
 {
     mu_assert_int_eq(0, parse_bin("0"));
@@ -55,5 +83,9 @@ MU_TEST_SUITE(test_suite_bit_utils)
 {
     MU_RUN_TEST(test_bit);
     MU_RUN_TEST(test_fragment);
+    MU_RUN_TEST(test_mask_below);
+    MU_RUN_TEST(test_mask_below_inc);
+    MU_RUN_TEST(test_mask_above);
+    MU_RUN_TEST(test_mask_above_inc);
     MU_RUN_TEST(test_parse_bin);
 }

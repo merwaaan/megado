@@ -5,10 +5,11 @@
 #include "instructions_logic.h"
 #include "operands.h"
 
-void and(Operand *operands)
+void and(Instruction* i)
 {
-    uint16_t r = GET(operands[0]) & GET(operands[1]);
-    SET(operands[1], r);
+    uint16_t dest = GET(i->operands[1]);
+    uint16_t r = GET(i->operands[0]) & dest;
+    SET(i->operands[1], MASK_BELOW(dest, i->size) | MASK_ABOVE(r, i->size));
 
     // TODO flags
 }
@@ -18,6 +19,7 @@ Instruction* gen_and(uint16_t opcode, M68k* m)
     Instruction* i = calloc(1, sizeof(Instruction));
     i->name = "AND";
     i->func = and;
+    i->size = FRAGMENT(opcode, 7, 6);
     i->context = m;
 
     Operand op1 = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);

@@ -2,18 +2,19 @@
 
 struct M68k;
 struct Operand;
+struct Instruction;
 
-typedef void (InstrFunc)(struct Operand*);
+typedef void (InstructionFunc)(struct Instruction*);
 
 typedef struct Instruction {
 	char* name;
 
-	InstrFunc* func;
+	InstructionFunc* func;
+
+    uint8_t size;
 
 	struct Operand* operands;
-	int operand_count;
+	uint8_t operand_count;
 
 	struct M68k* context;
 } Instruction;
-
-#define EXECUTE(instruction, cpu) instruction.func(instruction, cpu)
