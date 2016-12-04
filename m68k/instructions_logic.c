@@ -19,11 +19,9 @@ Instruction* gen_logic_instruction(uint16_t opcode, M68k* m, char* name, Instruc
     Operand* op2 = operand_make(FRAGMENT(opcode, 5, 0), i);
     int direction = BIT(opcode, 8);
 
-    Operand** operands = calloc(2, sizeof(Operand*));
-    operands[direction] = op1;
-    operands[(direction + 1) % 2] = op2;
-
-    i->operands = operands;
+    i->operands = calloc(2, sizeof(Operand*));
+    i->operands[direction] = op1;
+    i->operands[(direction + 1) % 2] = op2;
     i->operand_count = 2;
 
     return i;
@@ -31,13 +29,14 @@ Instruction* gen_logic_instruction(uint16_t opcode, M68k* m, char* name, Instruc
 
 void and(Instruction* i)
 {
-    uint16_t dest = GET(i->operands[1]);
-    uint16_t r = GET(i->operands[0]) & dest;
-    SET(i->operands[1], MASK_BELOW(dest, i->size) | MASK_ABOVE(r, i->size));
+    int32_t initial = GET(i->operands[1]);
+    int32_t result = MASK_ABOVE_INC(GET(i->operands[0]) & initial, i->size);
+    printf("0x%.8X 0x%.8X 0x%.8X 0x%.8X\n", initial, result, MASK_BELOW(initial, i->size), result | MASK_BELOW(initial, i->size));
+    SET(i->operands[1], MASK_BELOW(initial, i->size) | result);
     
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
-    ZERO_SET(i->context, r == 0);
+    ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, true); // TODO
 }
 
@@ -82,11 +81,13 @@ Instruction* gen_or(uint16_t opcode, M68k* m)
 
 void not(Instruction* i)
 {
-    uint16_t x = GET(i->operands[0]);
+    int32_t initial = GET(i->operands[0]);
+    int32_t result = MASK_ABOVE_INC(~initial, i->size);
+    SET(i->operands[0], MASK_BELOW(initial, i->size) | result);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
-    ZERO_SET(i->context, x == 0);
+    ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, true); // TODO
 }
 
@@ -99,7 +100,7 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    Operand** operands = calloc(1, sizeof(Operand*));
+    i->operands = calloc(1, sizeof(Operand*));
     i->operands[0] = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->operand_count = 1;
 
@@ -126,7 +127,7 @@ Instruction* gen_tst(uint16_t opcode, M68k* m)
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    Operand** operands = calloc(1, sizeof(Operand*));
+    i->operands = calloc(1, sizeof(Operand*));
     i->operands[0] = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->operand_count = 1;
 

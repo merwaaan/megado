@@ -62,12 +62,12 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
  * Direct data register value
  */
 
-uint16_t data_register_get(Operand* this)
+int32_t data_register_get(Operand* this)
 {
     return this->instruction->context->data_registers[this->n];
 }
 
-void data_register_set(Operand* this, uint16_t value)
+void data_register_set(Operand* this, int32_t value)
 {
     this->instruction->context->data_registers[this->n] = value;
 }
@@ -87,12 +87,12 @@ Operand* operand_make_data_register(int n, Instruction* instr)
  * Direct address register value
  */
 
-uint16_t address_register_get(Operand* this)
+int32_t address_register_get(Operand* this)
 {
     return this->instruction->context->address_registers[this->n];
 }
 
-void address_register_set(Operand* this, uint16_t value)
+void address_register_set(Operand* this, int32_t value)
 {
     this->instruction->context->address_registers[this->n] = value;
 }
@@ -114,12 +114,12 @@ Operand* operand_make_address_register(int n, Instruction* instr)
  * The register contains the address of the data in memory.
  */
 
-uint16_t address_register_indirect_get(Operand* this)
+int32_t address_register_indirect_get(Operand* this)
 {
     return this->instruction->context->memory[this->instruction->context->address_registers[this->n]];
 }
 
-void address_register_indirect_set(Operand* this, uint16_t value)
+void address_register_indirect_set(Operand* this, int32_t value)
 {
     this->instruction->context->memory[this->instruction->context->address_registers[this->n]] = value;
 }

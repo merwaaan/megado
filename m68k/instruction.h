@@ -14,7 +14,7 @@ typedef struct Instruction {
 
 	InstructionFunc* func;
 
-    uint8_t size;
+    long size;
 
 	struct Operand** operands;
 	uint8_t operand_count;

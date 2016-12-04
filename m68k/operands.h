@@ -8,8 +8,8 @@
 struct Operand;
 struct Instruction;
 
-typedef uint16_t (*GetFunc)(struct Operand* this);
-typedef void (*SetFunc)(struct Operand* this, uint16_t value);
+typedef int32_t (*GetFunc)(struct Operand* this);
+typedef void (*SetFunc)(struct Operand* this, int32_t value);
 
 typedef enum {
 	Unsupported,

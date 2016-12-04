@@ -19,6 +19,9 @@ bool instruction_valid(Instruction* instr)
 
 void instruction_free(Instruction* instr)
 {
+    if (instr == NULL)
+        return;
+
     for (int i = 0; i < instr->operand_count; ++i)
         operand_free(instr->operands[i]);
 

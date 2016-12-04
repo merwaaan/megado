@@ -28,7 +28,7 @@ typedef struct Instruction Instruction;
 typedef struct M68k {
     uint16_t* memory; // TODO externalize memory
 
-	uint32_t data_registers[8];
+	int32_t data_registers[8];
 	uint32_t address_registers[7];
 	uint16_t flags;
 	uint32_t sp;

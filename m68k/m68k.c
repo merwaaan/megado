@@ -41,11 +41,6 @@ Instruction* generate(uint16_t opcode, M68k* context)
     return NULL;
 }
 
-void execute(uint16_t opcode)
-{
-
-}
-
 M68k* m68k_init()
 {
     M68k* m68k = calloc(1, sizeof(M68k));
@@ -65,10 +60,10 @@ M68k* m68k_init()
 
         m68k->opcode_table[opcode] = instr;
 
-        printf("opcode %#04X: %s", opcode, instr->name);
+        /*printf("opcode %#04X: %s", opcode, instr->name);
         for (int i = 0; i < instr->operand_count; ++i)
             printf(" %s", operand_tostring(instr->operands[i]));
-        printf("\n");
+        printf("\n");*/
     }
 
     return m68k;
