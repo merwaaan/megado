@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stdbool.h>
+#include <stdint.h>
+
 struct M68k;
 struct Operand;
 struct Instruction;
@@ -18,3 +21,7 @@ typedef struct Instruction {
 
 	struct M68k* context;
 } Instruction;
+
+
+bool instruction_valid(Instruction* instr);
+void instruction_free(Instruction* instr);

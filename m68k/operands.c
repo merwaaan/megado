@@ -134,3 +134,9 @@ Operand* operand_make_address_register_indirect(int n, Instruction* instr)
     op->instruction = instr;
     return op;
 }
+
+
+void operand_free(Operand* operand)
+{
+    free(operand);
+}

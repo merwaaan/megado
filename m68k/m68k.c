@@ -12,8 +12,8 @@
 static Pattern _patterns[] =
 {
     {0xC000, 0xF000, &gen_and},
-    //{0x4A00, 0xFF00, &gen_tst},
-    //{0x4600, 0xFF00, &gen_not},
+    {0x4A00, 0xFF00, &gen_tst},
+    {0x4600, 0xFF00, &gen_not},
     //{0x5000, 0xF000, &gen_scc},
     {0x8000, 0xF000, &gen_or},
     {0xB000, 0xF000, &gen_eor},
@@ -46,20 +46,6 @@ void execute(uint16_t opcode)
 
 }
 
-bool instruction_valid(Instruction* instr)
-{
-    // Check that the generated instruction is valid
-    if (instr == NULL)
-        return false;
-
-    // Check that the instruction's operands are valid
-    for (int o = 0; o < instr->operand_count; ++o)
-        if (instr->operands[o] == NULL)
-            return false;
-
-    return true;
-}
-
 M68k* m68k_init()
 {
     M68k* m68k = calloc(1, sizeof(M68k));
@@ -72,7 +58,10 @@ M68k* m68k_init()
         Instruction* instr = generate(opcode, m68k);
 
         if (!instruction_valid(instr))
-            continue; // TODO free instr
+        {
+            instruction_free(instr);
+            continue;
+        }
 
         m68k->opcode_table[opcode] = instr;
 

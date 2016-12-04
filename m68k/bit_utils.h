@@ -2,8 +2,11 @@
 
 #include <stdint.h>
 
-// Get the nth bit of x
+// Get the n-th bit of x
 #define BIT(x, n) (((x) & (1 << (n))) != 0)
+
+// Set the n-th bit of x to b
+#define BIT_SET(x, n, b) x = (x) ^ (((-b) ^ (x)) & (1 << (n)));
 
 // Get the bits of x in [start, end]
 #define FRAGMENT(x, start, end) (((x) & ~(0xFFFF << ((start) + 1))) >> (end))

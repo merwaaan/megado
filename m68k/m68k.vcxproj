@@ -116,6 +116,7 @@
   <ItemGroup>
     <ClCompile Include="bit_utils.c" />
     <ClCompile Include="globals.c" />
+    <ClCompile Include="instruction.c" />
     <ClCompile Include="instructions_logic.c" />
     <ClCompile Include="m68k.c" />
     <ClCompile Include="main.c" />

@@ -36,4 +36,6 @@ Operand* operand_make_data_register(int n, struct Instruction* instr);
 Operand* operand_make_address_register(int n, Instruction* instr);
 Operand* operand_make_address_register_indirect(int n, Instruction* instr);
 
+void operand_free(Operand* instr);
+
 uint8_t operand_size(uint8_t pattern);
