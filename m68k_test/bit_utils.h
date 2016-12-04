@@ -27,37 +27,49 @@ MU_TEST(test_fragment)
     mu_assert_int_eq(1, FRAGMENT(2, 1, 1));
 
     mu_assert_int_eq(0xFF, FRAGMENT(0xFF, 7, 0));
-    mu_assert_int_eq(0xFF, FRAGMENT(0xFF, 100, 0));
+    mu_assert_int_eq(0xFF, FRAGMENT(0xFF, 20, 0));
     mu_assert_int_eq(0x0F, FRAGMENT(0xFF, 3, 0));
     mu_assert_int_eq(0x0F, FRAGMENT(0xFF, 7, 4));
 }
 
 MU_TEST(test_mask_below)
 {
-    /*mu_assert_int_eq(0, MASK_BELOW(0, 0));
-    mu_assert_int_eq(0, MASK_BELOW(1, 0));
-    mu_assert_int_eq(2, MASK_BELOW(3, 0));
-    mu_assert_int_eq(0, MASK_BELOW(3, 1));
-    mu_assert_int_eq(0xFE, MASK_BELOW(0xFF, 0));
-    mu_assert_int_eq(0xF0, MASK_BELOW(0xFF, 3));*/
+    mu_assert_int_eq(0, MASK_BELOW(0, 0));
+    mu_assert_int_eq(1, MASK_BELOW(1, 0));
+    mu_assert_int_eq(3, MASK_BELOW(3, 0));
+    mu_assert_int_eq(2, MASK_BELOW(3, 1));
+    mu_assert_int_eq(0xFF, MASK_BELOW(0xFF, 0));
+    mu_assert_int_eq(0xF8, MASK_BELOW(0xFF, 3));
 }
 
 MU_TEST(test_mask_below_inc)
 {
-    /*mu_assert_int_eq(0, MASK_BELOW_INC(0, 0));
-    mu_assert_int_eq(1, MASK_BELOW_INC(1, 0));
-    mu_assert_int_eq(3, MASK_BELOW_INC(3, 0));
-    mu_assert_int_eq(2, MASK_BELOW_INC(3, 1));
-    mu_assert_int_eq(0xFF, MASK_BELOW_INC(0xFF, 0));
-    mu_assert_int_eq(0xF8, MASK_BELOW_INC(0xFF, 3));*/
+    mu_assert_int_eq(0, MASK_BELOW_INC(0, 0));
+    mu_assert_int_eq(0, MASK_BELOW_INC(1, 0));
+    mu_assert_int_eq(2, MASK_BELOW_INC(3, 0));
+    mu_assert_int_eq(0, MASK_BELOW_INC(3, 1));
+    mu_assert_int_eq(0xFE, MASK_BELOW_INC(0xFF, 0));
+    mu_assert_int_eq(0xF0, MASK_BELOW_INC(0xFF, 3));
 }
 
 MU_TEST(test_mask_above)
 {
+    mu_assert_int_eq(0, MASK_ABOVE(0, 0));
+    mu_assert_int_eq(1, MASK_ABOVE(1, 0));
+    mu_assert_int_eq(1, MASK_ABOVE(3, 0));
+    mu_assert_int_eq(3, MASK_ABOVE(3, 1));
+    mu_assert_int_eq(1, MASK_ABOVE(0xFF, 0));
+    mu_assert_int_eq(0x0F, MASK_ABOVE(0xFF, 3));
 }
 
 MU_TEST(test_mask_above_inc)
 {
+    mu_assert_int_eq(0, MASK_ABOVE_INC(0, 0));
+    mu_assert_int_eq(0, MASK_ABOVE_INC(1, 0));
+    mu_assert_int_eq(0, MASK_ABOVE_INC(3, 0));
+    mu_assert_int_eq(1, MASK_ABOVE_INC(3, 1));
+    mu_assert_int_eq(1, MASK_ABOVE_INC(0xFF, 1));
+    mu_assert_int_eq(7, MASK_ABOVE_INC(0xFF, 3));
 }
 
 MU_TEST(test_parse_bin)

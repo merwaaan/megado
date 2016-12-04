@@ -13,7 +13,7 @@ typedef struct Instruction {
 
     uint8_t size;
 
-	struct Operand* operands;
+	struct Operand** operands;
 	uint8_t operand_count;
 
 	struct M68k* context;

@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -33,18 +34,8 @@ Instruction* generate(uint16_t opcode, M68k* context)
 {
     for (int i = 0; i < 1; ++i)
         if (pattern_match(opcode, _patterns[i]))
-        {
-            Instruction* instr = pattern_generate(_patterns[i], opcode, context);
-            
-            printf("opcode %#04X: %s", opcode, instr->name);
-            for (int i = 0; i < instr->operand_count; ++i)
-                printf(" %s", operand_tostring(instr->operands + i));
-            printf("\n");
+            return pattern_generate(_patterns[i], opcode, context);
 
-            return instr;
-        }
-
-    //printf("Opcode %d does not match any pattern\n", opcode);
     return NULL;
 }
 
@@ -53,15 +44,41 @@ void execute(uint16_t opcode)
 
 }
 
+bool instruction_valid(Instruction* instr)
+{
+    // Check that the generated instruction is valid
+    if (instr == NULL)
+        return false;
+
+    // Check that the instruction's operands are valid
+    for (int o = 0; o < instr->operand_count; ++o)
+        if (instr->operands[o] == NULL)
+            return false;
+
+    return true;
+}
+
 M68k* m68k_init()
 {
     M68k* m68k = calloc(1, sizeof(M68k));
 
-    // Generate every possible opcode
     m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
 
-    for (int i = 0; i < 0x10000; i++)
-        m68k->opcode_table[i] = generate(i, m68k);
+    // Generate every possible opcode
+    for (int opcode = 0; opcode < 0x10000; opcode++)
+    {
+        Instruction* instr = generate(opcode, m68k);
+
+        if (!instruction_valid(instr))
+            continue; // TODO free instr
+
+        m68k->opcode_table[opcode] = instr;
+
+        printf("opcode %#04X: %s", opcode, instr->name);
+        for (int i = 0; i < instr->operand_count; ++i)
+            printf(" %s", operand_tostring(instr->operands[i]));
+        printf("\n");
+    }
 
     return m68k;
 }
@@ -80,5 +97,5 @@ void m68k_execute(M68k* cpu, uint16_t opcode)
         return;
     }
 
-    instr->func(instr->operands);
+    instr->func(instr);
 }

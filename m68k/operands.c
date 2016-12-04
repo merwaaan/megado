@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "globals.h"
 #include "instruction.h"
@@ -27,10 +28,22 @@ char* operand_tostring(Operand* operand)
     return buffer;
 }
 
+uint8_t operand_size(uint8_t pattern)
+{
+    switch (pattern)
+    {
+    case 0:
+        return 8;
+    case 1:
+        return 16;
+    case 2:
+        return 32;
+    default:
+        return 0;
+    }
+}
 
-
-
-Operand make_operand(uint16_t pattern, Instruction* instr)
+Operand* operand_make(uint16_t pattern, Instruction* instr)
 {
     switch (pattern & 0x38)
     {
@@ -41,7 +54,7 @@ Operand make_operand(uint16_t pattern, Instruction* instr)
         case 0x10:
             return operand_make_address(pattern & 7);*/
     default:
-        return (Operand) { 0 };
+        return NULL;
     }
 }
 
@@ -49,25 +62,25 @@ Operand make_operand(uint16_t pattern, Instruction* instr)
  *
  */
 
-uint16_t data_register_get(Operand this)
+uint16_t data_register_get(Operand* this)
 {
-    return this.instruction->context->data_registers[this.n];
+    return this->instruction->context->data_registers[this->n];
 }
 
-void data_register_set(Operand this, uint16_t value)
+void data_register_set(Operand* this, uint16_t value)
 {
-    this.instruction->context->data_registers[this.n] = value;
+    this->instruction->context->data_registers[this->n] = value;
 }
 
-Operand operand_make_data_register(int n, Instruction* instr)
+Operand* operand_make_data_register(int n, Instruction* instr)
 {
-    return (Operand) {
-        .type = DataRegister,
-            .get = data_register_get,
-            .set = data_register_set,
-            .n = n,
-            .instruction = instr
-    };
+    Operand* op = calloc(1, sizeof(Operand));
+    op->type = DataRegister;
+    op->get = data_register_get;
+    op->set = data_register_set;
+    op->n = n;
+    op->instruction = instr;
+    return op;
 }
 
 /*

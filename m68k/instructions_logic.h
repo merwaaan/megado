@@ -9,7 +9,6 @@
 #define V(x) _m68k.flags = _m68k.flags & (0xFFFF ^ 1 << 1)
 #define C(x) _m68k.flags = _m68k.flags & (0xFFFF ^ 1)
 
-#define DEFINE_INSTR(NAME) void NAME(Operand *operands); Instruction* gen_ ## NAME (uint16_t opcode, M68k* context);
-// TODO first definition not required?
+#define DEFINE_INSTR(NAME) Instruction* gen_ ## NAME (uint16_t opcode, M68k* context);
 
 DEFINE_INSTR(and)
