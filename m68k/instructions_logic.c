@@ -5,22 +5,14 @@
 #include "instructions_logic.h"
 #include "operands.h"
 
-void and(Instruction* i)
-{
-    uint16_t dest = GET(i->operands[1]);
-    uint16_t r = GET(i->operands[0]) & dest;
-    SET(i->operands[1], MASK_BELOW(dest, i->size) | MASK_ABOVE(r, i->size));
-
-    // TODO flags
-}
-
-Instruction* gen_and(uint16_t opcode, M68k* m)
+Instruction* gen_logic_instruction(uint16_t opcode, M68k* m, char* name, InstructionFunc* func)
 {
     Instruction* i = calloc(1, sizeof(Instruction));
-    i->name = "AND";
-    i->func = and;
-    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+    i->name = name;
+    i->func = func;
     i->context = m;
+
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
     Operand* op1 = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     Operand* op2 = operand_make(FRAGMENT(opcode, 5, 0), i);
@@ -36,83 +28,44 @@ Instruction* gen_and(uint16_t opcode, M68k* m)
     return i;
 }
 
-/*
-void eor(Operand *operands)
+void and(Instruction* i)
 {
-    //operands[1].set(operands[0].get() ^ operands[1].get());
+    uint16_t dest = GET(i->operands[1]);
+    uint16_t r = GET(i->operands[0]) & dest;
+    SET(i->operands[1], MASK_BELOW(dest, i->size) | MASK_ABOVE(r, i->size));
 
     // TODO flags
 }
 
-Instruction gen_eor(uint16_t opcode)
+Instruction* gen_and(uint16_t opcode, M68k* m)
 {
-    Operand ops[] = {
-        make_operand(fragment(opcode, 5, 0))
-    };
-
-    return (Instruction) { "EOR", eor, ops, 1 };
+    return gen_logic_instruction(opcode, m, "AND", and);
 }
 
-void or(Operand *operands)
+void eor(Instruction* i)
 {
-    //operands[1].set(operands[0].get() | operands[1].get());
+    uint16_t dest = GET(i->operands[1]);
+    uint16_t r = GET(i->operands[0]) & dest;
+    SET(i->operands[1], MASK_BELOW(dest, i->size) ^ MASK_ABOVE(r, i->size));
 
     // TODO flags
 }
 
-Instruction gen_or(uint16_t opcode)
+Instruction* gen_eor(uint16_t opcode, M68k* m)
 {
-    Operand ops[] = {
-        make_operand(fragment(opcode, 5, 0))
-    };
-
-    return (Instruction) { "OR", or, ops, 1 };
+    return gen_logic_instruction(opcode, m, "EOR", eor);
 }
 
-void not(Operand *operands)
+void or(Instruction* i)
 {
-    //operands[0].set(~operands[0].get());
+    uint16_t dest = GET(i->operands[1]);
+    uint16_t r = GET(i->operands[0]) | dest;
+    SET(i->operands[1], MASK_BELOW(dest, i->size) | MASK_ABOVE(r, i->size));
 
     // TODO flags
 }
 
-Instruction gen_not(uint16_t opcode)
+Instruction* gen_or(uint16_t opcode, M68k* m)
 {
-    Operand ops[] = {
-        make_operand(fragment(opcode, 5, 0))
-    };
-
-    return (Instruction) { "NOT", not, ops, 1 };
+    return gen_logic_instruction(opcode, m, "OR", or);
 }
-
-void scc(Operand *operands)
-{
-    // TODO set value wrt cond
-    // TODO flags
-}
-
-Instruction gen_scc(uint16_t opcode)
-{
-    //ConditionFunc cond = make_condition(fragment(opcode, 11, 8));
-
-    Operand ops[] = {
-        make_operand(fragment(opcode, 5, 0))
-    };
-
-    return (Instruction) { "SCC", scc, ops, 1 };
-}
-
-void tst(Operand *operands)
-{
-    // TODO flags
-}
-
-Instruction gen_tst(uint16_t opcode)
-{
-    Operand ops[] = {
-        make_operand(fragment(opcode, 5, 0))
-    };
-
-    return (Instruction) { "TST", tst, ops, 1 };
-}
-*/

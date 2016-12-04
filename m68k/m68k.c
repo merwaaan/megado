@@ -11,12 +11,12 @@
 
 static Pattern _patterns[] =
 {
-    {0xC000, 0xF000, &gen_and}
-    /*{0x4A00, 0xFF00, &gen_tst},
-    {0x4600, 0xFF00, &gen_not},
-    {0x5000, 0xF000, &gen_scc},
+    {0xC000, 0xF000, &gen_and},
+    //{0x4A00, 0xFF00, &gen_tst},
+    //{0x4600, 0xFF00, &gen_not},
+    //{0x5000, 0xF000, &gen_scc},
     {0x8000, 0xF000, &gen_or},
-    {0xB000, 0xF000, &gen_eor},*/
+    {0xB000, 0xF000, &gen_eor},
     //{0xC000, 0xF000, &gen_add},
 };
 
@@ -32,7 +32,9 @@ Instruction* pattern_generate(Pattern pattern, uint16_t opcode, M68k* context)
 
 Instruction* generate(uint16_t opcode, M68k* context)
 {
-    for (int i = 0; i < 1; ++i)
+    int pattern_count = sizeof(_patterns) / sizeof(Pattern);
+
+    for (int i = 0; i < pattern_count; ++i)
         if (pattern_match(opcode, _patterns[i]))
             return pattern_generate(_patterns[i], opcode, context);
 

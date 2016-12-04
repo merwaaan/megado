@@ -18,7 +18,7 @@ char* operand_tostring(Operand* operand)
     case AddressRegister:
         sprintf(buffer, "A%d", operand->n);
         break;
-    case Address:
+    case AddressRegisterIndirect:
         sprintf(buffer, "(A%d)", operand->n);
         break;
     default:
@@ -49,17 +49,17 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
     {
     case 0:
         return operand_make_data_register(pattern & 7, instr);
-        /*case 0x8:
-            return operand_make_address_register(pattern & 7);
-        case 0x10:
-            return operand_make_address(pattern & 7);*/
+    case 0x8:
+        return operand_make_address_register(pattern & 7, instr);
+    case 0x10:
+        return operand_make_address_register_indirect(pattern & 7, instr);
     default:
         return NULL;
     }
 }
 
 /*
- *
+ * Direct data register value
  */
 
 uint16_t data_register_get(Operand* this)
@@ -84,50 +84,53 @@ Operand* operand_make_data_register(int n, Instruction* instr)
 }
 
 /*
- *
+ * Direct address register value
  */
 
- /*uint16_t address_register_get(Operand this)
- {
-     return _m68k.address_registers[this.n];
- }
+uint16_t address_register_get(Operand* this)
+{
+    return this->instruction->context->address_registers[this->n];
+}
 
- void address_register_set(Operand this, uint16_t value)
- {
-     _m68k.address_registers[this.n] = value;
- }
+void address_register_set(Operand* this, uint16_t value)
+{
+    this->instruction->context->address_registers[this->n] = value;
+}
 
- Operand operand_make_address_register(int n)
- {
-     return (Operand) {
-         .type = AddressRegister,
-         .get = address_register_get,
-         .set = address_register_set,
-         .n = n
-     };
- }*/
+Operand* operand_make_address_register(int n, Instruction* instr)
+{
+    Operand* op = calloc(1, sizeof(Operand));
+    op->type = AddressRegister;
+    op->get = address_register_get;
+    op->set = address_register_set;
+    op->n = n;
+    op->instruction = instr;
+    return op;
+}
 
- /*
-  *
-  */
+/*
+ * Indirect address register value
+ *
+ * The register contains the address of the data in memory.
+ */
 
-  /*uint16_t address_get(Operand this)
-  {
-      return _memory[_m68k.address_registers[this.n]];
-  }
+uint16_t address_register_indirect_get(Operand* this)
+{
+    return this->instruction->context->memory[this->instruction->context->address_registers[this->n]];
+}
 
-  void address_set(Operand this, uint16_t value)
-  {
-      _memory[_m68k.address_registers[this.n]] = value;
-  }
+void address_register_indirect_set(Operand* this, uint16_t value)
+{
+    this->instruction->context->memory[this->instruction->context->address_registers[this->n]] = value;
+}
 
-  Operand operand_make_address(int n)
-  {
-      return (Operand) {
-          .type = Address,
-          .get = address_get,
-          .set = address_set,
-          .n = n
-      };
-  }
-  */
+Operand* operand_make_address_register_indirect(int n, Instruction* instr)
+{
+    Operand* op = calloc(1, sizeof(Operand));
+    op->type = AddressRegisterIndirect;
+    op->get = address_register_indirect_get;
+    op->set = address_register_indirect_set;
+    op->n = n;
+    op->instruction = instr;
+    return op;
+}
