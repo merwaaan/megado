@@ -6,6 +6,7 @@
 #include "bit_utils.h"
 #include "instruction.h"
 #include "instructions_logic.h"
+#include "instructions_shift.h"
 #include "m68k.h"
 #include "operands.h"
 
@@ -17,6 +18,7 @@ static Pattern _patterns[] =
     //{0x5000, 0xF000, &gen_scc},
     {0x8000, 0xF000, &gen_or},
     {0xB000, 0xF000, &gen_eor},
+    {0x0908, 0xFFF0, &gen_swap},
     //{0xC000, 0xF000, &gen_add},
 };
 

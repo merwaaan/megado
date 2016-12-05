@@ -1,24 +1,9 @@
 #pragma once
 
 #include <minunit.h>
-
 #include <m68k/m68k.h>
 
-M68k* m = NULL;
-
-void setup()
-{
-    m = m68k_init();
-}
-
-void teardown()
-{
-    m68k_free(m);
-}
-
-#define DATA(n, x) m->data_registers[n] = x
-#define DATA_CHECK(n, x) mu_assert_int_eq(x, m->data_registers[n])
-#define RUN(opcode) m68k_execute(m, parse_bin(opcode))
+#include "globals.h"
 
 MU_TEST(test_and_data) // TODO move to addr mode tests
 {
