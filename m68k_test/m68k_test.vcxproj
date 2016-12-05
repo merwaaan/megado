@@ -117,8 +117,10 @@
     <ClInclude Include="addressing_modes.h" />
     <ClInclude Include="bit_utils.h" />
     <ClInclude Include="globals.h" />
+    <ClInclude Include="instructions_bit.h" />
     <ClInclude Include="instructions_logic.h" />
     <ClInclude Include="instructions_shift.h" />
+    <ClInclude Include="instructions_transfer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="globals.c" />

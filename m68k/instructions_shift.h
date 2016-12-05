@@ -1,7 +1,7 @@
 #pragma once
 
 #include "globals.h"
-#include "instructions_logic.h"
+#include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
 

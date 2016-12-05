@@ -2,15 +2,14 @@
 #include <stdlib.h>
 
 #include "bit_utils.h"
-#include "instruction.h"
-#include "instructions_logic.h"
+#include "instructions_shift.h"
 #include "operands.h"
 
 void swap(Instruction* i)
 {
     int32_t value = GET(i->operands[0]);
-    uint16_t lo = value & 0xFFFF;
-    uint16_t hi = value >> 16;
+    int16_t lo = value & 0xFFFF;
+    int16_t hi = value >> 16;
     int32_t result = (lo << 16) | hi;
     SET(i->operands[0], result);
 

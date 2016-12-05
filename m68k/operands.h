@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 
-#define GET(operand) (operand->get(operand))
-#define SET(operand, value) (operand->set(operand, value))
+#define GET(operand) operand->get(operand)
+#define SET(operand, value) operand->set(operand, value)
 
 struct Operand;
 struct Instruction;

@@ -16,11 +16,11 @@
 #define NEGATIVE(context) BIT(context->flags, NEGATIVE_BIT)
 #define EXTENDED(context) BIT(context->flags, EXTENDED_BIT)
 
-#define CARRY_SET(context, b) BIT_SET(context->flags, CARRY_BIT, b)
-#define OVERFLOW_SET(context, b) BIT_SET(context->flags, OVERFLOW_BIT, b)
-#define ZERO_SET(context, b) BIT_SET(context->flags, ZERO_BIT, b)
-#define NEGATIVE_SET(context, b) BIT_SET(context->flags, NEGATIVE_BIT, b)
-#define EXTENDED_SET(context, b) BIT_SET(context->flags, EXTENDED_BIT, b)
+#define CARRY_SET(context, b) BIT_CHG(context->flags, CARRY_BIT, b)
+#define OVERFLOW_SET(context, b) BIT_CHG(context->flags, OVERFLOW_BIT, b)
+#define ZERO_SET(context, b) BIT_CHG(context->flags, ZERO_BIT, b)
+#define NEGATIVE_SET(context, b) BIT_CHG(context->flags, NEGATIVE_BIT, b)
+#define EXTENDED_SET(context, b) BIT_CHG(context->flags, EXTENDED_BIT, b)
 
 struct Instruction;
 typedef struct Instruction Instruction;

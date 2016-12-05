@@ -2,7 +2,15 @@
 
 #include <m68k/m68k.h>
 
-// This extends minunit to print asserted values in hexadecimal
+#define DATA(n, x) m->data_registers[n] = x
+#define DATA_CHECK(n, x) mu_assert_int_eq_hex(x, m->data_registers[n])
+
+#define ADDR(n, x) m->address_registers[n] = x
+#define ADDR_CHECK(n, x) mu_assert_int_eq_hex(x, m->address_registers[n])
+
+#define RUN(opcode) m68k_execute(m, parse_bin(opcode))
+
+// This extends minunit to print asserted values in hexadecimal format
 #define mu_assert_int_eq_hex(expected, result) MU__SAFE_BLOCK(\
 	int minunit_tmp_e;\
 	int minunit_tmp_r;\
@@ -17,10 +25,6 @@
 		printf(".");\
 	}\
 )
-
-#define DATA(n, x) m->data_registers[n] = x
-#define DATA_CHECK(n, x) mu_assert_int_eq_hex(x, m->data_registers[n])
-#define RUN(opcode) m68k_execute(m, parse_bin(opcode))
 
 extern M68k* m;
 

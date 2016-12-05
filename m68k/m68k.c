@@ -5,21 +5,27 @@
 
 #include "bit_utils.h"
 #include "instruction.h"
+#include "instructions_bit.h"
 #include "instructions_logic.h"
 #include "instructions_shift.h"
+#include "instructions_transfer.h"
 #include "m68k.h"
 #include "operands.h"
 
 static Pattern _patterns[] =
 {
-    {0xC000, 0xF000, &gen_and},
-    {0x4A00, 0xFF00, &gen_tst},
-    {0x4600, 0xFF00, &gen_not},
-    //{0x5000, 0xF000, &gen_scc},
-    {0x8000, 0xF000, &gen_or},
-    {0xB000, 0xF000, &gen_eor},
-    {0x0908, 0xFFF0, &gen_swap},
-    //{0xC000, 0xF000, &gen_add},
+    { 0x0800, 0xFFC0, &gen_btst }, // TODO other btst form
+    { 0x0840, 0xFFC0, &gen_bchg }, // TODO other bchg form
+    { 0x0880, 0xFFC0, &gen_bclr }, // TODO other bclr form
+    { 0x08C0, 0xFFC0, &gen_bset }, // TODO other bset form
+    { 0x4A00, 0xFF00, &gen_tst },
+    { 0x4600, 0xFF00, &gen_not },
+    { 0x4840, 0xFFF8, &gen_swap },
+    //{ 0x5000, 0xF000, &gen_scc },
+    { 0x8000, 0xF000, &gen_or },
+    { 0xB000, 0xF000, &gen_eor },
+    { 0xC000, 0xF000, &gen_and },
+    //{0xC100, 0xF130, &gen_exg }, TODO conflict with ADD, how to disambiguate?
 };
 
 int pattern_match(uint16_t opcode, Pattern pattern)
@@ -50,7 +56,7 @@ M68k* m68k_init()
     m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
 
     // Generate every possible opcode
-    for (int opcode = 0; opcode < 0x10000; opcode++)
+    for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
         Instruction* instr = generate(opcode, m68k);
 
