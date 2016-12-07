@@ -1,6 +1,6 @@
 #include "bit_utils.h"
 
-uint16_t parse_bin(char* bin)
+uint16_t bin_parse(char* bin)
 {
     uint16_t value = 0;
 
@@ -11,4 +11,27 @@ uint16_t parse_bin(char* bin)
     }
 
     return value;
+}
+
+char* bin_tostring(int x)
+{
+    if (x == 0)
+        return "0";
+
+    // Count the number of bits
+    int x2 = x;
+    int bits = 0;
+    while (x2 != 0)
+    {
+        x2 >>= 1;
+        ++bits;
+    }
+
+    // Build the string bit by bit
+    char buffer[33];
+    for (int i = 0; i < bits; ++i)
+        buffer[i] = BIT(x, bits - i - 1) + '0';
+    buffer[bits] = '\0';
+
+    return buffer;
 }

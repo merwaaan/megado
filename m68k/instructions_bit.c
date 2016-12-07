@@ -23,11 +23,11 @@ Instruction* gen_bit_instruction(uint16_t opcode, M68k* m, char* name, Instructi
     return i;
 }
 
-
 void bchg(Instruction* i)
 {
     int bit = GET(i->operands[0]); // TODO
     int initial = GET(i->operands[1]);
+    SET(i->operands[1], BIT_CHG(initial, bit, !BIT(initial, bit)));
 
     ZERO_SET(i->context, BIT(initial, bit) == 0);
 }
@@ -68,7 +68,8 @@ Instruction* gen_bset(uint16_t opcode, M68k* m)
 void btst(Instruction* i)
 {
     int bit = GET(i->operands[0]);
-    ZERO_SET(i->context, BIT(GET(i->operands[1]), bit) == 0);
+    int test = BIT(GET(i->operands[1]), bit) == 0;
+    ZERO_SET(i->context, test);
 }
 
 Instruction* gen_btst(uint16_t opcode, M68k* m)

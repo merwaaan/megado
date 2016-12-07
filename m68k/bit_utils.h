@@ -10,9 +10,9 @@
 #define BIT_CLR(x, n) ((x) & ~(1 << (n)))
 
 // Change the n-th bit of x to b
-#define BIT_CHG(x, n, b) ((x) ^ (((-b) ^ (x)) & (1 << (n))));
+#define BIT_CHG(x, n, b) ((x) ^ (((-(b)) ^ (x)) & (1 << (n))))
 
-// Get the bits of x in [start, end]
+// Get the bits of x within [start, end]
 #define FRAGMENT(x, start, end) (((x) & ~(0xFFFFFFFF << ((start) + 1))) >> (end))
 
 // Mask the bits below/above bit n
@@ -24,4 +24,7 @@
 #define MASK_ABOVE_INC(x, n) ((x) & ~(0xFFFFFFFFF << (n)))
 
 // Return the decimal value of a string representing a base-2 number
-uint16_t parse_bin(char* bin);
+uint16_t bin_parse(char* bin);
+
+// Return the binary representation of a number
+char* bin_tostring(int x);

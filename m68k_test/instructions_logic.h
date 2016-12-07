@@ -5,7 +5,7 @@
 
 #include "globals.h"
 
-MU_TEST(test_and_data) // TODO move to addr mode tests
+/*MU_TEST(test_and_data) // TODO move to addr mode tests
 {
     DATA(3, 0x0F); DATA(5, 0xFF);
     RUN("1100 011 0 01 000101"); // AND.w D3, D5
@@ -17,14 +17,14 @@ MU_TEST(test_and_data2) // TODO idem
     DATA(3, 0xFF); DATA(5, 0x0F);
     RUN("1100 011 1 01 000101"); // AND.w D3, D5 (reversed)
     DATA_CHECK(3, 0xF); DATA_CHECK(5, 0xF);
-}
+}*/
 
 MU_TEST(test_and_b)
 {
     DATA(2, 0xFE800174);
     DATA(3, 0x25CFB7DD);
     RUN("1100  010 0 00 000011"); // AND.b D2, D3
-    DATA_CHECK(7, 0x25CFB754);
+    DATA_CHECK(3, 0x25CFB754);
 }
 
 MU_TEST(test_and_w)
@@ -40,7 +40,7 @@ MU_TEST(test_and_l)
     DATA(2, 0xFE800174);
     DATA(3, 0x25CFB7DD);
     RUN("1100  010 0 10 000011"); // AND.l D2
-    DATA_CHECK(3, 0x2480154);
+    DATA_CHECK(3, 0x24800154);
 }
 
 MU_TEST(test_not_b)

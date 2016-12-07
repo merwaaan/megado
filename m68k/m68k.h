@@ -16,14 +16,13 @@
 #define NEGATIVE(context) BIT(context->flags, NEGATIVE_BIT)
 #define EXTENDED(context) BIT(context->flags, EXTENDED_BIT)
 
-#define CARRY_SET(context, b) BIT_CHG(context->flags, CARRY_BIT, b)
-#define OVERFLOW_SET(context, b) BIT_CHG(context->flags, OVERFLOW_BIT, b)
-#define ZERO_SET(context, b) BIT_CHG(context->flags, ZERO_BIT, b)
-#define NEGATIVE_SET(context, b) BIT_CHG(context->flags, NEGATIVE_BIT, b)
-#define EXTENDED_SET(context, b) BIT_CHG(context->flags, EXTENDED_BIT, b)
+#define CARRY_SET(context, b) context->flags = BIT_CHG(context->flags, CARRY_BIT, b)
+#define OVERFLOW_SET(context, b) context->flags = BIT_CHG(context->flags, OVERFLOW_BIT, b)
+#define ZERO_SET(context, b) context->flags = BIT_CHG(context->flags, ZERO_BIT, b)
+#define NEGATIVE_SET(context, b) context->flags = BIT_CHG(context->flags, NEGATIVE_BIT, b)
+#define EXTENDED_SET(context, b) context->flags = BIT_CHG(context->flags, EXTENDED_BIT, b)
 
 struct Instruction;
-typedef struct Instruction Instruction;
 
 typedef struct M68k {
     uint16_t* memory; // TODO externalize memory
@@ -34,10 +33,10 @@ typedef struct M68k {
 	uint32_t sp;
 	uint32_t pc;
 
-	Instruction** opcode_table;
+	struct Instruction** opcode_table;
 } M68k;
 
-typedef Instruction* (GenFunc)(uint16_t opcode, M68k* context);
+typedef struct Instruction* (GenFunc)(uint16_t opcode, M68k* context);
 
 typedef struct {
 	uint16_t pattern;
@@ -49,4 +48,4 @@ M68k* m68k_init();
 void m68k_free(M68k*);
 void m68k_execute(M68k*, uint16_t opcode);
 
-char* instruction_tostring(Instruction);
+char* instruction_tostring(struct Instruction*);

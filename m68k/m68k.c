@@ -14,10 +14,10 @@
 
 static Pattern _patterns[] =
 {
-    { 0x0800, 0xFFC0, &gen_btst }, // TODO other btst form
-    { 0x0840, 0xFFC0, &gen_bchg }, // TODO other bchg form
-    { 0x0880, 0xFFC0, &gen_bclr }, // TODO other bclr form
-    { 0x08C0, 0xFFC0, &gen_bset }, // TODO other bset form
+    { 0x0100, 0x01C0, &gen_btst }, // TODO other btst form
+    { 0x0140, 0x01C0, &gen_bchg }, // TODO other bchg form
+    { 0x0180, 0x01C0, &gen_bclr }, // TODO other bclr form
+    { 0x01C0, 0x01C0, &gen_bset }, // TODO other bset form
     { 0x4A00, 0xFF00, &gen_tst },
     { 0x4600, 0xFF00, &gen_not },
     { 0x4840, 0xFFF8, &gen_swap },

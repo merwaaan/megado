@@ -31,13 +31,12 @@ void and(Instruction* i)
 {
     int32_t initial = GET(i->operands[1]);
     int32_t result = MASK_ABOVE_INC(GET(i->operands[0]) & initial, i->size);
-    printf("0x%.8X 0x%.8X 0x%.8X 0x%.8X\n", initial, result, MASK_BELOW(initial, i->size), result | MASK_BELOW(initial, i->size));
     SET(i->operands[1], MASK_BELOW(initial, i->size) | result);
     
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
-    NEGATIVE_SET(i->context, true); // TODO
+    NEGATIVE_SET(i->context, result < 0);
 }
 
 Instruction* gen_and(uint16_t opcode, M68k* m)
@@ -48,13 +47,13 @@ Instruction* gen_and(uint16_t opcode, M68k* m)
 void eor(Instruction* i)
 {
     uint16_t dest = GET(i->operands[1]);
-    uint16_t r = GET(i->operands[0]) & dest;
-    SET(i->operands[1], MASK_BELOW(dest, i->size) ^ MASK_ABOVE(r, i->size));
+    uint16_t result = GET(i->operands[0]) & dest;
+    SET(i->operands[1], MASK_BELOW(dest, i->size) ^ MASK_ABOVE(result, i->size));
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
-    ZERO_SET(i->context, r == 0);
-    NEGATIVE_SET(i->context, true); // TODO
+    ZERO_SET(i->context, result == 0);
+    NEGATIVE_SET(i->context, result < 0);
 }
 
 Instruction* gen_eor(uint16_t opcode, M68k* m)
@@ -65,13 +64,13 @@ Instruction* gen_eor(uint16_t opcode, M68k* m)
 void or (Instruction* i)
 {
     uint16_t dest = GET(i->operands[1]);
-    uint16_t r = GET(i->operands[0]) | dest;
-    SET(i->operands[1], MASK_BELOW(dest, i->size) | MASK_ABOVE(r, i->size));
+    uint16_t result = GET(i->operands[0]) | dest;
+    SET(i->operands[1], MASK_BELOW(dest, i->size) | MASK_ABOVE(result, i->size));
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
-    ZERO_SET(i->context, r == 0);
-    NEGATIVE_SET(i->context, true); // TODO
+    ZERO_SET(i->context, result == 0);
+    NEGATIVE_SET(i->context, result < 0);
 }
 
 Instruction* gen_or(uint16_t opcode, M68k* m)
@@ -88,7 +87,7 @@ void not(Instruction* i)
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
-    NEGATIVE_SET(i->context, true); // TODO
+    NEGATIVE_SET(i->context, result < 0);
 }
 
 Instruction* gen_not(uint16_t opcode, M68k* m)
@@ -115,7 +114,7 @@ void tst(Instruction* i)
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, x == 0);
-    NEGATIVE_SET(i->context, true); // TODO
+    NEGATIVE_SET(i->context, x < 0);
 }
 
 Instruction* gen_tst(uint16_t opcode, M68k* m)
