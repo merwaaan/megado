@@ -26,6 +26,7 @@ static Pattern _patterns[] =
     { 0xB000, 0xF000, &gen_eor },
     { 0xC000, 0xF000, &gen_and },
     //{0xC100, 0xF130, &gen_exg }, TODO conflict with ADD, how to disambiguate?
+    { 0xE2C0, 0xFEC0, &gen_lsX },
 };
 
 int pattern_match(uint16_t opcode, Pattern pattern)

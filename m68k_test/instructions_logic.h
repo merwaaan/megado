@@ -64,6 +64,8 @@ MU_TEST(test_not_l)
     DATA_CHECK(7, 0x017FFE8B);
 }
 
+// TODO or, eor, tst
+
 MU_TEST_SUITE(test_suite_instructions_logic)
 {
     MU_SUITE_CONFIGURE(&setup, &teardown);
