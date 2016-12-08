@@ -4,6 +4,7 @@
 #include "bit_utils.h"
 #include "instruction.h"
 #include "instructions_logic.h"
+#include "m68k.h"
 #include "operands.h"
 
 void exg(Instruction* i)
@@ -44,6 +45,71 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
         // TODO error
         break;
     }
+
+    return i;
+}
+
+void lea(Instruction* i)
+{
+    SET(i->operands[1], GET(i->operands[0]));
+}
+
+Instruction* gen_lea(uint16_t opcode, M68k* m)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = m;
+    i->name = "LEA";
+    i->func = lea;
+
+    i->operands = calloc(2, sizeof(Operand*));
+    i->operands[0] = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
+    i->operands[1] = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->operand_count = 2;
+
+    return i;
+}
+
+void move(Instruction* i)
+{
+    int32_t moved = MASK_ABOVE(GET(i->operands[0]), i->size);
+    SET(i->operands[1], MASK_BELOW_INC(GET(i->operands[1]), i->size) | moved);
+
+    CARRY_SET(i->context, false);
+    OVERFLOW_SET(i->context, false);
+    ZERO_SET(i->context, moved == 0);
+    NEGATIVE_SET(i->context, moved < 0);
+}
+
+Instruction* gen_move(uint16_t opcode, M68k* m)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = m;
+    i->name = "MOVE";
+    i->func = move;
+
+    i->operands = calloc(1, sizeof(Operand*));
+    i->operands[1] = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->operand_count = 2;
+
+    return i;
+}
+
+void pea(Instruction* i)
+{
+    i->context->memory[i->context->sp] = GET(i->operands[0]);
+    i->context->sp--;
+}
+
+Instruction* gen_pea(uint16_t opcode, M68k* m)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = m;
+    i->name = "PEA";
+    i->func = pea;
+
+    i->operands = calloc(1, sizeof(Operand*));
+    i->operands[1] = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->operand_count = 2;
 
     return i;
 }

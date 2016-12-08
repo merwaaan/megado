@@ -119,6 +119,7 @@
     <ClCompile Include="instruction.c" />
     <ClCompile Include="instructions_arithmetic.c" />
     <ClCompile Include="instructions_bit.c" />
+    <ClCompile Include="instructions_control.c" />
     <ClCompile Include="instructions_logic.c" />
     <ClCompile Include="instructions_shift.c" />
     <ClCompile Include="instructions_transfer.c" />
@@ -133,6 +134,7 @@
     <ClInclude Include="instruction.h" />
     <ClInclude Include="instructions_arithmetic.h" />
     <ClInclude Include="instructions_bit.h" />
+    <ClInclude Include="instructions_control.h" />
     <ClInclude Include="instructions_logic.h" />
     <ClInclude Include="instructions_shift.h" />
     <ClInclude Include="instructions_transfer.h" />

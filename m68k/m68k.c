@@ -7,6 +7,7 @@
 #include "instruction.h"
 #include "instructions_arithmetic.h"
 #include "instructions_bit.h"
+#include "instructions_control.h"
 #include "instructions_logic.h"
 #include "instructions_shift.h"
 #include "instructions_transfer.h"
@@ -19,15 +20,20 @@ static Pattern _patterns[] =
     { 0x0140, 0x01C0, &gen_bchg }, // TODO other bchg form
     { 0x0180, 0x01C0, &gen_bclr }, // TODO other bclr form
     { 0x01C0, 0x01C0, &gen_bset }, // TODO other bset form
+    { 0x41C0, 0xF1C0, &gen_lea },
     { 0x4200, 0xFF00, &gen_clr },
     { 0x4600, 0xFF00, &gen_not },
     { 0x4840, 0xFFF8, &gen_swap },
+    { 0x4840, 0xFFC0, &gen_pea },
     { 0x4A00, 0xFF00, &gen_tst },
+    { 0x4EC0, 0xFFC0, &gen_jmp },
     //{ 0x5000, 0xF000, &gen_scc },
     { 0x8000, 0xF000, &gen_or },
     { 0xB000, 0xF000, &gen_eor },
     { 0xC000, 0xF000, &gen_and },
     //{0xC100, 0xF130, &gen_exg }, TODO conflict with ADD, how to disambiguate?
+    { 0xC0C0, 0xF1C0, &gen_mulu },
+    { 0xC1C0, 0xF1C0, &gen_muls },
     { 0xE2C0, 0xFEC0, &gen_lsX },
 };
 

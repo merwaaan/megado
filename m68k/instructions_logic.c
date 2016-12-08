@@ -108,13 +108,12 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
 
 void tst(Instruction* i)
 {
-    uint16_t x = ~GET(i->operands[0]);
-    SET(i->operands[0], x);
+    uint16_t x = MASK_ABOVE_INC(GET(i->operands[0]), i->size);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, x == 0);
-    NEGATIVE_SET(i->context, x < 0);
+    NEGATIVE_SET(i->context, x < 0); // TODO size masking
 }
 
 Instruction* gen_tst(uint16_t opcode, M68k* m)
