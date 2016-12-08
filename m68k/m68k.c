@@ -5,6 +5,7 @@
 
 #include "bit_utils.h"
 #include "instruction.h"
+#include "instructions_arithmetic.h"
 #include "instructions_bit.h"
 #include "instructions_logic.h"
 #include "instructions_shift.h"
@@ -18,9 +19,10 @@ static Pattern _patterns[] =
     { 0x0140, 0x01C0, &gen_bchg }, // TODO other bchg form
     { 0x0180, 0x01C0, &gen_bclr }, // TODO other bclr form
     { 0x01C0, 0x01C0, &gen_bset }, // TODO other bset form
-    { 0x4A00, 0xFF00, &gen_tst },
+    { 0x4200, 0xFF00, &gen_clr },
     { 0x4600, 0xFF00, &gen_not },
     { 0x4840, 0xFFF8, &gen_swap },
+    { 0x4A00, 0xFF00, &gen_tst },
     //{ 0x5000, 0xF000, &gen_scc },
     { 0x8000, 0xF000, &gen_or },
     { 0xB000, 0xF000, &gen_eor },

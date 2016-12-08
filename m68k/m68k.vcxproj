@@ -117,6 +117,7 @@
     <ClCompile Include="bit_utils.c" />
     <ClCompile Include="globals.c" />
     <ClCompile Include="instruction.c" />
+    <ClCompile Include="instructions_arithmetic.c" />
     <ClCompile Include="instructions_bit.c" />
     <ClCompile Include="instructions_logic.c" />
     <ClCompile Include="instructions_shift.c" />
