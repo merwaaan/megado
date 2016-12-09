@@ -1,36 +1,15 @@
-typedef int (*ConditionFunc)();
+#pragma once
 
-int False()
+#include <stdbool.h>
+
+typedef bool(*ConditionFunc)();
+
+bool False()
 {
-	return 0;
+    return false;
 }
 
-int True()
+bool True()
 {
-	return 1;
-}
-
-ConditionFunc _conditions[] = {
-	True,
-	False,
-	/*Higher,
-	LowerOrSame,
-	CarryClear,
-	CarrySet,
-	NotEqual,
-	Equal,
-	OverflowClear,
-	OverflowSet,
-	Plus,
-	Minus,
-	GreaterOrEqual,
-	LessThan,
-	GreaterThan,
-	LessOrEqual*/
-};
-
-ConditionFunc make_condition(uint8_t pattern)
-{
-	// TODO handle OoB -> if (pattern > 0XF)
-	return _conditions[pattern];
+    return true;
 }

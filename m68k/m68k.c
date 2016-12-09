@@ -26,8 +26,13 @@ static Pattern _patterns[] =
     { 0x4840, 0xFFF8, &gen_swap },
     { 0x4840, 0xFFC0, &gen_pea },
     { 0x4A00, 0xFF00, &gen_tst },
+    { 0x4E75, 0xFFFF, &gen_rts },
+    { 0x4E80, 0xFFC0, &gen_jsr },
     { 0x4EC0, 0xFFC0, &gen_jmp },
     //{ 0x5000, 0xF000, &gen_scc },
+    { 0x6000, 0xFF00, &gen_bra },
+    { 0x6100, 0xFF00, &gen_bsr },
+    { 0x6000, 0xF000, &gen_bcc },
     { 0x8000, 0xF000, &gen_or },
     { 0xB000, 0xF000, &gen_eor },
     { 0xC000, 0xF000, &gen_and },
@@ -58,7 +63,7 @@ Instruction* generate(uint16_t opcode, M68k* context)
     return NULL;
 }
 
-M68k* m68k_init()
+M68k* m68k_make()
 {
     M68k* m68k = calloc(1, sizeof(M68k));
 
@@ -101,4 +106,19 @@ void m68k_execute(M68k* cpu, uint16_t opcode)
     }
 
     instr->func(instr);
+}
+
+void m68k_push(int value)
+{
+
+}
+
+int m68k_pop()
+{
+
+}
+
+void m68k_jump(int address)
+{
+
 }

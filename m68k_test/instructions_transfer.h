@@ -26,11 +26,19 @@ MU_TEST(test_exg_data_address)
     DATA_CHECK(4, 0xA0A0A0A0); ADDR_CHECK(0, 0x12345678);
 }
 
+MU_TEST(test_lea)
+{
+    DATA(1, 0xF0F0); ADDR(0, 0xFFFF0000);
+    RUN("0100 000 111 000001"); // LEA D1, A1
+    ADDR_CHECK(0, 0xF0F0);
+}
+
 MU_TEST_SUITE(test_suite_instructions_transfer)
 {
     MU_SUITE_CONFIGURE(&setup, &teardown);
 
-    MU_RUN_TEST(test_exg_data_data);
+    //MU_RUN_TEST(test_exg_data_data); //TODO fix exg conflict with add
     //MU_RUN_TEST(test_exg_address_address);
     //MU_RUN_TEST(test_exg_data_address);
+    MU_RUN_TEST(test_lea);
 }

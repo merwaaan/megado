@@ -25,27 +25,30 @@
 struct Instruction;
 
 typedef struct M68k {
-    uint16_t* memory; // TODO externalize memory
+    int32_t data_registers[8];
+    uint32_t address_registers[7];
+    uint16_t flags;
+    uint32_t sp;
+    uint32_t pc;
 
-	int32_t data_registers[8];
-	uint32_t address_registers[7];
-	uint16_t flags;
-	uint32_t sp;
-	uint32_t pc;
-
-	struct Instruction** opcode_table;
+    struct Instruction** opcode_table;
+    
+    uint8_t* memory;
 } M68k;
 
 typedef struct Instruction* (GenFunc)(uint16_t opcode, M68k* context);
 
 typedef struct {
-	uint16_t pattern;
-	uint16_t mask;
-	GenFunc* generator;
+    uint16_t pattern;
+    uint16_t mask;
+    GenFunc* generator;
 } Pattern;
 
-M68k* m68k_init();
+M68k* m68k_make();
 void m68k_free(M68k*);
+
 void m68k_execute(M68k*, uint16_t opcode);
 
-char* instruction_tostring(struct Instruction*);
+void m68k_push(int value); // TODO type?
+int m68k_pop();
+void m68k_jump(int address);

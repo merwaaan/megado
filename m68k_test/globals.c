@@ -4,7 +4,7 @@ M68k* m = NULL;
 
 void setup()
 {
-    m = m68k_init();
+    m = m68k_make();
 }
 
 void teardown()

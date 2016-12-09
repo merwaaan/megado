@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "conditions.h"
 #include "globals.h"
 #include "instruction.h"
 #include "operands.h"
@@ -41,6 +42,11 @@ uint8_t operand_size(uint8_t pattern)
     default:
         return 0;
     }
+}
+
+void operand_free(Operand* operand)
+{
+    free(operand);
 }
 
 Operand* operand_make(uint16_t pattern, Instruction* instr)
@@ -135,8 +141,86 @@ Operand* operand_make_address_register_indirect(int n, Instruction* instr)
     return op;
 }
 
+/*
+* Immediate value encoded within an instruction
+*/
 
-void operand_free(Operand* operand)
+int32_t immediate_get(Operand* this)
 {
-    free(operand);
+    return this->n;
+}
+
+void immediate_set(Operand* this, int32_t value)
+{
+    this->n = value;
+}
+
+Operand* operand_make_immediate(int value, Instruction* instr)
+{
+    Operand* op = calloc(1, sizeof(Operand));
+    op->type = Immediate;
+    op->get = immediate_get;
+    op->set = immediate_set;
+    op->n = value;
+    op->instruction = instr;
+    return op;
+}
+
+/*
+* Extension word or long word following an instruction
+*/
+
+int32_t extension_get(Operand* this)
+{
+    uint32_t pc = this->instruction->context->pc;
+    uint8_t* m = this->instruction->context->memory;
+
+    if (this->n == 16)
+        return (m[pc + 2] << 8) | m[pc + 3];
+
+    return (m[pc + 2] << 24) | (m[pc + 3] << 16) | (m[pc + 4] << 8) | m[pc + 5];
+}
+
+void extension_set(Operand* this, int32_t value)
+{
+}
+
+Operand* operand_make_extension(int size, Instruction* instr)
+{
+    Operand* op = calloc(1, sizeof(Operand));
+    op->type = Extension;
+    op->get = extension_get;
+    op->set = extension_set;
+    op->n = size;
+    op->instruction = instr;
+    return op;
+}
+
+/*
+ * Condition
+ */
+
+ConditionFunc _conditions[] = {
+    True,
+    False,
+    /*Higher,
+    LowerOrSame,
+    CarryClear,
+    CarrySet,
+    NotEqual,
+    Equal,
+    OverflowClear,
+    OverflowSet,
+    Plus,
+    Minus,
+    GreaterOrEqual,
+    LessThan,
+    GreaterThan,
+    LessOrEqual*/
+};
+
+Operand* operand_make_condition(uint8_t pattern)
+{
+    // TODO handle OoB -> if (pattern > 0XF)
+    return _conditions[pattern];
 }

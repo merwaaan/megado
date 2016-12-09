@@ -2,6 +2,7 @@
 
 #include <minunit.h>
 #include <m68k/m68k.h>
+#include <stdbool.h>
 
 #include "globals.h"
 
@@ -64,7 +65,49 @@ MU_TEST(test_not_l)
     DATA_CHECK(7, 0x017FFE8B);
 }
 
-// TODO or, eor, tst
+MU_TEST(test_tst_b_true)
+{
+    DATA(4, 0xFE800100);
+    RUN("01001010 00 000100"); // TST.b D4
+    mu_assert_int_eq(true, ZERO(m));
+}
+
+MU_TEST(test_tst_b_false)
+{
+    DATA(4, 0xFE80010C);
+    RUN("01001010 00 000100"); // TST.b D4
+    mu_assert_int_eq(false, ZERO(m));
+}
+
+MU_TEST(test_tst_w_true)
+{
+    DATA(4, 0xFAAF0000);
+    RUN("01001010 01 000100"); // TST.w D4
+    mu_assert_int_eq(true, ZERO(m));
+}
+
+MU_TEST(test_tst_w_false)
+{
+    DATA(4, 0xFAAF0FF0);
+    RUN("01001010 01 000100"); // TST.w D4
+    mu_assert_int_eq(false, ZERO(m));
+}
+
+MU_TEST(test_tst_l_true)
+{
+    DATA(4, 0);
+    RUN("01001010 10 000100"); // TST.l D4
+    mu_assert_int_eq(true, ZERO(m));
+}
+
+MU_TEST(test_tst_l_false)
+{
+    DATA(4, 0xF0000000);
+    RUN("01001010 10 000100"); // TST.l D4
+    mu_assert_int_eq(false, ZERO(m));
+}
+
+// TODO or, eor
 
 MU_TEST_SUITE(test_suite_instructions_logic)
 {
@@ -77,4 +120,11 @@ MU_TEST_SUITE(test_suite_instructions_logic)
     MU_RUN_TEST(test_not_b);
     MU_RUN_TEST(test_not_w);
     MU_RUN_TEST(test_not_l);
+
+    MU_RUN_TEST(test_tst_b_true);
+    MU_RUN_TEST(test_tst_b_false);
+    MU_RUN_TEST(test_tst_w_true);
+    MU_RUN_TEST(test_tst_w_false);
+    MU_RUN_TEST(test_tst_l_true);
+    MU_RUN_TEST(test_tst_l_false);
 }

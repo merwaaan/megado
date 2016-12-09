@@ -15,7 +15,9 @@ typedef enum {
 	Unsupported,
 	DataRegister,
 	AddressRegister,
-	AddressRegisterIndirect
+	AddressRegisterIndirect,
+    Immediate,
+    Extension
 } OperandType;
 
 typedef struct Operand {
@@ -35,6 +37,9 @@ Operand* operand_make(uint16_t pattern, struct Instruction* instr);
 Operand* operand_make_data_register(int n, struct Instruction* instr);
 Operand* operand_make_address_register(int n, Instruction* instr);
 Operand* operand_make_address_register_indirect(int n, Instruction* instr);
+Operand* operand_make_immediate(int n, Instruction* instr);
+Operand* operand_make_extension(int length, Instruction* instr);
+Operand* operand_make_condition(int pattern, Instruction* instr);
 
 void operand_free(Operand* instr);
 
