@@ -1,7 +1,8 @@
-#include "instruction.h"
-#include "operands.h"
-
 #include <stdlib.h>
+
+#include "instruction.h"
+#include "m68k.h"
+#include "operands.h"
 
 bool instruction_valid(Instruction* instr)
 {
@@ -15,6 +16,15 @@ bool instruction_valid(Instruction* instr)
             return false;
 
     return true;
+}
+
+Instruction* instruction_make(M68k* context, char* name, InstructionFunc func)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = context;
+    i->name = name;
+    i->func = func;
+    return i;
 }
 
 void instruction_free(Instruction* instr)

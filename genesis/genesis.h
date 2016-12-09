@@ -5,7 +5,7 @@
 struct M68k;
 
 typedef struct {
-    uint16_t* memory;
+    uint8_t* memory;
     struct M68k* m68k;
 } Genesis;
 

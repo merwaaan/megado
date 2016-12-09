@@ -17,7 +17,8 @@ typedef enum {
 	AddressRegister,
 	AddressRegisterIndirect,
     Immediate,
-    Extension
+    Extension,
+    Condition
 } OperandType;
 
 typedef struct Operand {
@@ -33,13 +34,14 @@ typedef struct Operand {
 
 char* operand_tostring(Operand* operand);
 
-Operand* operand_make(uint16_t pattern, struct Instruction* instr);
 Operand* operand_make_data_register(int n, struct Instruction* instr);
-Operand* operand_make_address_register(int n, Instruction* instr);
-Operand* operand_make_address_register_indirect(int n, Instruction* instr);
-Operand* operand_make_immediate(int n, Instruction* instr);
-Operand* operand_make_extension(int length, Instruction* instr);
-Operand* operand_make_condition(int pattern, Instruction* instr);
+Operand* operand_make_address_register(int n, struct Instruction* instr);
+Operand* operand_make_address_register_indirect(int n, struct Instruction* instr);
+Operand* operand_make_immediate(int n, struct Instruction* instr);
+Operand* operand_make_extension(int length, struct Instruction* instr);
+Operand* operand_make_condition(int pattern, struct Instruction* instr);
+
+Operand* operand_make(uint16_t pattern, struct Instruction* instr);
 
 void operand_free(Operand* instr);
 

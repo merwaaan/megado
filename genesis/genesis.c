@@ -7,7 +7,7 @@
 Genesis* genesis_make()
 {
     Genesis* g = calloc(1, sizeof(Genesis*));
-    g->memory = calloc(0x1000000, sizeof(uint32_t));
+    g->memory = calloc(0x1000000, sizeof(uint8_t));
     g->m68k = m68k_make();
     return g;
 }

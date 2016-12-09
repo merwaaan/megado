@@ -8,6 +8,9 @@
 #define ADDR(n, x) m->address_registers[n] = x
 #define ADDR_CHECK(n, x) mu_assert_int_eq_hex(x, m->address_registers[n])
 
+#define MEM(a, x) m->memory[a] = x
+#define MEM_CHECK(a, x) mu_assert_int_eq_hex(x, m->memory[a])
+
 #define RUN(opcode) m68k_execute(m, bin_parse(opcode))
 
 // This extends minunit to print asserted values in hexadecimal format

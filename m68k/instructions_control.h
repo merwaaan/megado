@@ -1,6 +1,5 @@
 #pragma once
 
-#include "globals.h"
 #include "m68k.h"
 #include "operands.h"
 

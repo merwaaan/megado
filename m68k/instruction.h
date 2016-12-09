@@ -24,4 +24,6 @@ typedef struct Instruction {
 
 
 bool instruction_valid(Instruction* instr);
+
+Instruction* instruction_make(struct M68k* context, char* name, InstructionFunc func);
 void instruction_free(Instruction* instr);

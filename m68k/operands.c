@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include "conditions.h"
-#include "globals.h"
 #include "instruction.h"
 #include "operands.h"
 #include "m68k.h"
@@ -200,7 +199,7 @@ Operand* operand_make_extension(int size, Instruction* instr)
  * Condition
  */
 
-ConditionFunc _conditions[] = {
+ConditionFunc conditions[] = {
     True,
     False,
     /*Higher,
@@ -219,8 +218,11 @@ ConditionFunc _conditions[] = {
     LessOrEqual*/
 };
 
-Operand* operand_make_condition(uint8_t pattern)
+Operand* operand_make_condition(uint8_t pattern, Instruction* instr)
 {
-    // TODO handle OoB -> if (pattern > 0XF)
-    return _conditions[pattern];
+    Operand* op = calloc(1, sizeof(Operand));
+    op->type = Condition;
+    op->get = conditions[pattern & 0xF];
+    op->instruction = instr;
+    return op;
 }
