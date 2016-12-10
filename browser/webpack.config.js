@@ -2,8 +2,7 @@ const path = require('path');
 
 const PATHS = {
     build: path.resolve(__dirname, 'build'),
-    components: path.resolve(__dirname, 'components'),
-    styles: path.resolve(__dirname, 'styled')
+    components: path.resolve(__dirname, 'components')
 };
 
 module.exports = {
@@ -31,7 +30,7 @@ module.exports = {
             },
             {
                 test: /\.scss$/,
-                loader: 'style!css!sass',//loaders: ['style', 'css', 'sass']
+                loaders: ['style', 'css', 'sass']
             }
         ]
     }

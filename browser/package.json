@@ -4,8 +4,12 @@
   "description": "",
   "main": "webpack.config.js",
   "dependencies": {
+    "classnames": "^2.2.5",
+    "lodash": "^4.17.2",
     "react": "^15.4.1",
-    "react-dom": "^15.4.1"
+    "react-dom": "^15.4.1",
+    "react-fa": "^4.1.2",
+    "react-fontawesome": "^1.5.0"
   },
   "devDependencies": {
     "babel-core": "^6.20.0",

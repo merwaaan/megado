@@ -1,0 +1,45 @@
+@import 'variables';
+
+.debugger {
+    font-family: monospace;
+
+    tr:first-child {
+        color: $color-accent;
+    }
+
+    td {
+        &:nth-child(4n+1) {
+            padding-right: 1em;
+        }
+
+        &:nth-child(1) {
+            padding-right: 2em;
+            color: $color-accent;
+        }
+
+        &.target {
+            background: grey;
+            color: white;
+            font-weight: bold;
+        }
+    }
+
+    input {
+        width: 4em;
+        text-align: right;
+        font-size: 1em;
+        font-family: monospace;
+        height: 0.8em;
+    }
+
+    .controls {
+        i {
+            font-size: 1em;
+            color: grey;
+
+            &:hover {
+                color: black;
+            }
+        }
+    }
+}

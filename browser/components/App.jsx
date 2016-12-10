@@ -9,8 +9,7 @@ class App extends React.Component {
     render () {
         return (
             <div>
-            <p> Hello React!</p>
-            <Debugger/>
+                <Debugger rowCount={20} />
             </div>
         );
     }
