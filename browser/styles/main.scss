@@ -1,3 +1,10 @@
-@import 'debugger';
+@import 'Memory';
+@import 'Program';
 
-p {color : red;}
+.app {
+    display: flex;
+
+    .spacer {
+        flex-grow: 1;
+    }
+}

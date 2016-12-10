@@ -8,7 +8,7 @@ function hex(x, size = 2) {
 
 const memory = _.times(0x10000, _.random.bind(0x100)); // TODO use external data
 
-class Debugger extends React.Component {
+class Memory extends React.Component {
 
     constructor(props) {
         super(props);
@@ -33,7 +33,7 @@ class Debugger extends React.Component {
         const rows = _.range(this.state.offset, this.state.offset + this.props.rowCount * 16, 16).map(offset =>
             <tr key={offset}>
 
-                { console.log(offset)/* Row offset */ }
+                { /* Row offset */ }
                 <td>{hex(offset, 8)}</td>
 
                 { /* Row values */ }
@@ -44,20 +44,21 @@ class Debugger extends React.Component {
                         </td>)}
             </tr>);
 
-        return (<div className="debugger">
-            <table>
-                <tbody>
-                    {header}
-                    {rows}
-                </tbody>
-            </table>
-            <section className="controls">
-                <i className="fa fa-fast-backward fa-rotate-90" onClick={this.move.bind(this, Number.NEGATIVE_INFINITY)}></i>
-                <i className="fa fa-step-backward fa-rotate-90" onClick={this.move.bind(this, -16)}></i>
-                <i className="fa fa-step-forward fa-rotate-90" onClick={this.move.bind(this, +16)}></i>
-                <i className="fa fa-fast-forward fa-rotate-90" onClick={this.move.bind(this, Number.POSITIVE_INFINITY)}></i>
-            </section>
-        </div>);
+        return (
+            <div className="memory">
+                <table>
+                    <tbody>
+                        {header}
+                        {rows}
+                    </tbody>
+                </table>
+                <section className="controls">
+                    <i className="fa fa-fast-backward fa-rotate-90" onClick={this.move.bind(this, Number.NEGATIVE_INFINITY)}></i>
+                    <i className="fa fa-step-backward fa-rotate-90" onClick={this.move.bind(this, -16)}></i>
+                    <i className="fa fa-step-forward fa-rotate-90" onClick={this.move.bind(this, +16)}></i>
+                    <i className="fa fa-fast-forward fa-rotate-90" onClick={this.move.bind(this, Number.POSITIVE_INFINITY)}></i>
+                </section>
+            </div>);
     }
 
     move(offset) {
@@ -77,8 +78,8 @@ class Debugger extends React.Component {
     }
 }
 
-Debugger.propTypes = {
+Memory.propTypes = {
     rowCount: React.PropTypes.number.isRequired
 };
 
-export default Debugger;
+export default Memory;

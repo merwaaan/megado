@@ -1,0 +1,47 @@
+@import 'variables';
+
+.program {
+    font-family: monospace;
+
+    table {
+         border-collapse: collapse;
+
+        tr {
+            &:first-child {
+                color: $color-accent2;
+            }
+
+            td {
+                padding-right: 1em;
+
+                &:first-child {
+                    padding-right: 2em;
+                color: $color-accent2;
+                }
+
+                &:nth-child(3) {
+                    text-align: right;
+                }
+
+                &.target {
+                    background: grey;
+                    color: white;
+                    font-weight: bold;
+                }
+            }
+
+            &:not(:first-child):hover {
+                color: white;
+
+                td {
+                    background: $color-accent2;
+                    color: white;
+                }
+            }
+        }
+    }
+
+    .controls {
+        color: $color-accent2;
+    }
+}

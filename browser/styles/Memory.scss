@@ -1,6 +1,6 @@
 @import 'variables';
 
-.debugger {
+.memory {
     font-family: monospace;
 
     tr:first-child {
@@ -8,11 +8,16 @@
     }
 
     td {
+        &:hover {
+            background: $color-accent;
+            color: white;
+        }
+
         &:nth-child(4n+1) {
             padding-right: 1em;
         }
 
-        &:nth-child(1) {
+        &:first-child {
             padding-right: 2em;
             color: $color-accent;
         }
@@ -35,7 +40,7 @@
     .controls {
         i {
             font-size: 1em;
-            color: grey;
+            color: $color-accent;
 
             &:hover {
                 color: black;
