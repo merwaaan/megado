@@ -19,7 +19,7 @@ void genesis_free(Genesis* g)
     free(g);
 }
 
-void genesis_load_rom(Genesis* g, char* path)
+void genesis_load_rom_file(Genesis* g, char* path)
 {
     FILE* file = fopen(path, "rb");
     if (!file)
@@ -35,4 +35,14 @@ void genesis_load_rom(Genesis* g, char* path)
     fread(g->memory, sizeof(uint32_t), 0x1000000, file);
 
     fclose(file);
+}
+
+void genesis_load_rom_data(Genesis* g, uint8_t* data)
+{
+    // TODO
+}
+
+void genesis_step(Genesis* g)
+{
+    // TODO
 }
