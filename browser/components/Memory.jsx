@@ -53,10 +53,10 @@ class Memory extends React.Component {
                     </tbody>
                 </table>
                 <section className="controls">
-                    <i className="fa fa-fast-backward fa-rotate-90" onClick={this.move.bind(this, Number.NEGATIVE_INFINITY)}></i>
-                    <i className="fa fa-step-backward fa-rotate-90" onClick={this.move.bind(this, -16)}></i>
-                    <i className="fa fa-step-forward fa-rotate-90" onClick={this.move.bind(this, +16)}></i>
-                    <i className="fa fa-fast-forward fa-rotate-90" onClick={this.move.bind(this, Number.POSITIVE_INFINITY)}></i>
+                    <i className="fa fa-fw fa-fast-backward fa-rotate-90" onClick={this.move.bind(this, Number.NEGATIVE_INFINITY)}></i>
+                    <i className="fa fa-fw fa-step-backward fa-rotate-90" onClick={this.move.bind(this, -16)}></i>
+                    <i className="fa fa-fw fa-step-forward fa-rotate-90" onClick={this.move.bind(this, +16)}></i>
+                    <i className="fa fa-fw fa-fast-forward fa-rotate-90" onClick={this.move.bind(this, Number.POSITIVE_INFINITY)}></i>
                 </section>
             </div>);
     }

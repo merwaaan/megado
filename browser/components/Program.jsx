@@ -49,9 +49,9 @@ class Program extends React.Component {
                     </tbody>
                 </table>
                 <section className="controls">
-                    <i className="fa fa-play" onClick={null}></i>
-                    <i className="fa fa-pause" onClick={null}></i>
-                    <i className="fa fa-step-forward" onClick={null}></i>
+                    <i className="fa fa-fw fa-play" onClick={null}></i>
+                    <i className="fa fa-fw fa-pause" onClick={null}></i>
+                    <i className="fa fa-fw fa-step-forward" onClick={null}></i>
                 </section>
             </div>);
     }

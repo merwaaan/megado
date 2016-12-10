@@ -16,7 +16,7 @@
 
                 &:first-child {
                     padding-right: 2em;
-                color: $color-accent2;
+                    color: $color-accent2;
                 }
 
                 &:nth-child(3) {
@@ -42,6 +42,13 @@
     }
 
     .controls {
-        color: $color-accent2;
+        i {
+            font-size: 1em;
+            color: lighten($color-accent2, 20%);
+
+            &:hover {
+                color: $color-accent2;
+            }
+        }
     }
 }

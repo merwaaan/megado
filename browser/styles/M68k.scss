@@ -1,0 +1,22 @@
+@import 'variables';
+
+.m68k {
+    font-family: monospace;
+
+    table {
+         border-collapse: collapse;
+
+        td:nth-child(2n+1) {
+            padding-right: 0.5em;
+            color: $color-accent3;
+        }
+
+        td:nth-child(2n) {
+            padding-right: 1em;
+        }
+    }
+
+    .flag.set {
+        color: $color-accent3;
+    }
+}
