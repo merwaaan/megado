@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 
-typedef bool(*ConditionFunc)();
+/*typedef bool(*ConditionFunc)();
 
 bool False()
 {
@@ -13,3 +13,4 @@ bool True()
 {
     return true;
 }
+*/

@@ -113,7 +113,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="genesis.c" />
-    <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="genesis.h" />

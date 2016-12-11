@@ -199,7 +199,17 @@ Operand* operand_make_extension(int size, Instruction* instr)
  * Condition
  */
 
-ConditionFunc conditions[] = {
+int32_t False(Operand* this)
+{
+    return false;
+}
+
+int32_t True(Operand* this)
+{
+    return true;
+}
+
+GetFunc conditions[] = {
     True,
     False,
     /*Higher,
@@ -218,7 +228,7 @@ ConditionFunc conditions[] = {
     LessOrEqual*/
 };
 
-Operand* operand_make_condition(uint8_t pattern, Instruction* instr)
+Operand* operand_make_condition(int pattern, Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
     op->type = Condition;
