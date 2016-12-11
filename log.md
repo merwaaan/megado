@@ -1,5 +1,40 @@
 # Logs
 
+## 11/12/2016
+
+I now want to want the plug the M68000 emulator to the JS UI so I looked more closely at [emscripten](http://kripken.github.io/emscripten-site/) the past few days. I experienced *a lot* of trouble compiling my M68000 C library to JS and I'm not there yet.
+
+The emscripten website states that:
+
+ > [...] Building large projects with Emscripten is very easy. Emscripten provides two simple scripts that configure your makefiles to use emcc as a drop-in replacement for gcc.
+
+Those two wrapper scripts invoke the `./configure` and `make` commands after tweaking the build environment to use emscripten's compiler (eg. `emcc` instead of `gcc`).
+
+```
+emconfigure ./configure
+emmake make
+```
+In my environment, using those tools have no effect whatsoever on the make output. The produced files should be LLVM bytecode but a binary diff confirmed that I end up with the same data with or without the wrappers. I also noticed that various emscripten test projects using this toolchain have platform-specific issues at different points of their builds. So, All in all, I'm not very confident in those two scripts.
+
+Using `emcc` manually produces the expected bytecode, though, so I'll just write my own makefile.
+
+## 11/11/2016
+
+My process when implementing a new instruction is as follows:
+
+- Add the opcode mask to the generation table (opcode pattern, generation function)
+- Implement the generation function ("those bits are operand 1", "this bit is the size", etc...)
+- Implement the actual instruction
+- Write unit tests for the instruction
+
+I try to do this once a day, when I have a break, but it's starting to get boring. I originally planned to emulate the whole instruction of the M68K before moving on to other area aspects of the emulator such as graphics. I might rethink this strategy. It would just be more fun to have enough code to be able to load a ROM and step into te code of a game. I'll implement instructions when I need them.
+
+Anyway, right now I cover approximately 25% of the opcodes so the project is advancing at a good pace.
+
+On another front, I started to build a tiny UI to debug the emulator. I used [React](https://facebook.github.io/react/) to write a memory viewer and a disassembler. Nothing is plugged to the emulator yet but the components are ready. As usual, building custom UI bits with React is a breeze, I really like this framework.
+
+The nice surprise comes from [webpack](https://webpack.github.io/docs/), which I used to bundle all the JSX, HTML and CSS. This is so much nicer than Gulp/Grunt where you have a dozen different recipes for the same task and where your build toolchain globally feels like a patch-up job.
+
 ## 11/28/2016
 
 I wrote a basic proof of concept for generating some instructions. The gist of it:
