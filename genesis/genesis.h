@@ -15,4 +15,6 @@ void genesis_free(Genesis*);
 void genesis_load_rom_file(Genesis* g, char* path);
 void genesis_load_rom_data(Genesis* g, uint8_t* data);
 
+uint8_t* genesis_memory();
+
 void genesis_step();

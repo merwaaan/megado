@@ -7,8 +7,8 @@
 Genesis* genesis_make()
 {
     Genesis* g = calloc(1, sizeof(Genesis*));
-    g->memory = calloc(0x1000000, sizeof(uint8_t));
-    g->m68k = m68k_make();
+    //g->memory = calloc(0x1000000, sizeof(uint8_t)); g->memory[0] = 123;
+    //g->m68k = m68k_make();
     return g;
 }
 
@@ -40,6 +40,11 @@ void genesis_load_rom_file(Genesis* g, char* path)
 void genesis_load_rom_data(Genesis* g, uint8_t* data)
 {
     // TODO
+}
+
+uint8_t* genesis_memory(Genesis* g)
+{
+    return g->memory;
 }
 
 void genesis_step(Genesis* g)

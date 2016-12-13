@@ -1,40 +1,40 @@
-# THE EMSCRIPTEN path must be defined ???
+# Compile the Genesis emulator to Javascript with Emscripten
 
-SOURCES = bit_utils.c\
-instruction.c\
-instructions_arithmetic.c\
-instructions_bit.c\
-instructions_control.c\
-instructions_logic.c\
-instructions_shift.c\
-instructions_transfer.c\
-m68k.c\
-operands.c
+MODULES := m68k genesis
 
-OBJECTS = $(SOURCES:.c=.bc)
+SRC_DIR := $(addprefix ../, $(MODULES))
+SRC := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c))
+OBJ := $(notdir $(SRC:.c=.bc))
 
-all: m68k
+BUILD_DIR := build/
+
+# *.c prerequisites will be searched udner those paths
+vpath %.c $(addprefix ../,$(MODULES))
+
+EXPORTED_FUNCTIONS := genesis_make genesis_memory
+# f -> '_f'
+EXPORTED_FUNCTIONS := $(addprefix '_, $(addsuffix ', $(EXPORTED_FUNCTIONS)))
+# '_f1' '_f2' -> ['_f1','_f1']
+comma:= ,
+empty:=
+space:= $(empty) $(empty)
+EXPORTED_FUNCTIONS := [$(subst $(space),$(comma),$(EXPORTED_FUNCTIONS))]
+
+
+all: $(BUILD_DIR) genesis.js
+	@echo $(SRC)
+	@echo $(OBJ)
 	@echo "JS build completed"
 
-m68k: $(OBJECTS)
-	emcc $(addprefix build/,$?) -o build/m68k.html -s EXPORTED_FUNCTIONS="['_bin_parse', '_m68k_make']"
+# Create the build directory if necessary
+$(BUILD_DIR):
+	@mkdir -p $@
 
-%.bc : $(addprefix ../m68k/,%.c)
-	emcc $<s -o $(addprefix build/,$@)
+genesis.js: $(OBJ)
+	emcc $(addprefix build/,$?) -o build/genesis.js -s EXPORTED_FUNCTIONS="$(EXPORTED_FUNCTIONS)" -s ALLOW_MEMORY_GROWTH=1
+
+$(OBJ): %.bc : %.c
+	emcc $< -I.. -o $(addprefix build/,$@)
 
 clean:
 	rm build/*
-
-#%.bc: %.cpp
-#    $(CXX) $(OPTS) -I$(ACTIVE) $< -o $@
-#box2d.bc: $(OBJECTS)
-#    $(CXX) $(OPTS) -I$(ACTIVE) -o $@ $(OBJECTS)
-#box2d_glue.cpp: $(ACTIVE).idl
-#    $(PYTHON) "$(EMSCRIPTEN)/tools/webidl_binder.py" $(ACTIVE).idl box2d_glue
-#box2d_glue.h: box2d_glue.cpp
-#box2d.js: box2d.bc box2d_glue.cpp box2d_glue.h
-#    $(CXX) $(LINK_OPTS) -I$(ACTIVE) -s EXPORT_BINDINGS=1 -s RESERVED_FUNCTION_POINTERS=20 --post-js box2d_glue.js --memory-init-file 0 -s NO_EXIT_RUNTIME=1 glue_stub.cpp $< -o build/$(ACTIVE)_$(BUILD).js
-#clean: remove
-#    rm -f $(OBJECTS)
-#remove:
-#    rm -f box2d.bc box2d_bindings.cpp box2d_bindings.bc box2d.clean.h box2d_glue.js box2d_glue.cpp WebIDLGrammar.pkl parser.out

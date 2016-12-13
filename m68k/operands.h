@@ -37,6 +37,8 @@ char* operand_tostring(Operand* operand);
 Operand* operand_make_data_register(int n, struct Instruction* instr);
 Operand* operand_make_address_register(int n, struct Instruction* instr);
 Operand* operand_make_address_register_indirect(int n, struct Instruction* instr);
+Operand* operand_make_address_register_indirect_postincrement(int n, struct Instruction* instr); // TODO
+Operand* operand_make_address_register_indirect_predecrement(int n, struct Instruction* instr); // TODO
 Operand* operand_make_immediate(int n, struct Instruction* instr);
 Operand* operand_make_extension(int length, struct Instruction* instr);
 Operand* operand_make_condition(int pattern, struct Instruction* instr);

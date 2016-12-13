@@ -10,7 +10,7 @@ module.exports = {
 
     output: {
         path: PATHS.build,
-        filename: 'genesis.pack.js'
+        filename: 'genesis.ui.js'
     },
 
     resolve: {
