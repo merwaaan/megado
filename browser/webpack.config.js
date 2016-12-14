@@ -27,7 +27,7 @@ module.exports = {
             // TODO would be nice to pack the output in the bundle
             onBuildStart: ['make'],
             // Required to re-run the script in watch mode
-            dev: false
+            //dev: false
         })
     ],
 

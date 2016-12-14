@@ -7,29 +7,30 @@ import Program from 'components/Program';
 
 import 'styles/main.scss';
 
-function saveRom(data) {
-
-    // Store the ROM in browoser storage
-    //var uint8array = new TextEncoder(encoding).encode(string);
-    //var string = new TextDecoder(encoding).decode(uint8array);
-
+function saveRomInBrowser(data) {
     console.log('Saving to browser storage...');
-    localStorage.setItem('rom', new TextDecoder('utf8').decode(data));
-    console.log('File saved');
+
+    const string = new TextDecoder('utf8').decode(data);
+    localStorage.setItem('rom', string);
+    console.log(data, string)
+    console.log(`File saved (${data.length} bytes)`);
 }
 
-function loadRom() {
+function loadRomFromBrowser() {
     console.log('Checking browser storage...');
 
     const rom = localStorage.getItem('rom');
     if (rom) {
-        console.log('ROM file found');
-        const data = new TextEncoder(encoding).encode(string);
-        // TODO
+        const data = new TextEncoder('utf8').encode(rom);
+        console.log(`File found (${data.length} bytes)`);
+        return data;
     }
-    else {
-        console.log('No ROM file found');
-    }
+    else
+        console.log('No file found');
+}
+
+function loadRom(data) {
+    Module.HEAP8.set(data, Module.memory);
 }
 
 class App extends React.Component {
@@ -46,8 +47,9 @@ class App extends React.Component {
     }
 
     componentDidMount() {
-        // Try to load a ROM from the browser storage
-        loadRom();
+        //const data = loadRomFromBrowser();
+        //if (data)
+        //    loadRom(data);
     }
 
     handleFile(event) {
@@ -57,10 +59,8 @@ class App extends React.Component {
         reader.onload = load => {
             const data = load.target.result;
 
-            // Store the ROM in the browser
-            saveRom(data);
-
-            //
+            //saveRomInBrowser(data);
+            loadRom(data);
         };
 
         console.log(`Loading "${file.name}"...`);
