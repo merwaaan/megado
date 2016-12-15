@@ -29,24 +29,41 @@ function loadRomFromBrowser() {
         console.log('No file found');
 }
 
-function loadRom(data) {
-    Module.HEAP8.set(data, Module.memory);
-}
-
 class App extends React.Component {
 
+    constructor() {
+        super();
+
+        this.state = {
+            genesisPtr: null,
+            memoryPtr: null,
+            m68kPtr: null,
+        }
+    }
+
     render () {
+        const d = Module.HEAP8[this.state.m68kPtr];
+
         return (
             <div className="app">
                 <input type="file" onChange={this.handleFile.bind(this)}/>
-                <Memory rowCount={20} />
+                <Memory start={this.state.memoryPtr} rowCount={20} />
                 <Program rowCount={20} />
                 <M68k />
             </div>
         );
     }
 
-    componentDidMount() {
+    componentWillMount() {
+        this.state.genesisPtr = Module.ccall('genesis_make', 'number');
+        console.log(`Genesis @${this.state.genesisPtr}`);
+
+        this.state.memoryPtr = Module.ccall('genesis_memory', 'number', ['number'], [this.state.genesisPtr]);
+        console.log(`Memory @${this.state.memoryPtr}`);
+
+        this.state.m68kPtr = Module.ccall('genesis_m68k', 'number', ['number'], [this.state.genesisPtr]);
+        console.log(`M68000 @${this.state.m68kPtr}`);
+
         //const data = loadRomFromBrowser();
         //if (data)
         //    loadRom(data);
@@ -56,15 +73,20 @@ class App extends React.Component {
         const reader = new FileReader();
         const file = event.target.files[0];
 
-        reader.onload = load => {
-            const data = load.target.result;
+        reader.onload = event => {
+            const data = new Uint8Array(event.target.result);
 
             //saveRomInBrowser(data);
-            loadRom(data);
+            this.loadRom(data);
         };
 
         console.log(`Loading "${file.name}"...`);
         reader.readAsArrayBuffer(file);
+    }
+
+    loadRom(data) {
+        Module.HEAP8.set(data, this.state.memoryPtr);
+        this.forceUpdate();
     }
 }
 

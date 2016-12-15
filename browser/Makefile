@@ -11,7 +11,7 @@ BUILD_DIR := build/
 # *.c prerequisites will be searched udner those paths
 vpath %.c $(addprefix ../,$(MODULES))
 
-EXPORTED_FUNCTIONS := genesis_make genesis_memory
+EXPORTED_FUNCTIONS := genesis_make genesis_memory genesis_m68k
 # f -> '_f'
 EXPORTED_FUNCTIONS := $(addprefix '_, $(addsuffix ', $(EXPORTED_FUNCTIONS)))
 # '_f1' '_f2' -> ['_f1','_f1']

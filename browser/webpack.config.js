@@ -11,6 +11,8 @@ const PATHS = {
 module.exports = {
     entry: PATHS.components + '/App.jsx',
 
+    devtool: 'source-map',
+
     output: {
         path: PATHS.build,
         filename: 'genesis.ui.js'

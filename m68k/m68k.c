@@ -67,6 +67,12 @@ M68k* m68k_make()
 {
     M68k* m68k = calloc(1, sizeof(M68k));
 
+    // TODO temp
+    for (int i = 0; i < 8; ++i)
+        m68k->data_registers[i] = i;
+    for (int i = 0; i < 8; ++i)
+        m68k->address_registers[i] = 100 + i;
+
     m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
 
     // Generate every possible opcode

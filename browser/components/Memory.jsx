@@ -40,7 +40,7 @@ class Memory extends React.Component {
                 {_.range(offset, offset + 16).map(addr =>
                     <td key={addr}
                         className={classnames({'target': addr === this.state.searchedAddress})}>
-                        {hex(memory[addr], 2)}
+                        {hex(Module.HEAP8[this.props.start + addr], 2)}
                         </td>)}
             </tr>);
 
@@ -79,6 +79,7 @@ class Memory extends React.Component {
 }
 
 Memory.propTypes = {
+    start: React.PropTypes.number.isRequired,
     rowCount: React.PropTypes.number.isRequired
 };
 
