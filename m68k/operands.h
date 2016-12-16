@@ -32,7 +32,7 @@ typedef struct Operand {
 	struct Instruction* instruction;
 } Operand;
 
-char* operand_tostring(Operand* operand);
+int operand_tostring(Operand* operand, char* buffer);
 
 Operand* operand_make_data_register(int n, struct Instruction* instr);
 Operand* operand_make_address_register(int n, struct Instruction* instr);

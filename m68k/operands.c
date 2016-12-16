@@ -6,26 +6,19 @@
 #include "operands.h"
 #include "m68k.h"
 
-char* operand_tostring(Operand* operand)
+int operand_tostring(Operand* operand, char* buffer)
 {
-    static char buffer[1024];
-
     switch (operand->type)
     {
     case DataRegister:
-        sprintf(buffer, "D%d", operand->n);
-        break;
+        return sprintf(buffer, "D%d", operand->n);
     case AddressRegister:
-        sprintf(buffer, "A%d", operand->n);
-        break;
+        return sprintf(buffer, "A%d", operand->n);
     case AddressRegisterIndirect:
-        sprintf(buffer, "(A%d)", operand->n);
-        break;
+        return sprintf(buffer, "(A%d)", operand->n);
     default:
-        sprintf(buffer, "UNSUPPORTED");
+        return sprintf(buffer, "UNSUPPORTED");
     }
-
-    return buffer;
 }
 
 uint8_t operand_size(uint8_t pattern)

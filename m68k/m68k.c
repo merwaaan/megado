@@ -102,6 +102,29 @@ void m68k_free(M68k* cpu)
     free(cpu);
 }
 
+DecodedInstruction* m68k_decode(M68k* m, uint32_t pc)
+{
+    uint8_t opcode = (m->memory[m->pc] << 8) | m->memory[m->pc + 1];
+
+    Instruction* instr = m->opcode_table[opcode];
+    if (instr == NULL)
+    {
+        printf("Opcode %#08X cannot be found in the opcode table\n", opcode);
+        return NULL;
+    }
+
+    DecodedInstruction* decoded = calloc(1, sizeof(DecodedInstruction));
+
+    char buffer[50];
+    sprintf(buffer, "%s ", instr->name);
+
+    for (int i = 0; i < instr->operand_count; ++i)
+        operand_tostring(instr->operands[i], buffer);
+
+    decoded->mnemonics = buffer;
+    return decoded;
+}
+
 void m68k_execute(M68k* cpu, uint16_t opcode)
 {
     Instruction* instr = cpu->opcode_table[opcode];

@@ -3,9 +3,8 @@
 @import 'Program';
 
 .app {
-    display: flex;
 
-    .spacer {
-        flex-grow: 1;
+    .debugger {
+        display: flex;
     }
 }

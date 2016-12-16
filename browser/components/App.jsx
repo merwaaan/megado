@@ -47,9 +47,14 @@ class App extends React.Component {
         return (
             <div className="app">
                 <input type="file" onChange={this.handleFile.bind(this)}/>
-                <Memory start={this.state.memoryPtr} rowCount={20} />
-                <Program rowCount={20} />
-                <M68k />
+                <div className="debugger">
+                    <Memory start={this.state.memoryPtr}
+                            rowCount={20} />
+                    <Program start={this.state.memoryPtr}
+                             pc={this.state.pc}
+                             rowCount={10} />
+                    <M68k />
+                </div>
             </div>
         );
     }

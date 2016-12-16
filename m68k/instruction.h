@@ -22,6 +22,9 @@ typedef struct Instruction {
 	struct M68k* context;
 } Instruction;
 
+typedef struct DecodedInstruction {
+    char* mnemonics;
+} DecodedInstruction;
 
 bool instruction_valid(Instruction* instr);
 

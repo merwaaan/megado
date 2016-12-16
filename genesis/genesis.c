@@ -1,4 +1,5 @@
 #include <m68k/m68k.h>
+#include <m68k/instruction.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -42,7 +43,15 @@ void genesis_load_rom_data(Genesis* g, uint8_t* data)
     // TODO
 }
 
+struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc)
+{
+    m68k_decode(g->m68k, pc);
+}
+
 void genesis_step(Genesis* g)
 {
     // TODO
 }
+
+uint8_t* genesis_memory(Genesis* g) { return g->memory; }
+M68k* genesis_m68k(Genesis* g) { return g->m68k; }

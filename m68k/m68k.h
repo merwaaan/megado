@@ -23,6 +23,7 @@
 #define EXTENDED_SET(context, b) context->flags = BIT_CHG(context->flags, EXTENDED_BIT, b)
 
 struct Instruction;
+struct DecodedInstruction;
 
 typedef struct M68k {
     int32_t data_registers[8];
@@ -47,6 +48,7 @@ typedef struct {
 M68k* m68k_make();
 void m68k_free(M68k*);
 
+struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
 void m68k_execute(M68k*, uint16_t opcode);
 
 void m68k_push(int value); // TODO type?
