@@ -1,6 +1,8 @@
 #include <genesis/genesis.h>
 #include <m68k/instruction.h>
 #include <m68k/m68k.h>
+#include <stdio.h>
+#include <WinSock2.h>
 
 void check_alignment(Genesis* g)
 {
@@ -14,10 +16,35 @@ void check_decoding(Genesis* g, char* opcode_bin)
     uint16_t opcode = bin_parse(opcode_bin);
     g->memory[0] = MASK_BELOW(opcode, 8) >> 8;
     g->memory[1] = MASK_ABOVE_INC(opcode, 8);
-    
+
     DecodedInstruction* decoded = genesis_decode(g, 0);
     printf("%s (%#03X | %#03X ) : %s\n", opcode_bin, g->memory[0], g->memory[1], decoded->mnemonics);
     // TODO free
+}
+
+void check_endianness()
+{
+    uint8_t* array = calloc(4, sizeof(uint8_t));
+    array[0] = 0xAB;
+    array[1] = 0xCD;
+    array[2] = 0x12;
+    array[3] = 0x34;
+    for (int i = 0; i < 4; ++i)
+        printf("byte %d: %#010X\n", i, array[i]);
+
+    uint16_t* array_16 = (uint16_t*)array;
+    for (int i = 0; i < 2; ++i)
+        printf("word %d: %#010X\n", i, array_16[i]);
+    for (int i = 0; i < 2; ++i)
+        printf("word htonl %d: %#010X\n", i, htonl(array_16[i]));
+    for (int i = 0; i < 2; ++i)
+        printf("word htons %d: %#010X\n", i, htons(array_16[i]));
+
+    uint32_t* array_32 = (uint32_t*)array;
+    printf("long: %#010X\n", array_32[0]);
+    printf("long htonl: %#010X\n", htonl(array_32[0]));
+
+    free(array);
 }
 
 int main()
@@ -28,6 +55,7 @@ int main()
     check_decoding(g, "0100 0110 00 000010");
     check_decoding(g, "1100100010000001");
     check_decoding(g, "0100111011000011");
+    check_endianness();
 
     genesis_free(g);
 

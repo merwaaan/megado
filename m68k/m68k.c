@@ -109,7 +109,7 @@ void m68k_free(M68k* m)
 
 DecodedInstruction* m68k_decode(M68k* m, uint32_t pc)
 {
-printf("...%p %d...\n", m, m->data_registers[1]);
+    printf("...%p %d...\n", m, m->data_registers[1]);
     uint16_t opcode = (m->memory[m->pc] << 8) | m->memory[m->pc + 1];
     printf("Decoding opcode %#06X [%#010X]...\n", opcode, pc);
 
@@ -135,16 +135,21 @@ printf("...%p %d...\n", m, m->data_registers[1]);
     return decoded;
 }
 
-void m68k_execute(M68k* cpu, uint16_t opcode)
+uint32_t m68k_step(M68k* m)
 {
-    Instruction* instr = cpu->opcode_table[opcode];
-    if (instr == NULL)
-    {
-        printf("Opcode %#08X cannot be found in the opcode table\n", opcode);
-        return;
-    }
+    uint16_t opcode = (m->memory[m->pc] << 8) | m->memory[m->pc + 1];
+    return m68k_execute(m, opcode);
+}
 
-    instr->func(instr);
+uint32_t m68k_execute(M68k* m, uint16_t opcode)
+{
+    Instruction* instr = m->opcode_table[opcode];
+    if (instr == NULL)
+        printf("Opcode %#08X cannot be found in the opcode table\n", opcode);
+    else
+        instr->func(instr);
+
+    return m->pc;
 }
 
 void m68k_push(int value)

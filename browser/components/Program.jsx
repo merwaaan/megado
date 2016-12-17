@@ -28,7 +28,7 @@ class Program extends React.Component {
 
     render() {
 
-        const rows = _.range(0, this.props.rowCount).map(offset => {
+        const rows = _.range(this.state.pc, this.state.pc + this.props.rowCount).map(offset => {
 
             let address = this.state.pc + offset;
 
@@ -37,6 +37,7 @@ class Program extends React.Component {
             //const name = instruction.split(' ')[0];
             //const operands = 'test';
             console.log(instructionPtr);
+
             console.log(Module.Pointer_stringify(instructionPtr));
 
             return <tr key={offset}>
@@ -58,9 +59,15 @@ class Program extends React.Component {
                 <section className="controls">
                     <i className="fa fa-fw fa-play" onClick={null}></i>
                     <i className="fa fa-fw fa-pause" onClick={null}></i>
-                    <i className="fa fa-fw fa-step-forward" onClick={null}></i>
+                    <i className="fa fa-fw fa-step-forward" onClick={this.handleStep.bind(this)}></i>
                 </section>
             </div>);
+    }
+
+    handleStep() {
+        console.log(`Stepping from @${this.state.pc}...`);
+        this.state.pc = Module.ccall('genesis_step', 'number', ['number'], [this.props.genesis]);
+        this.setState(this.state);
     }
 }
 

@@ -95,6 +95,7 @@ class App extends React.Component {
 
     loadRom(data) {
         Module.HEAP8.set(data, this.state.memoryPtr);
+        Module.ccall('genesis_setup', null, ['number'], [this.state.genesisPtr]);
         this.forceUpdate();
     }
 }

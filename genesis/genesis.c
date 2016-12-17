@@ -49,9 +49,26 @@ struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc)
     return m68k_decode(g->m68k, pc);
 }
 
-void genesis_step(Genesis* g)
+#define WORD(x) ((x)[0] << 8 | (x)[1])
+#define LONG(x) ((x)[0] << 24 | (x)[1] << 16 | (x)[2] << 8 | (x)[3])
+
+void genesis_setup(Genesis* g)
 {
-    // TODO
+    // http://darkdust.net/writings/megadrive/initializing
+    // http://md.squee.co/Howto:Initialise_a_Mega_Drive
+
+    // TODO sp
+
+    g->m68k->pc = LONG(g->memory + 4); // Entry point
+    printf("Entry point @%#010X\n", g->m68k->pc);
+
+    // TODO interrupts
+
+}
+
+uint32_t genesis_step(Genesis* g)
+{
+    return m68k_step(g->m68k);
 }
 
 uint8_t* genesis_memory(Genesis* g) { return g->memory; }

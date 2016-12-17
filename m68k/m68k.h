@@ -49,7 +49,12 @@ M68k* m68k_make();
 void m68k_free(M68k*);
 
 struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
-void m68k_execute(M68k*, uint16_t opcode);
+
+// Step forward one instruction and return the current program counter value
+uint32_t m68k_step(M68k*);
+
+// Execute the given opcode and return the current program counter value
+uint32_t m68k_execute(M68k*, uint16_t opcode);
 
 void m68k_push(int value); // TODO type?
 int m68k_pop();

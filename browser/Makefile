@@ -12,6 +12,8 @@ BUILD_DIR := build/
 vpath %.c $(addprefix ../,$(MODULES))
 
 EXPORTED_FUNCTIONS := genesis_make\
+genesis_setup\
+genesis_step\
 genesis_memory\
 genesis_m68k\
 genesis_decode
