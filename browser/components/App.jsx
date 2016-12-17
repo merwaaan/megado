@@ -44,15 +44,19 @@ class App extends React.Component {
     render () {
         const d = Module.HEAP8[this.state.m68kPtr];
 
+        const decodeInstruction = Module.cwrap('genesis_decode', 'number', ['number', 'number']);
+
         return (
             <div className="app">
                 <input type="file" onChange={this.handleFile.bind(this)}/>
                 <div className="debugger">
                     <Memory start={this.state.memoryPtr}
                             rowCount={20} />
-                    <Program start={this.state.memoryPtr}
-                             pc={this.state.pc}
-                             rowCount={10} />
+                    <Program decode={decodeInstruction}
+                             genesis={this.state.genesisPtr}
+                             start={this.state.memoryPtr}
+                             pc={0}
+                             rowCount={1} />
                     <M68k />
                 </div>
             </div>

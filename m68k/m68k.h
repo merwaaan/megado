@@ -27,7 +27,7 @@ struct DecodedInstruction;
 
 typedef struct M68k {
     int32_t data_registers[8];
-    uint32_t address_registers[7];
+    uint32_t address_registers[8];
     uint16_t flags;
     uint32_t sp;
     uint32_t pc;

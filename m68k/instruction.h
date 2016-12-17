@@ -22,6 +22,7 @@ typedef struct Instruction {
 	struct M68k* context;
 } Instruction;
 
+// TODO just make it a char*?
 typedef struct DecodedInstruction {
     char* mnemonics;
 } DecodedInstruction;

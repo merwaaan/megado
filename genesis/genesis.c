@@ -7,9 +7,9 @@
 
 Genesis* genesis_make()
 {
-    Genesis* g = calloc(1, sizeof(Genesis*));
+    Genesis* g = calloc(1, sizeof(Genesis));
     g->memory = calloc(0x1000000, sizeof(uint8_t));
-    g->m68k = m68k_make();
+    g->m68k = m68k_make(g->memory);
     return g;
 }
 
@@ -45,7 +45,8 @@ void genesis_load_rom_data(Genesis* g, uint8_t* data)
 
 struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc)
 {
-    m68k_decode(g->m68k, pc);
+    printf(".%p %p.\n", g, g->m68k);
+    return m68k_decode(g->m68k, pc);
 }
 
 void genesis_step(Genesis* g)

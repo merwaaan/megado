@@ -16,7 +16,7 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
     i->func = func;
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    i->operands = calloc(2, sizeof(Operand*));
+    i->operands = calloc(2, sizeof(Operand));
 
     if (!immediate)
     {
@@ -129,7 +129,7 @@ Instruction* gen_swap(uint16_t opcode, M68k* m)
     i->name = "SWAP";
     i->func = swap;
 
-    i->operands = calloc(2, sizeof(Operand*));
+    i->operands = calloc(2, sizeof(Operand));
     i->operands[0] = operand_make_data_register(FRAGMENT(opcode, 5, 0), i);
     i->operand_count = 1;
 

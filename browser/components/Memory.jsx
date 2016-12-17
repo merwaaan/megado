@@ -3,7 +3,9 @@ import classnames from 'classnames';
 import _ from 'lodash';
 
 function hex(x, size = 2) {
-    return ('0'.repeat(size) + x.toString(16).toUpperCase()).substr(-size, size)
+    if (x < 0)
+        x = 0xFFFF + x + 1;
+    return ('0'.repeat(size) + x.toString(16).toUpperCase()).substr(-size, size);
 }
 
 const memory = _.times(0x10000, _.random.bind(0x100)); // TODO use external data

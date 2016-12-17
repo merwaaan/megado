@@ -19,7 +19,7 @@ Instruction* gen_logic_instruction(uint16_t opcode, M68k* m, char* name, Instruc
     Operand* op2 = operand_make(FRAGMENT(opcode, 5, 0), i);
     int direction = BIT(opcode, 8);
 
-    i->operands = calloc(2, sizeof(Operand*));
+    i->operands = calloc(2, sizeof(Operand));
     i->operands[direction] = op1;
     i->operands[(direction + 1) % 2] = op2;
     i->operand_count = 2;
@@ -99,7 +99,7 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    i->operands = calloc(1, sizeof(Operand*));
+    i->operands = calloc(1, sizeof(Operand));
     i->operands[0] = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->operand_count = 1;
 
@@ -125,7 +125,7 @@ Instruction* gen_tst(uint16_t opcode, M68k* m)
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    i->operands = calloc(1, sizeof(Operand*));
+    i->operands = calloc(1, sizeof(Operand));
     i->operands[0] = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->operand_count = 1;
 

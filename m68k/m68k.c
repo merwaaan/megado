@@ -63,9 +63,10 @@ Instruction* generate(uint16_t opcode, M68k* context)
     return NULL;
 }
 
-M68k* m68k_make()
+M68k* m68k_make(uint8_t* memory)
 {
     M68k* m68k = calloc(1, sizeof(M68k));
+    m68k->memory = memory;
 
     // TODO temp
     for (int i = 0; i < 8; ++i)
@@ -97,30 +98,39 @@ M68k* m68k_make()
     return m68k;
 }
 
-void m68k_free(M68k* cpu)
+void m68k_free(M68k* m)
 {
-    free(cpu);
+    for (int opcode = 0; opcode < 0x10000; ++opcode)
+        instruction_free(m->opcode_table[opcode]);
+
+    free(m->opcode_table);
+    free(m);
 }
 
 DecodedInstruction* m68k_decode(M68k* m, uint32_t pc)
 {
-    uint8_t opcode = (m->memory[m->pc] << 8) | m->memory[m->pc + 1];
+printf("...%p %d...\n", m, m->data_registers[1]);
+    uint16_t opcode = (m->memory[m->pc] << 8) | m->memory[m->pc + 1];
+    printf("Decoding opcode %#06X [%#010X]...\n", opcode, pc);
 
     Instruction* instr = m->opcode_table[opcode];
     if (instr == NULL)
     {
-        printf("Opcode %#08X cannot be found in the opcode table\n", opcode);
+        printf("Opcode %#06X cannot be found in the opcode table\n", opcode);
         return NULL;
     }
 
     DecodedInstruction* decoded = calloc(1, sizeof(DecodedInstruction));
 
-    char buffer[50];
-    sprintf(buffer, "%s ", instr->name);
+    char* buffer = calloc(50, sizeof(char));
+    int pos = sprintf(buffer, "%s ", instr->name);
 
     for (int i = 0; i < instr->operand_count; ++i)
-        operand_tostring(instr->operands[i], buffer);
+        pos += operand_tostring(instr->operands[i], buffer + pos);
 
+    buffer[pos] = '\0';
+
+    printf("Decoded \"%s\"\n", buffer);
     decoded->mnemonics = buffer;
     return decoded;
 }

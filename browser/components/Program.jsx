@@ -8,8 +8,6 @@ function hex(x, size = 2) {
 
 const memory = _.times(0x1000, _.random.bind(0x100)); // TODO use external data
 
-const decodeInstruction = Module.cwrap('m68k_decode', 'number', ['number', 'number']);
-
 const header =
     <tr>
         <td></td>
@@ -24,7 +22,7 @@ class Program extends React.Component {
         super(props);
 
         this.state = {
-
+            pc: 0
         };
     }
 
@@ -32,12 +30,14 @@ class Program extends React.Component {
 
         const rows = _.range(0, this.props.rowCount).map(offset => {
 
-            let address = this.props.pc + offset;
+            let address = this.state.pc + offset;
 
             // Decode the instruction via the C API
-            const instructionPtr = decodeInstruction();
+            const instructionPtr = this.props.decode(this.props.genesis, address);
             //const name = instruction.split(' ')[0];
             //const operands = 'test';
+            console.log(instructionPtr);
+            console.log(Module.Pointer_stringify(instructionPtr));
 
             return <tr key={offset}>
                 <td>{hex(offset, 8)}</td>
@@ -65,6 +65,7 @@ class Program extends React.Component {
 }
 
 Program.propTypes = {
+    decode: React.PropTypes.func.isRequired,
     start: React.PropTypes.number.isRequired,
     rowCount: React.PropTypes.number.isRequired
 };
