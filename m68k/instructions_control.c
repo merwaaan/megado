@@ -24,13 +24,13 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
     i->operand_count = 2;
     i->operands[1] = operand_make_condition(FRAGMENT(opcode, 11, 8), i);
 
-    int displacement = FRAGMENT(opcode, 7, 0);
+    /*int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
-        i->operands[0] = operand_make_extension(16, i);
+        i->operands[0] = operand_make_absolute_short(16, i);
     else if (displacement == 0xFF)
-        i->operands[0] = operand_make_extension(32, i);
+        i->operands[0] = operand_make_absolute_short(32, i);
     else
-        i->operands[0] = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);
+        i->operands[0] = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);*/ // TODO
 
     return i;
 }
@@ -50,13 +50,13 @@ Instruction* gen_bra(uint16_t opcode, M68k* m)
     i->operands = calloc(1, sizeof(Operand));
     i->operand_count = 1;
 
-    int displacement = FRAGMENT(opcode, 7, 0);
+    /*int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
-        i->operands[0] = operand_make_extension(16, i);
+        i->operands[0] = operand_make_absolute_short(16, i);
     else if (displacement == 0xFF)
-        i->operands[0] = operand_make_extension(32, i);
+        i->operands[0] = operand_make_absolute_short(32, i);
     else
-        i->operands[0] = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);
+        i->operands[0] = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);*/
 
     return i;
 }
@@ -77,13 +77,13 @@ Instruction* gen_bsr(uint16_t opcode, M68k* m)
     i->operands = calloc(1, sizeof(Operand));
     i->operand_count = 1;
 
-    int displacement = FRAGMENT(opcode, 7, 0);
+    /*int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
-        i->operands[0] = operand_make_extension(16, i);
+        i->operands[0] = operand_make_absolute_short(16, i);
     else if (displacement == 0xFF)
-        i->operands[0] = operand_make_extension(32, i);
+        i->operands[0] = operand_make_absolute_short(32, i);
     else
-        i->operands[0] = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);
+        i->operands[0] = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);*/
 
     return i;
 }

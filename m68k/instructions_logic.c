@@ -15,7 +15,7 @@ Instruction* gen_logic_instruction(uint16_t opcode, M68k* m, char* name, Instruc
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    Operand* op1 = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    Operand* op1 = operand_make_data(FRAGMENT(opcode, 11, 9), i);
     Operand* op2 = operand_make(FRAGMENT(opcode, 5, 0), i);
     int direction = BIT(opcode, 8);
 

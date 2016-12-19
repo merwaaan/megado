@@ -6,9 +6,9 @@
 
 void check_alignment(Genesis* g)
 {
-    printf("m68k: %p (%d)\n", g->m68k, sizeof(g->m68k));
-    printf("m68k data regs: %p (%d)\n", g->m68k->data_registers, sizeof(g->m68k->data_registers));
-    printf("m68k addr regs: %p (%d)\n", g->m68k->address_registers, sizeof(g->m68k->data_registers));
+    printf("m68k: %p (%zu)\n", g->m68k, sizeof(g->m68k));
+    printf("m68k data regs: %p (%zu)\n", g->m68k->data_registers, sizeof(g->m68k->data_registers));
+    printf("m68k addr regs: %p (%zu)\n", g->m68k->address_registers, sizeof(g->m68k->data_registers));
 }
 
 void check_decoding(Genesis* g, char* opcode_bin)

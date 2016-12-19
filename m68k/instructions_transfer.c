@@ -30,16 +30,16 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
     switch (mode)
     {
     case 8:
-        i->operands[0] = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-        i->operands[1] = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
+        i->operands[0] = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+        i->operands[1] = operand_make_data(FRAGMENT(opcode, 2, 0), i);
         break;
     case 9:
-        i->operands[0] = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
-        i->operands[1] = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
+        i->operands[0] = operand_make_address(FRAGMENT(opcode, 11, 9), i);
+        i->operands[1] = operand_make_address(FRAGMENT(opcode, 2, 0), i);
         break;
     case 17:
-        i->operands[0] = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-        i->operands[1] = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
+        i->operands[0] = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+        i->operands[1] = operand_make_address(FRAGMENT(opcode, 2, 0), i);
         break;
     default:
         // TODO error
@@ -62,7 +62,7 @@ Instruction* gen_lea(uint16_t opcode, M68k* m)
     i->func = lea;
 
     i->operands = calloc(2, sizeof(Operand));
-    i->operands[0] = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
+    i->operands[0] = operand_make_address(FRAGMENT(opcode, 11, 9), i);
     i->operands[1] = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->operand_count = 2;
 

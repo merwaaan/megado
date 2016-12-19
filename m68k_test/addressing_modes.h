@@ -26,12 +26,11 @@ void teardown_addressing_modes()
 }
 
 
-MU_TEST(test_data_register)
+MU_TEST(test_data)
 {
-    return;
     DATA(1, 0xFF);
 
-    Operand* o = operand_make_data_register(1, instr);
+    Operand* o = operand_make_data(1, instr);
 
     uint32_t value = GET(o);
     mu_assert_int_eq_hex(0xFF, value);
@@ -40,11 +39,11 @@ MU_TEST(test_data_register)
     DATA_CHECK(1, 0x1F);
 }
 
-MU_TEST(test_address_register)
+MU_TEST(test_address)
 {
     ADDR(3, 0xF0AA);
 
-    Operand* o = operand_make_address_register(3, instr);
+    Operand* o = operand_make_address(3, instr);
 
     uint32_t value = GET(o);
     mu_assert_int_eq_hex(0xF0AA, value);
@@ -53,12 +52,12 @@ MU_TEST(test_address_register)
     ADDR_CHECK(3, 0xEEEE);
 }
 
-MU_TEST(test_address_register_indirect)
+MU_TEST(test_address_indirect)
 {
     ADDR(5, 0x123ABC);
     MEM(0x123ABC, 0xEF);
 
-    Operand* o = operand_make_address_register_indirect(5, instr);
+    Operand* o = operand_make_address_indirect(5, instr);
 
     uint32_t value = GET(o);
     mu_assert_int_eq_hex(0xEF, value);
@@ -71,7 +70,7 @@ MU_TEST_SUITE(test_suite_addressing_modes)
 {
     MU_SUITE_CONFIGURE(&setup_addressing_modes, &teardown_addressing_modes);
 
-    MU_RUN_TEST(test_data_register);
-    MU_RUN_TEST(test_address_register);
-    MU_RUN_TEST(test_address_register_indirect);
+    MU_RUN_TEST(test_data);
+    MU_RUN_TEST(test_address);
+    MU_RUN_TEST(test_address_indirect);
 }

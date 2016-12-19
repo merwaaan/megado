@@ -8,39 +8,51 @@
 struct Operand;
 struct Instruction;
 
-typedef int32_t (*GetFunc)(struct Operand* this);
-typedef void (*SetFunc)(struct Operand* this, int32_t value);
+typedef int32_t(*GetFunc)(struct Operand* this);
+typedef void(*SetFunc)(struct Operand* this, int32_t value);
+typedef void(*Action)(struct Operand* this);
 
 typedef enum {
-	Unsupported,
-	DataRegister,
-	AddressRegister,
-	AddressRegisterIndirect,
+    Unsupported,
+    Data,
+    Address,
+    AddressIndirect,
+    AddressIndirectPreInc,
+    AddressIndirectPostInc,
+    AddressIndirectOffset,
+    AddressIndirectIndexOffset,
+    ProgramCounterOffset,
+    ProgramCounterIndexOffset,
     Immediate,
-    Extension,
+    AbsoluteShort,
+    AbsoluteLong,
     Condition
 } OperandType;
 
 typedef struct Operand {
-	OperandType type;
+    OperandType type;
 
-	GetFunc get;
-	SetFunc set;
+    GetFunc get;
+    SetFunc set;
+    
+    Action pre;
+    Action post;
 
-	int n;
+    int n;
 
-	struct Instruction* instruction;
+    struct Instruction* instruction;
 } Operand;
 
 int operand_tostring(Operand* operand, char* buffer);
 
-Operand* operand_make_data_register(int n, struct Instruction* instr);
-Operand* operand_make_address_register(int n, struct Instruction* instr);
-Operand* operand_make_address_register_indirect(int n, struct Instruction* instr);
-Operand* operand_make_address_register_indirect_postincrement(int n, struct Instruction* instr); // TODO
-Operand* operand_make_address_register_indirect_predecrement(int n, struct Instruction* instr); // TODO
+Operand* operand_make_data(int n, struct Instruction* instr);
+Operand* operand_make_address(int n, struct Instruction* instr);
+Operand* operand_make_address_indirect(int n, struct Instruction* instr);
+Operand* operand_make_address_indirect_postincrement(int n, struct Instruction* instr);
+Operand* operand_make_address_indirect_predecrement(int n, struct Instruction* instr);
 Operand* operand_make_immediate(int n, struct Instruction* instr);
-Operand* operand_make_extension(int length, struct Instruction* instr);
+Operand* operand_make_absolute_short(struct Instruction* instr);
+Operand* operand_make_absolute_long(struct Instruction* instr);
 Operand* operand_make_condition(int pattern, struct Instruction* instr);
 
 Operand* operand_make(uint16_t pattern, struct Instruction* instr);

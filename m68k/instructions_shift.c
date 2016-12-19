@@ -20,8 +20,8 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
 
     if (!immediate)
     {
-        i->operands[0] = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-        i->operands[1] = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
+        i->operands[0] = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+        i->operands[1] = operand_make_data(FRAGMENT(opcode, 2, 0), i);
     }
     else
         return NULL;
@@ -130,7 +130,7 @@ Instruction* gen_swap(uint16_t opcode, M68k* m)
     i->func = swap;
 
     i->operands = calloc(2, sizeof(Operand));
-    i->operands[0] = operand_make_data_register(FRAGMENT(opcode, 5, 0), i);
+    i->operands[0] = operand_make_data(FRAGMENT(opcode, 5, 0), i);
     i->operand_count = 1;
 
     return i;
