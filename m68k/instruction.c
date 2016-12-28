@@ -1,22 +1,14 @@
 #include <stdlib.h>
 
 #include "instruction.h"
+#include "instructions_arithmetic.h"
+#include "instructions_bit.h"
+#include "instructions_control.h"
+#include "instructions_logic.h"
+#include "instructions_shift.h"
+#include "instructions_transfer.h"
 #include "m68k.h"
 #include "operands.h"
-
-bool instruction_valid(Instruction* instr)
-{
-    // Check that the generated instruction is valid
-    if (instr == NULL)
-        return false;
-
-    // Check that the instruction's operands are valid
-    for (int o = 0; o < instr->operand_count; ++o)
-        if (instr->operands[o] == NULL)
-            return false;
-
-    return true;
-}
 
 Instruction* instruction_make(M68k* context, char* name, InstructionFunc func)
 {
@@ -36,4 +28,67 @@ void instruction_free(Instruction* instr)
         operand_free(instr->operands[i]);
 
     free(instr);
+}
+
+static Pattern _patterns[] =
+{
+    { 0x0100, 0x01C0, &gen_btst }, // TODO other btst form
+    { 0x0140, 0x01C0, &gen_bchg }, // TODO other bchg form
+    { 0x0180, 0x01C0, &gen_bclr }, // TODO other bclr form
+    { 0x01C0, 0x01C0, &gen_bset }, // TODO other bset form
+    { 0x41C0, 0xF1C0, &gen_lea },
+    { 0x4200, 0xFF00, &gen_clr },
+    { 0x4600, 0xFF00, &gen_not },
+    { 0x4840, 0xFFF8, &gen_swap },
+    { 0x4840, 0xFFC0, &gen_pea },
+    { 0x4A00, 0xFF00, &gen_tst },
+    { 0x4E75, 0xFFFF, &gen_rts },
+    { 0x4E80, 0xFFC0, &gen_jsr },
+    { 0x4EC0, 0xFFC0, &gen_jmp },
+    //{ 0x5000, 0xF000, &gen_scc },
+    { 0x6000, 0xFF00, &gen_bra },
+    { 0x6100, 0xFF00, &gen_bsr },
+    { 0x6000, 0xF000, &gen_bcc },
+    { 0x8000, 0xF000, &gen_or },
+    { 0xB000, 0xF000, &gen_eor },
+    { 0xC000, 0xF000, &gen_and },
+    //{0xC100, 0xF130, &gen_exg }, TODO conflict with ADD, how to disambiguate?
+    { 0xC0C0, 0xF1C0, &gen_mulu },
+    { 0xC1C0, 0xF1C0, &gen_muls },
+    { 0xE2C0, 0xFEC0, &gen_lsX },
+};
+
+int pattern_match(uint16_t opcode, Pattern pattern)
+{
+    return (opcode & pattern.mask) == pattern.pattern;
+}
+
+Instruction* pattern_generate(Pattern pattern, uint16_t opcode, M68k* context)
+{
+    return pattern.generator(opcode, context);
+}
+
+Instruction* instruction_generate(M68k* context, uint16_t opcode)
+{
+    int pattern_count = sizeof(_patterns) / sizeof(Pattern);
+
+    for (int i = 0; i < pattern_count; ++i)
+        if (pattern_match(opcode, _patterns[i]))
+            return pattern_generate(_patterns[i], opcode, context);
+
+    return NULL;
+}
+
+bool instruction_valid(Instruction* instr)
+{
+    // Check that the generated instruction is valid
+    if (instr == NULL)
+        return false;
+
+    // Check that the instruction's operands are valid
+    for (int o = 0; o < instr->operand_count; ++o)
+        if (instr->operands[o] == NULL)
+            return false;
+
+    return true;
 }

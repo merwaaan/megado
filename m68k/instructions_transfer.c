@@ -96,8 +96,8 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
 
 void pea(Instruction* i)
 {
-    i->context->memory[i->context->sp] = GET(i->operands[0]);
-    i->context->sp--;
+    i->context->memory[i->context->address_registers[7]] = GET(i->operands[0]);
+    i->context->address_registers[7]--;
 }
 
 Instruction* gen_pea(uint16_t opcode, M68k* m)

@@ -27,7 +27,10 @@ typedef struct DecodedInstruction {
     char* mnemonics;
 } DecodedInstruction;
 
-bool instruction_valid(Instruction* instr);
-
 Instruction* instruction_make(struct M68k* context, char* name, InstructionFunc func);
+Instruction* instruction_generate(struct M68k* context, uint16_t opcode);
 void instruction_free(Instruction* instr);
+
+// Check if an instruction is fully formed, ie. a function have been
+// assigned and all operands have been setup
+bool instruction_valid(Instruction* instr);
