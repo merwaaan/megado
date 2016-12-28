@@ -24,7 +24,7 @@ M68k* m68k_make(uint8_t* memory)
     // Generate every possible opcode
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
-        Instruction* instr = instruction_generate(opcode, m68k);
+        Instruction* instr = instruction_generate(m68k, opcode);
 
         if (!instruction_valid(instr))
         {
@@ -70,8 +70,10 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t pc)
     char* buffer = calloc(50, sizeof(char));
     int pos = sprintf(buffer, "%s ", instr->name);
 
-    for (int i = 0; i < instr->operand_count; ++i)
-        pos += operand_tostring(instr->operands[i], buffer + pos);
+    if (instr->src != NULL)
+        pos += operand_tostring(instr->src, buffer + pos);
+    if (instr->dst != NULL)
+        pos += operand_tostring(instr->dst, buffer + pos);
 
     buffer[pos] = '\0';
 
@@ -99,15 +101,15 @@ uint32_t m68k_execute(M68k* m, uint16_t opcode)
 
 void m68k_push(int value)
 {
-
+    // TODO
 }
 
 int m68k_pop()
 {
-
+    return 0; // TODO
 }
 
 void m68k_jump(int address)
 {
-
+    // TODO
 }

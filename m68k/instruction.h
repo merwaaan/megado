@@ -10,16 +10,16 @@ struct Instruction;
 typedef void (InstructionFunc)(struct Instruction*);
 
 typedef struct Instruction {
-	char* name;
+    char* name;
 
-	InstructionFunc* func;
+    InstructionFunc* func;
 
     long size;
 
-	struct Operand** operands;
-	uint8_t operand_count;
+    struct Operand* src;
+    struct Operand* dst;
 
-	struct M68k* context;
+    struct M68k* context;
 } Instruction;
 
 // TODO just make it a char*?

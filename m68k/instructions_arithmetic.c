@@ -5,7 +5,7 @@
 
 void clr(Instruction* i)
 {
-    SET(i->operands[0], MASK_BELOW(GET(i->operands[0]), i->size));
+    SET(i->src, MASK_BELOW(GET(i->src), i->size));
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -19,20 +19,15 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "CLR";
     i->func = clr;
-
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-
-    i->operands = calloc(1, sizeof(Operand));
-    i->operands[0] = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->operand_count = 1;
-
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
 
 void ext(Instruction* i)
 {
-    int x = GET(i->operands[0]);
-    // TODO SET(i->operands[0], MASK_BELOW_INC(x, i->size * 2) | MASK_ABOVE((x < ? 0xFFFFFFFFF : 0) << i->size | x, i->size * 2);
+    int x = GET(i->src);
+    // TODO SET(i->src, MASK_BELOW_INC(x, i->size * 2) | MASK_ABOVE((x < ? 0xFFFFFFFFF : 0) << i->size | x, i->size * 2);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -46,19 +41,14 @@ Instruction* gen_ext(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "EXT";
     i->func = ext;
-
     i->size = operand_size(BIT(opcode, 6));
-
-    i->operands = calloc(1, sizeof(Operand));
-    i->operands[0] = operand_make_data(FRAGMENT(opcode, 3, 0), i);
-    i->operand_count = 1;
-
+    i->src = operand_make_data(FRAGMENT(opcode, 3, 0), i);
     return i;
 }
 
 void mulu(Instruction* i)
 {
-    SET(i->operands[0], GET(i->operands[0]) * GET(i->operands[1]));
+    SET(i->src, GET(i->src) * GET(i->dst));
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false); // TODO
@@ -73,20 +63,15 @@ Instruction* gen_mulu(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "MULU";
     i->func = mulu;
-
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-
-    i->operands = calloc(2, sizeof(Operand));
-    i->operands[0] = operand_make_data(FRAGMENT(opcode, 11, 9), i);
-    i->operands[1] = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->operand_count = 2;
-
+    i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
 
 void muls(Instruction* i)
 {
-    SET(i->operands[0], GET(i->operands[0]) * GET(i->operands[1]));
+    SET(i->src, GET(i->src) * GET(i->dst));
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false); // TODO
@@ -101,13 +86,8 @@ Instruction* gen_muls(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "MULU";
     i->func = mulu;
-
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-
-    i->operands = calloc(2, sizeof(Operand));
-    i->operands[0] = operand_make_data(FRAGMENT(opcode, 11, 9), i);
-    i->operands[1] = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->operand_count = 2;
-
+    i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }

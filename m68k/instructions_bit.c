@@ -15,19 +15,17 @@ Instruction* gen_bit_instruction(uint16_t opcode, M68k* m, char* name, Instructi
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    i->operands = calloc(2, sizeof(Operand));
-    i->operands[0] = operand_make_data(FRAGMENT(opcode, 11, 9), i);
-    i->operands[1] = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->operand_count = 2;
+    i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     return i;
 }
 
 void bchg(Instruction* i)
 {
-    int bit = GET(i->operands[0]); // TODO
-    int initial = GET(i->operands[1]);
-    SET(i->operands[1], BIT_CHG(initial, bit, !BIT(initial, bit)));
+    int bit = GET(i->src); // TODO
+    int initial = GET(i->dst);
+    SET(i->dst, BIT_CHG(initial, bit, !BIT(initial, bit)));
 
     ZERO_SET(i->context, BIT(initial, bit) == 0);
 }
@@ -39,9 +37,9 @@ Instruction* gen_bchg(uint16_t opcode, M68k* m)
 
 void bclr(Instruction* i)
 {
-    int initial = GET(i->operands[1]);
-    int bit = GET(i->operands[0]);
-    SET(i->operands[1], BIT_CLR(initial, bit));
+    int initial = GET(i->dst);
+    int bit = GET(i->src);
+    SET(i->dst, BIT_CLR(initial, bit));
 
     ZERO_SET(i->context, BIT(initial, bit) == 0);
 }
@@ -53,9 +51,9 @@ Instruction* gen_bclr(uint16_t opcode, M68k* m)
 
 void bset(Instruction* i)
 {
-    int initial = GET(i->operands[1]);
-    int bit = GET(i->operands[0]);
-    SET(i->operands[1], BIT_SET(initial, bit));
+    int initial = GET(i->dst);
+    int bit = GET(i->src);
+    SET(i->dst, BIT_SET(initial, bit));
 
     ZERO_SET(i->context, BIT(initial, bit) == 0);
 }
@@ -67,8 +65,8 @@ Instruction* gen_bset(uint16_t opcode, M68k* m)
 
 void btst(Instruction* i)
 {
-    int bit = GET(i->operands[0]);
-    int test = BIT(GET(i->operands[1]), bit) == 0;
+    int bit = GET(i->src);
+    int test = BIT(GET(i->dst), bit) == 0;
     ZERO_SET(i->context, test);
 }
 

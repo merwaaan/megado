@@ -9,9 +9,9 @@
 
 void exg(Instruction* i)
 {
-    int32_t op1_value = GET(i->operands[1]);
-    SET(i->operands[1], GET(i->operands[0]));
-    SET(i->operands[0], op1_value);
+    int32_t op1_value = GET(i->dst);
+    SET(i->dst, GET(i->src));
+    SET(i->src, op1_value);
 }
 
 Instruction* gen_exg(uint16_t opcode, M68k* m)
@@ -23,23 +23,20 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    i->operands = calloc(2, sizeof(Operand));
-    i->operand_count = 2;
-
     int mode = FRAGMENT(opcode, 7, 3);
     switch (mode)
     {
     case 8:
-        i->operands[0] = operand_make_data(FRAGMENT(opcode, 11, 9), i);
-        i->operands[1] = operand_make_data(FRAGMENT(opcode, 2, 0), i);
+        i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+        i->dst = operand_make_data(FRAGMENT(opcode, 2, 0), i);
         break;
     case 9:
-        i->operands[0] = operand_make_address(FRAGMENT(opcode, 11, 9), i);
-        i->operands[1] = operand_make_address(FRAGMENT(opcode, 2, 0), i);
+        i->src = operand_make_address(FRAGMENT(opcode, 11, 9), i);
+        i->dst = operand_make_address(FRAGMENT(opcode, 2, 0), i);
         break;
     case 17:
-        i->operands[0] = operand_make_data(FRAGMENT(opcode, 11, 9), i);
-        i->operands[1] = operand_make_address(FRAGMENT(opcode, 2, 0), i);
+        i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+        i->dst = operand_make_address(FRAGMENT(opcode, 2, 0), i);
         break;
     default:
         // TODO error
@@ -51,7 +48,7 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
 
 void lea(Instruction* i)
 {
-    SET(i->operands[1], GET(i->operands[0]));
+    SET(i->dst, GET(i->src));
 }
 
 Instruction* gen_lea(uint16_t opcode, M68k* m)
@@ -61,18 +58,16 @@ Instruction* gen_lea(uint16_t opcode, M68k* m)
     i->name = "LEA";
     i->func = lea;
 
-    i->operands = calloc(2, sizeof(Operand));
-    i->operands[0] = operand_make_address(FRAGMENT(opcode, 11, 9), i);
-    i->operands[1] = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->operand_count = 2;
+    i->src = operand_make_address(FRAGMENT(opcode, 11, 9), i);
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     return i;
 }
 
 void move(Instruction* i)
 {
-    int32_t moved = MASK_ABOVE(GET(i->operands[0]), i->size);
-    SET(i->operands[1], MASK_BELOW_INC(GET(i->operands[1]), i->size) | moved);
+    int32_t moved = MASK_ABOVE(GET(i->src), i->size);
+    SET(i->dst, MASK_BELOW_INC(GET(i->dst), i->size) | moved);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -87,16 +82,14 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
     i->name = "MOVE";
     i->func = move;
 
-    i->operands = calloc(1, sizeof(Operand));
-    i->operands[1] = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->operand_count = 2;
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     return i;
 }
 
 void pea(Instruction* i)
 {
-    i->context->memory[i->context->address_registers[7]] = GET(i->operands[0]);
+    i->context->memory[i->context->address_registers[7]] = GET(i->src);
     i->context->address_registers[7]--;
 }
 
@@ -107,9 +100,7 @@ Instruction* gen_pea(uint16_t opcode, M68k* m)
     i->name = "PEA";
     i->func = pea;
 
-    i->operands = calloc(1, sizeof(Operand));
-    i->operands[1] = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->operand_count = 2;
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     return i;
 }

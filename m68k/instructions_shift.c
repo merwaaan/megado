@@ -16,30 +16,26 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
     i->func = func;
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    i->operands = calloc(2, sizeof(Operand));
-
     if (!immediate)
     {
-        i->operands[0] = operand_make_data(FRAGMENT(opcode, 11, 9), i);
-        i->operands[1] = operand_make_data(FRAGMENT(opcode, 2, 0), i);
+        i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+        i->dst = operand_make_data(FRAGMENT(opcode, 2, 0), i);
     }
     else
         return NULL;
     // TODO handle immediate mode
-
-    i->operand_count = 2;
 
     return i;
 }
 
 void asl(Instruction* i)
 {
-    int shift = GET(i->operands[0]);
-    int initial = GET(i->operands[1]);
+    int shift = GET(i->src);
+    int initial = GET(i->dst);
     int shifted_bit = BIT(initial, i->size);
 
     int result = MASK_ABOVE_INC(initial << shift, i->size);
-    SET(i->operands[1], MASK_BELOW(initial, i->size) | result);
+    SET(i->dst, MASK_BELOW(initial, i->size) | result);
 
     CARRY_SET(i->context, shifted_bit);
     OVERFLOW_SET(i->context, false);
@@ -50,12 +46,12 @@ void asl(Instruction* i)
 
 void asr(Instruction* i)
 {
-    int shift = GET(i->operands[0]);
-    int initial = GET(i->operands[1]);
+    int shift = GET(i->src);
+    int initial = GET(i->dst);
     int shifted_bit = BIT(initial, 0);
 
     int result = MASK_ABOVE_INC(initial >> shift, i->size);
-    SET(i->operands[1], MASK_BELOW(initial, i->size) | result);
+    SET(i->dst, MASK_BELOW(initial, i->size) | result);
 
     CARRY_SET(i->context, shifted_bit);
     OVERFLOW_SET(i->context, false);
@@ -72,12 +68,12 @@ Instruction* gen_asX(uint16_t opcode, M68k* m)
 
 void lsl(Instruction* i)
 {
-    int shift = GET(i->operands[0]);
-    int initial = GET(i->operands[1]);
+    int shift = GET(i->src);
+    int initial = GET(i->dst);
     int shifted_bit = BIT(initial, i->size);
 
     int result = MASK_ABOVE_INC(initial << shift, i->size);
-    SET(i->operands[1], MASK_BELOW(initial, i->size) | result);
+    SET(i->dst, MASK_BELOW(initial, i->size) | result);
 
     CARRY_SET(i->context, shifted_bit);
     OVERFLOW_SET(i->context, false);
@@ -88,12 +84,12 @@ void lsl(Instruction* i)
 
 void lsr(Instruction* i)
 {
-    int shift = GET(i->operands[0]);
-    int initial = GET(i->operands[1]);
+    int shift = GET(i->src);
+    int initial = GET(i->dst);
     int shifted_bit = BIT(initial, 0);
 
     int result = MASK_ABOVE_INC(initial >> shift, i->size);
-    SET(i->operands[1], MASK_BELOW(initial, i->size) | result);
+    SET(i->dst, MASK_BELOW(initial, i->size) | result);
 
     CARRY_SET(i->context, shifted_bit);
     OVERFLOW_SET(i->context, false);
@@ -110,11 +106,11 @@ Instruction* gen_lsX(uint16_t opcode, M68k* m)
 
 void swap(Instruction* i)
 {
-    int32_t value = GET(i->operands[0]);
+    int32_t value = GET(i->src);
     int16_t lo = value & 0xFFFF;
     int16_t hi = value >> 16;
     int32_t result = (lo << 16) | hi;
-    SET(i->operands[0], result);
+    SET(i->src, result);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -128,10 +124,6 @@ Instruction* gen_swap(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "SWAP";
     i->func = swap;
-
-    i->operands = calloc(2, sizeof(Operand));
-    i->operands[0] = operand_make_data(FRAGMENT(opcode, 5, 0), i);
-    i->operand_count = 1;
-
+    i->src = operand_make_data(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
