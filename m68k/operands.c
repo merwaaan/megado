@@ -74,15 +74,19 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
     case 0x32:
         return operand_make_address_indirect_predecrement(pattern & 7, instr);
     case 0x38:
-        return operand_make_absolute_short(instr);
-    case 0x39:
-        return operand_make_absolute_long(instr);
+        switch (pattern & 7)
+        {
+        case 0:
+            return operand_make_absolute_short(instr);
+        case 1:
+            return operand_make_absolute_long(instr);
+        }
     default:
         return NULL;
     }
 }
 
-void noop(Operand* this, int32_t value)
+void noop(Operand* this, uint32_t value)
 {
 }
 
@@ -90,12 +94,12 @@ void noop(Operand* this, int32_t value)
  * Direct data register value
  */
 
-int32_t data_get(Operand* this)
+uint32_t data_get(Operand* this)
 {
     return this->instruction->context->data_registers[this->n];
 }
 
-void data_set(Operand* this, int32_t value)
+void data_set(Operand* this, uint32_t value)
 {
     this->instruction->context->data_registers[this->n] = value;
 }
@@ -115,12 +119,12 @@ Operand* operand_make_data(int n, Instruction* instr)
  * Direct address register value
  */
 
-int32_t address_get(Operand* this)
+uint32_t address_get(Operand* this)
 {
     return this->instruction->context->address_registers[this->n];
 }
 
-void address_set(Operand* this, int32_t value)
+void address_set(Operand* this, uint32_t value)
 {
     this->instruction->context->address_registers[this->n] = value;
 }
@@ -142,12 +146,12 @@ Operand* operand_make_address(int n, Instruction* instr)
  * The register contains the address of the data in memory.
  */
 
-int32_t address_indirect_get(Operand* this)
+uint32_t address_indirect_get(Operand* this)
 {
     return this->instruction->context->memory[this->instruction->context->address_registers[this->n]];
 }
 
-void address_indirect_set(Operand* this, int32_t value)
+void address_indirect_set(Operand* this, uint32_t value)
 {
     this->instruction->context->memory[this->instruction->context->address_registers[this->n]] = value;
 }
@@ -213,12 +217,12 @@ Operand* operand_make_address_indirect_predecrement(int n, struct Instruction* i
  * Immediate value encoded within an instruction
  */
 
-int32_t immediate_get(Operand* this)
+uint32_t immediate_get(Operand* this)
 {
     return this->n;
 }
 
-void immediate_set(Operand* this, int32_t value)
+void immediate_set(Operand* this, uint32_t value)
 {
     this->n = value;
 }
@@ -238,7 +242,7 @@ Operand* operand_make_immediate(int value, Instruction* instr)
  * Extension word or long word following an instruction
  */
 
-int32_t absolute_short_get(Operand* this)
+uint32_t absolute_short_get(Operand* this)
 {
     uint32_t pc = this->instruction->context->pc;
     uint8_t* m = this->instruction->context->memory;
@@ -256,7 +260,7 @@ Operand* operand_make_absolute_short(Instruction* instr)
     return op;
 }
 
-int32_t absolute_long_get(Operand* this)
+uint32_t absolute_long_get(Operand* this)
 {
     uint32_t pc = this->instruction->context->pc;
     uint8_t* m = this->instruction->context->memory;
@@ -278,12 +282,12 @@ Operand* operand_make_absolute_long(Instruction* instr)
  * Condition
  */
 
-int32_t False(Operand* this)
+uint32_t False(Operand* this)
 {
     return false;
 }
 
-int32_t True(Operand* this)
+uint32_t True(Operand* this)
 {
     return true;
 }

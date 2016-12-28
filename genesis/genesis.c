@@ -33,7 +33,7 @@ void genesis_load_rom_file(Genesis* g, char* path)
     int file_length = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    fread(g->memory, sizeof(uint32_t), 0x1000000, file);
+    fread(g->memory, sizeof(uint8_t), file_length, file);
 
     fclose(file);
 }

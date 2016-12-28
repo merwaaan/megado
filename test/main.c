@@ -11,17 +11,6 @@ void check_alignment(Genesis* g)
     printf("m68k addr regs: %p (%zu)\n", g->m68k->address_registers, sizeof(g->m68k->data_registers));
 }
 
-void check_decoding(Genesis* g, char* opcode_bin)
-{
-    uint16_t opcode = bin_parse(opcode_bin);
-    g->memory[0] = MASK_BELOW(opcode, 8) >> 8;
-    g->memory[1] = MASK_ABOVE_INC(opcode, 8);
-
-    DecodedInstruction* decoded = genesis_decode(g, 0);
-    printf("%s (%#03X | %#03X ) : %s\n", opcode_bin, g->memory[0], g->memory[1], decoded->mnemonics);
-    // TODO free
-}
-
 void check_endianness()
 {
     uint8_t* array = calloc(4, sizeof(uint8_t));
@@ -47,15 +36,38 @@ void check_endianness()
     free(array);
 }
 
+void check_decoding(Genesis* g, char* opcode_bin)
+{
+    uint16_t opcode = bin_parse(opcode_bin);
+    g->memory[0] = MASK_BELOW(opcode, 8) >> 8;
+    g->memory[1] = MASK_ABOVE_INC(opcode, 8);
+
+    DecodedInstruction* decoded = genesis_decode(g, 0);
+    printf("%s (%#03X | %#03X ) : %s\n", opcode_bin, g->memory[0], g->memory[1], decoded->mnemonics);
+    // TODO free
+}
+
+void test_rom(Genesis* g, char* path)
+{
+    genesis_load_rom_file(g, path);
+    genesis_setup(g);
+
+    for (int i = 0; i < 5; ++i)
+        genesis_step(g);
+}
+
 int main()
 {
     Genesis* g = genesis_make();
 
     check_alignment(g);
-    check_decoding(g, "0100 0110 00 000010");
-    check_decoding(g, "1100100010000001");
-    check_decoding(g, "0100111011000011");
     check_endianness();
+
+    test_rom(g, "../browser/test.bin");
+
+    check_decoding(g, "0100 0110 00 000010"); // NOT D2
+    check_decoding(g, "1100 100 010 000001"); // AND D4, D1
+    check_decoding(g, "0100111011 000011"); // JMP D3
 
     genesis_free(g);
 

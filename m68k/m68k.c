@@ -24,6 +24,10 @@ M68k* m68k_make(uint8_t* memory)
     // Generate every possible opcode
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
+        if (opcode == 58080)
+        {
+            printf("1");
+        }
         Instruction* instr = instruction_generate(m68k, opcode);
 
         if (!instruction_valid(instr))
@@ -88,13 +92,24 @@ uint32_t m68k_step(M68k* m)
     return m68k_execute(m, opcode);
 }
 
+// TODO make private
 uint32_t m68k_execute(M68k* m, uint16_t opcode)
 {
+    // Fetch the instruction
     Instruction* instr = m->opcode_table[opcode];
+
     if (instr == NULL)
+    {
         printf("Opcode %#08X cannot be found in the opcode table\n", opcode);
+    }
     else
+    {
+        // Execute the opcode
         instr->func(instr);
+
+        // Increment the program counter
+        m->pc += instr->length;
+    }
 
     return m->pc;
 }

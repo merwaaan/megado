@@ -14,10 +14,15 @@ typedef struct Instruction {
 
     InstructionFunc* func;
 
-    long size;
-
+    // Operands
     struct Operand* src;
     struct Operand* dst;
+
+    // Data size (byte, word, long)
+    long size; // TODO type?
+
+    // Instruction length in bytes (depends on the operands)
+    int length; // TODO type?
 
     struct M68k* context;
 } Instruction;

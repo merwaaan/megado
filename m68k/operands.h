@@ -8,8 +8,8 @@
 struct Operand;
 struct Instruction;
 
-typedef int32_t(*GetFunc)(struct Operand* this);
-typedef void(*SetFunc)(struct Operand* this, int32_t value);
+typedef uint32_t(*GetFunc)(struct Operand* this);
+typedef void(*SetFunc)(struct Operand* this, uint32_t value);
 typedef void(*Action)(struct Operand* this);
 
 typedef enum {

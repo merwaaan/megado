@@ -67,13 +67,40 @@ Instruction* pattern_generate(Pattern pattern, uint16_t opcode, M68k* context)
     return pattern.generator(opcode, context);
 }
 
+int operand_length(Operand* operand)
+{
+    if (operand == NULL)
+        return 0;
+
+    switch (operand->type)
+    {
+    case AbsoluteShort:
+        return 2;
+    case AbsoluteLong:
+        return 4;
+    default:
+        return 0;
+    }
+}
+
 Instruction* instruction_generate(M68k* context, uint16_t opcode)
 {
     int pattern_count = sizeof(_patterns) / sizeof(Pattern);
 
     for (int i = 0; i < pattern_count; ++i)
         if (pattern_match(opcode, _patterns[i]))
-            return pattern_generate(_patterns[i], opcode, context);
+        {
+            // Generate the instruction
+            Instruction* instr = pattern_generate(_patterns[i], opcode, context);
+
+            if (instr == NULL)
+                return NULL;
+
+            // Compute its length in bytes
+            instr->length = 2 + operand_length(instr->src) + operand_length(instr->dst);
+
+            return instr;
+        }
 
     return NULL;
 }

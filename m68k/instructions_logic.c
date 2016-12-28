@@ -38,7 +38,7 @@ void and(Instruction* i)
     int32_t initial = GET(i->dst);
     int32_t result = MASK_ABOVE_INC(GET(i->src) & initial, i->size);
     SET(i->dst, MASK_BELOW(initial, i->size) | result);
-    
+
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
@@ -109,12 +109,12 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
 
 void tst(Instruction* i)
 {
-    uint16_t x = MASK_ABOVE_INC(GET(i->src), i->size);
+    uint32_t x = MASK_ABOVE_INC(GET(i->src), i->size);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, x == 0);
-    NEGATIVE_SET(i->context, x < 0); // TODO size masking
+    NEGATIVE_SET(i->context, BIT(x, i->size - 1) == 1);
 }
 
 Instruction* gen_tst(uint16_t opcode, M68k* m)
