@@ -115,6 +115,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bit_utils.c" />
+    <ClCompile Include="conditions.c" />
     <ClCompile Include="instruction.c" />
     <ClCompile Include="instructions_arithmetic.c" />
     <ClCompile Include="instructions_bit.c" />
@@ -128,7 +129,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bit_utils.h" />
-    <ClInclude Include="conditions.h" />
     <ClInclude Include="instruction.h" />
     <ClInclude Include="instructions_arithmetic.h" />
     <ClInclude Include="instructions_bit.h" />

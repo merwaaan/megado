@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "conditions.h"
 #include "instruction.h"
 #include "operands.h"
 #include "m68k.h"
@@ -274,48 +273,6 @@ Operand* operand_make_absolute_long(Instruction* instr)
     op->type = AbsoluteLong;
     op->get = absolute_long_get;
     op->set = noop;
-    op->instruction = instr;
-    return op;
-}
-
-/*
- * Condition
- */
-
-uint32_t False(Operand* this)
-{
-    return false;
-}
-
-uint32_t True(Operand* this)
-{
-    return true;
-}
-
-GetFunc conditions[] = {
-    True,
-    False,
-    /*Higher,
-    LowerOrSame,
-    CarryClear,
-    CarrySet,
-    NotEqual,
-    Equal,
-    OverflowClear,
-    OverflowSet,
-    Plus,
-    Minus,
-    GreaterOrEqual,
-    LessThan,
-    GreaterThan,
-    LessOrEqual*/
-};
-
-Operand* operand_make_condition(int pattern, Instruction* instr)
-{
-    Operand* op = calloc(1, sizeof(Operand));
-    op->type = Condition;
-    op->get = conditions[pattern & 0xF];
     op->instruction = instr;
     return op;
 }
