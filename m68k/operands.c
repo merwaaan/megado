@@ -49,6 +49,21 @@ uint8_t operand_size(uint8_t pattern)
     case 2:
         return 32;
     default:
+        print("Invalid operand size %d", pattern); // TODO logging fw?
+        return 0;
+    }
+}
+
+uint8_t operand_size2(uint8_t pattern)
+{
+    switch (pattern)
+    {
+    case 0:
+        return 16;
+    case 1:
+        return 32;
+    default:
+        print("Invalid operand size %d", pattern); // TODO logging fw?
         return 0;
     }
 }
@@ -216,24 +231,43 @@ Operand* operand_make_address_indirect_predecrement(int n, struct Instruction* i
  * Immediate value encoded within an instruction
  */
 
-uint32_t immediate_get(Operand* this)
+uint32_t immediate_get_byte(Operand* this)
 {
-    return this->n;
+    M68k* m = this->instruction->context;
+    return m->memory[m->pc + 3];
 }
 
-void immediate_set(Operand* this, uint32_t value)
+uint32_t immediate_get_word(Operand* this)
 {
-    this->n = value;
+    M68k* m = this->instruction->context;
+    return (m->memory[m->pc + 2] << 8) | m->memory[m->pc + 3];
 }
 
-Operand* operand_make_immediate(int value, Instruction* instr)
+uint32_t immediate_get_long(Operand* this)
+{
+    M68k* m = this->instruction->context;
+    return (m->memory[m->pc + 2] << 24) | (m->memory[m->pc + 3] << 16) | (m->memory[m->pc + 4] << 8) | m->memory[m->pc + 5];
+}
+
+Operand* operand_make_immediate(int size, Instruction* instr) // TODO should get data in ext
 {
     Operand* op = calloc(1, sizeof(Operand));
-    op->type = Immediate;
-    op->get = immediate_get;
-    op->set = immediate_set;
-    op->n = value;
     op->instruction = instr;
+    op->type = Immediate;
+    op->set = noop;
+
+    switch (size) {
+    case 8:
+        op->get = immediate_get_byte;
+        break;
+    case 16:
+        op->get = immediate_get_word;
+        break;
+    case 32:
+        op->get = immediate_get_long;
+        break;
+    }
+
     return op;
 }
 

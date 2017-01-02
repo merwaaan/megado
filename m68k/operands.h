@@ -60,3 +60,4 @@ Operand* operand_make(uint16_t pattern, struct Instruction* instr);
 void operand_free(Operand* instr);
 
 uint8_t operand_size(uint8_t pattern);
+uint8_t operand_size2(uint8_t pattern); // TODO how to name this?

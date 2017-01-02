@@ -87,6 +87,46 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
     return i;
 }
 
+void movem(Instruction* i)
+{/*
+    uint16_t mask = i->context->memory[i->context->pc + 1]; // TODO correct?
+    for (int i = 0; i < 8; ++i)
+        if (mask & (1 << i)) {
+            if (i->src != null)
+                i->src
+            else
+        }*/
+
+
+            // TODO sign extend words
+    int32_t moved = MASK_ABOVE(GET(i->src), i->size);
+    SET(i->dst, MASK_BELOW_INC(GET(i->dst), i->size) | moved);
+
+    CARRY_SET(i->context, false);
+    OVERFLOW_SET(i->context, false);
+    ZERO_SET(i->context, moved == 0);
+    NEGATIVE_SET(i->context, moved < 0);
+}
+
+Instruction* gen_movem(uint16_t opcode, M68k* m)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = m;
+    i->name = "MOVEM";
+    i->func = movem;
+    i->size = operand_size2(BIT(opcode, 6));
+
+    Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
+
+    int direction = BIT(opcode, 10);
+    if (direction)
+        i->dst = ea;
+    else
+        i->src = ea;
+
+    return i;
+}
+
 void pea(Instruction* i)
 {
     i->context->memory[i->context->address_registers[7]] = GET(i->src);

@@ -44,6 +44,16 @@ MU_TEST(test_and_l)
     DATA_CHECK(3, 0x24800154);
 }
 
+MU_TEST(test_andi_b) // TODO w, l
+{
+    DATA(0, 0xF0F0F0F0);
+    //MEM()
+    RUN("00000010 00 000000"); // ANDI.b #FF D2
+    DATA_CHECK(0, 0); // TODO
+}
+
+// TODO ori, eori
+
 MU_TEST(test_not_b)
 {
     DATA(7, 0xFE800174);
