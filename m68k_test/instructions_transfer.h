@@ -33,6 +33,19 @@ MU_TEST(test_lea)
     ADDR_CHECK(0, 0xF0F0);
 }
 
+MU_TEST(test_movem) // TODO
+{
+    ADDR(5, 0x294);
+    MEM(0x294, 0x8000);
+    MEM(0x294, 0x3FFF);
+    MEM(0x294, 0x0100); // TODO MEM16
+    RUN("01001 1 001 0 011101"); // MOVEM.w (A5)+, D5-D7
+    // TODO mask
+    DATA_CHECK(5, 0xFFFF8000);
+    DATA_CHECK(6, 0x00003FFF);
+    DATA_CHECK(7, 0x00000100);
+}
+
 MU_TEST_SUITE(test_suite_instructions_transfer)
 {
     MU_SUITE_CONFIGURE(&setup, &teardown);
@@ -40,5 +53,8 @@ MU_TEST_SUITE(test_suite_instructions_transfer)
     //MU_RUN_TEST(test_exg_data_data); //TODO fix exg conflict with add
     //MU_RUN_TEST(test_exg_address_address);
     //MU_RUN_TEST(test_exg_data_address);
+
     MU_RUN_TEST(test_lea);
+
+    MU_RUN_TEST(test_movem);
 }

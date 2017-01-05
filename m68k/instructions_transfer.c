@@ -88,24 +88,27 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
 }
 
 void movem(Instruction* i)
-{/*
-    uint16_t mask = i->context->memory[i->context->pc + 1]; // TODO correct?
-    for (int i = 0; i < 8; ++i)
-        if (mask & (1 << i)) {
-            if (i->src != null)
-                i->src
+{
+    uint16_t mask = (i->context->memory[i->context->pc + 1] << 8) | i->context->memory[i->context->pc + 2];
+
+    // TODO different mask for predecrement mode
+    // TODO long size
+    // TODO sign extend words
+
+    int cursor = GET(i->src ? i->src : i->dst);
+
+    for (int m = 0; m < 16; ++m)
+        if (mask & (1 << (15 - m))) {
+
+            // memory -> register
+            if (i->src != NULL)
+                i->context->data_registers[m] = i->context->memory[cursor];
+            // register -> memory
             else
-        }*/
+                i->context->memory[cursor] = i->context->data_registers[m];
 
-
-            // TODO sign extend words
-    int32_t moved = MASK_ABOVE(GET(i->src), i->size);
-    SET(i->dst, MASK_BELOW_INC(GET(i->dst), i->size) | moved);
-
-    CARRY_SET(i->context, false);
-    OVERFLOW_SET(i->context, false);
-    ZERO_SET(i->context, moved == 0);
-    NEGATIVE_SET(i->context, moved < 0);
+            cursor += i->size == 16 ? 2 : 4;
+        }
 }
 
 Instruction* gen_movem(uint16_t opcode, M68k* m)
