@@ -10,7 +10,7 @@
 void bcc(Instruction* i)
 {
     if (GET(i->dst))
-        m68k_jump(i->context->pc + GET(i->src));
+        i->context->pc += GET(i->src);
 }
 
 Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
@@ -22,13 +22,13 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
 
     i->dst = operand_make_condition(FRAGMENT(opcode, 11, 8), i);
 
-    /*int displacement = FRAGMENT(opcode, 7, 0);
+    int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
         i->src = operand_make_absolute_short(16, i);
     else if (displacement == 0xFF)
         i->src = operand_make_absolute_short(32, i);
     else
-        i->src = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);*/ // TODO
+        i->src = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);
 
     return i;
 }

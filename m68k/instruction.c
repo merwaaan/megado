@@ -31,10 +31,10 @@ void instruction_free(Instruction* instr)
 
 static Pattern _patterns[] =
 {
-    { 0x0100, 0x01C0, &gen_btst }, // TODO other btst form
-    { 0x0140, 0x01C0, &gen_bchg }, // TODO other bchg form
-    { 0x0180, 0x01C0, &gen_bclr }, // TODO other bclr form
-    { 0x01C0, 0x01C0, &gen_bset }, // TODO other bset form
+    { 0x0100, 0x37C0, &gen_btst }, // TODO other btst form
+    { 0x0140, 0x37C0, &gen_bchg }, // TODO other bchg form
+    { 0x0180, 0x37C0, &gen_bclr }, // TODO other bclr form
+    { 0x01C0, 0x37C0, &gen_bset }, // TODO other bset form
     { 0x41C0, 0xF1C0, &gen_lea },
     { 0x4200, 0xFF00, &gen_clr },
     { 0x4600, 0xFF00, &gen_not },
@@ -75,6 +75,7 @@ int operand_length(Operand* operand)
     switch (operand->type)
     {
     case AbsoluteShort:
+    case ProgramCounterOffset:
         return 2;
     case AbsoluteLong:
         return 4;

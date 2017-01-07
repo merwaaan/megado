@@ -94,6 +94,8 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
             return operand_make_absolute_short(instr);
         case 1:
             return operand_make_absolute_long(instr);
+        case 2:
+            return operand_make_pc_displacement(instr);
         }
     default:
         return NULL;
@@ -121,11 +123,11 @@ void data_set(Operand* this, uint32_t value)
 Operand* operand_make_data(int n, Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
+    op->instruction = instr;
     op->type = Data;
     op->get = data_get;
     op->set = data_set;
     op->n = n;
-    op->instruction = instr;
     return op;
 }
 
@@ -140,17 +142,17 @@ uint32_t address_get(Operand* this)
 
 void address_set(Operand* this, uint32_t value)
 {
-    this->instruction->context->address_registers[this->n] = value;
+    this->instruction->context->address_registers[this->n] = value; // TODO sign-extend?
 }
 
 Operand* operand_make_address(int n, Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
+    op->instruction = instr;
     op->type = Address;
     op->get = address_get;
     op->set = address_set;
     op->n = n;
-    op->instruction = instr;
     return op;
 }
 
@@ -173,11 +175,11 @@ void address_indirect_set(Operand* this, uint32_t value)
 Operand* operand_make_address_indirect(int n, Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
+    op->instruction = instr;
     op->type = AddressIndirect;
     op->get = address_indirect_get;
     op->set = address_indirect_set;
     op->n = n;
-    op->instruction = instr;
     return op;
 }
 
@@ -195,12 +197,12 @@ void address_inc(Operand* this)
 Operand* operand_make_address_indirect_postincrement(int n, struct Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
+    op->instruction = instr;
     op->type = AddressIndirectPostInc;
     op->get = address_indirect_get;
     op->set = address_indirect_set;
     op->post = address_inc;
     op->n = n;
-    op->instruction = instr;
     return op;
 }
 
@@ -218,12 +220,12 @@ void address_dec(Operand* this)
 Operand* operand_make_address_indirect_predecrement(int n, struct Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
+    op->instruction = instr;
     op->type = AddressIndirectPostInc;
     op->get = address_indirect_get;
     op->set = address_indirect_set;
     op->pre = address_dec;
     op->n = n;
-    op->instruction = instr;
     return op;
 }
 
@@ -254,6 +256,22 @@ Operand* operand_make_immediate(int size, Instruction* instr) // TODO should get
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = Immediate;
+<<<<<<< .mine
+    op->get = immediate_get;
+    op->set = immediate_set;
+    op->n = value;
+
+
+
+
+
+
+
+
+
+
+
+=======
     op->set = noop;
 
     switch (size) {
@@ -268,6 +286,7 @@ Operand* operand_make_immediate(int size, Instruction* instr) // TODO should get
         break;
     }
 
+>>>>>>> .theirs
     return op;
 }
 
@@ -280,16 +299,17 @@ uint32_t absolute_short_get(Operand* this)
     uint32_t pc = this->instruction->context->pc;
     uint8_t* m = this->instruction->context->memory;
 
-    return (m[pc + 2] << 8) | m[pc + 3];
+    uint32_t address = (m[pc + 2] << 8) | m[pc + 3];
+    return m[address];
 }
 
 Operand* operand_make_absolute_short(Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
+    op->instruction = instr;
     op->type = AbsoluteShort;
     op->get = absolute_short_get;
     op->set = noop;
-    op->instruction = instr;
     return op;
 }
 
@@ -298,15 +318,36 @@ uint32_t absolute_long_get(Operand* this)
     uint32_t pc = this->instruction->context->pc;
     uint8_t* m = this->instruction->context->memory;
 
-    return (m[pc + 2] << 24) | (m[pc + 3] << 16) | (m[pc + 4] << 8) | m[pc + 5];
+    uint32_t address = (m[pc + 2] << 24) | (m[pc + 3] << 16) | (m[pc + 4] << 8) | m[pc + 5];
+    return m[address];
 }
 
 Operand* operand_make_absolute_long(Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
+    op->instruction = instr;
     op->type = AbsoluteLong;
     op->get = absolute_long_get;
     op->set = noop;
+    return op;
+}
+
+/*
+ *
+ */
+
+uint32_t pc_displacement_word_get(Operand* this)
+{
+    M68k* m = this->instruction->context;
+    return m->pc + ((m->memory[m->pc + 2] << 8) | m->memory[m->pc + 3]) + 2; // TODO no idea why +2
+}
+
+Operand* operand_make_pc_displacement(Instruction* instr)
+{
+    Operand* op = calloc(1, sizeof(Operand));
+    op->type = ProgramCounterOffset;
     op->instruction = instr;
+    op->get = pc_displacement_word_get;
+    op->set = noop;
     return op;
 }

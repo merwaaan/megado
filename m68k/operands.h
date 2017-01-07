@@ -26,6 +26,7 @@ typedef enum {
     Immediate,
     AbsoluteShort,
     AbsoluteLong,
+    Displacement,
     Condition
 } OperandType;
 
@@ -53,6 +54,7 @@ Operand* operand_make_address_indirect_predecrement(int n, struct Instruction* i
 Operand* operand_make_immediate(int n, struct Instruction* instr);
 Operand* operand_make_absolute_short(struct Instruction* instr);
 Operand* operand_make_absolute_long(struct Instruction* instr);
+Operand* operand_make_pc_displacement(struct Instruction* instr);
 Operand* operand_make_condition(int pattern, struct Instruction* instr);
 
 Operand* operand_make(uint16_t pattern, struct Instruction* instr);

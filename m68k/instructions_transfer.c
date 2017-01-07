@@ -58,8 +58,8 @@ Instruction* gen_lea(uint16_t opcode, M68k* m)
     i->name = "LEA";
     i->func = lea;
 
-    i->src = operand_make_address(FRAGMENT(opcode, 11, 9), i);
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->dst = operand_make_address(FRAGMENT(opcode, 11, 9), i);
 
     return i;
 }

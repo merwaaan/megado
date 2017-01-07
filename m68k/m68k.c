@@ -13,18 +13,12 @@ M68k* m68k_make(uint8_t* memory)
     M68k* m68k = calloc(1, sizeof(M68k));
     m68k->memory = memory;
 
-    // TODO temp
-    for (int i = 0; i < 8; ++i)
-        m68k->data_registers[i] = i;
-    for (int i = 0; i < 8; ++i)
-        m68k->address_registers[i] = 100 + i;
-
     m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
 
     // Generate every possible opcode
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
-        if (opcode == 58080)
+        if (opcode == 0x4bfa)
         {
             printf("1");
         }
@@ -100,15 +94,22 @@ uint32_t m68k_execute(M68k* m, uint16_t opcode)
 
     if (instr == NULL)
     {
-        printf("Opcode %#08X cannot be found in the opcode table\n", opcode);
+        printf("Opcode %#06X cannot be found in the opcode table\n", opcode);
     }
     else
     {
+        // Increment the program counter
+        //m->pc += instr->length;
+        //m->pc += 2; // TODO temporary test: advance the PC for the instruction and THEN for the extension words
+        // TODO this is called prefetch!! http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+
         // Execute the opcode
         instr->func(instr);
 
-        // Increment the program counter
         m->pc += instr->length;
+        //m->pc += instr->length - 2;
+
+        // TODO can only address 2^24 bytes in practice
     }
 
     return m->pc;
@@ -126,5 +127,5 @@ int m68k_pop()
 
 void m68k_jump(int address)
 {
-    // TODO
+    // TODO necesary?
 }

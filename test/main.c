@@ -52,7 +52,7 @@ void test_rom(Genesis* g, char* path)
     genesis_load_rom_file(g, path);
     genesis_setup(g);
 
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < 10; ++i)
         genesis_step(g);
 }
 
@@ -65,9 +65,9 @@ int main()
 
     test_rom(g, "../browser/test.bin");
 
-    check_decoding(g, "0100 0110 00 000010"); // NOT D2
-    check_decoding(g, "1100 100 010 000001"); // AND D4, D1
-    check_decoding(g, "0100111011 000011"); // JMP D3
+    //check_decoding(g, "0100 0110 00 000010"); // NOT D2
+    //check_decoding(g, "1100 100 010 000001"); // AND D4, D1
+    //check_decoding(g, "0100111011 000011"); // JMP D3
 
     genesis_free(g);
 
