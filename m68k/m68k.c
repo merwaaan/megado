@@ -108,6 +108,46 @@ uint32_t m68k_execute(M68k* m, uint16_t opcode)
     return m->pc;
 }
 
+uint8_t read_b(M68k* m, uint32_t address)
+{
+    return m->memory[address];
+}
+
+uint16_t read_w(M68k* m, uint32_t address)
+{
+    return
+        (m->memory[address] << 8) |
+        m->memory[address + 1];
+}
+
+uint32_t read_l(M68k* m, uint32_t address)
+{
+    return
+        (m->memory[address] << 24) |
+        (m->memory[address + 1] << 16) |
+        (m->memory[address + 2] << 8) |
+        m->memory[address + 1];
+}
+
+void write_b(M68k* m, uint32_t address, uint8_t value)
+{
+    m->memory[address] = value;
+}
+
+void write_w(M68k* m, uint32_t address, uint16_t value)
+{
+    m->memory[address] = (value & 0xFF00) >> 8;
+    m->memory[address + 1] = value & 0xFF;
+}
+
+void write_l(M68k* m, uint32_t address, uint32_t value)
+{
+    m->memory[address] = (value & 0xFF000000) >> 24;
+    m->memory[address + 1] = (value & 0xFF0000) >> 16;
+    m->memory[address + 2] = (value & 0xFF00) >> 8;
+    m->memory[address + 3] = value & 0xFF;
+}
+
 void m68k_push(int value)
 {
     // TODO
