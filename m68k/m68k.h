@@ -25,6 +25,13 @@
 #define SIGN_EXTEND_B(x) ((x & 0xFF) | (BIT((x), 7) ? 0xFF00 : 0))
 #define SIGN_EXTEND_W(x) ((x & 0xFFFF) | (BIT((x), 15) ? 0xFFFF0000 : 0))
 
+enum Size
+{
+    Byte = 8,
+    Word = 16,
+    Long = 32
+};
+
 struct Instruction;
 struct DecodedInstruction;
 
@@ -35,7 +42,7 @@ typedef struct M68k {
     uint32_t pc;
 
     struct Instruction** opcode_table;
-    
+
     uint8_t* memory;
 } M68k;
 
