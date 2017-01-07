@@ -19,10 +19,10 @@ typedef enum {
     AddressIndirect,
     AddressIndirectPreInc,
     AddressIndirectPostInc,
-    AddressIndirectOffset,
-    AddressIndirectIndexOffset,
-    ProgramCounterOffset,
-    ProgramCounterIndexOffset,
+    AddressIndirectDisplacement,
+    AddressIndirectIndexed,
+    ProgramCounterDisplacement,
+    ProgramCounterIndexed,
     Immediate,
     AbsoluteShort,
     AbsoluteLong,
@@ -51,16 +51,18 @@ Operand* operand_make_address(int n, struct Instruction* instr);
 Operand* operand_make_address_indirect(int n, struct Instruction* instr);
 Operand* operand_make_address_indirect_postincrement(int n, struct Instruction* instr);
 Operand* operand_make_address_indirect_predecrement(int n, struct Instruction* instr);
+Operand* operand_make_address_indirect_displacement(int n, struct Instruction* instr);
 Operand* operand_make_immediate(int n, struct Instruction* instr);
 Operand* operand_make_absolute_short(struct Instruction* instr);
 Operand* operand_make_absolute_long(struct Instruction* instr);
 Operand* operand_make_pc_displacement(struct Instruction* instr);
 Operand* operand_make_condition(int pattern, struct Instruction* instr);
 
-Operand* operand_make(uint16_t pattern, struct Instruction* instr);
-
-void operand_free(Operand* instr);
-
 uint8_t operand_size(uint8_t pattern);
-uint8_t operand_size2(uint8_t pattern); // TODO how to name this?
+uint8_t operand_size2(uint8_t pattern);
+uint8_t operand_size3(uint8_t pattern); // TODO how to name this?
+
 uint8_t operand_sign_extension(uint8_t pattern);
+
+Operand* operand_make(uint16_t pattern, struct Instruction* instr);
+void operand_free(Operand* instr);

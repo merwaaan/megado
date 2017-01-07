@@ -31,6 +31,7 @@ void instruction_free(Instruction* instr)
 
 static Pattern _patterns[] =
 {
+    { 0x0000, 0xC000, &gen_move },
     { 0x0100, 0xF1C0, &gen_btst }, // TODO other btst form
     { 0x0140, 0xF1C0, &gen_bchg }, // TODO other bchg form
     { 0x0180, 0xF1C0, &gen_bclr }, // TODO other bclr form
@@ -41,6 +42,7 @@ static Pattern _patterns[] =
     { 0x4840, 0xFFF8, &gen_swap },
     { 0x4840, 0xFFC0, &gen_pea },
     { 0x4880, 0xFEB8, &gen_ext },
+    { 0x4880, 0xFB80, &gen_movem },
     { 0x4A00, 0xFF00, &gen_tst },
     { 0x4E75, 0xFFFF, &gen_rts },
     { 0x4E80, 0xFFC0, &gen_jsr },
@@ -76,7 +78,7 @@ int operand_length(Operand* operand)
     switch (operand->type)
     {
     case AbsoluteShort:
-    case ProgramCounterOffset:
+    case ProgramCounterDisplacement:
         return 2;
     case AbsoluteLong:
         return 4;
@@ -99,7 +101,7 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
                 return NULL;
 
             // Compute its length in bytes
-            instr->length = 2 + operand_length(instr->src) + operand_length(instr->dst);
+            instr->length += 2 + operand_length(instr->src) + operand_length(instr->dst);
 
             return instr;
         }

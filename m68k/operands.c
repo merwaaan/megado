@@ -19,13 +19,13 @@ int operand_tostring(Operand* operand, char* buffer)
         return sprintf(buffer, "+(A%d)", operand->n);
     case AddressIndirectPostInc:
         return sprintf(buffer, "(A%d)-", operand->n);
-    case AddressIndirectOffset:
+    case AddressIndirectDisplacement:
         return sprintf(buffer, "%d(A%d)-", operand->n, operand->n); // TODO
-    case AddressIndirectIndexOffset:
+    case AddressIndirectIndexed:
         return sprintf(buffer, "%d(A%d, D%d)-", operand->n, operand->n, operand->n); // TODO
-    case ProgramCounterOffset:
+    case ProgramCounterDisplacement:
         return sprintf(buffer, "%d(PC)-", operand->n); // TODO
-    case ProgramCounterIndexOffset:
+    case ProgramCounterIndexed:
         return sprintf(buffer, "%d(PC, D%d)-", operand->n, operand->n); // TODO
     case Immediate:
         return sprintf(buffer, "#%d", operand->n);
@@ -55,6 +55,22 @@ uint8_t operand_size(uint8_t pattern)
 }
 
 uint8_t operand_size2(uint8_t pattern)
+{
+    switch (pattern)
+    {
+    case 1:
+        return 8;
+    case 3:
+        return 16;
+    case 2:
+        return 32;
+    default:
+        //printf("Invalid operand size %d", pattern); // TODO logging fw?
+        return 0;
+    }
+}
+
+uint8_t operand_size3(uint8_t pattern)
 {
     switch (pattern)
     {
@@ -99,8 +115,10 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
         return operand_make_address_indirect(pattern & 7, instr);
     case 0x18:
         return operand_make_address_indirect_postincrement(pattern & 7, instr);
-    case 0x32:
+    case 0x20:
         return operand_make_address_indirect_predecrement(pattern & 7, instr);
+    case 0x28:
+        return operand_make_address_indirect_displacement(pattern & 7, instr);
     case 0x38:
         switch (pattern & 7)
         {
@@ -244,6 +262,37 @@ Operand* operand_make_address_indirect_predecrement(int n, struct Instruction* i
 }
 
 /*
+ * Address indirect with displacement
+ */
+
+uint32_t address_indirect_displacement_get(Operand* this)
+{
+    M68k* m = this->instruction->context;
+    uint32_t address = m->address_registers[this->n];
+    int16_t displacement = (m->memory[m->pc + 2] << 8) | m->memory[m->pc + 3];
+    return m->memory[address + displacement];
+}
+
+void address_indirect_displacement_set(Operand* this, uint32_t value)
+{
+    M68k* m = this->instruction->context;
+    uint32_t address = m->address_registers[this->n];
+    int16_t displacement = (m->memory[m->pc + 2] << 8) | m->memory[m->pc + 3];
+    return m->memory[address + displacement] = value;
+}
+
+Operand* operand_make_address_indirect_displacement(int n, struct Instruction* instr)
+{
+    Operand* op = calloc(1, sizeof(Operand));
+    op->instruction = instr;
+    op->type = AddressIndirectDisplacement;
+    op->get = address_indirect_displacement_get;
+    op->set = address_indirect_displacement_set;
+    op->n = n;
+    return op;
+}
+
+/*
  * Immediate value encoded within an instruction
  */
 
@@ -342,7 +391,7 @@ uint32_t pc_displacement_word_get(Operand* this)
 Operand* operand_make_pc_displacement(Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
-    op->type = ProgramCounterOffset;
+    op->type = ProgramCounterDisplacement;
     op->instruction = instr;
     op->get = pc_displacement_word_get;
     op->set = noop;

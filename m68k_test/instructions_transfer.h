@@ -33,14 +33,20 @@ MU_TEST(test_lea)
     ADDR_CHECK(0, 0xF0F0);
 }
 
-MU_TEST(test_movem) // TODO
+MU_TEST(test_move)
+{
+//TODO
+}
+
+MU_TEST(test_movem_mem_to_reg)
 {
     ADDR(5, 0x294);
     MEM16(0x294, 0x8000);
-    MEM16(0x294, 0x3FFF);
-    MEM16(0x294, 0x0100);
+    MEM16(0x296, 0x3FFF);
+    MEM16(0x298, 0x0100);
+    MEM16(2, 0x00E0); // Mask after the opcode in memory
     RUN("01001 1 001 0 011101"); // MOVEM.w (A5)+, D5-D7
-    // TODO mask
+                                 // TODO mask
     DATA_CHECK(5, 0xFFFF8000);
     DATA_CHECK(6, 0x00003FFF);
     DATA_CHECK(7, 0x00000100);
@@ -56,5 +62,5 @@ MU_TEST_SUITE(test_suite_instructions_transfer)
 
     MU_RUN_TEST(test_lea);
 
-    MU_RUN_TEST(test_movem);
+    MU_RUN_TEST(test_movem_mem_to_reg);
 }

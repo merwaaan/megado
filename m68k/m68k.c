@@ -98,16 +98,9 @@ uint32_t m68k_execute(M68k* m, uint16_t opcode)
     }
     else
     {
-        // Increment the program counter
-        //m->pc += instr->length;
-        //m->pc += 2; // TODO temporary test: advance the PC for the instruction and THEN for the extension words
-        // TODO this is called prefetch!! http://pasti.fxatari.com/68kdocs/68kPrefetch.html
-
-        // Execute the opcode
         instr->func(instr);
 
         m->pc += instr->length;
-        //m->pc += instr->length - 2;
 
         // TODO can only address 2^24 bytes in practice
     }
