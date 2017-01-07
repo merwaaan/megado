@@ -25,12 +25,12 @@
 #define SIGN_EXTEND_B(x) ((x & 0xFF) | (BIT((x), 7) ? 0xFF00 : 0))
 #define SIGN_EXTEND_W(x) ((x & 0xFFFF) | (BIT((x), 15) ? 0xFFFF0000 : 0))
 
-enum Size
+typedef enum 
 {
     Byte = 8,
     Word = 16,
     Long = 32
-};
+} Size;
 
 struct Instruction;
 struct DecodedInstruction;
@@ -65,9 +65,12 @@ uint32_t m68k_execute(M68k*, uint16_t opcode); // Execute the given opcode and r
 uint8_t read_b(M68k*, uint32_t address);
 uint16_t read_w(M68k*, uint32_t address);
 uint32_t read_l(M68k*, uint32_t address);
+uint32_t read(M68k*, Size size, uint32_t address);
+
 void write_b(M68k*, uint32_t address, uint8_t value);
 void write_w(M68k*, uint32_t address, uint16_t value);
 void write_l(M68k*, uint32_t address, uint32_t value);
+void write(M68k*, Size size, uint32_t address, uint32_t value);
 
 void m68k_push(int value); // TODO type?
 int m68k_pop();

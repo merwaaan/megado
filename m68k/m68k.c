@@ -129,6 +129,19 @@ uint32_t read_l(M68k* m, uint32_t address)
         m->memory[address + 1];
 }
 
+uint32_t read(M68k* m, Size size, uint32_t address)
+{
+    switch (size)
+    {
+    case Byte:
+        return read_b(m, address);
+    case Word:
+        return read_b(m, address);
+    case Long:
+        return read_b(m, address);
+    }
+}
+
 void write_b(M68k* m, uint32_t address, uint8_t value)
 {
     m->memory[address] = value;
@@ -146,6 +159,19 @@ void write_l(M68k* m, uint32_t address, uint32_t value)
     m->memory[address + 1] = (value & 0xFF0000) >> 16;
     m->memory[address + 2] = (value & 0xFF00) >> 8;
     m->memory[address + 3] = value & 0xFF;
+}
+
+void write(M68k* m, Size size, uint32_t address, uint32_t value)
+{
+    switch (size)
+    {
+    case Byte:
+        write_b(m, address, value);
+    case Word:
+        write_w(m, address, value);
+    case Long:
+        write_l(m, address, value);
+    }
 }
 
 void m68k_push(int value)
