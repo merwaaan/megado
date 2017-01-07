@@ -9,9 +9,9 @@
 
 void exg(Instruction* i)
 {
-    int32_t op1_value = GET(i->dst);
+    int32_t dst = GET(i->dst);
     SET(i->dst, GET(i->src));
-    SET(i->src, op1_value);
+    SET(i->src, dst);
 }
 
 Instruction* gen_exg(uint16_t opcode, M68k* m)
@@ -20,8 +20,6 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "EXG";
     i->func = exg;
-
-    i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
     int mode = FRAGMENT(opcode, 7, 3);
     switch (mode)

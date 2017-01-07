@@ -50,9 +50,9 @@ MU_TEST_SUITE(test_suite_instructions_transfer)
 {
     MU_SUITE_CONFIGURE(&setup, &teardown);
 
-    //MU_RUN_TEST(test_exg_data_data); //TODO fix exg conflict with add
-    //MU_RUN_TEST(test_exg_address_address);
-    //MU_RUN_TEST(test_exg_data_address);
+    MU_RUN_TEST(test_exg_data_data);
+    MU_RUN_TEST(test_exg_address_address);
+    MU_RUN_TEST(test_exg_data_address);
 
     MU_RUN_TEST(test_lea);
 

@@ -51,8 +51,8 @@ static Pattern _patterns[] =
     { 0x6000, 0xF000, &gen_bcc },
     { 0x8000, 0xF000, &gen_or },
     { 0xB000, 0xF000, &gen_eor },
+    { 0xC100, 0xF100, &gen_exg },
     { 0xC000, 0xF000, &gen_and },
-    //{0xC100, 0xF130, &gen_exg }, TODO conflict with ADD, how to disambiguate?
     { 0xC0C0, 0xF1C0, &gen_mulu },
     { 0xC1C0, 0xF1C0, &gen_muls },
     { 0xE2C0, 0xFEC0, &gen_lsX },

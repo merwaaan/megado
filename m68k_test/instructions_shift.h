@@ -37,7 +37,8 @@ MU_TEST_SUITE(test_suite_instructions_shift)
 {
     MU_SUITE_CONFIGURE(&setup, &teardown);
 
-    MU_RUN_TEST(test_lsl);
-    MU_RUN_TEST(test_lsl_zero);
+    //MU_RUN_TEST(test_lsl);
+    //MU_RUN_TEST(test_lsl_zero);
+
     MU_RUN_TEST(test_swap);
 }
