@@ -11,8 +11,8 @@ int main()
     MU_RUN_SUITE(test_suite_bit_utils);
     MU_RUN_SUITE(test_suite_addressing_modes);
     MU_RUN_SUITE(test_suite_instructions_arithmetic);
-    /*MU_RUN_SUITE(test_suite_instructions_bit);
-    MU_RUN_SUITE(test_suite_instructions_logic);
+    MU_RUN_SUITE(test_suite_instructions_bit);
+    /*MU_RUN_SUITE(test_suite_instructions_logic);
     MU_RUN_SUITE(test_suite_instructions_shift);
     MU_RUN_SUITE(test_suite_instructions_transfer);*/
 

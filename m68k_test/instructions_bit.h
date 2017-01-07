@@ -8,14 +8,14 @@
 MU_TEST(test_bchg_set)
 {
     DATA(1, 2); DATA(5, 0xFFFF);
-    RUN("0000 001 101 000101"); // BCHG D2, D5
+    RUN("0000 001 101 000101"); // BCHG D1, D5
     DATA_CHECK(5, 0xFFFB);
 }
 
 MU_TEST(test_bchg_cleared)
 {
     DATA(1, 2); DATA(5, 0xFFFB);
-    RUN("0000 001 101 000101"); // BCHG D2, D5
+    RUN("0000 001 101 000101"); // BCHG D1, D5
     DATA_CHECK(5, 0xFFFF);
 }
 
@@ -53,8 +53,11 @@ MU_TEST_SUITE(test_suite_instructions_bit)
 
     MU_RUN_TEST(test_bchg_set);
     MU_RUN_TEST(test_bchg_cleared);
+
     MU_RUN_TEST(test_bclr);
+    
     MU_RUN_TEST(test_bset);
+    
     MU_RUN_TEST(test_btst_true);
     MU_RUN_TEST(test_btst_false);
 }
