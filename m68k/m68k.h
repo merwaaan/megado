@@ -62,15 +62,15 @@ struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
 uint32_t m68k_step(M68k*); // Execute one instruction and return the current program counter value
 uint32_t m68k_execute(M68k*, uint16_t opcode); // Execute the given opcode and return the current program counter value
 
-uint8_t read_b(M68k*, uint32_t address);
-uint16_t read_w(M68k*, uint32_t address);
-uint32_t read_l(M68k*, uint32_t address);
-uint32_t read(M68k*, Size size, uint32_t address);
+uint8_t m68k_read_b(M68k*, uint32_t address);
+uint16_t m68k_read_w(M68k*, uint32_t address);
+uint32_t m68k_read_l(M68k*, uint32_t address);
+uint32_t m68k_read(M68k*, Size size, uint32_t address);
 
-void write_b(M68k*, uint32_t address, uint8_t value);
-void write_w(M68k*, uint32_t address, uint16_t value);
-void write_l(M68k*, uint32_t address, uint32_t value);
-void write(M68k*, Size size, uint32_t address, uint32_t value);
+void m68k_write_b(M68k*, uint32_t address, uint8_t value);
+void m68k_write_w(M68k*, uint32_t address, uint16_t value);
+void m68k_write_l(M68k*, uint32_t address, uint32_t value);
+void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);
 
 void m68k_push(int value); // TODO type?
 int m68k_pop();
