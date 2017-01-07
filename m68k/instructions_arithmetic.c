@@ -27,12 +27,23 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
 void ext(Instruction* i)
 {
     int x = GET(i->src);
-    // TODO SET(i->src, MASK_BELOW_INC(x, i->size * 2) | MASK_ABOVE((x < ? 0xFFFFFFFFF : 0) << i->size | x, i->size * 2);
+
+    uint32_t extended;
+    switch (i->size) {
+    case 8:
+        extended = SIGN_EXTEND_B(x);
+        break;
+    case 16:
+        extended = SIGN_EXTEND_W(x);
+        break;
+    }
+
+    SET(i->src, extended);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
-    ZERO_SET(i->context, true);
-    NEGATIVE_SET(i->context, false);
+    ZERO_SET(i->context, extended == 0);
+    NEGATIVE_SET(i->context, BIT(extended, i->size - 1) == 1);
 }
 
 Instruction* gen_ext(uint16_t opcode, M68k* m)
@@ -41,7 +52,7 @@ Instruction* gen_ext(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "EXT";
     i->func = ext;
-    i->size = operand_size(BIT(opcode, 6));
+    i->size = operand_sign_extension(FRAGMENT(opcode, 8, 6));
     i->src = operand_make_data(FRAGMENT(opcode, 3, 0), i);
     return i;
 }

@@ -49,7 +49,7 @@ uint8_t operand_size(uint8_t pattern)
     case 2:
         return 32;
     default:
-        print("Invalid operand size %d", pattern); // TODO logging fw?
+        //printf("Invalid operand size %d", pattern); // TODO logging fw?
         return 0;
     }
 }
@@ -63,7 +63,21 @@ uint8_t operand_size2(uint8_t pattern)
     case 1:
         return 32;
     default:
-        print("Invalid operand size %d", pattern); // TODO logging fw?
+        //printf("Invalid operand size %d", pattern); // TODO logging fw?
+        return 0;
+    }
+}
+
+uint8_t operand_sign_extension(uint8_t pattern)
+{
+    switch (pattern)
+    {
+    case 2:
+        return 8;
+    case 3:
+        return 16;
+    default:
+        //printf("Invalid operand size %d", pattern); // TODO logging fw?
         return 0;
     }
 }
@@ -256,22 +270,6 @@ Operand* operand_make_immediate(int size, Instruction* instr) // TODO should get
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = Immediate;
-<<<<<<< .mine
-    op->get = immediate_get;
-    op->set = immediate_set;
-    op->n = value;
-
-
-
-
-
-
-
-
-
-
-
-=======
     op->set = noop;
 
     switch (size) {
@@ -286,7 +284,6 @@ Operand* operand_make_immediate(int size, Instruction* instr) // TODO should get
         break;
     }
 
->>>>>>> .theirs
     return op;
 }
 

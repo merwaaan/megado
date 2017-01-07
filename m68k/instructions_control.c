@@ -24,9 +24,9 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
 
     int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
-        i->src = operand_make_absolute_short(16, i);
+        i->src = operand_make_absolute_short(i);
     else if (displacement == 0xFF)
-        i->src = operand_make_absolute_short(32, i);
+        i->src = operand_make_absolute_short(i);
     else
         i->src = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);
 

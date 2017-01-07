@@ -9,6 +9,7 @@
 #define ADDR_CHECK(n, x) mu_assert_int_eq_hex(x, m->address_registers[n])
 
 #define MEM(a, x) m->memory[a] = x
+#define MEM16(a, x) m->memory[a] = (x & 0xFF00) >> 8; m->memory[a + 1] = x & 0x00FF
 #define MEM_CHECK(a, x) mu_assert_int_eq_hex(x, m->memory[a])
 
 #define RUN(opcode) m68k_execute(m, bin_parse(opcode))

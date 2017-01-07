@@ -95,7 +95,7 @@ void movem(Instruction* i)
     // TODO long size
     // TODO sign extend words
 
-    int cursor = GET(i->src ? i->src : i->dst);
+    uint32_t cursor = GET(i->src ? i->src : i->dst);
 
     for (int m = 0; m < 16; ++m)
         if (mask & (1 << (15 - m))) {

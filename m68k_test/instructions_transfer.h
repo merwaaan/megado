@@ -36,9 +36,9 @@ MU_TEST(test_lea)
 MU_TEST(test_movem) // TODO
 {
     ADDR(5, 0x294);
-    MEM(0x294, 0x8000);
-    MEM(0x294, 0x3FFF);
-    MEM(0x294, 0x0100); // TODO MEM16
+    MEM16(0x294, 0x8000);
+    MEM16(0x294, 0x3FFF);
+    MEM16(0x294, 0x0100);
     RUN("01001 1 001 0 011101"); // MOVEM.w (A5)+, D5-D7
     // TODO mask
     DATA_CHECK(5, 0xFFFF8000);

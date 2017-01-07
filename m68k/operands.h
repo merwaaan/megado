@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 
-#define GET(operand) operand->get(operand)
-#define SET(operand, value) operand->set(operand, value)
+#define GET(operand) (operand)->get((operand))
+#define SET(operand, value) (operand)->set((operand), (value))
 
 struct Operand;
 struct Instruction;
@@ -63,3 +63,4 @@ void operand_free(Operand* instr);
 
 uint8_t operand_size(uint8_t pattern);
 uint8_t operand_size2(uint8_t pattern); // TODO how to name this?
+uint8_t operand_sign_extension(uint8_t pattern);

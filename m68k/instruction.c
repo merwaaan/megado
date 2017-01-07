@@ -40,6 +40,7 @@ static Pattern _patterns[] =
     { 0x4600, 0xFF00, &gen_not },
     { 0x4840, 0xFFF8, &gen_swap },
     { 0x4840, 0xFFC0, &gen_pea },
+    { 0x4880, 0xFEB8, &gen_ext },
     { 0x4A00, 0xFF00, &gen_tst },
     { 0x4E75, 0xFFFF, &gen_rts },
     { 0x4E80, 0xFFC0, &gen_jsr },
