@@ -69,6 +69,8 @@ int main()
     //check_decoding(g, "1100 100 010 000001"); // AND D4, D1
     //check_decoding(g, "0100111011 000011"); // JMP D3
 
+    getchar();
+
     genesis_free(g);
 
     return 0;
