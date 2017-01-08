@@ -26,7 +26,7 @@ typedef struct Vdp
     // Register $00
     bool skip_leftmost_pixels;
     bool hblank_enabled;
-    bool latch_hv_counter;
+    bool latch_hv_counter; // TODO enabled?
     bool enabled;
 
     // Register $01
@@ -37,6 +37,9 @@ typedef struct Vdp
     bool display_mode;
     bool genesis_mode;
 
+    // Register $02
+    bool plane_a_nametable;
+
     // Register $03
     bool window_nametable;
 
@@ -46,15 +49,12 @@ typedef struct Vdp
     // Register $05
     bool sprites_location;
 
-    // Register $06
-    // TODO 128k mode ???
-
     // Register $07
     bool background_color_palette;
     bool background_color_entry;
 
     // Register $0A
-    bool hblank_counter;
+    bool hblank_counter; // TODO unclear
 
     // Register $0B
     // TODO light gun ???
@@ -103,10 +103,12 @@ typedef struct Vdp
 Vdp* vdp_make();
 void vdp_free(Vdp*);
 
-uint8_t vdp_data_read();
-void vdp_data_write();
+uint8_t vdp_read_data_hi(Vdp*);
+uint8_t vdp_read_data_lo(Vdp*);
+void vdp_write_data(Vdp*, uint16_t value); // TODO 8bit writes OK but only 16bit reads?
+                                           // If confirmed, just use a single read_xxx, and return nibbles in m68k_io
 
-uint8_t vdp_control_read();
-void vdp_control_write();
+uint16_t vdp_read_control(Vdp*);
+void vdp_write_control(Vdp*, uint16_t value);
 
 void vdp_draw(Vdp*);

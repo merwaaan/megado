@@ -23,6 +23,14 @@
 #define MASK_BELOW_INC(x, n) ((x) & (0xFFFFFFFFF << ((n) + 1)))
 #define MASK_ABOVE_INC(x, n) ((x) & ~(0xFFFFFFFFF << (n)))
 
+// Get low/high nibble/byte/word
+#define NIBBLE_LO(b) ((b) & 0xF)
+#define NIBBLE_HI(b) (((b) & 0xF0) >> 4) 
+#define BYTE_LO(b) ((b) & 0xFF)
+#define BYTE_HI(b) (((b) & 0xFF00) >> 8) 
+#define WORD_LO(b) ((b) & 0xFFFF)
+#define WORD_HI(b) (((b) & 0xFFFF0000) >> 16) 
+
 typedef enum
 {
     Byte = 8,
