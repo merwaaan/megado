@@ -127,9 +127,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="genesis.c" />
+    <ClCompile Include="vdp.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="genesis.h" />
+    <ClInclude Include="vdp.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\m68k\m68k.vcxproj">

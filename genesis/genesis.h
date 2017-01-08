@@ -3,11 +3,13 @@
 #include <stdint.h>
 
 struct M68k;
+struct Vdp;
 struct DecodedInstruction;
 
 typedef struct {
     uint8_t* memory;
     struct M68k* m68k;
+    struct Vdp* vdp;
 } Genesis;
 
 Genesis* genesis_make();

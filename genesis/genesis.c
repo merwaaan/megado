@@ -4,18 +4,21 @@
 #include <stdlib.h>
 
 #include "genesis.h"
+#include "vdp.h"
 
 Genesis* genesis_make()
 {
     Genesis* g = calloc(1, sizeof(Genesis));
     g->memory = calloc(0x1000000, sizeof(uint8_t));
     g->m68k = m68k_make(g->memory);
+    g->vdp = vdp_make();
     return g;
 }
 
 void genesis_free(Genesis* g)
 {
     m68k_free(g->m68k);
+    vdp_free(g->vdp);
     free(g->memory);
     free(g);
 }
