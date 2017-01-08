@@ -201,12 +201,12 @@ Operand* operand_make_address(int n, Instruction* instr)
 
 uint32_t address_indirect_get(Operand* o)
 {
-    return o->instruction->context->memory[o->instruction->context->address_registers[o->n]];
+    return m68k_read_b(o->instruction->context, o->instruction->context->address_registers[o->n]); // TODO what about words, longs??
 }
 
 void address_indirect_set(Operand* o, uint32_t value)
 {
-    o->instruction->context->memory[o->instruction->context->address_registers[o->n]] = value;
+    m68k_write_b(o->instruction->context, o->instruction->context->address_registers[o->n], value);
 }
 
 Operand* operand_make_address_indirect(int n, Instruction* instr)
@@ -274,16 +274,16 @@ uint32_t address_indirect_displacement_get(Operand* o)
 {
     M68k* m = o->instruction->context;
     uint32_t address = m->address_registers[o->n];
-    int16_t displacement = (m->memory[m->pc + 2] << 8) | m->memory[m->pc + 3];
-    return m->memory[address + displacement];
+    int16_t displacement = m68k_read_w(o->instruction->context, m->pc + 2);
+    return  m68k_read_w(o->instruction->context, address + displacement);
 }
 
 void address_indirect_displacement_set(Operand* o, uint32_t value)
 {
     M68k* m = o->instruction->context;
     uint32_t address = m->address_registers[o->n];
-    int16_t displacement = (m->memory[m->pc + 2] << 8) | m->memory[m->pc + 3];
-    m->memory[address + displacement] = value;
+    int16_t displacement = m68k_read_w(o->instruction->context, m->pc + 2);
+    m68k_write_w(o->instruction->context, address + displacement, value);
 }
 
 Operand* operand_make_address_indirect_displacement(int n, struct Instruction* instr)
@@ -344,11 +344,9 @@ Operand* operand_make_immediate(Size size, Instruction* instr) // TODO should ge
 
 uint32_t absolute_short_get(Operand* o)
 {
-    uint32_t pc = o->instruction->context->pc;
-    uint8_t* m = o->instruction->context->memory;
-
-    uint32_t address = (m[pc + 2] << 8) | m[pc + 3];
-    return m[address];
+    M68k* m = o->instruction->context;
+    uint16_t address = m68k_read_w(m, m->pc + 2);
+    return  m68k_read_w(m, address); // TODO not sure about w.l
 }
 
 Operand* operand_make_absolute_short(Instruction* instr)
@@ -363,11 +361,9 @@ Operand* operand_make_absolute_short(Instruction* instr)
 
 uint32_t absolute_long_get(Operand* o)
 {
-    uint32_t pc = o->instruction->context->pc;
-    uint8_t* m = o->instruction->context->memory;
-
-    uint32_t address = (m[pc + 2] << 24) | (m[pc + 3] << 16) | (m[pc + 4] << 8) | m[pc + 5];
-    return m[address];
+    M68k* m = o->instruction->context;
+    uint16_t address = m68k_read_w(m, m->pc + 2);
+    return  m68k_read_l(m, address); // TODO not sure about w.l
 }
 
 Operand* operand_make_absolute_long(Instruction* instr)
@@ -387,7 +383,7 @@ Operand* operand_make_absolute_long(Instruction* instr)
 uint32_t pc_displacement_word_get(Operand* o)
 {
     M68k* m = o->instruction->context;
-    return m->pc + ((m->memory[m->pc + 2] << 8) | m->memory[m->pc + 3]) + 2; // TODO no idea why +2
+    return m->pc + m68k_read_w(m, m->pc + 2) + 2; // TODO no idea why +2
 }
 
 Operand* operand_make_pc_displacement(Instruction* instr)

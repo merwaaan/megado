@@ -145,8 +145,9 @@ Instruction* gen_movem(uint16_t opcode, M68k* m)
 
 void pea(Instruction* i)
 {
-    i->context->memory[i->context->address_registers[7]] = GET(i->src);
-    i->context->address_registers[7]--;
+    // TODO
+    //i->context->memory[i->context->address_registers[7]] = GET(i->src);
+    //i->context->address_registers[7]--;
 }
 
 Instruction* gen_pea(uint16_t opcode, M68k* m)

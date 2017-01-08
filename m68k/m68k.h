@@ -36,7 +36,8 @@ typedef struct M68k {
 
     struct Instruction** opcode_table;
 
-    uint8_t* memory;
+    // Arbitrary user-defined data associated with this M68000 instance
+    void* user_data;
 } M68k;
 
 typedef struct Instruction* (GenFunc)(uint16_t opcode, M68k* context);
@@ -47,13 +48,21 @@ typedef struct {
     GenFunc* generator;
 } Pattern;
 
-M68k* m68k_make(uint8_t* memory);
+M68k* m68k_make();
 void m68k_free(M68k*);
 
 struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
 
 uint32_t m68k_step(M68k*); // Execute one instruction and return the current program counter value
 uint32_t m68k_execute(M68k*, uint16_t opcode); // Execute the given opcode and return the current program counter value
+
+void m68k_push(int value); // TODO type?
+int m68k_pop();
+void m68k_jump(int address);
+
+// -----
+// The following I/O functions must be implemented
+// -----
 
 uint8_t m68k_read_b(M68k*, uint32_t address);
 uint16_t m68k_read_w(M68k*, uint32_t address);
@@ -64,7 +73,3 @@ void m68k_write_b(M68k*, uint32_t address, uint8_t value);
 void m68k_write_w(M68k*, uint32_t address, uint16_t value);
 void m68k_write_l(M68k*, uint32_t address, uint32_t value);
 void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);
-
-void m68k_push(int value); // TODO type?
-int m68k_pop();
-void m68k_jump(int address);

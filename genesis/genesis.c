@@ -10,8 +10,13 @@ Genesis* genesis_make()
 {
     Genesis* g = calloc(1, sizeof(Genesis));
     g->memory = calloc(0x1000000, sizeof(uint8_t));
-    g->m68k = m68k_make(g->memory);
+    g->m68k = m68k_make();
     g->vdp = vdp_make();
+
+    // Store a pointer to the Genesis instance in the M68k
+    // In this way, the various modules can be accessed from M68k-centric I/O functions (see m68k_io.c)
+    g->m68k->user_data = g;
+
     return g;
 }
 

@@ -127,6 +127,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="genesis.c" />
+    <ClCompile Include="m68k_io.c" />
     <ClCompile Include="vdp.c" />
   </ItemGroup>
   <ItemGroup>
