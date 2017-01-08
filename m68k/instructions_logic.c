@@ -42,7 +42,7 @@ void and(Instruction* i)
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
-    NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
+    NEGATIVE_SET(i->context, BIT(result, i->size - 1));
 }
 
 Instruction* gen_and(uint16_t opcode, M68k* m)

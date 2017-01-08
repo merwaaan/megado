@@ -31,6 +31,7 @@ void instruction_free(Instruction* instr)
 
 static Pattern _patterns[] =
 {
+    { 0x0200, 0xFF00, &gen_andi },
     { 0x0000, 0xC000, &gen_move },
     { 0x0100, 0xF1C0, &gen_btst }, // TODO other btst form
     { 0x0140, 0xF1C0, &gen_bchg }, // TODO other bchg form
@@ -68,23 +69,6 @@ int pattern_match(uint16_t opcode, Pattern pattern)
 Instruction* pattern_generate(Pattern pattern, uint16_t opcode, M68k* context)
 {
     return pattern.generator(opcode, context);
-}
-
-int operand_length(Operand* operand)
-{
-    if (operand == NULL)
-        return 0;
-
-    switch (operand->type)
-    {
-    case AbsoluteShort:
-    case ProgramCounterDisplacement:
-        return 2;
-    case AbsoluteLong:
-        return 4;
-    default:
-        return 0;
-    }
 }
 
 Instruction* instruction_generate(M68k* context, uint16_t opcode)

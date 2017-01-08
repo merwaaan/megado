@@ -1,5 +1,18 @@
 #include "bit_utils.h"
 
+uint8_t size_in_bytes(Size size)
+{
+    switch (size)
+    {
+    case Byte:
+        return 1;
+    case Word:
+        return 2;
+    case Long:
+        return 4;
+    }
+}
+
 uint16_t bin_parse(char* bin)
 {
     uint16_t value = 0;

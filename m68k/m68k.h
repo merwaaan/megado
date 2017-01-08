@@ -25,13 +25,6 @@
 #define SIGN_EXTEND_B(x) ((x & 0xFF) | (BIT((x), 7) ? 0xFF00 : 0))
 #define SIGN_EXTEND_W(x) ((x & 0xFFFF) | (BIT((x), 15) ? 0xFFFF0000 : 0))
 
-typedef enum 
-{
-    Byte = 8,
-    Word = 16,
-    Long = 32
-} Size;
-
 struct Instruction;
 struct DecodedInstruction;
 

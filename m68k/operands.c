@@ -7,6 +7,9 @@
 
 int operand_tostring(Operand* operand, char* buffer)
 {
+    if (operand == NULL)
+        return 0;
+
     switch (operand->type)
     {
     case Data:
@@ -33,51 +36,53 @@ int operand_tostring(Operand* operand, char* buffer)
         return sprintf(buffer, "(%d).w", operand->n);
     case AbsoluteLong:
         return sprintf(buffer, "(%d).l", operand->n);
+    case Value:
+        return sprintf(buffer, "$%#06X", operand->n);
     default:
-        return sprintf(buffer, "UNSUPPORTED");
+        return 0;
     }
 }
 
-uint8_t operand_size(uint8_t pattern)
+Size operand_size(uint8_t pattern)
 {
     switch (pattern)
     {
     case 0:
-        return 8;
+        return Byte;
     case 1:
-        return 16;
+        return Word;
     case 2:
-        return 32;
+        return Long;
     default:
         //printf("Invalid operand size %d", pattern); // TODO logging fw?
         return 0;
     }
 }
 
-uint8_t operand_size2(uint8_t pattern)
+rsize_t operand_size2(uint8_t pattern)
 {
     switch (pattern)
     {
     case 1:
-        return 8;
+        return Byte;
     case 3:
-        return 16;
+        return Word;
     case 2:
-        return 32;
+        return Long;
     default:
         //printf("Invalid operand size %d", pattern); // TODO logging fw?
         return 0;
     }
 }
 
-uint8_t operand_size3(uint8_t pattern)
+Size operand_size3(uint8_t pattern)
 {
     switch (pattern)
     {
     case 0:
-        return 16;
+        return Word;
     case 1:
-        return 32;
+        return Long;
     default:
         //printf("Invalid operand size %d", pattern); // TODO logging fw?
         return 0;
@@ -134,7 +139,7 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
     }
 }
 
-void noop(Operand* this, uint32_t value)
+void noop(Operand* o, uint32_t value)
 {
 }
 
@@ -142,14 +147,14 @@ void noop(Operand* this, uint32_t value)
  * Direct data register value
  */
 
-uint32_t data_get(Operand* this)
+uint32_t data_get(Operand* o)
 {
-    return this->instruction->context->data_registers[this->n];
+    return o->instruction->context->data_registers[o->n];
 }
 
-void data_set(Operand* this, uint32_t value)
+void data_set(Operand* o, uint32_t value)
 {
-    this->instruction->context->data_registers[this->n] = value;
+    o->instruction->context->data_registers[o->n] = value;
 }
 
 Operand* operand_make_data(int n, Instruction* instr)
@@ -167,14 +172,14 @@ Operand* operand_make_data(int n, Instruction* instr)
  * Direct address register value
  */
 
-uint32_t address_get(Operand* this)
+uint32_t address_get(Operand* o)
 {
-    return this->instruction->context->address_registers[this->n];
+    return o->instruction->context->address_registers[o->n];
 }
 
-void address_set(Operand* this, uint32_t value)
+void address_set(Operand* o, uint32_t value)
 {
-    this->instruction->context->address_registers[this->n] = value; // TODO sign-extend?
+    o->instruction->context->address_registers[o->n] = value; // TODO sign-extend?
 }
 
 Operand* operand_make_address(int n, Instruction* instr)
@@ -194,14 +199,14 @@ Operand* operand_make_address(int n, Instruction* instr)
  * The register contains the address of the data in memory.
  */
 
-uint32_t address_indirect_get(Operand* this)
+uint32_t address_indirect_get(Operand* o)
 {
-    return this->instruction->context->memory[this->instruction->context->address_registers[this->n]];
+    return o->instruction->context->memory[o->instruction->context->address_registers[o->n]];
 }
 
-void address_indirect_set(Operand* this, uint32_t value)
+void address_indirect_set(Operand* o, uint32_t value)
 {
-    this->instruction->context->memory[this->instruction->context->address_registers[this->n]] = value;
+    o->instruction->context->memory[o->instruction->context->address_registers[o->n]] = value;
 }
 
 Operand* operand_make_address_indirect(int n, Instruction* instr)
@@ -221,9 +226,9 @@ Operand* operand_make_address_indirect(int n, Instruction* instr)
  * The address register is incremented AFTER reading/writing data.
  */
 
-void address_inc(Operand* this)
+void address_inc(Operand* o)
 {
-    this->instruction->context->address_registers[this->n] += this->instruction->size;
+    o->instruction->context->address_registers[o->n] += size_in_bytes(o->instruction->size);
 }
 
 Operand* operand_make_address_indirect_postincrement(int n, struct Instruction* instr)
@@ -244,9 +249,9 @@ Operand* operand_make_address_indirect_postincrement(int n, struct Instruction* 
 * The address register is decremented BEFORE reading/writing data.
 */
 
-void address_dec(Operand* this)
+void address_dec(Operand* o)
 {
-    this->instruction->context->address_registers[this->n] -= this->instruction->size;
+    o->instruction->context->address_registers[o->n] -= o->instruction->size;
 }
 
 Operand* operand_make_address_indirect_predecrement(int n, struct Instruction* instr)
@@ -265,20 +270,20 @@ Operand* operand_make_address_indirect_predecrement(int n, struct Instruction* i
  * Address indirect with displacement
  */
 
-uint32_t address_indirect_displacement_get(Operand* this)
+uint32_t address_indirect_displacement_get(Operand* o)
 {
-    M68k* m = this->instruction->context;
-    uint32_t address = m->address_registers[this->n];
+    M68k* m = o->instruction->context;
+    uint32_t address = m->address_registers[o->n];
     int16_t displacement = (m->memory[m->pc + 2] << 8) | m->memory[m->pc + 3];
     return m->memory[address + displacement];
 }
 
-void address_indirect_displacement_set(Operand* this, uint32_t value)
+void address_indirect_displacement_set(Operand* o, uint32_t value)
 {
-    M68k* m = this->instruction->context;
-    uint32_t address = m->address_registers[this->n];
+    M68k* m = o->instruction->context;
+    uint32_t address = m->address_registers[o->n];
     int16_t displacement = (m->memory[m->pc + 2] << 8) | m->memory[m->pc + 3];
-    return m->memory[address + displacement] = value;
+    m->memory[address + displacement] = value;
 }
 
 Operand* operand_make_address_indirect_displacement(int n, struct Instruction* instr)
@@ -296,25 +301,22 @@ Operand* operand_make_address_indirect_displacement(int n, struct Instruction* i
  * Immediate value encoded within an instruction
  */
 
-uint32_t immediate_get_byte(Operand* this)
+uint32_t immediate_get_byte(Operand* o)
 {
-    M68k* m = this->instruction->context;
-    return m->memory[m->pc + 3];
+    return m68k_read_b(o->instruction->context, o->instruction->context->pc + 3);
 }
 
-uint32_t immediate_get_word(Operand* this)
+uint32_t immediate_get_word(Operand* o)
 {
-    M68k* m = this->instruction->context;
-    return (m->memory[m->pc + 2] << 8) | m->memory[m->pc + 3];
+    return m68k_read_w(o->instruction->context, o->instruction->context->pc + 2);
 }
 
-uint32_t immediate_get_long(Operand* this)
+uint32_t immediate_get_long(Operand* o)
 {
-    M68k* m = this->instruction->context;
-    return (m->memory[m->pc + 2] << 24) | (m->memory[m->pc + 3] << 16) | (m->memory[m->pc + 4] << 8) | m->memory[m->pc + 5];
+    return m68k_read_l(o->instruction->context, o->instruction->context->pc + 2);
 }
 
-Operand* operand_make_immediate(int size, Instruction* instr) // TODO should get data in ext
+Operand* operand_make_immediate(Size size, Instruction* instr) // TODO should get data in ext
 {
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
@@ -322,13 +324,13 @@ Operand* operand_make_immediate(int size, Instruction* instr) // TODO should get
     op->set = noop;
 
     switch (size) {
-    case 8:
+    case Byte:
         op->get = immediate_get_byte;
         break;
-    case 16:
+    case Word:
         op->get = immediate_get_word;
         break;
-    case 32:
+    case Long:
         op->get = immediate_get_long;
         break;
     }
@@ -340,10 +342,10 @@ Operand* operand_make_immediate(int size, Instruction* instr) // TODO should get
  * Extension word or long word following an instruction
  */
 
-uint32_t absolute_short_get(Operand* this)
+uint32_t absolute_short_get(Operand* o)
 {
-    uint32_t pc = this->instruction->context->pc;
-    uint8_t* m = this->instruction->context->memory;
+    uint32_t pc = o->instruction->context->pc;
+    uint8_t* m = o->instruction->context->memory;
 
     uint32_t address = (m[pc + 2] << 8) | m[pc + 3];
     return m[address];
@@ -359,10 +361,10 @@ Operand* operand_make_absolute_short(Instruction* instr)
     return op;
 }
 
-uint32_t absolute_long_get(Operand* this)
+uint32_t absolute_long_get(Operand* o)
 {
-    uint32_t pc = this->instruction->context->pc;
-    uint8_t* m = this->instruction->context->memory;
+    uint32_t pc = o->instruction->context->pc;
+    uint8_t* m = o->instruction->context->memory;
 
     uint32_t address = (m[pc + 2] << 24) | (m[pc + 3] << 16) | (m[pc + 4] << 8) | m[pc + 5];
     return m[address];
@@ -382,9 +384,9 @@ Operand* operand_make_absolute_long(Instruction* instr)
  *
  */
 
-uint32_t pc_displacement_word_get(Operand* this)
+uint32_t pc_displacement_word_get(Operand* o)
 {
-    M68k* m = this->instruction->context;
+    M68k* m = o->instruction->context;
     return m->pc + ((m->memory[m->pc + 2] << 8) | m->memory[m->pc + 3]) + 2; // TODO no idea why +2
 }
 
@@ -396,4 +398,49 @@ Operand* operand_make_pc_displacement(Instruction* instr)
     op->get = pc_displacement_word_get;
     op->set = noop;
     return op;
+}
+
+/*
+* Valeu directly stored within the opcode
+*/
+
+uint32_t value_get(Operand* o)
+{
+    return o->n;
+}
+
+Operand* operand_make_value(int value, struct Instruction* instr)
+{
+    Operand* op = calloc(1, sizeof(Operand));
+    op->type = Value;
+    op->instruction = instr;
+    op->n = value;
+    op->get = value_get;
+    op->set = noop;
+    return op;
+}
+
+
+
+int operand_length(Operand* operand)
+{
+    if (operand == NULL)
+        return 0;
+
+    switch (operand->type)
+    {
+    case AbsoluteShort:
+    case AddressIndirectDisplacement:
+    case ProgramCounterDisplacement:
+        return 2;
+    case AbsoluteLong:
+        return 4;
+    case Immediate:
+        if (operand->get == immediate_get_byte || operand->get == immediate_get_word)
+            return 2;
+        else
+            return 4;
+    default:
+        return 0;
+    }
 }

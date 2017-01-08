@@ -23,6 +23,16 @@
 #define MASK_BELOW_INC(x, n) ((x) & (0xFFFFFFFFF << ((n) + 1)))
 #define MASK_ABOVE_INC(x, n) ((x) & ~(0xFFFFFFFFF << (n)))
 
+typedef enum
+{
+    Byte = 8,
+    Word = 16,
+    Long = 32
+} Size;
+
+// Give the nyte coutn for each size
+uint8_t size_in_bytes(Size);
+
 // Return the decimal value of a string representing a base-2 number
 uint16_t bin_parse(char* bin);
 

@@ -18,9 +18,9 @@ M68k* m68k_make(uint8_t* memory)
     // Generate every possible opcode
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
-        if (opcode == 0x4bfa)
+        if (opcode == 0x0200)
         {
-            printf("1");
+            printf("");
         }
         Instruction* instr = instruction_generate(m68k, opcode);
 
@@ -52,8 +52,7 @@ void m68k_free(M68k* m)
 
 DecodedInstruction* m68k_decode(M68k* m, uint32_t pc)
 {
-    printf("...%p %d...\n", m, m->data_registers[1]);
-    uint16_t opcode = (m->memory[m->pc] << 8) | m->memory[m->pc + 1];
+    uint16_t opcode = m68k_read_w(m, pc);
     printf("Decoding opcode %#06X [%#010X]...\n", opcode, pc);
 
     Instruction* instr = m->opcode_table[opcode];
@@ -98,62 +97,68 @@ uint32_t m68k_execute(M68k* m, uint16_t opcode)
     }
     else
     {
+        DecodedInstruction* d = m68k_decode(m, m->pc);
+        // TODO different func to generate and print decoded instr
+
         instr->func(instr);
 
         m->pc += instr->length;
-
         // TODO can only address 2^24 bytes in practice
+
+        free(d);
     }
 
     return m->pc;
 }
 
-uint8_t read_b(M68k* m, uint32_t address)
+uint8_t m68k_read_b(M68k* m, uint32_t address)
 {
     return m->memory[address];
 }
 
-uint16_t read_w(M68k* m, uint32_t address)
+uint16_t m68k_read_w(M68k* m, uint32_t address)
 {
     return
         (m->memory[address] << 8) |
         m->memory[address + 1];
 }
 
-uint32_t read_l(M68k* m, uint32_t address)
+uint32_t m68k_read_l(M68k* m, uint32_t address)
 {
     return
         (m->memory[address] << 24) |
         (m->memory[address + 1] << 16) |
         (m->memory[address + 2] << 8) |
-        m->memory[address + 1];
+        m->memory[address + 3];
 }
 
-uint32_t read(M68k* m, Size size, uint32_t address)
+uint32_t m68k_read(M68k* m, Size size, uint32_t address)
 {
     switch (size)
     {
     case Byte:
-        return read_b(m, address);
+        return m68k_read_b(m, address);
     case Word:
-        return read_b(m, address);
+        return m68k_read_w(m, address);
     case Long:
-        return read_b(m, address);
+        return m68k_read_l(m, address);
+    default:
+        return 0xFF; // TODO error?
     }
 }
 
-void write_b(M68k* m, uint32_t address, uint8_t value)
+void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
 {
     m->memory[address] = value;
 }
 
-void write_w(M68k* m, uint32_t address, uint16_t value)
+void m68k_write_w(M68k* m, uint32_t address, uint16_t value)
 {
     m->memory[address] = (value & 0xFF00) >> 8;
     m->memory[address + 1] = value & 0xFF;
 }
 
-void write_l(M68k* m, uint32_t address, uint32_t value)
+void m68k_write_l(M68k* m, uint32_t address, uint32_t value)
 {
     m->memory[address] = (value & 0xFF000000) >> 24;
     m->memory[address + 1] = (value & 0xFF0000) >> 16;
@@ -161,16 +166,16 @@ void write_l(M68k* m, uint32_t address, uint32_t value)
     m->memory[address + 3] = value & 0xFF;
 }
 
-void write(M68k* m, Size size, uint32_t address, uint32_t value)
+void m68k_write(M68k* m, Size size, uint32_t address, uint32_t value)
 {
     switch (size)
     {
     case Byte:
-        write_b(m, address, value);
+        m68k_write_b(m, address, value);
     case Word:
-        write_w(m, address, value);
+        m68k_write_w(m, address, value);
     case Long:
-        write_l(m, address, value);
+        m68k_write_l(m, address, value);
     }
 }
 

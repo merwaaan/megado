@@ -17,18 +17,19 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
 {
     Instruction* i = calloc(1, sizeof(Instruction));
     i->context = m;
-    i->name = "BCC";
+    i->name = "BCC"; // TODO set name wrt condition
     i->func = bcc;
 
+    // Consider the condition as an operand
     i->dst = operand_make_condition(FRAGMENT(opcode, 11, 8), i);
 
     int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
         i->src = operand_make_absolute_short(i);
     else if (displacement == 0xFF)
-        i->src = operand_make_absolute_short(i);
+        i->src = operand_make_absolute_long(i);
     else
-        i->src = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);
+        i->src = operand_make_value(FRAGMENT(opcode, 7, 0), i);
 
     return i;
 }

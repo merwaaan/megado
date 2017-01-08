@@ -92,60 +92,35 @@ void movem(Instruction* i)
     // TODO
     // incomplete version, this opcode is super confusing
 
-    uint16_t mask = (i->context->memory[i->context->pc + 2] << 8) | i->context->memory[i->context->pc + 3];
+    uint16_t mask = m68k_read_w(i->context, i->context->pc + 2);
 
     uint32_t cursor = i->context->address_registers[i->src->n];
 
     for (int m = 0; m < 16; ++m)
-        if (BIT(mask, m)) {
-
+        if (BIT(mask, m))
+        {
             // memory -> register
-            if (i->src != NULL) {
-
+            if (i->src != NULL)
+            {
                 uint32_t* reg = m < 8 ? i->context->data_registers + m : i->context->address_registers + m - 8;
 
-                *reg = (i->context->memory[cursor] << 8) | i->context->memory[cursor + 1];
+                *reg = m68k_read(i->context, i->size, cursor);
 
-                if (i->size == 16)
+                if (i->size == Word)
                     *reg = SIGN_EXTEND_W(*reg);
+
+                // In post-increment mode, increment after EACH transfer
+                if (i->src->type == AddressIndirectPostInc)
+                    i->src->post(i->src);
+            }
+            // register -> memory
+            else
+            {
+                // TODO
             }
 
             cursor += i->size == 16 ? 2 : 4;
         }
-
-    /*for (int m = 0; m < 16; ++m)
-        if (mask & (1 << (15 - m))) {
-
-            // memory -> register
-            if (i->src != NULL)
-                i->context->data_registers[m] = i->context->memory[cursor];
-            // register -> memory
-            else
-                i->context->memory[cursor] = i->context->data_registers[m];
-
-            cursor += i->size == 16 ? 2 : 4;
-        }*/
-
-        /*uint16_t mask = (i->context->memory[i->context->pc + 2] << 8) | i->context->memory[i->context->pc + 3];
-
-        // TODO different mask for predecrement mode
-        // TODO long size
-        // TODO sign extend words
-
-        uint32_t cursor = GET(i->src ? i->src : i->dst);
-
-        for (int m = 0; m < 16; ++m)
-            if (mask & (1 << (15 - m))) {
-
-                // memory -> register
-                if (i->src != NULL)
-                    i->context->data_registers[m] = i->context->memory[cursor];
-                // register -> memory
-                else
-                    i->context->memory[cursor] = i->context->data_registers[m];
-
-                cursor += i->size == 16 ? 2 : 4;
-            }*/
 }
 
 Instruction* gen_movem(uint16_t opcode, M68k* m)
