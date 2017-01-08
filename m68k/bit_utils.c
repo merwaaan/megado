@@ -11,6 +11,8 @@ uint8_t size_in_bytes(Size size)
     case Long:
         return 4;
     }
+
+    return 0;
 }
 
 uint16_t bin_parse(char* bin)
