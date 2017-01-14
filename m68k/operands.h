@@ -41,7 +41,9 @@ typedef enum
     AbsoluteByte,
     AbsoluteShort,
     AbsoluteLong,
-    Value
+    Value,
+
+    BranchingOffset
 } OperandType;
 
 typedef struct Operand
@@ -72,6 +74,7 @@ Operand* operand_make_absolute_short(struct Instruction*);
 Operand* operand_make_absolute_long(struct Instruction*);
 Operand* operand_make_pc_displacement(struct Instruction*);
 Operand* operand_make_value(int value, struct Instruction*);
+Operand* operand_make_branching_offset(struct Instruction*, Size size);
 
 Size operand_size(uint8_t pattern);
 Size operand_size2(uint8_t pattern);

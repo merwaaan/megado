@@ -25,21 +25,23 @@ int operand_tostring(Operand* operand, uint32_t instr_address, char* buffer)
     case AddressIndirectPostInc:
         return sprintf(buffer, "(A%d)+", operand->n);
     case AddressIndirectDisplacement:
-        return sprintf(buffer, "TODO (%#010x,A%d)-", GET_RELATIVE(operand, instr_address), operand->n);
+        return sprintf(buffer, "TODO (%010x,A%d)", GET_RELATIVE(operand, instr_address), operand->n);
     case AddressIndirectIndexed:
-        return sprintf(buffer, "TODO %d(A%d, D%d)-", operand->n, operand->n, operand->n);
+        return sprintf(buffer, "TODO %d(A%d, D%d)", operand->n, operand->n, operand->n);
     case ProgramCounterDisplacement:
-        return sprintf(buffer, "TODO (%#010x,PC)-", GET_RELATIVE(operand, instr_address));
+        return sprintf(buffer, "TODO (%010x,PC)", GET_RELATIVE(operand, instr_address));
     case ProgramCounterIndexed:
-        return sprintf(buffer, "TODO %d(PC, D%d)-", operand->n, operand->n);
+        return sprintf(buffer, "TODO %d(PC, D%d)", operand->n, operand->n);
     case Immediate:
-        return sprintf(buffer, "#$%#04x", GET_RELATIVE(operand, instr_address));
+        return sprintf(buffer, "#$%04x", GET_RELATIVE(operand, instr_address));
     case Value:
-        return sprintf(buffer, "#$%#04x", operand->n);
+        return sprintf(buffer, "#$%04x", operand->n);
     case AbsoluteShort:
-        return sprintf(buffer, "($%#06x).w", m68k_read_w(operand->instruction->context, instr_address + 2));
+        return sprintf(buffer, "($%06x).w", m68k_read_w(operand->instruction->context, instr_address + 2));
     case AbsoluteLong:
-        return sprintf(buffer, "($%#010x).l", m68k_read_l(operand->instruction->context, instr_address + 2));
+        return sprintf(buffer, "($%010x).l", m68k_read_l(operand->instruction->context, instr_address + 2));
+    case BranchingOffset:
+        return sprintf(buffer, "$%010x", instr_address + GET_RELATIVE(operand, instr_address) + 2);
     default:
         return 0;
     }
@@ -421,6 +423,53 @@ Operand* operand_make_value(int value, struct Instruction* instr)
     op->set = noop;
     return op;
 }
+
+/*
+ * Branching offset (specific to control flow isntruction such as Bcc)
+ * TODO can't I factor this?
+ */
+
+uint32_t branching_offset_byte_get(Operand* o, uint32_t instr_address)
+{
+    return m68k_read_b(o->instruction->context, instr_address + 1);
+}
+
+uint32_t branching_offset_word_get(Operand* o, uint32_t instr_address)
+{
+    return m68k_read_w(o->instruction->context, instr_address + 2);
+}
+
+uint32_t branching_offset_long_get(Operand* o, uint32_t instr_address)
+{
+    return m68k_read_l(o->instruction->context, instr_address + 2);
+}
+
+Operand* operand_make_branching_offset(Instruction* instr, Size size)
+{
+    Operand* op = calloc(1, sizeof(Operand));
+    op->instruction = instr;
+    op->type = BranchingOffset;
+
+    op->set = noop;
+
+    switch (size)
+    {
+    case Byte:
+        op->get = branching_offset_byte_get;
+        break;
+    case Word:
+        op->get = branching_offset_byte_get;
+        break;
+    case Long:
+        op->get = branching_offset_byte_get;
+        break;
+    }
+
+    return op;
+}
+
+
+
 
 int operand_length(Operand* operand)
 {

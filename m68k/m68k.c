@@ -89,7 +89,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
         pos += operand_tostring(instr->src, instr_address, buffer + pos);
 
     if (instr->src != NULL && instr->dst != NULL)
-        pos += sprintf(buffer + pos, ",");
+        pos += sprintf(buffer + pos, ", ");
 
     if (instr->dst != NULL)
         pos += operand_tostring(instr->dst, instr_address, buffer + pos);

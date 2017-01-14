@@ -193,7 +193,7 @@ Instruction* gen_movea(uint16_t opcode, M68k* m)
 }
 
 void move_usp(Instruction* i)
-{
+{// TODO move address value or pointed value?
     // Register to stack
     if (i->src != NULL)
         m68k_write_l(i->context, i->context->address_registers[7], GET(i->src));

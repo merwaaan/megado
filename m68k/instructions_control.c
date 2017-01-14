@@ -10,7 +10,7 @@
 
 void bcc(Instruction* i)
 {
-    if (GET(i->dst))
+    if (i->condition->func(i->context))
         i->context->pc += GET(i->src);
 }
 
@@ -23,14 +23,14 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
 
     i->condition = condition_get(i, FRAGMENT(opcode, 11, 8));
     //sprintf(i->name, "B%s", i->condition->mnemonics);
-    
+
     int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
-        i->src = operand_make_absolute_short(i);
+        i->src = operand_make_branching_offset(i, Word);
     else if (displacement == 0xFF)
-        i->src = operand_make_absolute_long(i);
+        i->src = operand_make_branching_offset(i, Long);
     else
-        i->src = operand_make_value(FRAGMENT(opcode, 7, 0), i);
+        i->src = operand_make_branching_offset(i, Byte);
 
     return i;
 }
