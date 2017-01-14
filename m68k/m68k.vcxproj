@@ -129,6 +129,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bit_utils.h" />
+    <ClInclude Include="conditions.h" />
     <ClInclude Include="instruction.h" />
     <ClInclude Include="instructions_arithmetic.h" />
     <ClInclude Include="instructions_bit.h" />

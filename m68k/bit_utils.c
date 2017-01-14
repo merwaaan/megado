@@ -28,7 +28,7 @@ uint16_t bin_parse(char* bin)
     return value;
 }
 
-char* bin_tostring(int x)
+char* bin_tostring(int x) // TODO pass buffer
 {
     if (x == 0)
         return "0";

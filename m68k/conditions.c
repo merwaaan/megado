@@ -1,113 +1,110 @@
 #include <stdlib.h>
 
+#include "conditions.h"
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
 
-uint32_t True(Operand* this)
+bool True(M68k* context)
 {
     return 1;
 }
 
-uint32_t False(Operand* this)
+bool False(M68k* context)
 {
     return 0;
 }
 
-uint32_t High(Operand* this)
+bool High(M68k* context)
 {
-    return ZERO(this->instruction->context) + CARRY(this->instruction->context) == 0; // TODO
+    return ZERO(context) + CARRY(context) == 0; // TODO
 }
 
-uint32_t LowOrSame(Operand* this)
+bool LowOrSame(M68k* context)
 {
-    return ZERO(this->instruction->context) | CARRY(this->instruction->context);
+    return ZERO(context) | CARRY(context);
 }
 
-uint32_t CarryClear(Operand* this)
+bool CarryClear(M68k* context)
 {
-    return CARRY(this->instruction->context) == 0;
+    return CARRY(context) == 0;
 }
 
-uint32_t CarrySet(Operand* this)
+bool CarrySet(M68k* context)
 {
-    return CARRY(this->instruction->context) == 1;
+    return CARRY(context) == 1;
 }
 
-uint32_t NotEqual(Operand* this)
+bool NotEqual(M68k* context)
 {
-    return ZERO(this->instruction->context) == 0;
+    return ZERO(context) == 0;
 }
 
-uint32_t Equal(Operand* this)
+bool Equal(M68k* context)
 {
-    return ZERO(this->instruction->context) == 1;
+    return ZERO(context) == 1;
 }
 
-uint32_t OverflowClear(Operand* this)
+bool OverflowClear(M68k* context)
 {
-    return OVERFLOW(this->instruction->context) == 0;
+    return OVERFLOW(context) == 0;
 }
 
-uint32_t OverflowSet(Operand* this)
+bool OverflowSet(M68k* context)
 {
-    return OVERFLOW(this->instruction->context) == 1;
+    return OVERFLOW(context) == 1;
 }
 
-uint32_t Plus(Operand* this)
+bool Plus(M68k* context)
 {
-    return NEGATIVE(this->instruction->context) == 0;
+    return NEGATIVE(context) == 0;
 }
 
-uint32_t Minus(Operand* this)
+bool Minus(M68k* context)
 {
-    return NEGATIVE(this->instruction->context) == 1;
+    return NEGATIVE(context) == 1;
 }
 
-uint32_t GreaterOrEqual(Operand* this)
-{
-    return 0; // TODO
-}
-
-uint32_t LessThan(Operand* this)
+bool GreaterOrEqual(M68k* context)
 {
     return 0; // TODO
 }
 
-uint32_t GreaterThan(Operand* this)
+bool LessThan(M68k* context)
 {
     return 0; // TODO
 }
 
-uint32_t LessOrEqual(Operand* this)
+bool GreaterThan(M68k* context)
 {
     return 0; // TODO
 }
 
-GetFunc conditions[] = {
-    True,
-    False,
-    High,
-    LowOrSame,
-    CarryClear,
-    CarrySet,
-    NotEqual,
-    Equal,
-    OverflowClear,
-    OverflowSet,
-    Plus,
-    Minus,
-    GreaterOrEqual,
-    LessThan,
-    GreaterThan,
-    LessOrEqual
+bool LessOrEqual(M68k* context)
+{
+    return 0; // TODO
+}
+
+static Condition all_conditions[] = {
+    { True, "T" },
+    { False, "F" },
+    { High, "HI" },
+    { LowOrSame, "LS" },
+    { CarryClear, "CC" },
+    { CarrySet, "CS" },
+    { NotEqual, "NE" },
+    { Equal, "EQ" },
+    { OverflowClear, "VC" },
+    { OverflowSet, "VS" },
+    { Plus, "PL" },
+    { Minus, "MI" },
+    { GreaterOrEqual, "GE" },
+    { LessThan, "LT" },
+    { GreaterThan, "GT" },
+    { LessOrEqual, "LE" }
 };
 
-Operand* operand_make_condition(int pattern, Instruction* instr)
+Condition* condition_get(Instruction* instr, int pattern)
 {
-    Operand* op = calloc(1, sizeof(Operand));
-    op->type = Condition;
-    op->get = conditions[pattern & 0xF];
-    op->instruction = instr;
-    return op;
+    return &all_conditions[pattern];
 }

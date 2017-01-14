@@ -38,7 +38,7 @@ typedef enum
     Long = 32
 } Size;
 
-// Give the nyte coutn for each size
+// Give the byte count for each size
 uint8_t size_in_bytes(Size);
 
 // Return the decimal value of a string representing a base-2 number

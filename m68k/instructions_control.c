@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "bit_utils.h"
+#include "conditions.h"
 #include "instruction.h"
 #include "instructions_arithmetic.h"
 #include "m68k.h"
@@ -17,12 +18,12 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
 {
     Instruction* i = calloc(1, sizeof(Instruction));
     i->context = m;
-    i->name = "BCC"; // TODO set name wrt condition
     i->func = bcc;
+    i->name = "BCC"; // TODO set name wrt condition
 
-    // Consider the condition as an operand
-    i->dst = operand_make_condition(FRAGMENT(opcode, 11, 8), i);
-
+    i->condition = condition_get(i, FRAGMENT(opcode, 11, 8));
+    //sprintf(i->name, "B%s", i->condition->mnemonics);
+    
     int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
         i->src = operand_make_absolute_short(i);

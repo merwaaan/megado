@@ -25,21 +25,21 @@ int operand_tostring(Operand* operand, uint32_t instr_address, char* buffer)
     case AddressIndirectPostInc:
         return sprintf(buffer, "(A%d)+", operand->n);
     case AddressIndirectDisplacement:
-        return sprintf(buffer, "(%#010x,A%d)-", GET_RELATIVE(operand, instr_address), operand->n);
+        return sprintf(buffer, "TODO (%#010x,A%d)-", GET_RELATIVE(operand, instr_address), operand->n);
     case AddressIndirectIndexed:
         return sprintf(buffer, "TODO %d(A%d, D%d)-", operand->n, operand->n, operand->n);
     case ProgramCounterDisplacement:
-        return sprintf(buffer, "(%#010x,PC)-", GET_RELATIVE(operand, instr_address));
+        return sprintf(buffer, "TODO (%#010x,PC)-", GET_RELATIVE(operand, instr_address));
     case ProgramCounterIndexed:
         return sprintf(buffer, "TODO %d(PC, D%d)-", operand->n, operand->n);
     case Immediate:
-        return sprintf(buffer, "#%#04x", GET_RELATIVE(operand, instr_address));
+        return sprintf(buffer, "#$%#04x", GET_RELATIVE(operand, instr_address));
     case Value:
-        return sprintf(buffer, "#%#04x", operand->n);
+        return sprintf(buffer, "#$%#04x", operand->n);
     case AbsoluteShort:
-        return sprintf(buffer, "(%#010x).w", GET_RELATIVE(operand, instr_address));
+        return sprintf(buffer, "($%#06x).w", m68k_read_w(operand->instruction->context, instr_address + 2));
     case AbsoluteLong:
-        return sprintf(buffer, "(%#018x).l", GET_RELATIVE(operand, instr_address));
+        return sprintf(buffer, "($%#010x).l", m68k_read_l(operand->instruction->context, instr_address + 2));
     default:
         return 0;
     }

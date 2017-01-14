@@ -3,15 +3,22 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "bit_utils.h"
+
+struct Condition;
+struct Instruction;
 struct M68k;
 struct Operand;
-struct Instruction;
 
 typedef void (InstructionFunc)(struct Instruction*);
 
 typedef struct Instruction {
     char* name;
 
+    // The M68000 instance that the instruction is bound to
+    struct M68k* context;
+
+    // Implementation
     InstructionFunc* func;
 
     // Operands
@@ -19,12 +26,16 @@ typedef struct Instruction {
     struct Operand* dst;
 
     // Data size (byte, word, long)
-    long size; // TODO type?
+    Size size;
 
-    // Instruction length in bytes (depends on the operands)
-    int length; // TODO type?
+    // Instruction length in bytes (depends on the operands' length)
+    uint8_t length;
 
-    struct M68k* context;
+    // Some instruction require extra data
+    union
+    {
+        struct Condition* condition; // Branching condition index (see conditions.h)
+    };
 } Instruction;
 
 // TODO just make it a char*?

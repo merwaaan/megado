@@ -29,7 +29,7 @@ void instruction_free(Instruction* instr)
     free(instr);
 }
 
-static Pattern _patterns[] =
+static Pattern all_patterns[] =
 {
     { 0x0200, 0xFF00, &gen_andi },
     { 0x0040, 0xC1C0, &gen_movea },
@@ -76,13 +76,13 @@ Instruction* pattern_generate(Pattern pattern, uint16_t opcode, M68k* context)
 
 Instruction* instruction_generate(M68k* context, uint16_t opcode)
 {
-    int pattern_count = sizeof(_patterns) / sizeof(Pattern);
+    int pattern_count = sizeof(all_patterns) / sizeof(Pattern);
 
     for (int i = 0; i < pattern_count; ++i)
-        if (pattern_match(opcode, _patterns[i]))
+        if (pattern_match(opcode, all_patterns[i]))
         {
             // Generate the instruction
-            Instruction* instr = pattern_generate(_patterns[i], opcode, context);
+            Instruction* instr = pattern_generate(all_patterns[i], opcode, context);
 
             if (instr == NULL)
                 return NULL;

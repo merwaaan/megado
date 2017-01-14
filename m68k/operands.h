@@ -25,7 +25,8 @@ typedef void(*SetFunc)(struct Operand* o, uint32_t instr_address, uint32_t value
 
 typedef void(*Action)(struct Operand* this);
 
-typedef enum {
+typedef enum
+{
     Unsupported,
     Data,
     Address,
@@ -37,13 +38,14 @@ typedef enum {
     ProgramCounterDisplacement,
     ProgramCounterIndexed,
     Immediate,
+    AbsoluteByte,
     AbsoluteShort,
     AbsoluteLong,
-    Value,
-    Condition
+    Value
 } OperandType;
 
-typedef struct Operand {
+typedef struct Operand
+{
     OperandType type;
 
     GetFunc get;
@@ -70,7 +72,6 @@ Operand* operand_make_absolute_short(struct Instruction*);
 Operand* operand_make_absolute_long(struct Instruction*);
 Operand* operand_make_pc_displacement(struct Instruction*);
 Operand* operand_make_value(int value, struct Instruction*);
-Operand* operand_make_condition(int pattern, struct Instruction*);
 
 Size operand_size(uint8_t pattern);
 Size operand_size2(uint8_t pattern);
