@@ -13,4 +13,5 @@ DEFINE_INSTR(movea);
 DEFINE_INSTR(movem);
 DEFINE_INSTR(moveq);
 DEFINE_INSTR(movep);
+DEFINE_INSTR(move_usp);
 DEFINE_INSTR(pea);

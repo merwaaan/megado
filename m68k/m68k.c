@@ -17,10 +17,12 @@ M68k* m68k_make()
     // Generate every possible opcode
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
-        if (opcode == 0x0200)
+        // Manual breakpoint!
+        if (opcode == 0x7217)
         {
-            printf("");
+            printf("don't get optimized away please");
         }
+
         Instruction* instr = instruction_generate(m68k, opcode);
 
         if (!instruction_valid(instr))
@@ -49,10 +51,10 @@ void m68k_free(M68k* m)
     free(m);
 }
 
-DecodedInstruction* m68k_decode(M68k* m, uint32_t pc)
+DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 {
-    uint16_t opcode = m68k_read_w(m, pc);
-    printf("Decoding opcode %#06X [%#010X]...\n", opcode, pc);
+    uint16_t opcode = m68k_read_w(m, instr_address);
+    printf("Decoding opcode %#06X [%#010X]...\n", opcode, instr_address);
 
     Instruction* instr = m->opcode_table[opcode];
     if (instr == NULL)
@@ -64,12 +66,33 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t pc)
     DecodedInstruction* decoded = calloc(1, sizeof(DecodedInstruction));
 
     char* buffer = calloc(50, sizeof(char));
-    int pos = sprintf(buffer, "%s ", instr->name);
+    int pos = sprintf(buffer, "%s", instr->name);
+
+    char* size_symbol;
+    switch (instr->size)
+    {
+    case Byte:
+        size_symbol = ".b";
+        break;
+    case Word:
+        size_symbol = ".w";
+        break;
+    case Long:
+        size_symbol = ".l";
+        break;
+    default:
+        size_symbol = " ";
+    }
+    pos += sprintf(buffer + pos, "%s ", size_symbol);
 
     if (instr->src != NULL)
-        pos += operand_tostring(instr->src, buffer + pos);
+        pos += operand_tostring(instr->src, instr_address, buffer + pos);
+
+    if (instr->src != NULL && instr->dst != NULL)
+        pos += sprintf(buffer + pos, ",");
+
     if (instr->dst != NULL)
-        pos += operand_tostring(instr->dst, buffer + pos);
+        pos += operand_tostring(instr->dst, instr_address, buffer + pos);
 
     buffer[pos] = '\0';
 
@@ -89,6 +112,12 @@ uint32_t m68k_execute(M68k* m, uint16_t opcode)
 {
     // Fetch the instruction
     Instruction* instr = m->opcode_table[opcode];
+
+    // Manual breakpoint!
+    if (m->pc == 0x23C)
+    {
+        printf("don't get optimized away please");
+    }
 
     if (instr == NULL)
     {

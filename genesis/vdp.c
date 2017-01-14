@@ -8,6 +8,7 @@ Vdp* vdp_make()
     Vdp* v = calloc(1, sizeof(Vdp));
     v->vram = calloc(0x10000, sizeof(uint8_t));
     v->cram = calloc(64, sizeof(uint16_t));
+    v->pending_command = false;
 
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -51,17 +52,32 @@ uint8_t vdp_read_data_hi(Vdp* v)
 
 uint8_t vdp_read_data_lo(Vdp* v)
 {
+    v->pending_command = false;
+
     return 0; // TODO
 }
 
 void vdp_write_data(Vdp* v, uint16_t value)
 {
+    v->pending_command = false;
+
     // TODO
 }
 
 uint16_t vdp_read_control(Vdp* v)
 {
-    return 0; // TODO return status
+    v->pending_command = false;
+    // TODO
+    return
+        (false << 9) | // FIFO not empty
+        (false << 8) | // FIFO not full
+        (false << 7) | // Vertical interrupt occurred
+        (false << 6) | // Sprite overflow
+        (false << 5) | // Sprite collision
+        (false << 4) | // Odd frame
+        (false << 3) | // Vertical blank
+        (false << 2) | // Horizontal blank
+        false;        // NTSC (0) / PAL (1)
 }
 
 void vdp_write_control(Vdp* v, uint16_t value)
@@ -78,12 +94,14 @@ void vdp_write_control(Vdp* v, uint16_t value)
         {
         case 0:
             v->hblank_enabled = BIT(value, 4);
+            v->hv_counter_enabled = !BIT(value, 1);
             return;
 
         case 1:
-            // TODO vdp enabled here too??
+            v->display_enabled = BIT(value, 6);
             v->vblank_enabled = BIT(value, 5);
             v->dma_enabled = BIT(value, 4);
+            v->display_mode = BIT(value, 3);
             return;
 
         case 2:
@@ -99,12 +117,16 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 5:
-            v->sprites_location = FRAGMENT(value, 6, 0);
+            v->sprites_attributetable = FRAGMENT(value, 6, 0);
             return;
 
         case 7:
             v->background_color_palette = FRAGMENT(value, 5, 4);
             v->background_color_entry = FRAGMENT(value, 3, 0);
+            return;
+
+        case 0xA:
+            v->hblank_counter = value;
             return;
 
         case 0xB:
@@ -113,9 +135,9 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 0xC:
-            v->display_width = BIT(value, 7);
+            v->display_width = BIT(value, 7); // Should be same value as bit 0
             v->shadow_highlight_enabled = BIT(value, 3);
-            v->interlace = FRAGMENT(value, 2, 1);
+            v->interlace_mode = FRAGMENT(value, 2, 1);
             return;
 
         case 0xD:
@@ -127,8 +149,8 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 0x10:
-            v->vertical_plane_size = FRAGMENT(value, 5, 4);
-            v->horizontal_plane_size = FRAGMENT(value, 1, 0);
+            v->vertical_plane_size = FRAGMENT(value, 5, 4); // TODO Convert to size
+            v->horizontal_plane_size = FRAGMENT(value, 1, 0); // TODO
             return;
 
         case 0x11:
@@ -148,18 +170,33 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->dma_length = (v->dma_length & 0x0000FFFF) | (value << 16);
             return;
 
-        case 0x15: // TODO
+        case 0x15:
+            v->dma_address = (v->dma_address & 0xFFFFFFFF0000) | value;
             return;
         case 0x16:
+            v->dma_address = (v->dma_address & 0xFFFF0000FFFF) | (value << 16);
             return;
         case 0x17:
+            v->dma_address = (v->dma_address & 0x0000FFFFFFFF) | (value << 32);
+            v->dma_type = FRAGMENT(value, 7, 6); // TODO convert    
             return;
         }
     }
     // Data address set
     else
     {
+        if (!v->pending_command) {
+            v->access_mode = (v->access_mode & 0xFC) | FRAGMENT(value, 15, 14); // B15-14 -> B1-0 of access mode
+            v->access_address = (v->access_address & 0xC000) | FRAGMENT(value, 13, 0); // B13-0 -> B13-0 of address
 
+            v->pending_command = true;
+        }
+        else {
+            v->access_mode = (v->access_mode & 3) | (FRAGMENT(value, 7, 4) << 2); // B7-4 -> B5-2 of access mode
+            v->access_address = (v->access_address & 0x3FFF) | (FRAGMENT(value, 1, 0) << 14); // B1-0 -> B15-14 of address
+
+            v->pending_command = false;
+        }
     }
 }
 

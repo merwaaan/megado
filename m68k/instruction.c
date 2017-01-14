@@ -32,6 +32,7 @@ void instruction_free(Instruction* instr)
 static Pattern _patterns[] =
 {
     { 0x0200, 0xFF00, &gen_andi },
+    { 0x0040, 0xC1C0, &gen_movea },
     { 0x0000, 0xC000, &gen_move },
     { 0x0100, 0xF1C0, &gen_btst }, // TODO other btst form
     { 0x0140, 0xF1C0, &gen_bchg }, // TODO other bchg form
@@ -45,6 +46,7 @@ static Pattern _patterns[] =
     { 0x4880, 0xFEB8, &gen_ext },
     { 0x4880, 0xFB80, &gen_movem },
     { 0x4A00, 0xFF00, &gen_tst },
+    { 0x4E60, 0xFFF0, &gen_move_usp },
     { 0x4E75, 0xFFFF, &gen_rts },
     { 0x4E80, 0xFFC0, &gen_jsr },
     { 0x4EC0, 0xFFC0, &gen_jmp },
@@ -52,6 +54,7 @@ static Pattern _patterns[] =
     { 0x6000, 0xFF00, &gen_bra },
     { 0x6100, 0xFF00, &gen_bsr },
     { 0x6000, 0xF000, &gen_bcc },
+    { 0x7000, 0xF100, &gen_moveq },
     { 0x8000, 0xF000, &gen_or },
     { 0xB000, 0xF000, &gen_eor },
     { 0xC100, 0xF100, &gen_exg },

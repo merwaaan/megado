@@ -143,6 +143,84 @@ Instruction* gen_movem(uint16_t opcode, M68k* m)
     return i;
 }
 
+void moveq(Instruction* i)
+{
+    int32_t value = SIGN_EXTEND_B_L(GET(i->src));
+    SET(i->dst, value);
+
+    CARRY_SET(i->context, false);
+    OVERFLOW_SET(i->context, false);
+    ZERO_SET(i->context, value == 0);
+    NEGATIVE_SET(i->context, BIT(value, 31) == 1);
+}
+
+Instruction* gen_moveq(uint16_t opcode, M68k* m)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = m;
+    i->name = "MOVEQ";
+    i->func = moveq;
+
+    i->src = operand_make_value(BYTE_LO(opcode), i);
+    i->dst = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+
+    return i;
+}
+
+void movea(Instruction* i)
+{
+    int32_t value = GET(i->src);
+
+    if (i->size == Word)
+        value = SIGN_EXTEND_W(value);
+
+    SET(i->dst, value);
+}
+
+Instruction* gen_movea(uint16_t opcode, M68k* m)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = m;
+    i->name = "MOVEA";
+    i->func = movea;
+
+    i->size = operand_size2(FRAGMENT(opcode, 13, 12));
+
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->dst = operand_make_address(FRAGMENT(opcode, 11, 9), i);
+
+    return i;
+}
+
+void move_usp(Instruction* i)
+{
+    // Register to stack
+    if (i->src != NULL)
+        m68k_write_l(i->context, i->context->address_registers[7], GET(i->src));
+    // Stack to register
+    else
+        SET(i->dst, m68k_read_l(i->context, i->context->address_registers[7]));
+}
+
+Instruction* gen_move_usp(uint16_t opcode, M68k* m)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = m;
+    i->name = "MOVE USP";
+    i->func = move_usp;
+    i->size = Long;
+
+    Operand* reg = operand_make_address_indirect(FRAGMENT(opcode, 2, 0), i);
+
+    int direction = BIT(opcode, 3);
+    if (direction)
+        i->dst = reg;
+    else
+        i->src = reg;
+
+    return i;
+}
+
 void pea(Instruction* i)
 {
     // TODO

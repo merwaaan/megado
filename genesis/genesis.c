@@ -65,10 +65,8 @@ void genesis_setup(Genesis* g)
     // http://darkdust.net/writings/megadrive/initializing
     // http://md.squee.co/Howto:Initialise_a_Mega_Drive
 
-    // TODO sp
-
+    g->m68k->address_registers[7] = LONG(g->memory);
     g->m68k->pc = LONG(g->memory + 4); // Entry point
-    printf("Entry point @%#010X\n", g->m68k->pc);
 
     // TODO interrupts
 

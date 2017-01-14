@@ -24,6 +24,7 @@
 
 #define SIGN_EXTEND_B(x) ((x & 0xFF) | (BIT((x), 7) ? 0xFF00 : 0))
 #define SIGN_EXTEND_W(x) ((x & 0xFFFF) | (BIT((x), 15) ? 0xFFFF0000 : 0))
+#define SIGN_EXTEND_B_L(x) ((x & 0xFF) | (BIT((x), 7) ? 0xFFFFFFFFFFFFFF00 : 0))
 
 struct Instruction;
 struct DecodedInstruction;

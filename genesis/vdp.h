@@ -21,21 +21,26 @@ typedef struct Vdp
     uint8_t* vram;
     uint16_t* cram;
 
+    // If set, a first command word has been written.
+    // We're waiting for the second half.
+    bool pending_command;
+
+    // Read/Write configuration.
+    // Set through the control port.
+    int access_mode;
+    int access_address;
+
     // http://md.squee.co/VDP#VDP_Registers
 
     // Register $00
-    bool skip_leftmost_pixels;
     bool hblank_enabled;
-    bool latch_hv_counter; // TODO enabled?
-    bool enabled;
+    bool hv_counter_enabled;
 
     // Register $01
-    bool vram_extended;
     bool display_enabled;
     bool vblank_enabled;
     bool dma_enabled;
     bool display_mode;
-    bool genesis_mode;
 
     // Register $02
     bool plane_a_nametable;
@@ -47,7 +52,7 @@ typedef struct Vdp
     bool plane_b_nametable;
 
     // Register $05
-    bool sprites_location;
+    bool sprites_attributetable;
 
     // Register $07
     bool background_color_palette;
@@ -57,22 +62,16 @@ typedef struct Vdp
     bool hblank_counter; // TODO unclear
 
     // Register $0B
-    // TODO light gun ???
     bool vertical_scrolling;
     bool horizontal_scrolling;
 
     // Register $0C
     int display_width;
     bool shadow_highlight_enabled;
-    int interlace;
-    // TODO external color data ???
-    // TODO pixel clock ???
+    int interlace_mode;
 
     // Register $0D
     int horizontal_scrolltable;
-
-    // Register $0E
-    // TODO 128k mode ???
 
     // Register $0F
     int auto_increment;
@@ -93,7 +92,7 @@ typedef struct Vdp
     int dma_length;
 
     // Register $15 - $17
-    int dma_source;
+    int dma_address;
     int dma_type;
 
     SDL_Window* window;
