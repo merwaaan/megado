@@ -15,6 +15,10 @@
 #define MEM_CHECK_W(a, x) mu_assert_int_eq_hex(x, m68k_read_w(m, a))
 #define MEM_CHECK_L(a, x) mu_assert_int_eq_hex(x, m68k_read_l(m, a))
 
+#define ASSERT(a, b) mu_assert_int_eq_hex(a, b)
+#define ASSERT_BIN(a, b) mu_assert_int_eq_bin(a, b)
+#define ASSERT_STR(a, b) mu_assert_str_eq(a, b)
+
 #define RUN(opcode) m68k_execute(m, bin_parse(opcode))
 
 // This extends minunit to print asserted values in hexadecimal format

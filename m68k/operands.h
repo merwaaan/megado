@@ -48,6 +48,10 @@ typedef enum
 
 typedef struct Operand
 {
+    // The instruction that the operand instance is bound to.
+    // The operand data depends on the instruction size.
+    struct Instruction* instruction;
+
     OperandType type;
 
     GetFunc get;
@@ -57,8 +61,6 @@ typedef struct Operand
     Action post;
 
     int n;
-
-    struct Instruction* instruction;
 } Operand;
 
 int operand_tostring(Operand* operand, uint32_t instr_address, char* buffer);

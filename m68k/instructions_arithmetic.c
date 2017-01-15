@@ -5,9 +5,9 @@
 
 void add(Instruction* i)
 {
-    uint64_t src = GET(i->src);
-    uint64_t dst = GET(i->dst);
-    uint64_t sum = src + dst;
+    uint32_t src = GET(i->src);
+    uint32_t dst = GET(i->dst);
+    uint32_t sum = src + dst; // TODO 64?
 
     uint32_t result = MASK_ABOVE_INC(sum, i->size);
     SET(i->src, MASK_BELOW(dst, i->size) | result);

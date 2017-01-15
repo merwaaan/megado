@@ -153,12 +153,14 @@ void noop(Operand* o, uint32_t instr_address, uint32_t value)
 
 uint32_t data_get(Operand* o, uint32_t instr_address)
 {
-    return o->instruction->context->data_registers[o->n];
+    return MASK_ABOVE_INC(o->instruction->context->data_registers[o->n], o->instruction->size);
 }
 
 void data_set(Operand* o, uint32_t instr_address, uint32_t value)
 {
-    o->instruction->context->data_registers[o->n] = value;
+    o->instruction->context->data_registers[o->n] =
+        MASK_BELOW(o->instruction->context->data_registers[o->n], o->instruction->size) |
+        MASK_ABOVE_INC(value, o->instruction->size);
 }
 
 Operand* operand_make_data(int n, Instruction* instr)
@@ -178,12 +180,14 @@ Operand* operand_make_data(int n, Instruction* instr)
 
 uint32_t address_get(Operand* o, uint32_t instr_address)
 {
-    return o->instruction->context->address_registers[o->n];
+    return MASK_ABOVE_INC(o->instruction->context->address_registers[o->n], o->instruction->size);
 }
 
 void address_set(Operand* o, uint32_t instr_address, uint32_t value)
 {
-    o->instruction->context->address_registers[o->n] = value; // TODO sign-extend?
+    o->instruction->context->address_registers[o->n] =
+        MASK_BELOW(o->instruction->context->address_registers[o->n], o->instruction->size) |
+        MASK_ABOVE_INC(value, o->instruction->size);
 }
 
 Operand* operand_make_address(int n, Instruction* instr)
@@ -201,7 +205,6 @@ Operand* operand_make_address(int n, Instruction* instr)
  * Indirect address register
  *
  * The register contains the address of the data in memory.
- * The increment value depends on the instruction size.
  */
 
 uint32_t address_indirect_get(Operand* o, uint32_t instr_address)
@@ -250,10 +253,11 @@ Operand* operand_make_address_indirect_postincrement(int n, struct Instruction* 
 }
 
 /*
-* Pre-decrement indirect
-*
-* The address register is decremented BEFORE reading/writing data.
-*/
+ * Pre-decrement indirect
+ *
+ * The address register is decremented BEFORE reading/writing data.
+ * The decrement value depends on the instruction size.
+ */
 
 void address_dec(Operand* o)
 {
