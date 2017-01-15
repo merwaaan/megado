@@ -31,6 +31,8 @@
 #define WORD_LO(b) ((b) & 0xFFFF)
 #define WORD_HI(b) (((b) & 0xFFFF0000) >> 16) 
 
+#define MAX_VALUE(size) ((size) == Byte ? 0xFF : ((size) == Word ? 0xFFFF : 0xFFFFFFFF))
+
 typedef enum
 {
     Byte = 8,
