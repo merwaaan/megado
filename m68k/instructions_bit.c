@@ -15,7 +15,7 @@ Instruction* gen_bit_instruction(uint16_t opcode, M68k* m, char* name, Instructi
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+    i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     return i;

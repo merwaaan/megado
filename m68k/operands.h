@@ -28,13 +28,13 @@ typedef void(*Action)(struct Operand* this);
 typedef enum
 {
     Unsupported,
-    Data,
-    Address,
-    AddressIndirect,
-    AddressIndirectPreDec,
-    AddressIndirectPostInc,
-    AddressIndirectDisplacement,
-    AddressIndirectIndexed,
+    DataRegister,
+    AddressRegister,
+    AddressRegisterIndirect,
+    AddressRegisterIndirectPreDec,
+    AddressRegisterIndirectPostInc,
+    AddressRegisterIndirectDisplacement,
+    AddressRegisterIndirectIndexed,
     ProgramCounterDisplacement,
     ProgramCounterIndexed,
     Immediate,
@@ -65,13 +65,13 @@ typedef struct Operand
 
 int operand_tostring(Operand* operand, uint32_t instr_address, char* buffer);
 
-Operand* operand_make_data(int n, struct Instruction*); // TODO put instr first to be consistent with the order modules
-Operand* operand_make_address(int n, struct Instruction*);
-Operand* operand_make_address_indirect(int n, struct Instruction*);
-Operand* operand_make_address_indirect_postincrement(int n, struct Instruction*);
-Operand* operand_make_address_indirect_predecrement(int n, struct Instruction*);
-Operand* operand_make_address_indirect_displacement(int n, struct Instruction*);
-Operand* operand_make_immediate(Size, struct Instruction*);
+Operand* operand_make_data_register(int n, struct Instruction*); // TODO put instr first to be consistent with the order modules
+Operand* operand_make_address_register(int n, struct Instruction*);
+Operand* operand_make_address_register_indirect(int n, struct Instruction*);
+Operand* operand_make_address_register_indirect_predec(int n, struct Instruction*);
+Operand* operand_make_address_register_indirect_postinc(int n, struct Instruction*);
+Operand* operand_make_address_register_indirect_displacement(int n, struct Instruction*);
+Operand* operand_make_immediate_value(Size, struct Instruction*);
 Operand* operand_make_absolute_short(struct Instruction*);
 Operand* operand_make_absolute_long(struct Instruction*);
 Operand* operand_make_pc_displacement(struct Instruction*);

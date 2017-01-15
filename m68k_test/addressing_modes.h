@@ -27,7 +27,7 @@ void teardown_addressing_modes()
 
 MU_TEST(test_data_b)
 {
-    Operand* o = operand_make_data(1, instr);
+    Operand* o = operand_make_data_register(1, instr);
     o->instruction->size = Byte;
 
     DATA(1, 0xFF);
@@ -45,7 +45,7 @@ MU_TEST(test_data_b)
 
 MU_TEST(test_data_w)
 {
-    Operand* o = operand_make_data(1, instr);
+    Operand* o = operand_make_data_register(1, instr);
     o->instruction->size = Word;
 
     DATA(1, 0xFFFF);
@@ -63,7 +63,7 @@ MU_TEST(test_data_w)
 
 MU_TEST(test_data_l)
 {
-    Operand* o = operand_make_data(1, instr);
+    Operand* o = operand_make_data_register(1, instr);
     o->instruction->size = Long;
 
     DATA(1, 0xFFFFFFFF);
@@ -75,7 +75,7 @@ MU_TEST(test_data_l)
 
 MU_TEST(test_address_b)
 {
-    Operand* o = operand_make_address(3, instr);
+    Operand* o = operand_make_address_register(3, instr);
     o->instruction->size = Byte;
 
     ADDR(3, 0xAA);
@@ -93,7 +93,7 @@ MU_TEST(test_address_b)
 
 MU_TEST(test_address_w)
 {
-    Operand* o = operand_make_address(3, instr);
+    Operand* o = operand_make_address_register(3, instr);
     o->instruction->size = Word;
 
     ADDR(3, 0xAAAA);
@@ -111,7 +111,7 @@ MU_TEST(test_address_w)
 
 MU_TEST(test_address_l)
 {
-    Operand* o = operand_make_address(3, instr);
+    Operand* o = operand_make_address_register(3, instr);
     o->instruction->size = Long;
 
     ADDR(3, 0xAAAAAAAA);
@@ -123,7 +123,7 @@ MU_TEST(test_address_l)
 
 MU_TEST(test_address_indirect_b)
 {
-    Operand* o = operand_make_address_indirect(5, instr);
+    Operand* o = operand_make_address_register_indirect(5, instr);
     o->instruction->size = Byte;
 
     ADDR(5, 0x123ABC);
@@ -142,7 +142,7 @@ MU_TEST(test_address_indirect_b)
 
 MU_TEST(test_address_indirect_w)
 {
-    Operand* o = operand_make_address_indirect(5, instr);
+    Operand* o = operand_make_address_register_indirect(5, instr);
     o->instruction->size = Word;
 
     ADDR(5, 0x123ABC);
@@ -161,7 +161,7 @@ MU_TEST(test_address_indirect_w)
 
 MU_TEST(test_address_indirect_l)
 {
-    Operand* o = operand_make_address_indirect(5, instr);
+    Operand* o = operand_make_address_register_indirect(5, instr);
     o->instruction->size = Long;
 
     ADDR(5, 0x123ABC);

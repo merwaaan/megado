@@ -24,16 +24,16 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
     switch (mode)
     {
     case 8:
-        i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
-        i->dst = operand_make_data(FRAGMENT(opcode, 2, 0), i);
+        i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+        i->dst = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
         break;
     case 9:
-        i->src = operand_make_address(FRAGMENT(opcode, 11, 9), i);
-        i->dst = operand_make_address(FRAGMENT(opcode, 2, 0), i);
+        i->src = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
+        i->dst = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
         break;
     case 17:
-        i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
-        i->dst = operand_make_address(FRAGMENT(opcode, 2, 0), i);
+        i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+        i->dst = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
         break;
     default:
         // TODO error
@@ -56,7 +56,7 @@ Instruction* gen_lea(uint16_t opcode, M68k* m)
     i->func = lea;
 
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_address(FRAGMENT(opcode, 11, 9), i);
+    i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
 
     return i;
 }
@@ -109,7 +109,7 @@ void movem(Instruction* i)
                     *reg = SIGN_EXTEND_W(*reg);
 
                 // In post-increment mode, increment after EACH transfer
-                if (i->src->type == AddressIndirectPostInc)
+                if (i->src->type == AddressRegisterIndirectPostInc)
                     i->src->post(i->src);
             }
             // register -> memory
@@ -161,7 +161,7 @@ Instruction* gen_moveq(uint16_t opcode, M68k* m)
     i->func = moveq;
 
     i->src = operand_make_value(BYTE_LO(opcode), i);
-    i->dst = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
 
     return i;
 }
@@ -186,7 +186,7 @@ Instruction* gen_movea(uint16_t opcode, M68k* m)
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
 
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_address(FRAGMENT(opcode, 11, 9), i);
+    i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
 
     return i;
 }
@@ -209,7 +209,7 @@ Instruction* gen_move_usp(uint16_t opcode, M68k* m)
     i->func = move_usp;
     i->size = Long;
 
-    Operand* reg = operand_make_address_indirect(FRAGMENT(opcode, 2, 0), i);
+    Operand* reg = operand_make_address_register_indirect(FRAGMENT(opcode, 2, 0), i);
 
     int direction = BIT(opcode, 3);
     if (direction)

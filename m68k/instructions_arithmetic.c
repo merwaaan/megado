@@ -29,7 +29,7 @@ Instruction* gen_add(uint16_t opcode, M68k* m)
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    Operand* reg = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+    Operand* reg = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     int direction = BIT(opcode, 8);
@@ -97,7 +97,7 @@ Instruction* gen_ext(uint16_t opcode, M68k* m)
     i->name = "EXT";
     i->func = ext;
     i->size = operand_sign_extension(FRAGMENT(opcode, 8, 6));
-    i->src = operand_make_data(FRAGMENT(opcode, 3, 0), i);
+    i->src = operand_make_data_register(FRAGMENT(opcode, 3, 0), i);
     return i;
 }
 
@@ -119,7 +119,7 @@ Instruction* gen_muls(uint16_t opcode, M68k* m)
     i->name = "MULS";
     i->func = muls;
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+    i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
@@ -142,7 +142,7 @@ Instruction* gen_mulu(uint16_t opcode, M68k* m)
     i->name = "MULU";
     i->func = mulu;
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+    i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }

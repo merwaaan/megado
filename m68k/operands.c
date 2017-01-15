@@ -14,19 +14,19 @@ int operand_tostring(Operand* operand, uint32_t instr_address, char* buffer)
 
     switch (operand->type)
     {
-    case Data:
+    case DataRegister:
         return sprintf(buffer, "D%d", operand->n);
-    case Address:
+    case AddressRegister:
         return sprintf(buffer, "A%d", operand->n);
-    case AddressIndirect:
+    case AddressRegisterIndirect:
         return sprintf(buffer, "(A%d)", operand->n);
-    case AddressIndirectPreDec:
+    case AddressRegisterIndirectPreDec:
         return sprintf(buffer, "-(A%d)", operand->n);
-    case AddressIndirectPostInc:
+    case AddressRegisterIndirectPostInc:
         return sprintf(buffer, "(A%d)+", operand->n);
-    case AddressIndirectDisplacement:
+    case AddressRegisterIndirectDisplacement:
         return sprintf(buffer, "TODO (%010x,A%d)", GET_RELATIVE(operand, instr_address), operand->n);
-    case AddressIndirectIndexed:
+    case AddressRegisterIndirectIndexed:
         return sprintf(buffer, "TODO %d(A%d, D%d)", operand->n, operand->n, operand->n);
     case ProgramCounterDisplacement:
         return sprintf(buffer, "TODO (%010x,PC)", GET_RELATIVE(operand, instr_address));
@@ -117,17 +117,17 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
     switch (pattern & 0x38)
     {
     case 0:
-        return operand_make_data(pattern & 7, instr);
+        return operand_make_data_register(pattern & 7, instr);
     case 0x8:
-        return operand_make_address(pattern & 7, instr);
+        return operand_make_address_register(pattern & 7, instr);
     case 0x10:
-        return operand_make_address_indirect(pattern & 7, instr);
+        return operand_make_address_register_indirect(pattern & 7, instr);
     case 0x18:
-        return operand_make_address_indirect_postincrement(pattern & 7, instr);
+        return operand_make_address_register_indirect_postinc(pattern & 7, instr);
     case 0x20:
-        return operand_make_address_indirect_predecrement(pattern & 7, instr);
+        return operand_make_address_register_indirect_predec(pattern & 7, instr);
     case 0x28:
-        return operand_make_address_indirect_displacement(pattern & 7, instr);
+        return operand_make_address_register_indirect_displacement(pattern & 7, instr);
     case 0x38:
         switch (pattern & 7)
         {
@@ -163,11 +163,11 @@ void data_set(Operand* o, uint32_t instr_address, uint32_t value)
         MASK_ABOVE_INC(value, o->instruction->size);
 }
 
-Operand* operand_make_data(int n, Instruction* instr)
+Operand* operand_make_data_register(int n, Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
-    op->type = Data;
+    op->type = DataRegister;
     op->get = data_get;
     op->set = data_set;
     op->n = n;
@@ -190,11 +190,11 @@ void address_set(Operand* o, uint32_t instr_address, uint32_t value)
         MASK_ABOVE_INC(value, o->instruction->size);
 }
 
-Operand* operand_make_address(int n, Instruction* instr)
+Operand* operand_make_address_register(int n, Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
-    op->type = Address;
+    op->type = AddressRegister;
     op->get = address_get;
     op->set = address_set;
     op->n = n;
@@ -217,11 +217,11 @@ void address_indirect_set(Operand* o, uint32_t instr_address, uint32_t value)
     m68k_write(o->instruction->context, o->instruction->size, o->instruction->context->address_registers[o->n], value);
 }
 
-Operand* operand_make_address_indirect(int n, Instruction* instr)
+Operand* operand_make_address_register_indirect(int n, Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
-    op->type = AddressIndirect;
+    op->type = AddressRegisterIndirect;
     op->get = address_indirect_get;
     op->set = address_indirect_set;
     op->n = n;
@@ -240,11 +240,11 @@ void address_inc(Operand* o)
     o->instruction->context->address_registers[o->n] += size_in_bytes(o->instruction->size);
 }
 
-Operand* operand_make_address_indirect_postincrement(int n, struct Instruction* instr)
+Operand* operand_make_address_register_indirect_postinc(int n, struct Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
-    op->type = AddressIndirectPostInc;
+    op->type = AddressRegisterIndirectPostInc;
     op->get = address_indirect_get;
     op->set = address_indirect_set;
     op->post = address_inc;
@@ -264,11 +264,11 @@ void address_dec(Operand* o)
     o->instruction->context->address_registers[o->n] -= o->instruction->size;
 }
 
-Operand* operand_make_address_indirect_predecrement(int n, struct Instruction* instr)
+Operand* operand_make_address_register_indirect_predec(int n, struct Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
-    op->type = AddressIndirectPostInc;
+    op->type = AddressRegisterIndirectPostInc;
     op->get = address_indirect_get;
     op->set = address_indirect_set;
     op->pre = address_dec;
@@ -298,11 +298,11 @@ void address_indirect_displacement_set(Operand* o, uint32_t instr_address, uint3
     m68k_write_w(o->instruction->context, address + displacement, value);
 }
 
-Operand* operand_make_address_indirect_displacement(int n, struct Instruction* instr)
+Operand* operand_make_address_register_indirect_displacement(int n, struct Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
-    op->type = AddressIndirectDisplacement;
+    op->type = AddressRegisterIndirectDisplacement;
     op->get = address_indirect_displacement_get;
     op->set = address_indirect_displacement_set;
     op->n = n;
@@ -328,7 +328,7 @@ uint32_t immediate_get_long(Operand* o, uint32_t instr_address)
     return m68k_read_l(o->instruction->context, instr_address + 2);
 }
 
-Operand* operand_make_immediate(Size size, Instruction* instr)
+Operand* operand_make_immediate_value(Size size, Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
@@ -483,7 +483,7 @@ int operand_length(Operand* operand)
     switch (operand->type)
     {
     case AbsoluteShort:
-    case AddressIndirectDisplacement:
+    case AddressRegisterIndirectDisplacement:
     case ProgramCounterDisplacement:
         return 2;
     case AbsoluteLong:

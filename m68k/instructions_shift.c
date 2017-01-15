@@ -19,8 +19,8 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
 
     if (!immediate)
     {
-        i->src = operand_make_data(FRAGMENT(opcode, 11, 9), i);
-        i->dst = operand_make_data(FRAGMENT(opcode, 2, 0), i);
+        i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+        i->dst = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
     }
     else
         return NULL;
@@ -125,6 +125,6 @@ Instruction* gen_swap(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "SWAP";
     i->func = swap;
-    i->src = operand_make_data(FRAGMENT(opcode, 5, 0), i);
+    i->src = operand_make_data_register(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
