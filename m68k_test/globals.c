@@ -8,7 +8,7 @@ uint8_t* memory = NULL;
 void setup()
 {
     memory = calloc(0x1000000, sizeof(uint8_t));
-    m = m68k_make(memory);
+    m = m68k_make();
 }
 
 void teardown()

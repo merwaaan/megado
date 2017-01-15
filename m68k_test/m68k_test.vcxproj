@@ -125,6 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="globals.c" />
+    <ClCompile Include="m68k_io.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>

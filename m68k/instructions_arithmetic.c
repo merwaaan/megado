@@ -28,8 +28,8 @@ Instruction* gen_add(uint16_t opcode, M68k* m)
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
-    int reg = operand_make_data(FRAGMENT(opcode, 11, 9), i);
-    int ea = operand_make(FRAGMENT(opcode, 5, 0), i);
+    Operand* reg = operand_make_data(FRAGMENT(opcode, 11, 9), i);
+    Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     int direction = BIT(opcode, 8);
     if (direction == 0)
@@ -73,10 +73,10 @@ void ext(Instruction* i)
 
     uint32_t extended;
     switch (i->size) {
-    case 8:
+    case Byte:
         extended = SIGN_EXTEND_B(x);
         break;
-    case 16:
+    case Word:
         extended = SIGN_EXTEND_W(x);
         break;
     }

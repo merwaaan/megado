@@ -41,10 +41,10 @@ MU_TEST(test_move)
 MU_TEST(test_movem_mem_to_reg)
 {
     ADDR(5, 0x294);
-    MEM16(0x294, 0x8000);
-    MEM16(0x296, 0x3FFF);
-    MEM16(0x298, 0x0100);
-    MEM16(2, 0x00E0); // Mask after the opcode in memory
+    MEM_W(0x294, 0x8000);
+    MEM_W(0x296, 0x3FFF);
+    MEM_W(0x298, 0x0100);
+    MEM_W(2, 0x00E0); // Mask after the opcode in memory
     RUN("01001 1 001 0 011101"); // MOVEM.w (A5)+, D5-D7
                                  // TODO mask
     DATA_CHECK(5, 0xFFFF8000);

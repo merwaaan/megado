@@ -211,7 +211,7 @@ uint32_t address_indirect_get(Operand* o, uint32_t instr_address)
 
 void address_indirect_set(Operand* o, uint32_t instr_address, uint32_t value)
 {
-    m68k_write_b(o->instruction->context, o->instruction->context->address_registers[o->n], value);
+    m68k_write(o->instruction->context, o->instruction->size, o->instruction->context->address_registers[o->n], value);
 }
 
 Operand* operand_make_address_indirect(int n, Instruction* instr)
