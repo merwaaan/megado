@@ -132,7 +132,7 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
 
 void scc(Instruction* i)
 {
-    SET(i->dst, condition(i->context) ? 0xFF : 0);
+    SET(i->dst, i->condition(i->context) ? 0xFF : 0);
 }
 
 Instruction* gen_scc(uint16_t opcode, M68k* m)

@@ -54,7 +54,7 @@ Instruction* instruction_generate(struct M68k* context, uint16_t opcode);
 bool instruction_valid(Instruction* instr);
 
 /*
- * Instruction implementations.
+ * Instruction generators
  */
 
 #define DEFINE_INSTR(name) Instruction* gen_ ## name (uint16_t opcode, struct M68k* context)
@@ -70,7 +70,7 @@ DEFINE_INSTR(and);
 DEFINE_INSTR(andi);
 DEFINE_INSTR(eor);
 DEFINE_INSTR(eori);
-DEFINE_INSTR(or );
+DEFINE_INSTR(or);
 DEFINE_INSTR(ori);
 DEFINE_INSTR(not);
 DEFINE_INSTR(scc);

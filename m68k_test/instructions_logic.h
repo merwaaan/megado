@@ -26,11 +26,59 @@ MU_TEST(test_and_l)
 {
     DATA(2, 0xFE800174);
     DATA(3, 0x25CFB7DD);
-    RUN("1100  010 0 10 000011"); // AND.l D2
+    RUN("1100  010 0 10 000011"); // AND.l D2, D3
     DATA_CHECK(3, 0x24800154);
 }
 
-MU_TEST(test_andi_b) // TODO w, l
+MU_TEST(test_eor_b)
+{
+    DATA(1, 0xFE800174);
+    DATA(4, 0x25CFB7DD);
+    RUN("1011 100 0 00 000001"); // OR.b D1, D4
+    DATA_CHECK(4, 0x25CFB7A9);
+}
+
+MU_TEST(test_eor_w)
+{
+    DATA(1, 0xFE800174);
+    DATA(4, 0x25CFB7DD);
+    RUN("1011 100 0 00 000001"); // OR.b D1, D4
+    DATA_CHECK(4, 0x25CFB6A9);
+}
+
+MU_TEST(test_eor_l)
+{
+    DATA(1, 0xFE800174);
+    DATA(4, 0x25CFB7DD);
+    RUN("1011 100 0 00 000001"); // OR.b D1, D4
+    DATA_CHECK(4, 0xDB4FB6A9);
+}
+
+MU_TEST(test_or_b)
+{
+    DATA(1, 0xFE800174);
+    DATA(4, 0x25CFB7DD);
+    RUN("1000 100 0 00 000001"); // OR.b D1, D4
+    DATA_CHECK(4, 0x25CFB7FD);
+}
+
+MU_TEST(test_or_w)
+{
+    DATA(1, 0xFE800174);
+    DATA(4, 0x25CFB7DD);
+    RUN("1000 100 0 00 000001"); // OR.b D1, D4
+    DATA_CHECK(4, 0x25CFB7FD);
+}
+
+MU_TEST(test_or_l)
+{
+    DATA(1, 0xFE800174);
+    DATA(4, 0x25CFB7DD);
+    RUN("1000 100 0 00 000001"); // OR.b D1, D4
+    DATA_CHECK(4, 0xFFCFB7FD);
+}
+
+MU_TEST(test_andi_b) // TODO
 {
     DATA(0, 0xF0F0F0F0);
     //MEM()
@@ -112,6 +160,14 @@ MU_TEST_SUITE(test_suite_instructions_logic)
     MU_RUN_TEST(test_and_b);
     MU_RUN_TEST(test_and_w);
     MU_RUN_TEST(test_and_l);
+
+    MU_RUN_TEST(test_eor_b);
+    MU_RUN_TEST(test_eor_w);
+    MU_RUN_TEST(test_eor_l);
+
+    MU_RUN_TEST(test_or_b);
+    MU_RUN_TEST(test_or_w);
+    MU_RUN_TEST(test_or_l);
 
     MU_RUN_TEST(test_not_b);
     MU_RUN_TEST(test_not_w);

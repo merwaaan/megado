@@ -20,8 +20,8 @@ typedef void(*SetFunc)(struct Operand* o, uint32_t instr_address, uint32_t value
 #define GET_RELATIVE(operand, instr_address) (operand)->get((operand), (instr_address)) 
 #define SET_RELATIVE(operand, instr_address, value) (operand)->set((operand), (instr_address), (value))
 // -- Relative to the current PC
-#define GET(operand) (operand)->get((operand), operand->instruction->context->pc) 
-#define SET(operand, value) (operand)->set((operand), operand->instruction->context->pc, (value))
+#define GET(operand) (operand)->get((operand), (operand)->instruction->context->pc) 
+#define SET(operand, value) (operand)->set((operand), (operand)->instruction->context->pc, (value))
 
 typedef void(*Action)(struct Operand* this);
 
