@@ -25,7 +25,7 @@ typedef struct Instruction {
     struct Operand* src;
     struct Operand* dst;
 
-    // Data size (byte, word, long)
+    // Size of the operation (byte, word, long)
     Size size;
 
     // Instruction length in bytes (depends on the operands' length)
