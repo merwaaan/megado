@@ -3,7 +3,6 @@
 
 #include "bit_utils.h"
 #include "instruction.h"
-#include "instructions_logic.h"
 #include "m68k.h"
 #include "operands.h"
 

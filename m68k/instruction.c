@@ -1,12 +1,6 @@
 #include <stdlib.h>
 
 #include "instruction.h"
-#include "instructions_arithmetic.h"
-#include "instructions_bit.h"
-#include "instructions_control.h"
-#include "instructions_logic.h"
-#include "instructions_shift.h"
-#include "instructions_transfer.h"
 #include "m68k.h"
 #include "operands.h"
 

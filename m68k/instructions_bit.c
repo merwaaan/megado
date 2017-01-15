@@ -3,7 +3,7 @@
 
 #include "bit_utils.h"
 #include "instruction.h"
-#include "instructions_logic.h"
+#include "m68k.h"
 #include "operands.h"
 
 Instruction* gen_bit_instruction(uint16_t opcode, M68k* m, char* name, InstructionFunc func)

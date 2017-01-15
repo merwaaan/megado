@@ -131,12 +131,6 @@
     <ClInclude Include="bit_utils.h" />
     <ClInclude Include="conditions.h" />
     <ClInclude Include="instruction.h" />
-    <ClInclude Include="instructions_arithmetic.h" />
-    <ClInclude Include="instructions_bit.h" />
-    <ClInclude Include="instructions_control.h" />
-    <ClInclude Include="instructions_logic.h" />
-    <ClInclude Include="instructions_shift.h" />
-    <ClInclude Include="instructions_transfer.h" />
     <ClInclude Include="m68k.h" />
     <ClInclude Include="operands.h" />
   </ItemGroup>

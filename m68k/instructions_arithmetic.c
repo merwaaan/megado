@@ -1,7 +1,8 @@
 #include <stdlib.h>
 
 #include "instruction.h"
-#include "instructions_arithmetic.h"
+#include "m68k.h"
+#include "operands.h"
 
 void add(Instruction* i)
 {

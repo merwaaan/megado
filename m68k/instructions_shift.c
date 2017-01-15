@@ -2,7 +2,8 @@
 #include <stdlib.h>
 
 #include "bit_utils.h"
-#include "instructions_shift.h"
+#include "instruction.h"
+#include "m68k.h"
 #include "operands.h"
 
 Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, InstructionFunc func)
