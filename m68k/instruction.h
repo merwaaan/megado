@@ -73,7 +73,7 @@ DEFINE_INSTR(eori);
 DEFINE_INSTR(or );
 DEFINE_INSTR(ori);
 DEFINE_INSTR(not);
-//DEFINE_INSTR(scc);
+DEFINE_INSTR(scc);
 DEFINE_INSTR(tst);
 
 // Arithmetic operations

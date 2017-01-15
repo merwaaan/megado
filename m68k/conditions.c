@@ -104,7 +104,7 @@ static Condition all_conditions[] = {
     { LessOrEqual, "LE" }
 };
 
-Condition* condition_get(Instruction* instr, int pattern)
+Condition* condition_get(int pattern)
 {
     return &all_conditions[pattern];
 }

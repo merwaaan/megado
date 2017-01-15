@@ -20,7 +20,7 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
     i->func = bcc;
     i->name = "BCC"; // TODO set name wrt condition
 
-    i->condition = condition_get(i, FRAGMENT(opcode, 11, 8));
+    i->condition = condition_get(FRAGMENT(opcode, 11, 8));
     //sprintf(i->name, "B%s", i->condition->mnemonics);
 
     int displacement = FRAGMENT(opcode, 7, 0);

@@ -2,8 +2,6 @@
 
 #include <stdbool.h>
 
-struct Instruction;
-
 typedef bool(*ConditionFunc)(struct M68k*);
 
 typedef struct Condition
@@ -14,4 +12,4 @@ typedef struct Condition
     char* mnemonics;
 } Condition;
 
-Condition* condition_get(struct Instruction* instr, int pattern);
+Condition* condition_get(int pattern);

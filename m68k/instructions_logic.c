@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "bit_utils.h"
+#include "conditions.h"
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
@@ -104,7 +105,7 @@ Instruction* gen_or(uint16_t opcode, M68k* m)
 
 Instruction* gen_ori(uint16_t opcode, M68k* m)
 {
-    return gen_boolean_instruction_immediate(opcode, m, "ORI", or);
+    return gen_boolean_instruction_immediate(opcode, m, "ORI", or );
 }
 
 void not(Instruction* i)
@@ -126,6 +127,23 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
     i->func = not;
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}
+
+void scc(Instruction* i)
+{
+    SET(i->dst, condition(i->context) ? 0xFF : 0);
+}
+
+Instruction* gen_scc(uint16_t opcode, M68k* m)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = m;
+    i->name = "SCC";
+    i->func = scc;
+    i->size = Byte;
+    i->condition = condition_get(m, FRAGMENT(opcode, 11, 8));
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
 
