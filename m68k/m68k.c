@@ -103,14 +103,8 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 
 uint32_t m68k_step(M68k* m)
 {
-    uint16_t opcode = m68k_read_w(m, m->pc);
-    return m68k_execute(m, opcode);
-}
-
-// TODO make private
-uint32_t m68k_execute(M68k* m, uint16_t opcode)
-{
     // Fetch the instruction
+    uint16_t opcode = m68k_read_w(m, m->pc);
     Instruction* instr = m->opcode_table[opcode];
 
     // Manual breakpoint!

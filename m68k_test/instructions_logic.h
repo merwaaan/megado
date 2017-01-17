@@ -32,50 +32,50 @@ MU_TEST(test_and_l)
 
 MU_TEST(test_eor_b)
 {
-    DATA(1, 0xFE800174);
     DATA(4, 0x25CFB7DD);
-    RUN("1011 100 0 00 000001"); // OR.b D1, D4
-    DATA_CHECK(4, 0x25CFB7A9);
+    DATA(1, 0xFE800174);
+    RUN("1011 100 0 00 000001"); // EOR.b D4, D1
+    DATA_CHECK(1, 0xFE8001A9);
 }
 
 MU_TEST(test_eor_w)
 {
-    DATA(1, 0xFE800174);
     DATA(4, 0x25CFB7DD);
-    RUN("1011 100 0 00 000001"); // OR.b D1, D4
-    DATA_CHECK(4, 0x25CFB6A9);
+    DATA(1, 0xFE800174);
+    RUN("1011 100 0 01 000001"); // EOR.w D4, D1
+    DATA_CHECK(1, 0xFE80B6A9);
 }
 
 MU_TEST(test_eor_l)
 {
-    DATA(1, 0xFE800174);
     DATA(4, 0x25CFB7DD);
-    RUN("1011 100 0 00 000001"); // OR.b D1, D4
-    DATA_CHECK(4, 0xDB4FB6A9);
+    DATA(1, 0xFE800174);
+    RUN("1011 100 0 10 000001"); // EOR.l D4, D1
+    DATA_CHECK(1, 0xDB4FB6A9);
 }
 
 MU_TEST(test_or_b)
 {
-    DATA(1, 0xFE800174);
     DATA(4, 0x25CFB7DD);
-    RUN("1000 100 0 00 000001"); // OR.b D1, D4
-    DATA_CHECK(4, 0x25CFB7FD);
+    DATA(1, 0xFE800174);
+    RUN("1000 100 0 00 000001"); // OR.b D4, D1
+    DATA_CHECK(1, 0xFE8001FD);
 }
 
 MU_TEST(test_or_w)
 {
-    DATA(1, 0xFE800174);
     DATA(4, 0x25CFB7DD);
-    RUN("1000 100 0 00 000001"); // OR.b D1, D4
-    DATA_CHECK(4, 0x25CFB7FD);
+    DATA(1, 0xFE800174);
+    RUN("1000 100 0 01 000001"); // OR.w D4, D1
+    DATA_CHECK(1, 0xFE80B7FD);
 }
 
 MU_TEST(test_or_l)
 {
-    DATA(1, 0xFE800174);
     DATA(4, 0x25CFB7DD);
-    RUN("1000 100 0 00 000001"); // OR.b D1, D4
-    DATA_CHECK(4, 0xFFCFB7FD);
+    DATA(1, 0xFE800174);
+    RUN("1000 100 0 10 000001"); // OR.l D4, D1
+    DATA_CHECK(1, 0xFFCFB7FD);
 }
 
 MU_TEST(test_andi_b) // TODO

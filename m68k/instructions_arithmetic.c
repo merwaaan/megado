@@ -74,10 +74,10 @@ void ext(Instruction* i)
 
     uint32_t extended;
     switch (i->size) {
-    case Byte:
+    case Word:
         extended = SIGN_EXTEND_B(x);
         break;
-    case Word:
+    case Long:
         extended = SIGN_EXTEND_W(x);
         break;
     }

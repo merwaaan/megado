@@ -132,7 +132,7 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
 
 void scc(Instruction* i)
 {
-    SET(i->dst, i->condition(i->context) ? 0xFF : 0);
+    SET(i->dst, i->condition->func(i->context) ? 0xFF : 0);
 }
 
 Instruction* gen_scc(uint16_t opcode, M68k* m)
@@ -142,7 +142,7 @@ Instruction* gen_scc(uint16_t opcode, M68k* m)
     i->name = "SCC";
     i->func = scc;
     i->size = Byte;
-    i->condition = condition_get(m, FRAGMENT(opcode, 11, 8));
+    i->condition = condition_get(FRAGMENT(opcode, 11, 8));
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }

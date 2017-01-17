@@ -98,9 +98,9 @@ uint8_t operand_sign_extension(uint8_t pattern)
     switch (pattern)
     {
     case 2:
-        return 8;
+        return Word;
     case 3:
-        return 16;
+        return Long;
     default:
         //printf("Invalid operand size %d", pattern); // TODO logging fw?
         return 0;

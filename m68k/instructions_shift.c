@@ -125,6 +125,7 @@ Instruction* gen_swap(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "SWAP";
     i->func = swap;
+    i->size = Long;
     i->src = operand_make_data_register(FRAGMENT(opcode, 5, 0), i);
     return i;
 }

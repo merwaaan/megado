@@ -22,9 +22,9 @@
 #define NEGATIVE_SET(context, b) context->status = BIT_CHG(context->status, NEGATIVE_BIT, b)
 #define EXTENDED_SET(context, b) context->status = BIT_CHG(context->status, EXTENDED_BIT, b)
 
-#define SIGN_EXTEND_B(x) ((x & 0xFF) | (BIT((x), 7) ? 0xFF00 : 0))
-#define SIGN_EXTEND_W(x) ((x & 0xFFFF) | (BIT((x), 15) ? 0xFFFF0000 : 0))
-#define SIGN_EXTEND_B_L(x) ((x & 0xFF) | (BIT((x), 7) ? 0xFFFFFFFFFFFFFF00 : 0))
+#define SIGN_EXTEND_B(x) (((x) & 0xFF) | (BIT((x), 7) ? 0xFF00 : 0))
+#define SIGN_EXTEND_W(x) (((x) & 0xFFFF) | (BIT((x), 15) ? 0xFFFF0000 : 0))
+#define SIGN_EXTEND_B_L(x) (((x) & 0xFF) | (BIT((x), 7) ? 0xFFFFFFFFFFFFFF00 : 0))
 
 struct Instruction;
 struct DecodedInstruction;
@@ -55,7 +55,6 @@ void m68k_free(M68k*);
 struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
 
 uint32_t m68k_step(M68k*); // Execute one instruction and return the current program counter value
-uint32_t m68k_execute(M68k*, uint16_t opcode); // Execute the given opcode and return the current program counter value
 
 void m68k_push(int value); // TODO type?
 int m68k_pop();

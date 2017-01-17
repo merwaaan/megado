@@ -7,14 +7,16 @@
 
 MU_TEST(test_lsl) // TODO test immediate version
 {
-    DATA(7, 1);  DATA(0, 0xFFFF);
+    DATA(7, 1);
+    DATA(0, 0xFFFF);
     RUN("1110001 1 11 000000"); // LSL D7, D0 (1 bit)
     DATA_CHECK(0, 0xFFFE);
 }
 
 MU_TEST(test_lsl_zero)
 {
-    DATA(7, 0);  DATA(0, 0xFFFF);
+    DATA(7, 0);
+    DATA(0, 0xFFFF);
     RUN("1110001 1 11 000000"); // LSL D7, D0 (0 bits)
     DATA_CHECK(0, 0xFFFF);
 }

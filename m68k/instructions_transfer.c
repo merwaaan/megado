@@ -19,6 +19,7 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "EXG";
     i->func = exg;
+    i->size = Long;
 
     int mode = FRAGMENT(opcode, 7, 3);
     switch (mode)
@@ -54,10 +55,9 @@ Instruction* gen_lea(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "LEA";
     i->func = lea;
-
+    i->size = Long;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
-
     return i;
 }
 
