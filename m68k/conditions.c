@@ -5,14 +5,14 @@
 #include "m68k.h"
 #include "operands.h"
 
-bool True(M68k* context)
-{
-    return 1;
-}
-
 bool False(M68k* context)
 {
-    return 0;
+    return false;
+}
+
+bool True(M68k* context)
+{
+    return true;
 }
 
 bool High(M68k* context)
@@ -86,8 +86,8 @@ bool LessOrEqual(M68k* context)
 }
 
 static Condition all_conditions[] = {
-    { True, "T" },
     { False, "F" },
+    { True, "T" },
     { High, "HI" },
     { LowOrSame, "LS" },
     { CarryClear, "CC" },

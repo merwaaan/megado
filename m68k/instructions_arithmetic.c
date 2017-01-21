@@ -6,17 +6,13 @@
 
 void add(Instruction* i)
 {
-    uint32_t src = GET(i->src);
-    uint32_t dst = GET(i->dst);
-    uint32_t sum = src + dst; // TODO 64?
+    uint64_t sum = GET(i->src) + GET(i->dst);
+    SET(i->dst, sum);
 
-    uint32_t result = MASK_ABOVE_INC(sum, i->size);
-    SET(i->src, MASK_BELOW(dst, i->size) | result);
-
-    CARRY_SET(i->context, (int)result < (int)src);
+    //TODO CARRY_SET(i->context, (int)result < (int)src);
     OVERFLOW_SET(i->context, sum > MAX_VALUE(i->size));
-    ZERO_SET(i->context, result == 0);
-    NEGATIVE_SET(i->context, BIT(result, i->size - 1));
+    ZERO_SET(i->context, sum == 0);
+    NEGATIVE_SET(i->context, BIT(sum, i->size - 1));
     EXTENDED_SET(i->context, CARRY(i->context));
 }
 

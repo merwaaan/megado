@@ -108,7 +108,7 @@ uint32_t m68k_step(M68k* m)
     Instruction* instr = m->opcode_table[opcode];
 
     // Manual breakpoint!
-    if (m->pc == 0x23C)
+    if (m->pc == 0x248)
     {
         printf("don't get optimized away please\n");
     }
@@ -122,7 +122,7 @@ uint32_t m68k_step(M68k* m)
         DecodedInstruction* d = m68k_decode(m, m->pc);
         // TODO different func to generate and print decoded instr
 
-        instr->func(instr);
+        instruction_execute(instr);
 
         m->pc += instr->length;
         // TODO can only address 2^24 bytes in practice

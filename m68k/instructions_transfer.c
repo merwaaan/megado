@@ -63,8 +63,8 @@ Instruction* gen_lea(uint16_t opcode, M68k* m)
 
 void move(Instruction* i)
 {
-    int32_t value = MASK_ABOVE(GET(i->src), i->size);
-    SET(i->dst, MASK_BELOW_INC(GET(i->dst), i->size) | value);
+    int32_t value = GET(i->src);
+    SET(i->dst, value);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -79,10 +79,8 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
     i->name = "MOVE";
     i->func = move;
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
-
-    i->dst = operand_make(FRAGMENT(opcode, 11, 6), i);
+    i->dst = operand_make(FRAGMENT(opcode, 11, 9) | FRAGMENT(opcode, 8, 6) << 3, i);
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-
     return i;
 }
 
@@ -120,6 +118,10 @@ void movem(Instruction* i)
 
             cursor += i->size == 16 ? 2 : 4;
         }
+
+    // Revert the initial post-increment (hackish)
+    if (i->src->type == AddressRegisterIndirectPostInc)
+        i->context->address_registers[i->src->n] -= size_in_bytes(i->src->instruction->size);
 }
 
 Instruction* gen_movem(uint16_t opcode, M68k* m)
@@ -159,10 +161,9 @@ Instruction* gen_moveq(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "MOVEQ";
     i->func = moveq;
-
+    i->size = Long;
     i->src = operand_make_value(BYTE_LO(opcode), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-
     return i;
 }
 
@@ -182,23 +183,20 @@ Instruction* gen_movea(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "MOVEA";
     i->func = movea;
-
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
-
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
-
     return i;
 }
 
 void move_usp(Instruction* i)
-{// TODO move address value or pointed value?
-    // Register to stack
+{
+    // Register to stack pointer
     if (i->src != NULL)
-        m68k_write_l(i->context, i->context->address_registers[7], GET(i->src));
-    // Stack to register
+        i->context->address_registers[7] = GET(i->src);
+    // Stack pointer to register
     else
-        SET(i->dst, m68k_read_l(i->context, i->context->address_registers[7]));
+        SET(i->dst, i->context->address_registers[7]);
 }
 
 Instruction* gen_move_usp(uint16_t opcode, M68k* m)
@@ -233,8 +231,6 @@ Instruction* gen_pea(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "PEA";
     i->func = pea;
-
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
-
     return i;
 }

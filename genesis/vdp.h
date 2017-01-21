@@ -89,7 +89,7 @@ typedef struct Vdp
     int window_plane_vertical_offset;
 
     // Register $13 - $14
-    int dma_length;
+    uint16_t dma_length;
 
     // Register $15 - $17
     int dma_address;

@@ -52,7 +52,7 @@ void test_rom(Genesis* g, char* path)
     genesis_load_rom_file(g, path);
     genesis_setup(g);
 
-    for (int i = 0; i < 20; ++i)
+    for (int i = 0; i < 500; ++i)
         genesis_step(g);
 }
 

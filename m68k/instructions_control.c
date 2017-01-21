@@ -81,6 +81,31 @@ Instruction* gen_bsr(uint16_t opcode, M68k* m)
     return i;
 }
 
+void dbcc(Instruction* i)
+{
+    //if (i->condition->func(i->context)) TODO unclear about the condition
+
+    uint16_t reg = GET(i->src);
+    if (reg > 0)
+        i->context->pc += (int16_t)m68k_read_w(i->context, i->context->pc + 2) - 2;
+
+    SET(i->src, reg - 1);
+}
+
+Instruction* gen_dbcc(uint16_t opcode, M68k* m)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = m;
+    i->func = dbcc;
+    i->name = "DBCC"; // TODO set name wrt condition
+    i->size = Word;
+    i->length += 2;
+    i->condition = condition_get(FRAGMENT(opcode, 11, 8));
+    //sprintf(i->name, "B%s", i->condition->mnemonics);
+    i->src = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
+    return i;
+}
+
 void jmp(Instruction* i)
 {
     i->context->pc = GET(i->src);

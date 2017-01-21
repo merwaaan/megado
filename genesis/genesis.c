@@ -65,7 +65,7 @@ void genesis_setup(Genesis* g)
     // http://darkdust.net/writings/megadrive/initializing
     // http://md.squee.co/Howto:Initialise_a_Mega_Drive
 
-    g->m68k->address_registers[7] = LONG(g->memory);
+    g->m68k->address_registers[7] = LONG(g->memory); // TODO really required? Games seem to do this as part of their startup routine
     g->m68k->pc = LONG(g->memory + 4); // Entry point
 
     // TODO interrupts

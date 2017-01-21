@@ -286,16 +286,16 @@ uint32_t address_indirect_displacement_get(Operand* o, uint32_t instr_address)
 {
     M68k* m = o->instruction->context;
     uint32_t address = m->address_registers[o->n];
-    int16_t displacement = m68k_read_w(o->instruction->context, instr_address + 2);
-    return  m68k_read_w(o->instruction->context, address + displacement);
+    int16_t displacement = m68k_read_w(m, instr_address + 2);
+    return  m68k_read_w(m, address + displacement);
 }
 
 void address_indirect_displacement_set(Operand* o, uint32_t instr_address, uint32_t value)
 {
     M68k* m = o->instruction->context;
     uint32_t address = m->address_registers[o->n];
-    int16_t displacement = m68k_read_w(o->instruction->context, instr_address + 2);
-    m68k_write_w(o->instruction->context, address + displacement, value);
+    int16_t displacement = m68k_read_w(m, instr_address + 2);
+    m68k_write_w(m, address + displacement, value);
 }
 
 Operand* operand_make_address_register_indirect_displacement(int n, struct Instruction* instr)
@@ -395,7 +395,8 @@ Operand* operand_make_absolute_long(Instruction* instr)
 uint32_t pc_displacement_word_get(Operand* o, uint32_t instr_address)
 {
     M68k* m = o->instruction->context;
-    return m->pc + m68k_read_w(m, instr_address + 2) + 2; // TODO no idea why +2
+    int16_t displacement = m68k_read_w(m, instr_address + 2);
+    return m->pc + displacement + 2; // TODO no idea why +2
 }
 
 Operand* operand_make_pc_displacement(Instruction* instr)

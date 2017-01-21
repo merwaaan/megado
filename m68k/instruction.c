@@ -45,6 +45,7 @@ static Pattern all_patterns[] =
     { 0x4E80, 0xFFC0, &gen_jsr },
     { 0x4EC0, 0xFFC0, &gen_jmp },
     //{ 0x5000, 0xF000, &gen_scc },
+    { 0x50C8, 0xF0F8, &gen_dbcc },
     { 0x6000, 0xFF00, &gen_bra },
     { 0x6100, 0xFF00, &gen_bsr },
     { 0x6000, 0xF000, &gen_bcc },
@@ -53,6 +54,7 @@ static Pattern all_patterns[] =
     { 0xB000, 0xF000, &gen_eor },
     { 0xC100, 0xF100, &gen_exg },
     { 0xC000, 0xF000, &gen_and },
+    { 0xD000, 0xF000, &gen_add },
     { 0xC0C0, 0xF1C0, &gen_mulu },
     { 0xC1C0, 0xF1C0, &gen_muls },
     { 0xE2C0, 0xFEC0, &gen_lsX },
@@ -97,4 +99,21 @@ bool instruction_valid(Instruction* instr)
         return false;
 
     return true;
+}
+
+void instruction_execute(Instruction* instr)
+{
+    // Pre-execution actions
+    if (instr->src != NULL && instr->src->pre != NULL)
+        instr->src->pre(instr->src);
+    if (instr->dst != NULL && instr->dst->pre != NULL)
+        instr->dst->pre(instr->dst);
+
+    instr->func(instr);
+
+    // Post-execution actions
+    if (instr->src != NULL && instr->src->post != NULL)
+        instr->src->post(instr->src);
+    if (instr->dst != NULL && instr->dst->post != NULL)
+        instr->dst->post(instr->dst);
 }

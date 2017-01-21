@@ -93,92 +93,92 @@ void vdp_write_control(Vdp* v, uint16_t value)
         switch (reg)
         {
         case 0:
-            v->hblank_enabled = BIT(value, 4);
-            v->hv_counter_enabled = !BIT(value, 1);
+            v->hblank_enabled = BIT(reg_value, 4);
+            v->hv_counter_enabled = !BIT(reg_value, 1);
             return;
 
         case 1:
-            v->display_enabled = BIT(value, 6);
-            v->vblank_enabled = BIT(value, 5);
-            v->dma_enabled = BIT(value, 4);
-            v->display_mode = BIT(value, 3);
+            v->display_enabled = BIT(reg_value, 6);
+            v->vblank_enabled = BIT(reg_value, 5);
+            v->dma_enabled = BIT(reg_value, 4);
+            v->display_mode = BIT(reg_value, 3);
             return;
 
         case 2:
-            v->plane_a_nametable = FRAGMENT(value, 5, 3);
+            v->plane_a_nametable = FRAGMENT(reg_value, 5, 3);
             return;
 
         case 3:
-            v->window_nametable = FRAGMENT(value, 5, 1);
+            v->window_nametable = FRAGMENT(reg_value, 5, 1);
             return;
 
         case 4:
-            v->plane_b_nametable = FRAGMENT(value, 2, 0);
+            v->plane_b_nametable = FRAGMENT(reg_value, 2, 0);
             return;
 
         case 5:
-            v->sprites_attributetable = FRAGMENT(value, 6, 0);
+            v->sprites_attributetable = FRAGMENT(reg_value, 6, 0);
             return;
 
         case 7:
-            v->background_color_palette = FRAGMENT(value, 5, 4);
-            v->background_color_entry = FRAGMENT(value, 3, 0);
+            v->background_color_palette = FRAGMENT(reg_value, 5, 4);
+            v->background_color_entry = FRAGMENT(reg_value, 3, 0);
             return;
 
         case 0xA:
-            v->hblank_counter = value;
+            v->hblank_counter = reg_value;
             return;
 
         case 0xB:
-            v->vertical_scrolling = BIT(value, 2);
-            v->horizontal_scrolling = FRAGMENT(value, 1, 0);
+            v->vertical_scrolling = BIT(reg_value, 2);
+            v->horizontal_scrolling = FRAGMENT(reg_value, 1, 0);
             return;
 
         case 0xC:
-            v->display_width = BIT(value, 7); // Should be same value as bit 0
-            v->shadow_highlight_enabled = BIT(value, 3);
-            v->interlace_mode = FRAGMENT(value, 2, 1);
+            v->display_width = BIT(reg_value, 7); // Should be same value as bit 0
+            v->shadow_highlight_enabled = BIT(reg_value, 3);
+            v->interlace_mode = FRAGMENT(reg_value, 2, 1);
             return;
 
         case 0xD:
-            v->horizontal_scrolltable = FRAGMENT(value, 5, 0);
+            v->horizontal_scrolltable = FRAGMENT(reg_value, 5, 0);
             return;
 
         case 0xF:
-            v->auto_increment = value;
+            v->auto_increment = reg_value;
             return;
 
         case 0x10:
-            v->vertical_plane_size = FRAGMENT(value, 5, 4); // TODO Convert to size
-            v->horizontal_plane_size = FRAGMENT(value, 1, 0); // TODO
+            v->vertical_plane_size = FRAGMENT(reg_value, 5, 4); // TODO Convert to size
+            v->horizontal_plane_size = FRAGMENT(reg_value, 1, 0); // TODO
             return;
 
         case 0x11:
-            v->window_plane_horizontal_direction = BIT(value, 7);
-            v->window_plane_horizontal_offset = FRAGMENT(value, 4, 0);
+            v->window_plane_horizontal_direction = BIT(reg_value, 7);
+            v->window_plane_horizontal_offset = FRAGMENT(reg_value, 4, 0);
             return;
 
         case 0x12:
-            v->window_plane_vertical_direction = BIT(value, 7);
-            v->window_plane_vertical_offset = FRAGMENT(value, 4, 0);
+            v->window_plane_vertical_direction = BIT(reg_value, 7);
+            v->window_plane_vertical_offset = FRAGMENT(reg_value, 4, 0);
             return;
 
         case 0x13:
-            v->dma_length = (v->dma_length & 0xFFFF0000) | value;
+            v->dma_length = (v->dma_length & 0xFF00) | reg_value;
             return;
         case 0x14:
-            v->dma_length = (v->dma_length & 0x0000FFFF) | (value << 16);
+            v->dma_length = (v->dma_length & 0x00FF) | (reg_value << 8);
             return;
 
         case 0x15:
-            v->dma_address = (v->dma_address & 0xFFFFFFFF0000) | value;
+            v->dma_address = (v->dma_address & 0xFFFF00) | reg_value;
             return;
         case 0x16:
-            v->dma_address = (v->dma_address & 0xFFFF0000FFFF) | (value << 16);
+            v->dma_address = (v->dma_address & 0xFF00FF) | (reg_value << 8);
             return;
         case 0x17:
-            v->dma_address = (v->dma_address & 0x0000FFFFFFFF) | (value << 32);
-            v->dma_type = FRAGMENT(value, 7, 6); // TODO convert    
+            v->dma_address = (v->dma_address & 0x00FFFF) | ((reg_value & 0x3F) << 16);
+            v->dma_type = FRAGMENT(reg_value, 7, 6); // TODO convert    
             return;
         }
     }

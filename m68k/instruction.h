@@ -44,14 +44,16 @@ typedef struct DecodedInstruction {
 } DecodedInstruction;
 
 Instruction* instruction_make(struct M68k* context, char* name, InstructionFunc func);
-void instruction_free(Instruction* instr);
+void instruction_free(Instruction*);
 
 // Generate the appropriate instruction from an opcode
 Instruction* instruction_generate(struct M68k* context, uint16_t opcode);
 
 // Check if an instruction is fully formed, ie. a function have been
 // assigned and all operands have been setup
-bool instruction_valid(Instruction* instr);
+bool instruction_valid(Instruction*);
+
+void instruction_execute(Instruction*);
 
 /*
  * Instruction generators
@@ -105,9 +107,9 @@ DEFINE_INSTR(pea);
 
 // Program control
 DEFINE_INSTR(bcc);
-// TODO DEFINE_INSTR(dbcc);
 DEFINE_INSTR(bra);
 DEFINE_INSTR(bsr);
+DEFINE_INSTR(dbcc);
 DEFINE_INSTR(jmp);
 DEFINE_INSTR(jsr);
 //DEFINE_INSTR(rtd);
