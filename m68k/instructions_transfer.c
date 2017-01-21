@@ -91,7 +91,7 @@ void movem(Instruction* i)
 
     uint16_t mask = m68k_read_w(i->context, i->context->pc + 2);
 
-    uint32_t cursor = i->context->address_registers[i->src->n];
+    uint32_t cursor = i->context->address_registers[i->src->n] & 0xFFFFFF;
 
     for (int m = 0; m < 16; ++m)
         if (BIT(mask, m))
@@ -186,6 +186,45 @@ Instruction* gen_movea(uint16_t opcode, M68k* m)
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
+    return i;
+}
+
+void move_from_sr(Instruction* i)
+{
+    SET(i->dst, i->context->status);
+}
+
+Instruction* gen_move_from_sr(uint16_t opcode, M68k* m)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = m;
+    i->name = "MOVE from SR";
+    i->func = move_from_sr;
+    i->size = Word;
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}
+
+void move_to_sr(Instruction* i)
+{
+    uint16_t value = GET(i->src);
+    i->context->status = value;
+
+    CARRY_SET(i->context, BIT(value, 0));
+    OVERFLOW_SET(i->context, BIT(value, 1));
+    ZERO_SET(i->context, BIT(value, 2));
+    NEGATIVE_SET(i->context, BIT(value, 3));
+    EXTENDED_SET(i->context, BIT(value, 4));
+}
+
+Instruction* gen_move_to_sr(uint16_t opcode, M68k* m)
+{
+    Instruction* i = calloc(1, sizeof(Instruction));
+    i->context = m;
+    i->name = "MOVE to SR";
+    i->func = move_to_sr;
+    i->size = Word;
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
 

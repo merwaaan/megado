@@ -8,17 +8,18 @@ Vdp* vdp_make()
     Vdp* v = calloc(1, sizeof(Vdp));
     v->vram = calloc(0x10000, sizeof(uint8_t));
     v->cram = calloc(64, sizeof(uint16_t));
+    v->vsram = calloc(40, sizeof(uint16_t));
     v->pending_command = false;
 
     // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO) != 0)
+    /*if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
         printf("An error occurred while initializing SDL: %s", SDL_GetError());
     }
     else
     {
         SDL_CreateWindowAndRenderer(640, 480, SDL_WINDOW_OPENGL, &v->window, &v->renderer);
-    }
+    }*/
 
     // Random colors 
     v->cram[0] = 0xFFFF;
@@ -36,9 +37,9 @@ Vdp* vdp_make()
 
 void vdp_free(Vdp* v)
 {
-    SDL_DestroyWindow(v->window);
+    /*SDL_DestroyWindow(v->window);
     SDL_DestroyRenderer(v->renderer);
-    SDL_Quit();
+    SDL_Quit();*/
 
     free(v->vram);
     free(v->cram);
@@ -61,7 +62,46 @@ void vdp_write_data(Vdp* v, uint16_t value)
 {
     v->pending_command = false;
 
-    // TODO
+    // DMA transfers
+    if (v->dma_enabled)
+    {
+        // VRAM fill
+        if (v->dma_type == 2)
+        {
+            // TODO do not freeze during the transfer
+            v->dma_in_progress = true;
+
+            int from = v->dma_address;
+            int to = v->dma_address + v->dma_length;
+            for (int i = from; i < to; i += v->auto_increment)
+            {
+                v->vram[i] = NIBBLE_HI(value);
+                v->vram[i + 1] = NIBBLE_LO(value);
+            }
+
+            v->dma_in_progress = false;
+        }
+
+        // TODO other DMA modes
+    }
+    else
+    {
+        // CRAM write
+        if (v->access_mode == 3)
+        {
+            v->cram[v->access_address] = value;
+            v->access_address += v->auto_increment;
+        }
+        // VSRAM write
+        else if (v->access_mode == 5)
+        {
+            v->vsram[v->access_address] = value;
+            v->access_address += v->auto_increment;
+        }
+        else {
+            printf("");
+        }
+    }
 }
 
 uint16_t vdp_read_control(Vdp* v)
@@ -77,6 +117,7 @@ uint16_t vdp_read_control(Vdp* v)
         (false << 4) | // Odd frame
         (false << 3) | // Vertical blank
         (false << 2) | // Horizontal blank
+        (v->dma_in_progress << 1) | // DMA transfer currently executing
         false;        // NTSC (0) / PAL (1)
 }
 
@@ -202,7 +243,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
 void vdp_draw(Vdp* v)
 {
-    if (v->renderer == NULL)
+    /*if (v->renderer == NULL)
         return;
 
     SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
@@ -225,7 +266,7 @@ void vdp_draw(Vdp* v)
         cell.y += 10;
     }
 
-    SDL_RenderPresent(v->renderer);
+    SDL_RenderPresent(v->renderer);*/
 }
 
 

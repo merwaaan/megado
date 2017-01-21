@@ -36,7 +36,13 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
 
 void bra(Instruction* i)
 {
-    m68k_jump(i->context->pc + GET(i->src));
+    int displacement = m68k_read_b(i->context, i->context->pc + 1);
+    if (displacement == 0)
+        i->src = m68k_read_w(i->context, i->context->pc + 2);
+    else if (displacement == 0xFF)
+        i->src = m68k_read_l(i->context, i->context->pc + 2);
+
+    i->context->pc += displacement;
 }
 
 Instruction* gen_bra(uint16_t opcode, M68k* m)
@@ -45,15 +51,6 @@ Instruction* gen_bra(uint16_t opcode, M68k* m)
     i->context = m;
     i->name = "BRA";
     i->func = bra;
-
-    /*int displacement = FRAGMENT(opcode, 7, 0);
-    if (displacement == 0)
-        i->src = operand_make_absolute_short(16, i);
-    else if (displacement == 0xFF)
-        i->src = operand_make_absolute_short(32, i);
-    else
-        i->src = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);*/
-
     return i;
 }
 

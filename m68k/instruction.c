@@ -32,6 +32,8 @@ static Pattern all_patterns[] =
     { 0x01C0, 0xF1C0, &gen_bset }, // TODO other bset form
     { 0x0040, 0xC1C0, &gen_movea },
     { 0x0000, 0xC000, &gen_move },
+    { 0x40C0, 0xFFC0, &gen_move_from_sr },
+    { 0x46C0, 0xFFC0, &gen_move_to_sr },
     { 0x41C0, 0xF1C0, &gen_lea },
     { 0x4200, 0xFF00, &gen_clr },
     { 0x4600, 0xFF00, &gen_not },

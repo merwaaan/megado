@@ -64,9 +64,10 @@ Instruction* gen_bset(uint16_t opcode, M68k* m)
 
 void btst(Instruction* i)
 {
-    int bit = GET(i->src);
-    int test = BIT(GET(i->dst), bit) == 0;
-    ZERO_SET(i->context, test);
+    int bit = GET(i->src) % 32;
+    int set = BIT(GET(i->dst), bit);
+
+    ZERO_SET(i->context, !set);
 }
 
 Instruction* gen_btst(uint16_t opcode, M68k* m)

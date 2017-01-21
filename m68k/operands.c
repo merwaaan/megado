@@ -137,6 +137,8 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
             return operand_make_absolute_long(instr);
         case 2:
             return operand_make_pc_displacement(instr);
+        case 4:
+            return operand_make_immediate_value(Word, instr); // TODO always word or instr size?
         }
     default:
         return NULL;
@@ -209,12 +211,12 @@ Operand* operand_make_address_register(int n, Instruction* instr)
 
 uint32_t address_indirect_get(Operand* o, uint32_t instr_address)
 {
-    return m68k_read(o->instruction->context, o->instruction->size, o->instruction->context->address_registers[o->n]);
+    return m68k_read(o->instruction->context, o->instruction->size, o->instruction->context->address_registers[o->n] & 0xFFFFFF);
 }
 
 void address_indirect_set(Operand* o, uint32_t instr_address, uint32_t value)
 {
-    m68k_write(o->instruction->context, o->instruction->size, o->instruction->context->address_registers[o->n], value);
+    m68k_write(o->instruction->context, o->instruction->size, o->instruction->context->address_registers[o->n] & 0xFFFFFF, value);
 }
 
 Operand* operand_make_address_register_indirect(int n, Instruction* instr)
@@ -261,14 +263,14 @@ Operand* operand_make_address_register_indirect_postinc(int n, struct Instructio
 
 void address_dec(Operand* o)
 {
-    o->instruction->context->address_registers[o->n] -= o->instruction->size;
+    o->instruction->context->address_registers[o->n] -= size_in_bytes(o->instruction->size);
 }
 
 Operand* operand_make_address_register_indirect_predec(int n, struct Instruction* instr)
 {
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
-    op->type = AddressRegisterIndirectPostInc;
+    op->type = AddressRegisterIndirectPreDec;
     op->get = address_indirect_get;
     op->set = address_indirect_set;
     op->pre = address_dec;

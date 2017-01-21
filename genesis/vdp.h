@@ -20,6 +20,7 @@ typedef struct Vdp
 {
     uint8_t* vram;
     uint16_t* cram;
+    uint16_t* vsram;
 
     // If set, a first command word has been written.
     // We're waiting for the second half.
@@ -94,6 +95,8 @@ typedef struct Vdp
     // Register $15 - $17
     int dma_address;
     int dma_type;
+
+    bool dma_in_progress;
 
     SDL_Window* window;
     SDL_Renderer* renderer;

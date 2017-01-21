@@ -18,7 +18,7 @@ M68k* m68k_make()
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
         // Manual breakpoint!
-        if (opcode == 0x7217)
+        if (opcode == 0x46fc)
         {
             printf("don't get optimized away please\n");
         }
@@ -54,8 +54,7 @@ void m68k_free(M68k* m)
 DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 {
     uint16_t opcode = m68k_read_w(m, instr_address);
-    printf("Decoding opcode %#06X [%#010X]...\n", opcode, instr_address);
-
+    
     Instruction* instr = m->opcode_table[opcode];
     if (instr == NULL)
     {
@@ -96,7 +95,6 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 
     buffer[pos] = '\0';
 
-    printf("Decoded \"%s\"\n", buffer);
     decoded->mnemonics = buffer;
     return decoded;
 }
@@ -108,7 +106,7 @@ uint32_t m68k_step(M68k* m)
     Instruction* instr = m->opcode_table[opcode];
 
     // Manual breakpoint!
-    if (m->pc == 0x248)
+    if (m->pc == 0x300)
     {
         printf("don't get optimized away please\n");
     }
