@@ -9,10 +9,7 @@
 
 Instruction* gen_boolean_instruction(uint16_t opcode, M68k* m, char* name, InstructionFunc* func)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = name;
-    i->func = func;
+    Instruction* i = instruction_make(m, name, func);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
     Operand* reg = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
@@ -121,10 +118,7 @@ void not(Instruction* i)
 
 Instruction* gen_not(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "NOT";
-    i->func = not;
+    Instruction* i = instruction_make(m, "NOT", not);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
@@ -137,10 +131,7 @@ void scc(Instruction* i)
 
 Instruction* gen_scc(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "SCC";
-    i->func = scc;
+    Instruction* i = instruction_make(m, "Scc", scc);
     i->size = Byte;
     i->condition = condition_get(FRAGMENT(opcode, 11, 8));
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
@@ -159,10 +150,7 @@ void tst(Instruction* i)
 
 Instruction* gen_tst(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "TST";
-    i->func = tst;
+    Instruction* i = instruction_make(m, "TST", tst);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;

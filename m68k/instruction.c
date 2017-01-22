@@ -10,6 +10,7 @@ Instruction* instruction_make(M68k* context, char* name, InstructionFunc func)
     i->context = context;
     i->name = name;
     i->func = func;
+    i->base_length = 2; // Most instructions take two bytes
     return i;
 }
 
@@ -26,7 +27,8 @@ void instruction_free(Instruction* instr)
 static Pattern all_patterns[] =
 {
     { 0x0200, 0xFF00, &gen_andi },
-    { 0x0100, 0xF1C0, &gen_btst }, // TODO other btst form
+    { 0x0100, 0xF1C0, &gen_btst_imm },
+    { 0x0800, 0xFFC0, &gen_btst },
     { 0x0140, 0xF1C0, &gen_bchg }, // TODO other bchg form
     { 0x0180, 0xF1C0, &gen_bclr }, // TODO other bclr form
     { 0x01C0, 0xF1C0, &gen_bset }, // TODO other bset form
@@ -85,8 +87,8 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
             if (instr == NULL)
                 return NULL;
 
-            // Compute its length in bytes
-            instr->length += 2 + operand_length(instr->src) + operand_length(instr->dst);
+            // Compute its total length in bytes
+            instr->total_length = instr->base_length + operand_length(instr->src) + operand_length(instr->dst);
 
             return instr;
         }

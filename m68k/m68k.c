@@ -122,7 +122,7 @@ uint32_t m68k_step(M68k* m)
 
         instruction_execute(instr);
 
-        m->pc += instr->length;
+        m->pc += instr->total_length;
         // TODO can only address 2^24 bytes in practice
 
         free(d);

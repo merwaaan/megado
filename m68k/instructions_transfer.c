@@ -15,10 +15,7 @@ void exg(Instruction* i)
 
 Instruction* gen_exg(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "EXG";
-    i->func = exg;
+    Instruction* i = instruction_make(m, "EXG", exg);
     i->size = Long;
 
     int mode = FRAGMENT(opcode, 7, 3);
@@ -51,10 +48,7 @@ void lea(Instruction* i)
 
 Instruction* gen_lea(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "LEA";
-    i->func = lea;
+    Instruction* i = instruction_make(m, "LEA", lea);
     i->size = Long;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
@@ -74,10 +68,7 @@ void move(Instruction* i)
 
 Instruction* gen_move(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "MOVE";
-    i->func = move;
+    Instruction* i = instruction_make(m, "MOVE", move);
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
     i->dst = operand_make(FRAGMENT(opcode, 11, 9) | FRAGMENT(opcode, 8, 6) << 3, i);
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
@@ -126,12 +117,9 @@ void movem(Instruction* i)
 
 Instruction* gen_movem(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "MOVEM";
-    i->func = movem;
+    Instruction* i = instruction_make(m, "MOVEM", movem);
     i->size = operand_size3(BIT(opcode, 6));
-    i->length += 2;
+    i->base_length = 4;
 
     Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
 
@@ -157,10 +145,7 @@ void moveq(Instruction* i)
 
 Instruction* gen_moveq(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "MOVEQ";
-    i->func = moveq;
+    Instruction* i = instruction_make(m, "MOVEQ", moveq);
     i->size = Long;
     i->src = operand_make_value(BYTE_LO(opcode), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
@@ -179,10 +164,7 @@ void movea(Instruction* i)
 
 Instruction* gen_movea(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "MOVEA";
-    i->func = movea;
+    Instruction* i = instruction_make(m, "MOVEA", movea);
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
@@ -196,10 +178,7 @@ void move_from_sr(Instruction* i)
 
 Instruction* gen_move_from_sr(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "MOVE from SR";
-    i->func = move_from_sr;
+    Instruction* i = instruction_make(m, "MOVE from SR", move_from_sr);
     i->size = Word;
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
@@ -219,10 +198,7 @@ void move_to_sr(Instruction* i)
 
 Instruction* gen_move_to_sr(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "MOVE to SR";
-    i->func = move_to_sr;
+    Instruction* i = instruction_make(m, "MOVE to SR", move_to_sr);
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
@@ -240,10 +216,7 @@ void move_usp(Instruction* i)
 
 Instruction* gen_move_usp(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "MOVE USP";
-    i->func = move_usp;
+    Instruction* i = instruction_make(m, "MOVE USP", move_usp);
     i->size = Long;
 
     Operand* reg = operand_make_address_register_indirect(FRAGMENT(opcode, 2, 0), i);
@@ -266,10 +239,7 @@ void pea(Instruction* i)
 
 Instruction* gen_pea(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "PEA";
-    i->func = pea;
+    Instruction* i = instruction_make(m, "PEA", pea);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }

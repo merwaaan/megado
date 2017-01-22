@@ -18,10 +18,7 @@ void add(Instruction* i)
 
 Instruction* gen_add(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "ADD";
-    i->func = add;
+    Instruction* i = instruction_make(m, "ADD", add);
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
@@ -55,10 +52,7 @@ void clr(Instruction* i)
 
 Instruction* gen_clr(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "CLR";
-    i->func = clr;
+    Instruction* i = instruction_make(m, "CLR", clr);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
@@ -88,10 +82,7 @@ void ext(Instruction* i)
 
 Instruction* gen_ext(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "EXT";
-    i->func = ext;
+    Instruction* i = instruction_make(m, "EXT", ext);
     i->size = operand_sign_extension(FRAGMENT(opcode, 8, 6));
     i->src = operand_make_data_register(FRAGMENT(opcode, 3, 0), i);
     return i;
@@ -110,10 +101,7 @@ void muls(Instruction* i)
 
 Instruction* gen_muls(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "MULS";
-    i->func = muls;
+    Instruction* i = instruction_make(m, "MULS", muls);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
@@ -133,10 +121,7 @@ void mulu(Instruction* i)
 
 Instruction* gen_mulu(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "MULU";
-    i->func = mulu;
+    Instruction* i = instruction_make(m, "MULU", mulu);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);

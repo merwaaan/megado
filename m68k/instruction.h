@@ -28,8 +28,11 @@ typedef struct Instruction {
     // Size of the operation (byte, word, long)
     Size size;
 
-    // Instruction length in bytes (depends on the operands' length)
-    uint8_t length;
+    // Instruction length in bytes
+    uint8_t base_length;
+
+    // Total instruction length (take into account the operands' length)
+    uint8_t total_length;
 
     // Some instructions require extra data
     union
@@ -63,9 +66,13 @@ void instruction_execute(Instruction*);
 
 // Bit-wise operations
 DEFINE_INSTR(bchg);
+DEFINE_INSTR(bchg_imm);
 DEFINE_INSTR(bclr);
+DEFINE_INSTR(bclr_imm);
 DEFINE_INSTR(bset);
+DEFINE_INSTR(bset_imm);
 DEFINE_INSTR(btst);
+DEFINE_INSTR(btst_imm);
 
 // Logic operations
 DEFINE_INSTR(and);

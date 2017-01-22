@@ -15,10 +15,8 @@ void bcc(Instruction* i)
 
 Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->func = bcc;
-    i->name = "BCC"; // TODO set name wrt condition
+    Instruction* i = instruction_make(m, "BCC", bcc);
+    // TODO set name wrt condition
 
     i->condition = condition_get(FRAGMENT(opcode, 11, 8));
     //sprintf(i->name, "B%s", i->condition->mnemonics);
@@ -36,22 +34,18 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
 
 void bra(Instruction* i)
 {
-    int displacement = m68k_read_b(i->context, i->context->pc + 1);
+    int32_t displacement = m68k_read_b(i->context, i->context->pc + 1);
     if (displacement == 0)
-        i->src = m68k_read_w(i->context, i->context->pc + 2);
+        displacement = m68k_read_w(i->context, i->context->pc + 2);
     else if (displacement == 0xFF)
-        i->src = m68k_read_l(i->context, i->context->pc + 2);
+        displacement = m68k_read_l(i->context, i->context->pc + 2);
 
     i->context->pc += displacement;
 }
 
 Instruction* gen_bra(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "BRA";
-    i->func = bra;
-    return i;
+    return instruction_make(m, "BRA", bra);;
 }
 
 void bsr(Instruction* i)
@@ -62,10 +56,7 @@ void bsr(Instruction* i)
 
 Instruction* gen_bsr(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "BSR";
-    i->func = bsr;
+    Instruction* i = instruction_make(m, "BSR", bsr);
 
     /*int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
@@ -91,12 +82,9 @@ void dbcc(Instruction* i)
 
 Instruction* gen_dbcc(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->func = dbcc;
-    i->name = "DBCC"; // TODO set name wrt condition
+    Instruction* i = instruction_make(m, "DBcc", dbcc);// TODO set name wrt condition
     i->size = Word;
-    i->length += 2;
+    i->base_length = 4;
     i->condition = condition_get(FRAGMENT(opcode, 11, 8));
     //sprintf(i->name, "B%s", i->condition->mnemonics);
     i->src = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
@@ -110,10 +98,7 @@ void jmp(Instruction* i)
 
 Instruction* gen_jmp(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "JMP";
-    i->func = jmp;
+    Instruction* i = instruction_make(m, "JMP", jmp);
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
@@ -126,10 +111,7 @@ void jsr(Instruction* i)
 
 Instruction* gen_jsr(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "JSR";
-    i->func = jsr;
+    Instruction* i = instruction_make(m, "JSR", jsr);
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
@@ -141,10 +123,7 @@ void rts(Instruction* i)
 
 Instruction* gen_rts(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "RTS";
-    i->func = rts;
+    Instruction* i = instruction_make(m, "RTS", rts);
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }

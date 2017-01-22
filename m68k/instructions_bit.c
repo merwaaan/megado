@@ -8,15 +8,10 @@
 
 Instruction* gen_bit_instruction(uint16_t opcode, M68k* m, char* name, InstructionFunc func)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = name;
-    i->func = func;
+    Instruction* i = instruction_make(m, name, func);
     i->size = Long;
-
     i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
-
     return i;
 }
 
@@ -73,4 +68,20 @@ void btst(Instruction* i)
 Instruction* gen_btst(uint16_t opcode, M68k* m)
 {
     return gen_bit_instruction(opcode, m, "BTST", btst);
+}
+
+void btst_imm(Instruction* i)
+{
+    int bit = m68k_read_b(i->context, i->context->pc + 3) % 32;
+    int set = BIT(GET(i->dst), bit);
+
+    ZERO_SET(i->context, !set);
+}
+
+Instruction* gen_btst_imm(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "BTST", btst_imm);
+    i->size = Long;
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i); // TODO use operand for immediate data so that it gets properly disassembled and the same implem can be used
+    return i;
 }

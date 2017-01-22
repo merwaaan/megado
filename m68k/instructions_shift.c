@@ -8,14 +8,12 @@
 
 Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, InstructionFunc func)
 {
+
+    Instruction* i = instruction_make(m, name, func);
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+
     bool direction = BIT(opcode, 8);
     bool immediate = BIT(opcode, 5);
-
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = name;
-    i->func = func;
-    i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
     if (!immediate)
     {
@@ -121,10 +119,7 @@ void swap(Instruction* i)
 
 Instruction* gen_swap(uint16_t opcode, M68k* m)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = "SWAP";
-    i->func = swap;
+    Instruction* i = instruction_make(m, "SWAP", swap);
     i->size = Long;
     i->src = operand_make_data_register(FRAGMENT(opcode, 5, 0), i);
     return i;
