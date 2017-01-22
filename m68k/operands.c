@@ -37,9 +37,9 @@ int operand_tostring(Operand* operand, uint32_t instr_address, char* buffer)
     case Value:
         return sprintf(buffer, "#$%04x", operand->n);
     case AbsoluteShort:
-        return sprintf(buffer, "($%06x).w", m68k_read_w(operand->instruction->context, instr_address + 2));
+        return sprintf(buffer, "($%06x).w", m68k_read_w(operand->instruction->context, instr_address + operand->instruction->base_length));
     case AbsoluteLong:
-        return sprintf(buffer, "($%010x).l", m68k_read_l(operand->instruction->context, instr_address + 2));
+        return sprintf(buffer, "($%010x).l", m68k_read_l(operand->instruction->context, instr_address + operand->instruction->base_length));
     case BranchingOffset:
         return sprintf(buffer, "$%010x", instr_address + GET_RELATIVE(operand, instr_address) + 2);
     default:
@@ -138,7 +138,7 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
         case 2:
             return operand_make_pc_displacement(instr);
         case 4:
-            return operand_make_immediate_value(Word, instr); // TODO always word or instr size?
+            return operand_make_immediate_value(instr->size, instr);
         }
     default:
         return NULL;
@@ -359,7 +359,7 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
 uint32_t absolute_short_get(Operand* o, uint32_t instr_address)
 {
     M68k* m = o->instruction->context;
-    uint16_t address = m68k_read_w(m, instr_address + 2);
+    uint16_t address = m68k_read_w(m, instr_address + +o->instruction->base_length);
     return  m68k_read_w(m, address); // TODO not sure about w.l
 }
 
@@ -376,7 +376,7 @@ Operand* operand_make_absolute_short(Instruction* instr)
 uint32_t absolute_long_get(Operand* o, uint32_t instr_address)
 {
     M68k* m = o->instruction->context;
-    uint32_t address = m68k_read_l(m, instr_address + 2);
+    uint32_t address = m68k_read_l(m, instr_address + o->instruction->base_length);
     return  m68k_read_l(m, address); // TODO not sure about w.l
 }
 

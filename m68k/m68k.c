@@ -18,7 +18,7 @@ M68k* m68k_make()
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
         // Manual breakpoint!
-        if (opcode == 0x46fc)
+        if (opcode == 0x207c)
         {
             printf("don't get optimized away please\n");
         }
@@ -106,7 +106,7 @@ uint32_t m68k_step(M68k* m)
     Instruction* instr = m->opcode_table[opcode];
 
     // Manual breakpoint!
-    if (m->pc == 0x300)
+    if (m->pc == 0x330)
     {
         printf("don't get optimized away please\n");
     }
@@ -118,7 +118,7 @@ uint32_t m68k_step(M68k* m)
     else
     {
         DecodedInstruction* d = m68k_decode(m, m->pc);
-        // TODO different func to generate and print decoded instr
+        printf("%#06X %s\n", m->pc, d->mnemonics);
 
         instruction_execute(instr);
 

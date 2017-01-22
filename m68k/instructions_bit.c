@@ -81,6 +81,7 @@ void btst_imm(Instruction* i)
 Instruction* gen_btst_imm(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "BTST", btst_imm);
+    i->base_length = 4;
     i->size = Long;
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i); // TODO use operand for immediate data so that it gets properly disassembled and the same implem can be used
     return i;

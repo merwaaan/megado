@@ -10,7 +10,10 @@
 void bcc(Instruction* i)
 {
     if (i->condition->func(i->context))
-        i->context->pc += GET(i->src);
+    {
+        uint16_t displacement = GET(i->src); // TODO does this always work? not if 8bit offset stored in 16bit part for soem reason
+        i->context->pc += displacement > MAX_VALUE(Byte) ? (int16_t) displacement : (int8_t) displacement;
+    }
 }
 
 Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
@@ -25,7 +28,7 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
     if (displacement == 0)
         i->src = operand_make_branching_offset(i, Word);
     else if (displacement == 0xFF)
-        i->src = operand_make_branching_offset(i, Long);
+        i->src = operand_make_branching_offset(i, Long); // Seems to be supported by 68020+ only
     else
         i->src = operand_make_branching_offset(i, Byte);
 

@@ -58,6 +58,25 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
     return i;
 }
 
+void cmp(Instruction* i)
+{
+    uint32_t diff = GET(i->dst) - GET(i->src);
+
+    CARRY_SET(i->context, false); // TODO
+    OVERFLOW_SET(i->context, false); // TODO
+    ZERO_SET(i->context, diff == 0);
+    NEGATIVE_SET(i->context, BIT(diff, i->size - 1) == 1); // TODO not so sure, signed/unsigned arithmetic?
+}
+
+Instruction* gen_cmp(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "CMP", cmp);
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    return i;
+}
+
 void ext(Instruction* i)
 {
     int x = GET(i->src);
