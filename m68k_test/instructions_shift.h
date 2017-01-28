@@ -100,7 +100,31 @@ MU_TEST(test_asl)
 
 MU_TEST(test_asr)
 {
+    DATA(2, 3);
 
+    DATA(1, 0xF0F0F0F0);
+    RUN("1110 010 0 00 1 00 001"); // ASR.b D2, D1 (3 bits)
+    DATA_CHECK(1, 0xF0F0F0FE);
+
+    DATA(1, 0xF0F0F0F0);
+    RUN("1110 010 0 01 1 00 001"); // ASR.w D2, D1 (3 bits)
+    DATA_CHECK(1, 0xF0F0FE1E);
+
+    DATA(1, 0xF0F0F0F0);
+    RUN("1110 010 0 10 1 00 001"); // ASR.l D2, D1 (3 bits)
+    DATA_CHECK(1, 0xFE1E1E1E);
+
+    DATA(1, 0x0F0F0F0F);
+    RUN("1110 010 0 00 1 00 001"); // ASR.b D2, D1 (3 bits)
+    DATA_CHECK(1, 0x0F0F0F01);
+
+    DATA(1, 0x0F0F0F0F);
+    RUN("1110 010 0 01 1 00 001"); // ASR.w D2, D1 (3 bits)
+    DATA_CHECK(1, 0x0F0F01E1);
+
+    DATA(1, 0x0F0F0F0F);
+    RUN("1110 010 0 10 1 00 001"); // ASR.l D2, D1 (3 bits)
+    DATA_CHECK(1, 0x01E1E1E1);
 }
 
 MU_TEST(test_swap)

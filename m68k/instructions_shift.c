@@ -23,7 +23,17 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
 
 void asr(Instruction* i)
 {
-    // TODO
+    uint32_t initial = GET(i->dst);
+    uint8_t shift = GET(i->src) % 64;
+    uint32_t shifted_in = BIT(initial, i->size - 1) ? MASK_BELOW(0xFFFFFFFF, i->size - shift) : 0;
+    SET(i->dst, initial >> shift | shifted_in);
+
+    uint32_t result = GET(i->dst);
+    CARRY_SET(i->context, BIT(initial, 0));
+    OVERFLOW_SET(i->context, false);
+    ZERO_SET(i->context, result == 0);
+    NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
+    EXTENDED_SET(i->context, CARRY(i->context));
 }
 
 void lsl(Instruction* i)
