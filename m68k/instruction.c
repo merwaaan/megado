@@ -62,6 +62,7 @@ static Pattern all_patterns[] =
     { 0xD000, 0xF000, &gen_add },
     { 0xC0C0, 0xF1C0, &gen_mulu },
     { 0xC1C0, 0xF1C0, &gen_muls },
+    { 0xE000, 0xF018, &gen_asd },
     { 0xE008, 0xF018, &gen_lsd },
 };
 

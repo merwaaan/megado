@@ -21,42 +21,9 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
     return i;
 }
 
-void asl(Instruction* i)
-{
-    int shift = GET(i->src);
-    int initial = GET(i->dst);
-    int shifted_bit = BIT(initial, i->size);
-
-    int result = MASK_ABOVE_INC(initial << shift, i->size);
-    SET(i->dst, MASK_BELOW(initial, i->size) | result);
-
-    CARRY_SET(i->context, shifted_bit);
-    OVERFLOW_SET(i->context, false);
-    ZERO_SET(i->context, result == 0);
-    NEGATIVE_SET(i->context, result < 0);
-    // TODO EXTENDED_SET();
-}
-
 void asr(Instruction* i)
 {
-    int shift = GET(i->src);
-    int initial = GET(i->dst);
-    int shifted_bit = BIT(initial, 0);
-
-    int result = MASK_ABOVE_INC(initial >> shift, i->size);
-    SET(i->dst, MASK_BELOW(initial, i->size) | result);
-
-    CARRY_SET(i->context, shifted_bit);
-    OVERFLOW_SET(i->context, false);
-    ZERO_SET(i->context, result == 0);
-    NEGATIVE_SET(i->context, result < 0);
-    // TODO EXTENDED_SET();
-}
-
-Instruction* gen_asX(uint16_t opcode, M68k* m)
-{
-    bool direction = BIT(opcode, 8);
-    return gen_shift_instruction(opcode, m, direction ? "ASR" : "ASL", direction ? asr : asl);
+    // TODO
 }
 
 void lsl(Instruction* i)
@@ -83,6 +50,12 @@ void lsr(Instruction* i)
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
     EXTENDED_SET(i->context, CARRY(i->context));
+}
+
+Instruction* gen_asd(uint16_t opcode, M68k* m)
+{
+    bool direction = BIT(opcode, 8);
+    return gen_shift_instruction(opcode, m, direction ? "ASL" : "ASR", direction ? lsl : asr); // ASL = LSL
 }
 
 Instruction* gen_lsd(uint16_t opcode, M68k* m)

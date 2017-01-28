@@ -8,11 +8,11 @@
 MU_TEST(test_lsl)
 {
     DATA(7, 1);
-    
+
     DATA(0, 0xFFFFFFFF);
     RUN("1110 111 1 00 1 01 000"); // LSL.b D7, D0 (1 bit)
     DATA_CHECK(0, 0xFFFFFFFE);
-    
+
     DATA(0, 0xFFFFFFFF);
     RUN("1110 111 1 01 1 01 000"); // LSL.w D7, D0 (1 bit)
     DATA_CHECK(0, 0xFFFFFFFE);
@@ -67,6 +67,42 @@ MU_TEST(test_lsr)
     DATA_CHECK(0, 0x3FFFFF);
 }
 
+MU_TEST(test_asl)
+{
+    DATA(2, 5);
+
+    DATA(1, 0xF0F0F0F0);
+    RUN("1110 010 1 00 1 00 001"); // ASL.b D2, D1 (5 bits)
+    DATA_CHECK(1, 0xF0F0F000);
+
+    DATA(1, 0xF0F0F0F0);
+    RUN("1110 010 1 01 1 00 001"); // ASL.w D2, D1 (5 bits)
+    DATA_CHECK(1, 0xF0F01E00);
+
+    DATA(1, 0xF0F0F0F0);
+    RUN("1110 010 1 10 1 00 001"); // ASL.l D2, D1 (5 bits)
+    DATA_CHECK(1, 0x1E1E1E00);
+
+    DATA(2, 20);
+
+    DATA(1, 0xF0F0F0F0);
+    RUN("1110 010 1 00 1 00 001"); // ASL.b D2, D1 (20 bits)
+    DATA_CHECK(1, 0xF0F0F000);
+
+    DATA(1, 0xF0F0F0F0);
+    RUN("1110 010 1 01 1 00 001"); // ASL.w D2, D1 (20 bits)
+    DATA_CHECK(1, 0xF0F00000);
+
+    DATA(1, 0xF0F0F0F0);
+    RUN("1110 010 1 10 1 00 001"); // ASL.l D2, D1 (20 bits)
+    DATA_CHECK(1, 0x0F000000);
+}
+
+MU_TEST(test_asr)
+{
+
+}
+
 MU_TEST(test_swap)
 {
     DATA(4, 0x1234ABCD);
@@ -80,6 +116,9 @@ MU_TEST_SUITE(test_suite_instructions_shift)
 
     MU_RUN_TEST(test_lsl);
     MU_RUN_TEST(test_lsr);
+
+    MU_RUN_TEST(test_asl);
+    MU_RUN_TEST(test_asr);
 
     MU_RUN_TEST(test_swap);
 }

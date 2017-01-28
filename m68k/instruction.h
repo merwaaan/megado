@@ -98,6 +98,7 @@ DEFINE_INSTR(mulu);
 DEFINE_INSTR(muls);
 
 // Shit & rotate
+DEFINE_INSTR(asd);
 DEFINE_INSTR(lsd);
 DEFINE_INSTR(swap);
 
