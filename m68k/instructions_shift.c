@@ -8,21 +8,15 @@
 
 Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, InstructionFunc func)
 {
-
     Instruction* i = instruction_make(m, name, func);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
+    i->dst = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
 
-    bool direction = BIT(opcode, 8);
-    bool immediate = BIT(opcode, 5);
-
-    if (!immediate)
-    {
+    bool reg = BIT(opcode, 5);
+    if (reg)
         i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-        i->dst = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
-    }
     else
-        return NULL;
-    // TODO handle immediate mode
+        i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
 
     return i;
 }
@@ -67,40 +61,34 @@ Instruction* gen_asX(uint16_t opcode, M68k* m)
 
 void lsl(Instruction* i)
 {
-    int shift = GET(i->src);
-    int initial = GET(i->dst);
-    int shifted_bit = BIT(initial, i->size);
+    uint32_t initial = GET(i->dst);
+    SET(i->dst, initial << (GET(i->src) % 64));
 
-    int result = MASK_ABOVE_INC(initial << shift, i->size);
-    SET(i->dst, MASK_BELOW(initial, i->size) | result);
-
-    CARRY_SET(i->context, shifted_bit);
+    uint32_t result = GET(i->dst);
+    CARRY_SET(i->context, BIT(initial, i->size - 1));
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
-    NEGATIVE_SET(i->context, result < 0);
-    // TODO EXTENDED_SET();
+    NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
+    EXTENDED_SET(i->context, CARRY(i->context));
 }
 
 void lsr(Instruction* i)
 {
-    int shift = GET(i->src);
-    int initial = GET(i->dst);
-    int shifted_bit = BIT(initial, 0);
+    uint32_t initial = GET(i->dst);
+    SET(i->dst, initial >> (GET(i->src) % 64));
 
-    int result = MASK_ABOVE_INC(initial >> shift, i->size);
-    SET(i->dst, MASK_BELOW(initial, i->size) | result);
-
-    CARRY_SET(i->context, shifted_bit);
+    uint32_t result = GET(i->dst);
+    CARRY_SET(i->context, BIT(initial, 0));
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
-    NEGATIVE_SET(i->context, result < 0);
-    // TODO EXTENDED_SET();
+    NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
+    EXTENDED_SET(i->context, CARRY(i->context));
 }
 
-Instruction* gen_lsX(uint16_t opcode, M68k* m)
+Instruction* gen_lsd(uint16_t opcode, M68k* m)
 {
     bool direction = BIT(opcode, 8);
-    return gen_shift_instruction(opcode, m, direction ? "LSR" : "LSL", direction ? lsr : lsl);
+    return gen_shift_instruction(opcode, m, direction ? "LSL" : "LSR", direction ? lsl : lsr);
 }
 
 void swap(Instruction* i)

@@ -5,28 +5,67 @@
 
 #include "globals.h"
 
-MU_TEST(test_lsl) // TODO test immediate version
+MU_TEST(test_lsl)
 {
     DATA(7, 1);
-    DATA(0, 0xFFFF);
-    RUN("1110001 1 11 000000"); // LSL D7, D0 (1 bit)
-    DATA_CHECK(0, 0xFFFE);
+    
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 1 00 1 01 000"); // LSL.b D7, D0 (1 bit)
+    DATA_CHECK(0, 0xFFFFFFFE);
+    
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 1 01 1 01 000"); // LSL.w D7, D0 (1 bit)
+    DATA_CHECK(0, 0xFFFFFFFE);
+
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 1 10 1 01 000"); // LSL.l D7, D0 (1 bit)
+    DATA_CHECK(0, 0xFFFFFFFE);
+
+    DATA(7, 10);
+
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 1 00 1 01 000"); // LSL.b D7, D0 (10 bits)
+    DATA_CHECK(0, 0xFFFFFF00);
+
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 1 01 1 01 000"); // LSL.w D7, D0 (10 bits)
+    DATA_CHECK(0, 0xFFFFFC00);
+
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 1 10 1 01 000"); // LSL.l D7, D0 (10 bits)
+    DATA_CHECK(0, 0xFFFFFC00);
 }
 
-MU_TEST(test_lsl_zero)
+MU_TEST(test_lsr)
 {
-    DATA(7, 0);
-    DATA(0, 0xFFFF);
-    RUN("1110001 1 11 000000"); // LSL D7, D0 (0 bits)
-    DATA_CHECK(0, 0xFFFF);
-}
+    DATA(7, 1);
 
-/*MU_TEST(test_lsl)
-{
-    DATA(7, 0);  DATA(0, 0xFFFF);
-    RUN("1110001 1 11 000000"); // LSL D7, D0
-    DATA_CHECK(0, 0xFFFF);
-}*/
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 0 00 1 01 000"); // LSR.b D7, D0 (1 bit)
+    DATA_CHECK(0, 0xFFFFFF7F);
+
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 0 01 1 01 000"); // LSR.w D7, D0 (1 bit)
+    DATA_CHECK(0, 0xFFFF7FFF);
+
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 0 10 1 01 000"); // LSR.l D7, D0 (1 bit)
+    DATA_CHECK(0, 0x7FFFFFFF);
+
+    DATA(7, 10);
+
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 0 00 1 01 000"); // LSR.b D7, D0 (10 bits)
+    DATA_CHECK(0, 0xFFFFFF00);
+
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 0 01 1 01 000"); // LSR.w D7, D0 (10 bits)
+    DATA_CHECK(0, 0xFFFF003F);
+
+    DATA(0, 0xFFFFFFFF);
+    RUN("1110 111 0 10 1 01 000"); // LSR.l D7, D0 (10 bits)
+    DATA_CHECK(0, 0x3FFFFF);
+}
 
 MU_TEST(test_swap)
 {
@@ -39,8 +78,8 @@ MU_TEST_SUITE(test_suite_instructions_shift)
 {
     MU_SUITE_CONFIGURE(&setup, &teardown);
 
-    //MU_RUN_TEST(test_lsl);
-    //MU_RUN_TEST(test_lsl_zero);
+    MU_RUN_TEST(test_lsl);
+    MU_RUN_TEST(test_lsr);
 
     MU_RUN_TEST(test_swap);
 }

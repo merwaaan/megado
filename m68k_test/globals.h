@@ -19,7 +19,7 @@
 #define ASSERT_BIN(a, b) mu_assert_int_eq_bin(a, b)
 #define ASSERT_STR(a, b) mu_assert_str_eq(a, b)
 
-#define RUN(opcode) m68k_write_w(m, 0, bin_parse(opcode)); m68k_step(m)
+#define RUN(opcode) m->pc = 0; m68k_write_w(m, 0, bin_parse(opcode)); m68k_step(m)
 
 // This extends minunit to print asserted values in hexadecimal format
 #define mu_assert_int_eq_hex(expected, result) MU__SAFE_BLOCK(\

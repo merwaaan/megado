@@ -98,7 +98,7 @@ DEFINE_INSTR(mulu);
 DEFINE_INSTR(muls);
 
 // Shit & rotate
-DEFINE_INSTR(lsX);
+DEFINE_INSTR(lsd);
 DEFINE_INSTR(swap);
 
 // Data transfer

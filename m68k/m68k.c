@@ -18,7 +18,7 @@ M68k* m68k_make()
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
         // Manual breakpoint!
-        if (opcode == 0x207c)
+        if (opcode == 0xef68)
         {
             printf("don't get optimized away please\n");
         }
