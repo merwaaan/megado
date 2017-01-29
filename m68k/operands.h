@@ -27,7 +27,6 @@ typedef void(*Action)(struct Operand* this);
 
 typedef enum
 {
-    Unsupported,
     DataRegister,
     AddressRegister,
     AddressRegisterIndirect,
@@ -38,12 +37,12 @@ typedef enum
     ProgramCounterDisplacement,
     ProgramCounterIndexed,
     Immediate,
-    AbsoluteByte,
     AbsoluteShort,
     AbsoluteLong,
     Value,
 
-    BranchingOffset
+    BranchingOffset,
+    Unsupported
 } OperandType;
 
 typedef struct Operand
@@ -85,6 +84,9 @@ Size operand_size3(uint8_t pattern); // TODO how to name this?
 uint8_t operand_sign_extension(uint8_t pattern);
 
 int operand_length(Operand*);
+
+// Return the number of cycles required to compute an effective address
+int operand_get_cycles(Operand*);
 
 Operand* operand_make(uint16_t pattern, struct Instruction* instr);
 void operand_free(Operand* instr);

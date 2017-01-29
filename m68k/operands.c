@@ -500,3 +500,27 @@ int operand_length(Operand* operand)
         return 0;
     }
 }
+
+// Cycles required to compute an effective address.
+// The first value is for Byte/Word operation, the second is for Long operations.
+// The order of the entries must match the AddressingMode enum.
+int address_calculation_cycles[12][2] = 
+{
+    { 0, 0 },
+    { 0, 0 },
+    { 4, 8 },
+    { 6, 10 },
+    { 4, 8 },
+    { 8, 12 },
+    { 10, 14 },
+    { 8, 12 },
+    { 10, 14 },
+    { 4, 8 },
+    { 8, 12 },
+    { 10, 14 }
+};
+
+int operand_get_cycles(Operand* o)
+{
+    return address_calculation_cycles[o->type][o->instruction->size == Long];
+}

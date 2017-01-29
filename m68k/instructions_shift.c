@@ -98,10 +98,6 @@ void ror(Instruction* i)
     if (rotation > 0)
         SET(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));
 
-    uint32_t x = initial >> rotation;
-    uint32_t y = FRAGMENT(initial, rotation - 1, 0);
-    uint32_t z = FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation);
-
     // TODO what if rot = 0?
     uint32_t result = GET(i->dst);
     CARRY_SET(i->context, BIT(initial, i->size - rotation));
