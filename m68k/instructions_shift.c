@@ -78,10 +78,31 @@ void rol(Instruction* i)
 {
     uint32_t initial = GET(i->dst);
     int rotation = GET(i->src) % i->size;
-    SET(i->dst, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
-    
-    uint32_t x = initial << rotation;
-    uint32_t y = FRAGMENT(initial, i->size - 1, i->size - rotation);
+
+    if (rotation > 0)
+        SET(i->dst, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
+
+    // TODO what if rot = 0?
+    uint32_t result = GET(i->dst);
+    CARRY_SET(i->context, BIT(initial, i->size - rotation));
+    OVERFLOW_SET(i->context, false);
+    ZERO_SET(i->context, result == 0);
+    NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
+}
+
+void ror(Instruction* i)
+{
+    uint32_t initial = GET(i->dst);
+    int rotation = GET(i->src) % i->size;
+
+    if (rotation > 0)
+        SET(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));
+
+    uint32_t x = initial >> rotation;
+    uint32_t y = FRAGMENT(initial, rotation - 1, 0);
+    uint32_t z = FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation);
+
+    // TODO what if rot = 0?
     uint32_t result = GET(i->dst);
     CARRY_SET(i->context, BIT(initial, i->size - rotation));
     OVERFLOW_SET(i->context, false);
@@ -92,7 +113,7 @@ void rol(Instruction* i)
 Instruction* gen_rod(uint16_t opcode, M68k* m)
 {
     bool direction = BIT(opcode, 8);
-    return gen_shift_instruction(opcode, m, direction ? "ROL" : "ROR", direction ? rol : NULL);
+    return gen_shift_instruction(opcode, m, direction ? "ROL" : "ROR", direction ? rol : ror);
 }
 
 void swap(Instruction* i)
