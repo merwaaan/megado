@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+// The "all bits on" mask is 64 bit to avoid issues due to 
+// 32 bit shifts on 32 bit values being undefined behaviour
+#define FULL_MASK ((uint64_t) 0xFFFFFFFF)
+
 // Get the n-th bit of x
 #define BIT(x, n) (((x) & (1 << (n))) != 0)
 
@@ -13,15 +17,15 @@
 #define BIT_CHG(x, n, b) ((x) ^ (((-(b)) ^ (x)) & (1 << (n))))
 
 // Get the bits of x within [start, end]
-#define FRAGMENT(x, start, end) (((x) & ~(0xFFFFFFFF << ((start) + 1))) >> (end))
+#define FRAGMENT(x, start, end) (((x) & ~(FULL_MASK << ((start) + 1))) >> (end))
 
 // Mask the bits below/above bit n
-#define MASK_BELOW(x, n) ((x) & (0xFFFFFFFFF << (n)))
-#define MASK_ABOVE(x, n) ((x) & ~(0xFFFFFFFFF << ((n) + 1)))
+#define MASK_BELOW(x, n) ((x) & (FULL_MASK << (n)))
+#define MASK_ABOVE(x, n) ((x) & ~(FULL_MASK << ((n) + 1)))
 
 // Mask the bits below/above bit n (inclusive)
-#define MASK_BELOW_INC(x, n) ((x) & (0xFFFFFFFFF << ((n) + 1)))
-#define MASK_ABOVE_INC(x, n) ((x) & ~(0xFFFFFFFFF << (n)))
+#define MASK_BELOW_INC(x, n) ((x) & (FULL_MASK << ((n) + 1)))
+#define MASK_ABOVE_INC(x, n) ((x) & ~(FULL_MASK << (n)))
 
 // Get low/high nibble/byte/word
 #define NIBBLE_LO(b) ((b) & 0xF)
