@@ -10,7 +10,7 @@ struct Instruction;
 struct M68k;
 struct Operand;
 
-typedef void (InstructionFunc)(struct Instruction*);
+typedef int (InstructionFunc)(struct Instruction*);
 
 typedef struct Instruction {
     char* name;
@@ -34,6 +34,17 @@ typedef struct Instruction {
     // Total instruction length (take into account the operands' length)
     uint8_t total_length;
 
+    // Base execution time (fixed part of the instruction's timing)
+    //
+    // The implementation will return an additional context-dependent
+    // execution time that must be added to obtain the total execution
+    // time.
+    //
+    // e.g. for ROL.b, base time is 6
+    //                 total time is 6+2n where n is the number of bits to rotate
+    //      -> the implementation will return 2n
+    uint8_t base_cycles;
+
     // Some instructions require extra data
     union
     {
@@ -56,7 +67,9 @@ Instruction* instruction_generate(struct M68k* context, uint16_t opcode);
 // assigned and all operands have been setup
 bool instruction_valid(Instruction*);
 
-void instruction_execute(Instruction*);
+// Execute the given instruction.
+// Returns the elapsed cycles.
+int instruction_execute(Instruction*);
 
 /*
  * Instruction generators

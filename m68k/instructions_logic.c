@@ -42,7 +42,7 @@ Instruction* gen_boolean_instruction_immediate(uint16_t opcode, M68k* m, char* n
     return i;
 }
 
-void and(Instruction* i)
+int and(Instruction* i)
 {
     uint32_t result = GET(i->src) & GET(i->dst);
     SET(i->dst, result);
@@ -51,6 +51,8 @@ void and(Instruction* i)
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1));
+
+    return 0;
 }
 
 Instruction* gen_and(uint16_t opcode, M68k* m)
@@ -63,7 +65,7 @@ Instruction* gen_andi(uint16_t opcode, M68k* m)
     return gen_boolean_instruction_immediate(opcode, m, "ANDI", and);
 }
 
-void eor(Instruction* i)
+int eor(Instruction* i)
 {
     uint32_t result = GET(i->src) ^ GET(i->dst);
     SET(i->dst, result);
@@ -72,6 +74,8 @@ void eor(Instruction* i)
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, result < 0);
+
+    return 0;
 }
 
 Instruction* gen_eor(uint16_t opcode, M68k* m)
@@ -84,7 +88,7 @@ Instruction* gen_eori(uint16_t opcode, M68k* m)
     return gen_boolean_instruction_immediate(opcode, m, "EORI", eor);
 }
 
-void or (Instruction* i)
+int or (Instruction* i)
 {
     uint32_t result = GET(i->src) | GET(i->dst);
     SET(i->dst, result);
@@ -93,6 +97,8 @@ void or (Instruction* i)
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, result < 0);
+
+    return 0;
 }
 
 Instruction* gen_or(uint16_t opcode, M68k* m)
@@ -105,7 +111,7 @@ Instruction* gen_ori(uint16_t opcode, M68k* m)
     return gen_boolean_instruction_immediate(opcode, m, "ORI", or );
 }
 
-void not(Instruction* i)
+int not(Instruction* i)
 {
     uint32_t result = ~GET(i->src);
     SET(i->src, result);
@@ -114,6 +120,8 @@ void not(Instruction* i)
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
+
+    return 0;
 }
 
 Instruction* gen_not(uint16_t opcode, M68k* m)
@@ -124,9 +132,11 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
     return i;
 }
 
-void scc(Instruction* i)
+int scc(Instruction* i)
 {
     SET(i->dst, i->condition->func(i->context) ? 0xFF : 0);
+
+    return 0;
 }
 
 Instruction* gen_scc(uint16_t opcode, M68k* m)
@@ -138,7 +148,7 @@ Instruction* gen_scc(uint16_t opcode, M68k* m)
     return i;
 }
 
-void tst(Instruction* i)
+int tst(Instruction* i)
 {
     uint32_t value = GET(i->src);
 
@@ -146,6 +156,8 @@ void tst(Instruction* i)
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, value == 0);
     NEGATIVE_SET(i->context, BIT(value, i->size - 1) == 1);
+
+    return 0;
 }
 
 Instruction* gen_tst(uint16_t opcode, M68k* m)

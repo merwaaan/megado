@@ -120,7 +120,7 @@ uint32_t m68k_step(M68k* m)
         DecodedInstruction* d = m68k_decode(m, m->pc);
         printf("%#06X %s\n", m->pc, d->mnemonics);
 
-        instruction_execute(instr);
+        m->cycles += instruction_execute(instr);
 
         m->pc += instr->total_length;
         // TODO can only address 2^24 bytes in practice

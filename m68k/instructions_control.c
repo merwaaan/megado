@@ -7,13 +7,17 @@
 #include "m68k.h"
 #include "operands.h"
 
-void bcc(Instruction* i)
+int bcc(Instruction* i)
 {
     if (i->condition->func(i->context))
     {
         uint16_t displacement = GET(i->src); // TODO does this always work? not if 8bit offset stored in 16bit part for soem reason
         i->context->pc += displacement > MAX_VALUE(Byte) ? (int16_t) displacement : (int8_t) displacement;
+
+        return 0; // TODO timings
     }
+
+    return 0;
 }
 
 Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
@@ -35,7 +39,7 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
     return i;
 }
 
-void bra(Instruction* i)
+int bra(Instruction* i)
 {
     int32_t displacement = m68k_read_b(i->context, i->context->pc + 1);
     if (displacement == 0)
@@ -44,6 +48,8 @@ void bra(Instruction* i)
         displacement = m68k_read_l(i->context, i->context->pc + 2);
 
     i->context->pc += displacement;
+
+    return 0;
 }
 
 Instruction* gen_bra(uint16_t opcode, M68k* m)
@@ -51,10 +57,12 @@ Instruction* gen_bra(uint16_t opcode, M68k* m)
     return instruction_make(m, "BRA", bra);;
 }
 
-void bsr(Instruction* i)
+int bsr(Instruction* i)
 {
     m68k_push(i->context->pc);
     m68k_jump(i->context->pc + GET(i->src));
+
+    return 0;
 }
 
 Instruction* gen_bsr(uint16_t opcode, M68k* m)
@@ -72,7 +80,7 @@ Instruction* gen_bsr(uint16_t opcode, M68k* m)
     return i;
 }
 
-void dbcc(Instruction* i)
+int dbcc(Instruction* i)
 {
     //if (i->condition->func(i->context)) TODO unclear about the condition
 
@@ -81,6 +89,8 @@ void dbcc(Instruction* i)
         i->context->pc += (int16_t)m68k_read_w(i->context, i->context->pc + 2) - 2;
 
     SET(i->src, reg - 1);
+
+    return 0; // TODO timings
 }
 
 Instruction* gen_dbcc(uint16_t opcode, M68k* m)
@@ -94,9 +104,11 @@ Instruction* gen_dbcc(uint16_t opcode, M68k* m)
     return i;
 }
 
-void jmp(Instruction* i)
+int jmp(Instruction* i)
 {
     i->context->pc = GET(i->src);
+
+    return 0;
 }
 
 Instruction* gen_jmp(uint16_t opcode, M68k* m)
@@ -106,10 +118,12 @@ Instruction* gen_jmp(uint16_t opcode, M68k* m)
     return i;
 }
 
-void jsr(Instruction* i)
+int jsr(Instruction* i)
 {
     m68k_push(i->context->pc);
     m68k_jump(GET(i->src));
+
+    return 0;
 }
 
 Instruction* gen_jsr(uint16_t opcode, M68k* m)
@@ -119,9 +133,11 @@ Instruction* gen_jsr(uint16_t opcode, M68k* m)
     return i;
 }
 
-void rts(Instruction* i)
+int rts(Instruction* i)
 {
     i->context->pc = m68k_pop();
+
+    return 0;
 }
 
 Instruction* gen_rts(uint16_t opcode, M68k* m)

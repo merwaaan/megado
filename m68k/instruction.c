@@ -11,6 +11,7 @@ Instruction* instruction_make(M68k* context, char* name, InstructionFunc func)
     i->name = name;
     i->func = func;
     i->base_length = 2; // Most instructions take two bytes
+    i->base_cycles = 0; // TODO
     return i;
 }
 
@@ -108,7 +109,7 @@ bool instruction_valid(Instruction* instr)
     return true;
 }
 
-void instruction_execute(Instruction* instr)
+int instruction_execute(Instruction* instr)
 {
     // Pre-execution actions
     if (instr->src != NULL && instr->src->pre != NULL)
@@ -116,11 +117,13 @@ void instruction_execute(Instruction* instr)
     if (instr->dst != NULL && instr->dst->pre != NULL)
         instr->dst->pre(instr->dst);
 
-    instr->func(instr);
+    int additional_cycles = instr->func(instr);
 
     // Post-execution actions
     if (instr->src != NULL && instr->src->post != NULL)
         instr->src->post(instr->src);
     if (instr->dst != NULL && instr->dst->post != NULL)
         instr->dst->post(instr->dst);
+
+    return instr->base_cycles + additional_cycles;
 }

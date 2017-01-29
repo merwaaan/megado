@@ -6,11 +6,13 @@
 #include "m68k.h"
 #include "operands.h"
 
-void exg(Instruction* i)
+int exg(Instruction* i)
 {
     int32_t dst = GET(i->dst);
     SET(i->dst, GET(i->src));
     SET(i->src, dst);
+
+    return 0;
 }
 
 Instruction* gen_exg(uint16_t opcode, M68k* m)
@@ -41,9 +43,11 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
     return i;
 }
 
-void lea(Instruction* i)
+int lea(Instruction* i)
 {
     SET(i->dst, GET(i->src));
+
+    return 0;
 }
 
 Instruction* gen_lea(uint16_t opcode, M68k* m)
@@ -55,7 +59,7 @@ Instruction* gen_lea(uint16_t opcode, M68k* m)
     return i;
 }
 
-void move(Instruction* i)
+int move(Instruction* i)
 {
     int32_t value = GET(i->src);
     SET(i->dst, value);
@@ -64,6 +68,8 @@ void move(Instruction* i)
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, value == 0);
     NEGATIVE_SET(i->context, BIT(value, i->size - 1) == 1);
+
+    return 0;
 }
 
 Instruction* gen_move(uint16_t opcode, M68k* m)
@@ -75,7 +81,7 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
     return i;
 }
 
-void movem(Instruction* i)
+int movem(Instruction* i)
 {
     // TODO
     // incomplete version, this opcode is super confusing
@@ -84,6 +90,7 @@ void movem(Instruction* i)
 
     uint32_t cursor = i->context->address_registers[i->src->n] & 0xFFFFFF;
 
+    int moved = 0;
     for (int m = 0; m < 16; ++m)
         if (BIT(mask, m))
         {
@@ -108,11 +115,14 @@ void movem(Instruction* i)
             }
 
             cursor += i->size == 16 ? 2 : 4;
+            ++moved;
         }
 
     // Revert the initial post-increment (hackish)
     if (i->src->type == AddressRegisterIndirectPostInc)
         i->context->address_registers[i->src->n] -= size_in_bytes(i->src->instruction->size);
+
+    return 4 * moved;
 }
 
 Instruction* gen_movem(uint16_t opcode, M68k* m)
@@ -132,7 +142,7 @@ Instruction* gen_movem(uint16_t opcode, M68k* m)
     return i;
 }
 
-void moveq(Instruction* i)
+int moveq(Instruction* i)
 {
     int32_t value = SIGN_EXTEND_B_L(GET(i->src));
     SET(i->dst, value);
@@ -141,6 +151,8 @@ void moveq(Instruction* i)
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, value == 0);
     NEGATIVE_SET(i->context, BIT(value, 31) == 1);
+
+    return 0;
 }
 
 Instruction* gen_moveq(uint16_t opcode, M68k* m)
@@ -152,7 +164,7 @@ Instruction* gen_moveq(uint16_t opcode, M68k* m)
     return i;
 }
 
-void movea(Instruction* i)
+int movea(Instruction* i)
 {
     int32_t value = GET(i->src);
 
@@ -160,6 +172,8 @@ void movea(Instruction* i)
         value = SIGN_EXTEND_W(value);
 
     SET(i->dst, value);
+
+    return 0;
 }
 
 Instruction* gen_movea(uint16_t opcode, M68k* m)
@@ -171,9 +185,11 @@ Instruction* gen_movea(uint16_t opcode, M68k* m)
     return i;
 }
 
-void move_from_sr(Instruction* i)
+int move_from_sr(Instruction* i)
 {
     SET(i->dst, i->context->status);
+
+    return 0;
 }
 
 Instruction* gen_move_from_sr(uint16_t opcode, M68k* m)
@@ -184,7 +200,7 @@ Instruction* gen_move_from_sr(uint16_t opcode, M68k* m)
     return i;
 }
 
-void move_to_sr(Instruction* i)
+int move_to_sr(Instruction* i)
 {
     uint16_t value = GET(i->src);
     i->context->status = value;
@@ -194,6 +210,8 @@ void move_to_sr(Instruction* i)
     ZERO_SET(i->context, BIT(value, 2));
     NEGATIVE_SET(i->context, BIT(value, 3));
     EXTENDED_SET(i->context, BIT(value, 4));
+
+    return 0;
 }
 
 Instruction* gen_move_to_sr(uint16_t opcode, M68k* m)
@@ -204,7 +222,7 @@ Instruction* gen_move_to_sr(uint16_t opcode, M68k* m)
     return i;
 }
 
-void move_usp(Instruction* i)
+int move_usp(Instruction* i)
 {
     // Register to stack pointer
     if (i->src != NULL)
@@ -212,6 +230,8 @@ void move_usp(Instruction* i)
     // Stack pointer to register
     else
         SET(i->dst, i->context->address_registers[7]);
+
+    return 0;
 }
 
 Instruction* gen_move_usp(uint16_t opcode, M68k* m)
@@ -230,11 +250,13 @@ Instruction* gen_move_usp(uint16_t opcode, M68k* m)
     return i;
 }
 
-void pea(Instruction* i)
+int pea(Instruction* i)
 {
     // TODO
     //i->context->memory[i->context->address_registers[7]] = GET(i->src);
     //i->context->address_registers[7]--;
+
+    return 0;
 }
 
 Instruction* gen_pea(uint16_t opcode, M68k* m)

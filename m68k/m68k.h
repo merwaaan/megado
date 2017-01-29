@@ -34,6 +34,7 @@ typedef struct M68k {
     uint32_t address_registers[8];
     uint16_t status;
     uint32_t pc;
+    uint64_t cycles;
 
     struct Instruction** opcode_table;
 

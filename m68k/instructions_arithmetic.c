@@ -4,7 +4,7 @@
 #include "m68k.h"
 #include "operands.h"
 
-void add(Instruction* i)
+int add(Instruction* i)
 {
     uint64_t sum = GET(i->src) + GET(i->dst);
     SET(i->dst, sum);
@@ -14,6 +14,8 @@ void add(Instruction* i)
     ZERO_SET(i->context, sum == 0);
     NEGATIVE_SET(i->context, BIT(sum, i->size - 1));
     EXTENDED_SET(i->context, CARRY(i->context));
+
+    return 0;
 }
 
 Instruction* gen_add(uint16_t opcode, M68k* m)
@@ -40,7 +42,7 @@ Instruction* gen_add(uint16_t opcode, M68k* m)
     return i;
 }
 
-void clr(Instruction* i)
+int clr(Instruction* i)
 {
     SET(i->src, MASK_BELOW(GET(i->src), i->size));
 
@@ -48,6 +50,8 @@ void clr(Instruction* i)
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, true);
     NEGATIVE_SET(i->context, false);
+
+    return 0;
 }
 
 Instruction* gen_clr(uint16_t opcode, M68k* m)
@@ -58,7 +62,7 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
     return i;
 }
 
-void cmp(Instruction* i)
+int cmp(Instruction* i)
 {
     uint32_t diff = GET(i->dst) - GET(i->src);
 
@@ -66,6 +70,8 @@ void cmp(Instruction* i)
     OVERFLOW_SET(i->context, false); // TODO
     ZERO_SET(i->context, diff == 0);
     NEGATIVE_SET(i->context, BIT(diff, i->size - 1) == 1); // TODO not so sure, signed/unsigned arithmetic?
+
+    return 0;
 }
 
 Instruction* gen_cmp(uint16_t opcode, M68k* m)
@@ -77,7 +83,7 @@ Instruction* gen_cmp(uint16_t opcode, M68k* m)
     return i;
 }
 
-void ext(Instruction* i)
+int ext(Instruction* i)
 {
     int x = GET(i->src);
 
@@ -97,6 +103,8 @@ void ext(Instruction* i)
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, extended == 0);
     NEGATIVE_SET(i->context, BIT(extended, i->size - 1) == 1);
+
+    return 0;
 }
 
 Instruction* gen_ext(uint16_t opcode, M68k* m)
@@ -107,7 +115,7 @@ Instruction* gen_ext(uint16_t opcode, M68k* m)
     return i;
 }
 
-void muls(Instruction* i)
+int muls(Instruction* i)
 {
     SET(i->src, GET(i->src) * GET(i->dst));
 
@@ -116,6 +124,8 @@ void muls(Instruction* i)
     ZERO_SET(i->context, true); // TODO
     NEGATIVE_SET(i->context, false); // TODO
                                      // TODO EXT
+
+    return 0;
 }
 
 Instruction* gen_muls(uint16_t opcode, M68k* m)
@@ -127,7 +137,7 @@ Instruction* gen_muls(uint16_t opcode, M68k* m)
     return i;
 }
 
-void mulu(Instruction* i)
+int mulu(Instruction* i)
 {
     SET(i->src, GET(i->src) * GET(i->dst));
 
@@ -136,6 +146,8 @@ void mulu(Instruction* i)
     ZERO_SET(i->context, true); // TODO
     NEGATIVE_SET(i->context, false); // TODO
                                      // TODO EXT
+
+    return 0;
 }
 
 Instruction* gen_mulu(uint16_t opcode, M68k* m)
