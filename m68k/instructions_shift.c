@@ -24,12 +24,12 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
 void asr(Instruction* i)
 {
     uint32_t initial = GET(i->dst);
-    uint8_t shift = GET(i->src) % 64;
+    uint8_t shift = GET(i->src);
     uint32_t shifted_in = BIT(initial, i->size - 1) ? MASK_BELOW(0xFFFFFFFF, i->size - shift) : 0;
     SET(i->dst, initial >> shift | shifted_in);
 
     uint32_t result = GET(i->dst);
-    CARRY_SET(i->context, BIT(initial, 0));
+    CARRY_SET(i->context, BIT(initial, 0)); // TODO not sure, should be last bit shifter out?
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -39,10 +39,10 @@ void asr(Instruction* i)
 void lsl(Instruction* i)
 {
     uint32_t initial = GET(i->dst);
-    SET(i->dst, initial << (GET(i->src) % 64));
+    SET(i->dst, initial << GET(i->src));
 
     uint32_t result = GET(i->dst);
-    CARRY_SET(i->context, BIT(initial, i->size - 1));
+    CARRY_SET(i->context, BIT(initial, i->size - 1)); // TODO not sure, should be last bit shifter out?
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -52,10 +52,10 @@ void lsl(Instruction* i)
 void lsr(Instruction* i)
 {
     uint32_t initial = GET(i->dst);
-    SET(i->dst, initial >> (GET(i->src) % 64));
+    SET(i->dst, initial >> GET(i->src));
 
     uint32_t result = GET(i->dst);
-    CARRY_SET(i->context, BIT(initial, 0));
+    CARRY_SET(i->context, BIT(initial, 0)); // TODO not sure, should be last bit shifter out?
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -72,6 +72,27 @@ Instruction* gen_lsd(uint16_t opcode, M68k* m)
 {
     bool direction = BIT(opcode, 8);
     return gen_shift_instruction(opcode, m, direction ? "LSL" : "LSR", direction ? lsl : lsr);
+}
+
+void rol(Instruction* i)
+{
+    uint32_t initial = GET(i->dst);
+    int rotation = GET(i->src) % i->size;
+    SET(i->dst, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
+    
+    uint32_t x = initial << rotation;
+    uint32_t y = FRAGMENT(initial, i->size - 1, i->size - rotation);
+    uint32_t result = GET(i->dst);
+    CARRY_SET(i->context, BIT(initial, i->size - rotation));
+    OVERFLOW_SET(i->context, false);
+    ZERO_SET(i->context, result == 0);
+    NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
+}
+
+Instruction* gen_rod(uint16_t opcode, M68k* m)
+{
+    bool direction = BIT(opcode, 8);
+    return gen_shift_instruction(opcode, m, direction ? "ROL" : "ROR", direction ? rol : NULL);
 }
 
 void swap(Instruction* i)
