@@ -66,7 +66,7 @@ int cmp(Instruction* i)
 {
     uint32_t diff = GET(i->dst) - GET(i->src);
 
-    CARRY_SET(i->context, false); // TODO
+    CARRY_SET(i->context, GET(i->src) > GET(i->dst)); // TODO
     OVERFLOW_SET(i->context, false); // TODO
     ZERO_SET(i->context, diff == 0);
     NEGATIVE_SET(i->context, BIT(diff, i->size - 1) == 1); // TODO not so sure, signed/unsigned arithmetic?

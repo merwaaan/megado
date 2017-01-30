@@ -117,6 +117,148 @@ MU_TEST(test_mask_above_inc)
     ASSERT_BIN(7, MASK_ABOVE_INC(0xFF, 3));
 }
 
+MU_TEST(test_sign_bit)
+{
+    ASSERT_BIN(0, SIGN_BIT(0, Byte));
+    ASSERT_BIN(0, SIGN_BIT(1, Byte));
+    ASSERT_BIN(0, SIGN_BIT(0x40, Byte));
+    ASSERT_BIN(1, SIGN_BIT(0x80, Byte));
+    ASSERT_BIN(1, SIGN_BIT(0xFE, Byte));
+    ASSERT_BIN(1, SIGN_BIT(0xFF, Byte));
+
+    ASSERT_BIN(0, SIGN_BIT(0, Word));
+    ASSERT_BIN(0, SIGN_BIT(0x80, Word));
+    ASSERT_BIN(0, SIGN_BIT(0xFF, Word));
+    ASSERT_BIN(0, SIGN_BIT(0x7FFF, Word));
+    ASSERT_BIN(1, SIGN_BIT(0x8000, Word));
+    ASSERT_BIN(1, SIGN_BIT(0xFFFF, Word));
+
+    ASSERT_BIN(0, SIGN_BIT(0, Long));
+    ASSERT_BIN(0, SIGN_BIT(0xFF, Long));
+    ASSERT_BIN(0, SIGN_BIT(0xFFFF, Long));
+    ASSERT_BIN(0, SIGN_BIT(0x7FFFFFFF, Long));
+    ASSERT_BIN(1, SIGN_BIT(0x80000000, Long));
+    ASSERT_BIN(1, SIGN_BIT(0xFFFFFFFF, Long));
+}
+
+MU_TEST(test_carry_add)
+{
+    ASSERT_BIN(false, CHECK_CARRY_ADD(0, 0, Byte));
+    ASSERT_BIN(false, CHECK_CARRY_ADD(0xFF, 0, Byte));
+    ASSERT_BIN(false, CHECK_CARRY_ADD(0, 0xFF, Byte));
+    ASSERT_BIN(false, CHECK_CARRY_ADD(0x10, 0xA0, Byte));
+    ASSERT_BIN(false, CHECK_CARRY_ADD(0xA0, 0x10, Byte));
+    ASSERT_BIN(true, CHECK_CARRY_ADD(0xFF, 1, Byte));
+    ASSERT_BIN(true, CHECK_CARRY_ADD(1, 0xFF, Byte));
+    ASSERT_BIN(true, CHECK_CARRY_ADD(0xA0, 0xA0, Byte));
+    ASSERT_BIN(true, CHECK_CARRY_ADD(0xFF, 0xFF, Byte));
+
+    ASSERT_BIN(false, CHECK_CARRY_ADD(0xFF, 0xFF, Word));
+    ASSERT_BIN(false, CHECK_CARRY_ADD(0xF000, 0xFF, Word));
+    ASSERT_BIN(true, CHECK_CARRY_ADD(0xFFFF, 1, Word));
+    ASSERT_BIN(true, CHECK_CARRY_ADD(0xFFFF, 0xFFFF, Word));
+
+    ASSERT_BIN(false, CHECK_CARRY_ADD(0xFF, 0xFF, Long));
+    ASSERT_BIN(false, CHECK_CARRY_ADD(0xFFFF, 0xFFFF, Long));
+    ASSERT_BIN(false, CHECK_CARRY_ADD(0xFFFF000, 0xFF, Long));
+    ASSERT_BIN(true, CHECK_CARRY_ADD(0xFFFFFFFF, 1, Long));
+    ASSERT_BIN(true, CHECK_CARRY_ADD(0xFFFFFFFF, 0xFFFF, Long));
+}
+
+MU_TEST(test_carry_sub)
+{
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0, 0, Byte));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xFF, 0, Byte));
+    ASSERT_BIN(true, CHECK_CARRY_SUB(0, 1, Byte));
+    ASSERT_BIN(true, CHECK_CARRY_SUB(0, 0xFF, Byte));
+    ASSERT_BIN(true, CHECK_CARRY_SUB(0x10, 0xA0, Byte));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xA0, 0x10, Byte));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xFF, 1, Byte));
+    ASSERT_BIN(true, CHECK_CARRY_SUB(1, 0xFF, Byte));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xA0, 0xA0, Byte));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xFF, 0xFF, Byte));
+
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xFF, 0xFF, Word));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xF000, 0xFF, Word));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xFFFF, 1, Word));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xFFFF, 0xFFFF, Word));
+    ASSERT_BIN(true, CHECK_CARRY_SUB(0, 0xFFFF, Word));
+    ASSERT_BIN(true, CHECK_CARRY_SUB(0, 1, Word));
+    ASSERT_BIN(true, CHECK_CARRY_SUB(0xAAAA, 0xAAAB, Word));
+
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xFF, 0xFF, Long));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xFFFF, 0xFFFF, Long));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xFFFF000, 0xFF, Long));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xFFFFFFFF, 1, Long));
+    ASSERT_BIN(false, CHECK_CARRY_SUB(0xFFFFFFFF, 0xFFFF, Long));
+    ASSERT_BIN(true, CHECK_CARRY_SUB(0, 0xFFFF, Long));
+    ASSERT_BIN(true, CHECK_CARRY_SUB(0xF0000000, 0xFFFFFFFF, Long));
+}
+
+MU_TEST(test_overflow_add)
+{
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0, 0, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0, 0x50, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0x50, 0, Byte));
+    ASSERT_BIN(true, CHECK_OVERFLOW_ADD(0x50, 0x50, Byte));
+    ASSERT_BIN(true, CHECK_OVERFLOW_ADD(0x7F, 1, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0x80, 0, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0x80, 1, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0x80, 0x50, Byte));
+    ASSERT_BIN(true, CHECK_OVERFLOW_ADD(0x80, 0x80, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0xFF, 1, Byte));
+
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0, 0, Word));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0x7F, 1,Word));
+    ASSERT_BIN(true, CHECK_OVERFLOW_ADD(0x7FFF, 1, Word));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0xFFFF, 0, Word));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0xFFFF, 1, Word));
+    ASSERT_BIN(true, CHECK_OVERFLOW_ADD(0x5000, 0x5000, Word));
+
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0, 0, Long));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0x7F, 1, Long));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0x7FFF, 1, Long));
+    ASSERT_BIN(true, CHECK_OVERFLOW_ADD(0x7FFFFFFF, 1, Long));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0x7FFFFFFF, 0, Long));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0xFFFFFFFF, 0, Long));
+    ASSERT_BIN(false, CHECK_OVERFLOW_ADD(0xFFFFFFFF, 1, Long));
+    ASSERT_BIN(true, CHECK_OVERFLOW_ADD(0x50000000, 0x50000000, Long));
+}
+
+MU_TEST(test_overflow_sub)
+{
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0, 0, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0, 0x50, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0x50, 0, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0x50, 0x50, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0x7F, 1, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0x80, 0, Byte));
+    ASSERT_BIN(true, CHECK_OVERFLOW_SUB(0x80, 1, Byte));
+    ASSERT_BIN(true, CHECK_OVERFLOW_SUB(0x80, 0x50, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0x80, 0x80, Byte));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0xFF, 1, Byte));
+
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0, 0, Word));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0x7F, 1, Word));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0x7FFF, 1, Word));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0xFFFF, 0, Word));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0xFFFF, 1, Word));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0xFFFF, 0x8001, Word));
+    ASSERT_BIN(true, CHECK_OVERFLOW_SUB(0x1000, 0x8000, Word));
+    ASSERT_BIN(true, CHECK_OVERFLOW_SUB(0x8000, 0x2000, Word));
+
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0, 0, Long));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0x7F, 1, Long));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0x7FFF, 1, Long));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0x7FFFFFFF, 0, Long));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0x7FFFFFFF, 1, Long));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0xFFFFFFFF, 0, Long));
+    ASSERT_BIN(false, CHECK_OVERFLOW_SUB(0xFFFFFFFF, 1, Long));
+    ASSERT_BIN(true, CHECK_OVERFLOW_SUB(0x80000000, 0x1, Long));
+    ASSERT_BIN(true, CHECK_OVERFLOW_SUB(0x80000000, 0x7FFFFFFF, Long));
+    ASSERT_BIN(true, CHECK_OVERFLOW_SUB(0x10000000, 0x90000000, Long));
+}
+
 MU_TEST(test_bin_parse)
 {
     ASSERT_BIN(0, bin_parse("0"));
@@ -158,6 +300,13 @@ MU_TEST_SUITE(test_suite_bit_utils)
     MU_RUN_TEST(test_mask_below_inc);
     MU_RUN_TEST(test_mask_above);
     MU_RUN_TEST(test_mask_above_inc);
+
+    MU_RUN_TEST(test_sign_bit);
+
+    MU_RUN_TEST(test_carry_add);
+    MU_RUN_TEST(test_carry_sub);
+    MU_RUN_TEST(test_overflow_add);
+    MU_RUN_TEST(test_overflow_sub);
 
     MU_RUN_TEST(test_bin_parse);
     MU_RUN_TEST(test_bin_tostring);
