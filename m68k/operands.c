@@ -465,10 +465,10 @@ Operand* operand_make_branching_offset(Instruction* instr, Size size)
         op->get = branching_offset_byte_get;
         break;
     case Word:
-        op->get = branching_offset_byte_get;
+        op->get = branching_offset_word_get;
         break;
     case Long:
-        op->get = branching_offset_byte_get;
+        op->get = branching_offset_long_get;
         break;
     }
 
@@ -494,7 +494,11 @@ int operand_length(Operand* operand)
     case Immediate:
         if (operand->get == immediate_get_byte || operand->get == immediate_get_word)
             return 2;
-        else
+        return 4;
+    case BranchingOffset:
+        if (operand->get == branching_offset_word_get)
+            return 2;
+        else if (operand->get == branching_offset_long_get)
             return 4;
     default:
         return 0;
@@ -504,7 +508,7 @@ int operand_length(Operand* operand)
 // Cycles required to compute an effective address.
 // The first value is for Byte/Word operation, the second is for Long operations.
 // The order of the entries must match the AddressingMode enum.
-int address_calculation_cycles[12][2] = 
+int address_calculation_cycles[12][2] =
 {
     { 0, 0 },
     { 0, 0 },

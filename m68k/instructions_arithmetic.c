@@ -64,12 +64,13 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
 
 int cmp(Instruction* i)
 {
-    uint32_t diff = GET(i->dst) - GET(i->src);
+    uint32_t a = GET(i->dst);
+    uint32_t b = GET(i->src);
 
-    CARRY_SET(i->context, GET(i->src) > GET(i->dst)); // TODO
-    OVERFLOW_SET(i->context, false); // TODO
-    ZERO_SET(i->context, diff == 0);
-    NEGATIVE_SET(i->context, BIT(diff, i->size - 1) == 1); // TODO not so sure, signed/unsigned arithmetic?
+    CARRY_SET(i->context, CHECK_CARRY_SUB(a, b, i->size));
+    OVERFLOW_SET(i->context, CHECK_OVERFLOW_SUB(a, b, i->size));
+    ZERO_SET(i->context, a == b);
+    NEGATIVE_SET(i->context, BIT(a - b, i->size - 1));
 
     return 0;
 }
