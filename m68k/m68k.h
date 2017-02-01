@@ -55,11 +55,8 @@ void m68k_free(M68k*);
 
 struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
 
-uint32_t m68k_step(M68k*); // Execute one instruction and return the current program counter value
-
-void m68k_push(int value); // TODO type?
-int m68k_pop();
-void m68k_jump(int address);
+// Execute one instruction and return the current program counter value
+uint32_t m68k_step(M68k*); 
 
 uint32_t m68k_read(M68k*, Size size, uint32_t address);
 void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);

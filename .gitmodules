@@ -1,3 +1,6 @@
 [submodule "deps/minunit"]
 	path = deps/minunit
 	url = https://github.com/siu/minunit.git
+[submodule "deps/musashi"]
+	path = deps/musashi
+	url = https://github.com/kstenerud/Musashi.git

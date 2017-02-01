@@ -106,10 +106,11 @@ uint32_t m68k_step(M68k* m)
     Instruction* instr = m->opcode_table[opcode];
 
     // Manual breakpoint!
-    if (m->pc == 0x376)
+    if (m->pc == 0x370)
     {
         printf("don't get optimized away please\n");
     }
+    // 35C: weird move with unknown regmode
 
     if (instr == NULL)
     {
@@ -129,21 +130,6 @@ uint32_t m68k_step(M68k* m)
     }
 
     return m->pc;
-}
-
-void m68k_push(int value)
-{
-    // TODO
-}
-
-int m68k_pop()
-{
-    return 0; // TODO
-}
-
-void m68k_jump(int address)
-{
-    // TODO necesary?
 }
 
 uint32_t m68k_read(M68k* m, Size size, uint32_t address)

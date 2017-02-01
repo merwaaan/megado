@@ -32,7 +32,7 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
     if (displacement == 0)
         i->src = operand_make_branching_offset(i, Word);
     else if (displacement == 0xFF)
-        i->src = operand_make_branching_offset(i, Long); // Seems to be supported by 68020+ only
+        i->src = operand_make_branching_offset(i, Long); // 68020+ only?
     else
         i->src = operand_make_branching_offset(i, Byte);
 
@@ -54,13 +54,14 @@ int bra(Instruction* i)
 
 Instruction* gen_bra(uint16_t opcode, M68k* m)
 {
-    return instruction_make(m, "BRA", bra);;
+    return instruction_make(m, "BRA", bra); // TODO
 }
 
 int bsr(Instruction* i)
 {
-    m68k_push(i->context->pc);
-    m68k_jump(i->context->pc + GET(i->src));
+    i->context->address_registers[7] -= 4;
+    m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
+    i->context->pc += GET(i->src);
 
     return 0;
 }
@@ -69,13 +70,13 @@ Instruction* gen_bsr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "BSR", bsr);
 
-    /*int displacement = FRAGMENT(opcode, 7, 0);
+    int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
-        i->src = operand_make_absolute_short(16, i);
+        i->src = operand_make_branching_offset(i, Word);
     else if (displacement == 0xFF)
-        i->src = operand_make_absolute_short(32, i);
+        i->src = operand_make_branching_offset(i, Long); // 68020+ only?
     else
-        i->src = operand_make_immediate(FRAGMENT(opcode, 7, 0), i);*/
+        i->src = operand_make_branching_offset(i, Byte);
 
     return i;
 }
@@ -120,8 +121,8 @@ Instruction* gen_jmp(uint16_t opcode, M68k* m)
 
 int jsr(Instruction* i)
 {
-    m68k_push(i->context->pc);
-    m68k_jump(GET(i->src));
+    //m68k_push(i->context->pc);
+    //m68k_jump(GET(i->src));
 
     return 0;
 }
@@ -135,7 +136,7 @@ Instruction* gen_jsr(uint16_t opcode, M68k* m)
 
 int rts(Instruction* i)
 {
-    i->context->pc = m68k_pop();
+    //i->context->pc = m68k_pop();
 
     return 0;
 }
