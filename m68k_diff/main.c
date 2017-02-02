@@ -12,17 +12,21 @@ uint8_t* memory_musashi;
 
 unsigned int m68k_read_memory_8(unsigned int address)
 {
+    // Simulate the Z80 as stopped
+    if (address == 0xA11100)
+        return 0;
+
     return memory_musashi[address];
 }
 
 unsigned int m68k_read_memory_16(unsigned int address)
 {
-    return memory_musashi[address] << 8 | memory_musashi[address + 1];
+    return m68k_read_memory_8(address) << 8 | m68k_read_memory_8(address + 1);
 }
 
 unsigned int m68k_read_memory_32(unsigned int address)
 {
-    return memory_musashi[address] << 24 | memory_musashi[address + 1] << 16 | memory_musashi[address + 2] << 8 | memory_musashi[address + 3];
+    return m68k_read_memory_16(address) << 16 | m68k_read_memory_16(address + 2);
 }
 
 void m68k_write_memory_8(unsigned int address, unsigned int value)
@@ -70,17 +74,21 @@ uint8_t* memory_xxx;
 
 uint8_t m68k_read_b(M68k* m, uint32_t address)
 {
+    // Simulate the Z80 as stopped
+    if (address == 0xA11100)
+        return 0;
+
     return memory_xxx[address];
 }
 
 uint16_t m68k_read_w(M68k* m, uint32_t address)
 {
-    return memory_xxx[address] << 8 | memory_xxx[address + 1];
+    return m68k_read_b(m, address) << 8 | m68k_read_b(m, address + 1);
 }
 
 uint32_t m68k_read_l(M68k* m, uint32_t address)
 {
-    return memory_xxx[address] << 24 | memory_xxx[address + 1] << 16 | memory_xxx[address + 2] << 8 | memory_xxx[address + 3];
+    return m68k_read_w(m, address) << 16 | m68k_read_w(m, address + 2);
 }
 
 void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
@@ -180,7 +188,7 @@ int main(int argc, char* argv[])
     musashi_dump(dumpfile_musashi);
     xxx_dump(dumpfile_xxx);
 
-    for (int i = 0; i < 10000; ++i)
+    for (int i = 0; i < 100000; ++i)
     {
         // Manual breakpoint!
         if (xxx->pc == 0x250)
