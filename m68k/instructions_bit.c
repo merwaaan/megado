@@ -9,9 +9,14 @@
 Instruction* gen_bit_instruction(uint16_t opcode, M68k* m, char* name, InstructionFunc func)
 {
     Instruction* i = instruction_make(m, name, func);
-    i->size = Long;
     i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+
+    // The operation size varies between data registers and memory locations
+    // http://oldwww.nvg.ntnu.no/amiga/MC680x0_Sections/btst.HTML
+    if (i->dst != NULL) // TODO temp check (remove when all addr modes are in)
+        i->size = i->dst->type == DataRegister ? Long : Byte;
+
     return i;
 }
 
@@ -34,7 +39,7 @@ Instruction* gen_bchg(uint16_t opcode, M68k* m)
 int bclr(Instruction* i)
 {
     int initial = GET(i->dst);
-    int bit = GET(i->src);
+    int bit = GET(i->src) % i->size;
     SET(i->dst, BIT_CLR(initial, bit));
 
     ZERO_SET(i->context, BIT(initial, bit) == 0);
@@ -50,7 +55,7 @@ Instruction* gen_bclr(uint16_t opcode, M68k* m)
 int bset(Instruction* i)
 {
     int initial = GET(i->dst);
-    int bit = GET(i->src);
+    int bit = GET(i->src) % i->size;
     SET(i->dst, BIT_SET(initial, bit));
 
     ZERO_SET(i->context, BIT(initial, bit) == 0);
@@ -65,7 +70,7 @@ Instruction* gen_bset(uint16_t opcode, M68k* m)
 
 int btst(Instruction* i)
 {
-    int bit = GET(i->src) % 32;
+    int bit = GET(i->src) % i->size;
     int set = BIT(GET(i->dst), bit);
 
     ZERO_SET(i->context, !set);
@@ -80,7 +85,7 @@ Instruction* gen_btst(uint16_t opcode, M68k* m)
 
 int btst_imm(Instruction* i)
 {
-    int bit = m68k_read_b(i->context, i->context->pc + 3) % 32;
+    int bit = m68k_read_b(i->context, i->context->pc + 3) % i->size;
     int set = BIT(GET(i->dst), bit);
 
     ZERO_SET(i->context, !set);

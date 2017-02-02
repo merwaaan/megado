@@ -11,10 +11,15 @@
 M68k* m68k_make()
 {
     M68k* m68k = calloc(1, sizeof(M68k));
+    
+    // TODO not sure if those are fixed by the hardware or the ROMs just set them up
+    m68k->status = 0x2704; // TODO not sure about Z
+    m68k->address_registers[7] = 0xFFFE00;
+
+    // Generate every possible opcode
 
     m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
 
-    // Generate every possible opcode
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
         // Manual breakpoint!
@@ -106,7 +111,7 @@ uint32_t m68k_step(M68k* m)
     Instruction* instr = m->opcode_table[opcode];
 
     // Manual breakpoint!
-    if (m->pc == 0x226)
+    if (m->pc == 0x250)
     {
         printf("don't get optimized away please\n");
     }

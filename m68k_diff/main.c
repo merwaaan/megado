@@ -104,7 +104,7 @@ void m68k_write_l(M68k* m, uint32_t address, uint32_t value)
 
 // Data dump functions
 
-char* dump_format = "PC %04x, SR %04x, A0 %04x, A1 %04x, A2 %04x, A3 %04x, A4 %04x, A5 %04x, A6 %04x, A7 %04x, A0 %04x, A1 %04x, A2 %04x, A3 %04x, A4 %04x, A5 %04x, A6 %04x, A7 %04x\n";
+char* dump_format = "PC %04x, SR %04x, A0 %08x, A1 %08x, A2 %08x, A3 %08x, A4 %08x, A5 %08x, A6 %08x, A7 %08x, D0 %08x, D1 %08x, D2 %08x, D3 %08x, D4 %08x, D5 %08x, D6 %08x, D7 %08x\n";
 
 #define MUSASHI_REG(reg) m68k_get_reg(NULL, M68K_REG_ ## reg)
 
@@ -180,8 +180,12 @@ int main(int argc, char* argv[])
     musashi_dump(dumpfile_musashi);
     xxx_dump(dumpfile_xxx);
 
-    for (int i = 0; i < 100; ++i)
+    for (int i = 0; i < 10000; ++i)
     {
+        // Manual breakpoint!
+        if (xxx->pc == 0x250)
+            printf("breakpoint\n");
+
         // Musashi
         m68k_execute(0);
         musashi_dump(dumpfile_musashi);
@@ -189,6 +193,8 @@ int main(int argc, char* argv[])
         // xxx
         m68k_step(xxx);
         xxx_dump(dumpfile_xxx);
+
+        printf("%04x %04x\n", memory_musashi[0xA11100], memory_xxx[0xA11100]);
     }
 
     free(memory_musashi);

@@ -111,6 +111,7 @@ bool instruction_valid(Instruction* instr)
 
 int instruction_execute(Instruction* instr)
 {
+    // TODO faster to use noops?
     // Pre-execution actions
     if (instr->src != NULL && instr->src->pre != NULL)
         instr->src->pre(instr->src);
