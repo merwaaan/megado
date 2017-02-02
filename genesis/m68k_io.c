@@ -9,6 +9,9 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
 {
     switch (address)
     {
+    // TODO temp, simulate z80
+    case 0xA11100:
+        return 0;
         // VDP data port
     case 0xC00000:
     case 0xC00002:

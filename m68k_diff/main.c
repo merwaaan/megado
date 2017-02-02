@@ -4,7 +4,10 @@
 #include <stdlib.h>
 
 #include "musashi/m68k.h"
+
 #include "m68k/m68k.h" // Names might clash...
+#include "m68k/instruction.h"
+
 // TODO add https://github.com/notaz/cyclone68000 to the list?
 
 // Musashi I/O
@@ -57,16 +60,6 @@ unsigned int m68k_read_disassembler_16(unsigned int address)
 unsigned int m68k_read_disassembler_32(unsigned int address)
 {
     return m68k_read_memory_32(address);
-}
-
-void musashi_instr_callback()
-{
-    static char buff[100];
-    static unsigned int pc;
-    static unsigned int instr_size;
-    pc = m68k_get_reg(NULL, M68K_REG_PC);
-    instr_size = m68k_disassemble(buff, pc, M68K_CPU_TYPE_68000);
-    printf("E %03x: %s\n", pc, buff);
 }
 
 // xxx emulator I/O
@@ -123,6 +116,7 @@ void musashi_dump(FILE* file)
         MUSASHI_REG(PC), MUSASHI_REG(SR),
         MUSASHI_REG(A0), MUSASHI_REG(A1), MUSASHI_REG(A2), MUSASHI_REG(A3), MUSASHI_REG(A4), MUSASHI_REG(A5), MUSASHI_REG(A6), MUSASHI_REG(A7),
         MUSASHI_REG(D0), MUSASHI_REG(D1), MUSASHI_REG(D2), MUSASHI_REG(D3), MUSASHI_REG(D4), MUSASHI_REG(D5), MUSASHI_REG(D6), MUSASHI_REG(D7));
+    fflush(file);
 }
 
 #define XXX_ADDR_REG(reg) xxx->address_registers[reg]
@@ -136,10 +130,36 @@ void xxx_dump(FILE* file)
         xxx->pc, xxx->status,
         XXX_ADDR_REG(0), XXX_ADDR_REG(1), XXX_ADDR_REG(2), XXX_ADDR_REG(3), XXX_ADDR_REG(4), XXX_ADDR_REG(5), XXX_ADDR_REG(6), XXX_ADDR_REG(7),
         XXX_DATA_REG(0), XXX_DATA_REG(1), XXX_DATA_REG(2), XXX_DATA_REG(3), XXX_DATA_REG(4), XXX_DATA_REG(5), XXX_DATA_REG(6), XXX_DATA_REG(7));
+    fflush(file);
 }
 
 #define MAX_ROM_SIZE 0x10000
 #define MAX_MEM_SIZE 0x1000000
+
+bool start_offset_passed = true;
+
+void musashi_instr_callback()
+{
+    if (!start_offset_passed)
+        return;
+
+    static char buff[100];
+    static unsigned int pc;
+    static unsigned int instr_size;
+    pc = m68k_get_reg(NULL, M68K_REG_PC);
+    instr_size = m68k_disassemble(buff, pc, M68K_CPU_TYPE_68000);
+    printf("E %03x: %s\n", pc, buff);
+}
+
+void xxx_instr_callback(M68k* m)
+{
+    if (!start_offset_passed)
+        return;
+
+    DecodedInstruction* d = m68k_decode(m, m->pc);
+    printf("%#06X %s\n", m->pc, d->mnemonics);
+    free(d);
+}
 
 int main(int argc, char* argv[])
 {
@@ -174,6 +194,7 @@ int main(int argc, char* argv[])
 
     // Setup xxx
     xxx = m68k_make();
+    xxx->instruction_callback = xxx_instr_callback;
 
     // Start the program at an optional offset
     if (argc > 2)
@@ -186,7 +207,6 @@ int main(int argc, char* argv[])
 
     // Wait for an optional address to be fetched to start dumping
     int start_offset;
-    bool start_offset_passed = true;
     if (argc > 3)
     {
         start_offset = strtol(argv[3], NULL, 16);
@@ -203,7 +223,7 @@ int main(int argc, char* argv[])
     for (int i = 0; i < 1000000; ++i)
     {
         // Manual breakpoint!
-        if (xxx->pc == 0x32e)
+        if (xxx->pc == 0x332)
             printf("breakpoint\n");
 
         if (!start_offset_passed && xxx->pc >= start_offset)
@@ -219,8 +239,6 @@ int main(int argc, char* argv[])
         m68k_step(xxx);
         if (start_offset_passed)
             xxx_dump(dumpfile_xxx);
-
-        printf("%04x %04x\n", memory_musashi[0xA11100], memory_xxx[0xA11100]);
     }
 
     free(memory_musashi);

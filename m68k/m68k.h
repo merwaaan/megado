@@ -28,6 +28,9 @@
 
 struct Instruction;
 struct DecodedInstruction;
+struct M68k;
+
+typedef void(*CallbackFunc)(struct M68k*);
 
 typedef struct M68k {
     int32_t data_registers[8];
@@ -37,6 +40,9 @@ typedef struct M68k {
     uint64_t cycles;
 
     struct Instruction** opcode_table;
+
+    // Callbacks
+    CallbackFunc instruction_callback;
 
     // Arbitrary user-defined data associated with this M68000 instance
     void* user_data;

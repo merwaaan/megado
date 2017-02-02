@@ -11,7 +11,7 @@
 M68k* m68k_make()
 {
     M68k* m68k = calloc(1, sizeof(M68k));
-    
+
     // TODO not sure if those are fixed by the hardware or the ROMs just set them up
     m68k->status = 0x2704; // TODO not sure about Z
     m68k->address_registers[7] = 0xFFFE00;
@@ -25,7 +25,7 @@ M68k* m68k_make()
         // Manual breakpoint!
         if (opcode == 0x0200)
         {
-            printf("don't get optimized away please\n");
+            printf("breakpoint\n");
         }
 
         Instruction* instr = instruction_generate(m68k, opcode);
@@ -37,11 +37,6 @@ M68k* m68k_make()
         }
 
         m68k->opcode_table[opcode] = instr;
-
-        /*printf("opcode %#04X: %s", opcode, instr->name);
-        for (int i = 0; i < instr->operand_count; ++i)
-            printf(" %s", operand_tostring(instr->operands[i]));
-        printf("\n");*/
     }
 
     return m68k;
@@ -59,7 +54,7 @@ void m68k_free(M68k* m)
 DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 {
     uint16_t opcode = m68k_read_w(m, instr_address);
-    
+
     Instruction* instr = m->opcode_table[opcode];
     if (instr == NULL)
     {
@@ -111,10 +106,9 @@ uint32_t m68k_step(M68k* m)
     Instruction* instr = m->opcode_table[opcode];
 
     // Manual breakpoint!
-    if (m->pc == 0x250)
-    {
-        printf("don't get optimized away please\n");
-    }
+    if (m->pc == 0x338)
+        printf("breakpoint\n");
+
     // 35C: weird move with unknown regmode
 
     if (instr == NULL)
@@ -123,15 +117,18 @@ uint32_t m68k_step(M68k* m)
     }
     else
     {
-        DecodedInstruction* d = m68k_decode(m, m->pc);
-        printf("%#06X %s\n", m->pc, d->mnemonics);
+        //DecodedInstruction* d = m68k_decode(m, m->pc);
+        //printf("%#06X %s\n", m->pc, d->mnemonics);
+
+        if (m->instruction_callback != NULL)
+            m->instruction_callback(m);
 
         m->cycles += instruction_execute(instr);
 
         m->pc += instr->total_length;
         // TODO can only address 2^24 bytes in practice
 
-        free(d);
+        //free(d);
     }
 
     return m->pc;

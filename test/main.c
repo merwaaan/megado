@@ -56,9 +56,17 @@ void test_rom(Genesis* g, char* path)
         genesis_step(g);
 }
 
+void instr_callback(M68k* m)
+{
+    DecodedInstruction* d = m68k_decode(m, m->pc);
+    printf("%#06X %s\n", m->pc, d->mnemonics);
+    free(d);
+}
+
 int main()
 {
     Genesis* g = genesis_make();
+    g->m68k->instruction_callback = instr_callback;
 
     check_alignment(g);
     check_endianness();
