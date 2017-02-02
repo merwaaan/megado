@@ -32,10 +32,7 @@ Instruction* gen_boolean_instruction(uint16_t opcode, M68k* m, char* name, Instr
 
 Instruction* gen_boolean_instruction_immediate(uint16_t opcode, M68k* m, char* name, InstructionFunc* func)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = m;
-    i->name = name;
-    i->func = func;
+    Instruction* i = instruction_make(m, name, func);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_immediate_value(i->size, i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);

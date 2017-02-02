@@ -1,44 +1,10 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "musashi/m68k.h"
 #include "m68k/m68k.h" // Names might clash...
-
 // TODO add https://github.com/notaz/cyclone68000 to the list?
-
-#define READ_BYTE_IMPL(name, memory, address_type, value_type)\
-    value_type name ## (address_type address) {\
-        return memory ## [address];\
-    }
-
-#define READ_WORD_IMPL(name, memory, address_type, value_type)\
-    value_type name ## (address_type address) {\
-        return memory ## [address] << 8 | memory ## [address + 1];\
-    }
-
-#define READ_LONG_IMPL(name, memory, address_type, value_type)\
-    value_type name ## (address_type address) {\
-        return memory ## [address] << 24 | memory ## [address + 1] << 16 | memory ## [address + 2] << 8 | memory ## [address + 3];\
-    }
-
-#define WRITE_BYTE_IMPL(name, memory, address_type, value_type)\
-    void name ## (address_type address, value_type value) {\
-        memory ## [address] = value & 0xFF;\
-    }
-
-#define WRITE_WORD_IMPL(name, memory, address_type, value_type)\
-    void name ## (address_type address, value_type value) {\
-        memory ## [address] = (value & 0xFF00) >> 8;\
-        memory ## [address + 1] = value & 0x00FF;\
-    }
-
-#define WRITE_LONG_IMPL(name, memory, address_type, value_type)\
-    void name ## (address_type address, value_type value) {\
-        memory ## [address] = (value & 0xFF000000) >> 24;\
-        memory ## [address + 1] = (value & 0x00FF0000) << 16;\
-        memory ## [address + 2] = (value & 0x0000FF00) >> 8;\
-        memory ## [address + 3] = value & 0x000000FF;\
-    }
 
 // Musashi I/O
 
@@ -78,8 +44,25 @@ void m68k_write_memory_32(unsigned int address, unsigned int value)
     memory_musashi[address + 3] = value & 0x000000FF;
 }
 
-READ_WORD_IMPL(m68k_read_disassembler_16, memory_musashi, unsigned int, unsigned int)
-READ_LONG_IMPL(m68k_read_disassembler_32, memory_musashi, unsigned int, unsigned int)
+unsigned int m68k_read_disassembler_16(unsigned int address)
+{
+    return m68k_read_memory_16(address);
+}
+
+unsigned int m68k_read_disassembler_32(unsigned int address)
+{
+    return m68k_read_memory_32(address);
+}
+
+void musashi_instr_callback()
+{
+    static char buff[100];
+    static unsigned int pc;
+    static unsigned int instr_size;
+    pc = m68k_get_reg(NULL, M68K_REG_PC);
+    instr_size = m68k_disassemble(buff, pc, M68K_CPU_TYPE_68000);
+    printf("E %03x: %s\n", pc, buff);
+}
 
 // xxx emulator I/O
 
@@ -146,27 +129,13 @@ void xxx_dump(FILE* file)
         XXX_DATA_REG(0), XXX_DATA_REG(1), XXX_DATA_REG(2), XXX_DATA_REG(3), XXX_DATA_REG(4), XXX_DATA_REG(5), XXX_DATA_REG(6), XXX_DATA_REG(7));
 }
 
-void musashi_instr_callback()
-{
-    /* The following code would print out instructions as they are executed */
-
-    static char buff[100];
-    static char buff2[100];
-    static unsigned int pc;
-    static unsigned int instr_size;
-    pc = m68k_get_reg(NULL, M68K_REG_PC);
-    instr_size = m68k_disassemble(buff, pc, M68K_CPU_TYPE_68000);
-    //make_hex(buff2, pc, instr_size);
-    printf("E %03x: %s\n", pc, buff);
-}
-
 #define MAX_ROM_SIZE 0x10000
 #define MAX_MEM_SIZE 0x1000000
 
 int main(int argc, char* argv[])
 {
     // Arg 1: rom path
-    // Arg 2: start offset (hex)
+    // Arg 2: program start offset (hex)
 
     memory_musashi = calloc(MAX_MEM_SIZE, sizeof(uint8_t));
     memory_xxx = calloc(MAX_MEM_SIZE, sizeof(uint8_t));
@@ -211,7 +180,7 @@ int main(int argc, char* argv[])
     musashi_dump(dumpfile_musashi);
     xxx_dump(dumpfile_xxx);
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         // Musashi
         m68k_execute(0);
