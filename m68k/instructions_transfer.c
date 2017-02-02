@@ -45,7 +45,13 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
 
 int lea(Instruction* i)
 {
-    SET(i->dst, GET(i->src));
+    uint32_t ea = EA(i->src);
+
+    // TODO not documented but Regen does this, need to check other emulators
+    if (i->src->type == AbsoluteShort)
+        ea = SIGN_EXTEND_W(ea);
+
+    SET(i->dst, ea);
 
     return 0;
 }

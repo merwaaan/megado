@@ -5,6 +5,44 @@
 #include "operands.h"
 #include "m68k.h"
 
+Operand* operand_make(uint16_t pattern, Instruction* instr)
+{
+    switch (pattern & 0x38)
+    {
+    case 0:
+        return operand_make_data_register(pattern & 7, instr);
+    case 0x8:
+        return operand_make_address_register(pattern & 7, instr);
+    case 0x10:
+        return operand_make_address_register_indirect(pattern & 7, instr);
+    case 0x18:
+        return operand_make_address_register_indirect_postinc(pattern & 7, instr);
+    case 0x20:
+        return operand_make_address_register_indirect_predec(pattern & 7, instr);
+    case 0x28:
+        return operand_make_address_register_indirect_displacement(pattern & 7, instr);
+    case 0x38:
+        switch (pattern & 7)
+        {
+        case 0:
+            return operand_make_absolute_short(instr);
+        case 1:
+            return operand_make_absolute_long(instr);
+        case 2:
+            return operand_make_pc_displacement(instr);
+        case 4:
+            return operand_make_immediate_value(instr->size, instr);
+        }
+    default:
+        return NULL;
+    }
+}
+
+void operand_free(Operand* operand)
+{
+    free(operand);
+}
+
 // The 'instr_address' argument is the address of the instruction that the operand is part of.
 // We need to pass it since some addressing modes are context-dependent.
 int operand_tostring(Operand* operand, uint32_t instr_address, char* buffer)
@@ -107,58 +145,57 @@ uint8_t operand_sign_extension(uint8_t pattern)
     }
 }
 
-void operand_free(Operand* operand)
+// Cycles required to compute an effective address.
+// The first value is for Byte/Word operation, the second is for Long operations.
+// The order of the entries must match the AddressingMode enum.
+int address_calculation_cycles[12][2] =
 {
-    free(operand);
+    { 0, 0 },
+    { 0, 0 },
+    { 4, 8 },
+    { 6, 10 },
+    { 4, 8 },
+    { 8, 12 },
+    { 10, 14 },
+    { 8, 12 },
+    { 10, 14 },
+    { 4, 8 },
+    { 8, 12 },
+    { 10, 14 }
+};
+
+int operand_get_cycles(Operand* o)
+{
+    return address_calculation_cycles[o->type][o->instruction->size == Long];
 }
 
-Operand* operand_make(uint16_t pattern, Instruction* instr)
-{
-    switch (pattern & 0x38)
-    {
-    case 0:
-        return operand_make_data_register(pattern & 7, instr);
-    case 0x8:
-        return operand_make_address_register(pattern & 7, instr);
-    case 0x10:
-        return operand_make_address_register_indirect(pattern & 7, instr);
-    case 0x18:
-        return operand_make_address_register_indirect_postinc(pattern & 7, instr);
-    case 0x20:
-        return operand_make_address_register_indirect_predec(pattern & 7, instr);
-    case 0x28:
-        return operand_make_address_register_indirect_displacement(pattern & 7, instr);
-    case 0x38:
-        switch (pattern & 7)
-        {
-        case 0:
-            return operand_make_absolute_short(instr);
-        case 1:
-            return operand_make_absolute_long(instr);
-        case 2:
-            return operand_make_pc_displacement(instr);
-        case 4:
-            return operand_make_immediate_value(instr->size, instr);
-        }
-    default:
-        return NULL;
-    }
-}
 
 void noop(Operand* o, uint32_t instr_address, uint32_t value)
 {
+}
+
+// Most operands that point to memory data will use those to get/set values from the effective address
+
+uint32_t get_from_ea(Operand* o, uint32_t instr_address)
+{
+    return m68k_read(o->instruction->context, o->instruction->size, o->ea(o, instr_address));
+}
+
+void set_from_ea(Operand* o, uint32_t instr_address, uint32_t value)
+{
+    m68k_write(o->instruction->context, o->instruction->size, o->ea(o, instr_address), value);
 }
 
 /*
  * Data register
  */
 
-uint32_t data_get(Operand* o, uint32_t instr_address)
+uint32_t data_register_get(Operand* o, uint32_t instr_address)
 {
     return MASK_ABOVE_INC(o->instruction->context->data_registers[o->n], o->instruction->size);
 }
 
-void data_set(Operand* o, uint32_t instr_address, uint32_t value)
+void data_register_set(Operand* o, uint32_t instr_address, uint32_t value)
 {
     o->instruction->context->data_registers[o->n] =
         MASK_BELOW(o->instruction->context->data_registers[o->n], o->instruction->size) |
@@ -170,8 +207,8 @@ Operand* operand_make_data_register(int n, Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = DataRegister;
-    op->get = data_get;
-    op->set = data_set;
+    op->get = data_register_get;
+    op->set = data_register_set;
     op->n = n;
     return op;
 }
@@ -209,14 +246,9 @@ Operand* operand_make_address_register(int n, Instruction* instr)
  * The register contains the address of the data in memory.
  */
 
-uint32_t address_indirect_get(Operand* o, uint32_t instr_address)
+uint32_t address_indirect_ea(Operand* o, uint32_t instr_address)
 {
-    return m68k_read(o->instruction->context, o->instruction->size, o->instruction->context->address_registers[o->n] & 0xFFFFFF);
-}
-
-void address_indirect_set(Operand* o, uint32_t instr_address, uint32_t value)
-{
-    m68k_write(o->instruction->context, o->instruction->size, o->instruction->context->address_registers[o->n] & 0xFFFFFF, value);
+    return o->instruction->context->address_registers[o->n] & 0xFFFFFF;
 }
 
 Operand* operand_make_address_register_indirect(int n, Instruction* instr)
@@ -224,8 +256,9 @@ Operand* operand_make_address_register_indirect(int n, Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirect;
-    op->get = address_indirect_get;
-    op->set = address_indirect_set;
+    op->ea = address_indirect_ea;
+    op->get = get_from_ea;
+    op->set = set_from_ea;
     op->n = n;
     return op;
 }
@@ -247,8 +280,9 @@ Operand* operand_make_address_register_indirect_postinc(int n, struct Instructio
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirectPostInc;
-    op->get = address_indirect_get;
-    op->set = address_indirect_set;
+    op->ea = address_indirect_ea;
+    op->get = get_from_ea;
+    op->set = set_from_ea;
     op->post = address_inc;
     op->n = n;
     return op;
@@ -271,8 +305,9 @@ Operand* operand_make_address_register_indirect_predec(int n, struct Instruction
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirectPreDec;
-    op->get = address_indirect_get;
-    op->set = address_indirect_set;
+    op->ea = address_indirect_ea;
+    op->get = get_from_ea;
+    op->set = set_from_ea;
     op->pre = address_dec;
     op->n = n;
     return op;
@@ -284,20 +319,12 @@ Operand* operand_make_address_register_indirect_predec(int n, struct Instruction
  * The data is at the stored address + a displacement (extension)
  */
 
-uint32_t address_indirect_displacement_get(Operand* o, uint32_t instr_address)
+uint32_t address_indirect_displacement_ea(Operand* o, uint32_t instr_address)
 {
     M68k* m = o->instruction->context;
     uint32_t address = m->address_registers[o->n];
     int16_t displacement = m68k_read_w(m, instr_address + 2);
-    return  m68k_read_w(m, address + displacement);
-}
-
-void address_indirect_displacement_set(Operand* o, uint32_t instr_address, uint32_t value)
-{
-    M68k* m = o->instruction->context;
-    uint32_t address = m->address_registers[o->n];
-    int16_t displacement = m68k_read_w(m, instr_address + 2);
-    m68k_write_w(m, address + displacement, value);
+    return  address + displacement;
 }
 
 Operand* operand_make_address_register_indirect_displacement(int n, struct Instruction* instr)
@@ -305,8 +332,9 @@ Operand* operand_make_address_register_indirect_displacement(int n, struct Instr
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirectDisplacement;
-    op->get = address_indirect_displacement_get;
-    op->set = address_indirect_displacement_set;
+    op->ea = address_indirect_displacement_ea;
+    op->get = get_from_ea;
+    op->set = set_from_ea;
     op->n = n;
     return op;
 }
@@ -335,7 +363,6 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = Immediate;
-    op->set = noop;
 
     switch (size) {
     case Byte:
@@ -356,11 +383,11 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
  * Address encoded in the extension words of an instruction
  */
 
-uint32_t absolute_short_get(Operand* o, uint32_t instr_address)
+uint32_t absolute_short_ea(Operand* o, uint32_t instr_address)
 {
     M68k* m = o->instruction->context;
-    uint16_t address = m68k_read_w(m, instr_address + +o->instruction->base_length);
-    return  m68k_read_w(m, address); // TODO not sure about w.l
+    uint16_t address = m68k_read_w(m, instr_address + o->instruction->base_length);
+    return  address;
 }
 
 Operand* operand_make_absolute_short(Instruction* instr)
@@ -368,16 +395,17 @@ Operand* operand_make_absolute_short(Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AbsoluteShort;
-    op->get = absolute_short_get;
-    op->set = noop;
+    op->ea = absolute_short_ea;
+    op->get = get_from_ea;
+    op->set = set_from_ea;
     return op;
 }
 
-uint32_t absolute_long_get(Operand* o, uint32_t instr_address)
+uint32_t absolute_long_ea(Operand* o, uint32_t instr_address)
 {
     M68k* m = o->instruction->context;
     uint32_t address = m68k_read_l(m, instr_address + o->instruction->base_length);
-    return  m68k_read_l(m, address); // TODO not sure about w.l
+    return  address; // TODO not sure about w.l
 }
 
 Operand* operand_make_absolute_long(Instruction* instr)
@@ -385,8 +413,9 @@ Operand* operand_make_absolute_long(Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AbsoluteLong;
-    op->get = absolute_long_get;
-    op->set = noop;
+    op->ea = absolute_long_ea;
+    op->get = get_from_ea;
+    op->set = set_from_ea;
     return op;
 }
 
@@ -394,7 +423,7 @@ Operand* operand_make_absolute_long(Instruction* instr)
  *
  */
 
-uint32_t pc_displacement_word_get(Operand* o, uint32_t instr_address)
+uint32_t pc_displacement_word_ea(Operand* o, uint32_t instr_address)
 {
     M68k* m = o->instruction->context;
     int16_t displacement = m68k_read_w(m, instr_address + 2);
@@ -406,8 +435,9 @@ Operand* operand_make_pc_displacement(Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->type = ProgramCounterDisplacement;
     op->instruction = instr;
-    op->get = pc_displacement_word_get;
-    op->set = noop;
+    op->ea = pc_displacement_word_ea;
+    op->get = get_from_ea;
+    op->set = set_from_ea;
     return op;
 }
 
@@ -427,7 +457,6 @@ Operand* operand_make_value(int value, struct Instruction* instr)
     op->instruction = instr;
     op->n = value;
     op->get = value_get;
-    op->set = noop;
     return op;
 }
 
@@ -475,9 +504,6 @@ Operand* operand_make_branching_offset(Instruction* instr, Size size)
     return op;
 }
 
-
-
-
 int operand_length(Operand* operand)
 {
     if (operand == NULL)
@@ -503,28 +529,4 @@ int operand_length(Operand* operand)
     default:
         return 0;
     }
-}
-
-// Cycles required to compute an effective address.
-// The first value is for Byte/Word operation, the second is for Long operations.
-// The order of the entries must match the AddressingMode enum.
-int address_calculation_cycles[12][2] =
-{
-    { 0, 0 },
-    { 0, 0 },
-    { 4, 8 },
-    { 6, 10 },
-    { 4, 8 },
-    { 8, 12 },
-    { 10, 14 },
-    { 8, 12 },
-    { 10, 14 },
-    { 4, 8 },
-    { 8, 12 },
-    { 10, 14 }
-};
-
-int operand_get_cycles(Operand* o)
-{
-    return address_calculation_cycles[o->type][o->instruction->size == Long];
 }

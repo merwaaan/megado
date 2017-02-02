@@ -64,8 +64,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 
     DecodedInstruction* decoded = calloc(1, sizeof(DecodedInstruction));
 
-    char* buffer = calloc(50, sizeof(char));
-    int pos = sprintf(buffer, "%s", instr->name);
+    int pos = sprintf(decoded->mnemonics, "%s", instr->name);
 
     char* size_symbol;
     switch (instr->size)
@@ -82,20 +81,19 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     default:
         size_symbol = " ";
     }
-    pos += sprintf(buffer + pos, "%s ", size_symbol);
+    pos += sprintf(decoded->mnemonics + pos, "%s ", size_symbol);
 
     if (instr->src != NULL)
-        pos += operand_tostring(instr->src, instr_address, buffer + pos);
+        pos += operand_tostring(instr->src, instr_address, decoded->mnemonics + pos);
 
     if (instr->src != NULL && instr->dst != NULL)
-        pos += sprintf(buffer + pos, ", ");
+        pos += sprintf(decoded->mnemonics + pos, ", ");
 
     if (instr->dst != NULL)
-        pos += operand_tostring(instr->dst, instr_address, buffer + pos);
+        pos += operand_tostring(instr->dst, instr_address, decoded->mnemonics + pos);
 
-    buffer[pos] = '\0';
+    decoded->mnemonics[pos] = '\0';
 
-    decoded->mnemonics = buffer;
     return decoded;
 }
 
@@ -106,7 +104,7 @@ uint32_t m68k_step(M68k* m)
     Instruction* instr = m->opcode_table[opcode];
 
     // Manual breakpoint!
-    if (m->pc == 0x338)
+    if (m->pc == 0x358)
         printf("breakpoint\n");
 
     // 35C: weird move with unknown regmode
@@ -117,8 +115,7 @@ uint32_t m68k_step(M68k* m)
     }
     else
     {
-        //DecodedInstruction* d = m68k_decode(m, m->pc);
-        //printf("%#06X %s\n", m->pc, d->mnemonics);
+        DecodedInstruction* d = m68k_decode(m, m->pc);
 
         if (m->instruction_callback != NULL)
             m->instruction_callback(m);
@@ -128,7 +125,7 @@ uint32_t m68k_step(M68k* m)
         m->pc += instr->total_length;
         // TODO can only address 2^24 bytes in practice
 
-        //free(d);
+        free(d);
     }
 
     return m->pc;

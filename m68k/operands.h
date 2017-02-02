@@ -17,9 +17,11 @@ typedef void(*SetFunc)(struct Operand* o, uint32_t instr_address, uint32_t value
 
 // Shortcuts to quickly read/write operand data
 // -- Relative to a given address
+#define EA_RELATIVE(operand, instr_address) (operand)->ea((operand), (instr_address)) 
 #define GET_RELATIVE(operand, instr_address) (operand)->get((operand), (instr_address)) 
 #define SET_RELATIVE(operand, instr_address, value) (operand)->set((operand), (instr_address), (value))
 // -- Relative to the current PC
+#define EA(operand) (operand)->ea((operand), (operand)->instruction->context->pc) 
 #define GET(operand) (operand)->get((operand), (operand)->instruction->context->pc) 
 #define SET(operand, value) (operand)->set((operand), (operand)->instruction->context->pc, (value))
 
@@ -53,7 +55,9 @@ typedef struct Operand
 
     OperandType type;
 
-    GetFunc get;
+    // Functions to access/modify the operand's value
+    GetFunc ea; // Return the effective address when applicable
+    GetFunc get; // Get/Set the pointed value
     SetFunc set;
     
     Action pre;
