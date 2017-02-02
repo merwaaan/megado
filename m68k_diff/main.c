@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -144,6 +145,7 @@ int main(int argc, char* argv[])
 {
     // Arg 1: rom path
     // Arg 2: program start offset (hex)
+    // Arg 2: address after which the dumping begins (hex)
 
     memory_musashi = calloc(MAX_MEM_SIZE, sizeof(uint8_t));
     memory_xxx = calloc(MAX_MEM_SIZE, sizeof(uint8_t));
@@ -182,25 +184,41 @@ int main(int argc, char* argv[])
         xxx->pc = offset;
     }
 
+    // Wait for an optional address to be fetched to start dumping
+    int start_offset;
+    bool start_offset_passed = true;
+    if (argc > 3)
+    {
+        start_offset = strtol(argv[3], NULL, 16);
+        start_offset_passed = false;
+    }
+
     FILE* dumpfile_musashi = fopen("musashi_dump.txt", "w");
     FILE* dumpfile_xxx = fopen("xxx_dump.txt", "w");
 
+    // Initial state
     musashi_dump(dumpfile_musashi);
     xxx_dump(dumpfile_xxx);
 
-    for (int i = 0; i < 100000; ++i)
+    for (int i = 0; i < 1000000; ++i)
     {
         // Manual breakpoint!
-        if (xxx->pc == 0x250)
+        if (xxx->pc == 0x32e)
             printf("breakpoint\n");
+
+        if (!start_offset_passed && xxx->pc >= start_offset)
+            start_offset_passed = true;
 
         // Musashi
         m68k_execute(0);
-        musashi_dump(dumpfile_musashi);
+
+        if (start_offset_passed)
+            musashi_dump(dumpfile_musashi);
 
         // xxx
         m68k_step(xxx);
-        xxx_dump(dumpfile_xxx);
+        if (start_offset_passed)
+            xxx_dump(dumpfile_xxx);
 
         printf("%04x %04x\n", memory_musashi[0xA11100], memory_xxx[0xA11100]);
     }
