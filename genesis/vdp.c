@@ -37,12 +37,16 @@ Vdp* vdp_make()
 
 void vdp_free(Vdp* v)
 {
+    if (v == NULL)
+        return;
+
     /*SDL_DestroyWindow(v->window);
     SDL_DestroyRenderer(v->renderer);
     SDL_Quit();*/
 
     free(v->vram);
     free(v->cram);
+    free(v->vsram);
     free(v);
 }
 

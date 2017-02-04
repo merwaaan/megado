@@ -279,12 +279,13 @@ MU_TEST(test_bin_parse)
 }
 
 MU_TEST(test_bin_tostring)
-{;
-    mu_assert_str_eq("0", bin_tostring(0));
-    mu_assert_str_eq("1", bin_tostring(1));
-    mu_assert_str_eq("10", bin_tostring(2));
-    mu_assert_str_eq("11111111", bin_tostring(0xFF));
-    mu_assert_str_eq("11111110", bin_tostring(0xFE));
+{
+    char buffer[100];
+    mu_assert_str_eq("0", bin_tostring(0, buffer));
+    mu_assert_str_eq("1", bin_tostring(1, buffer));
+    mu_assert_str_eq("10", bin_tostring(2, buffer));
+    mu_assert_str_eq("11111111", bin_tostring(0xFF, buffer));
+    mu_assert_str_eq("11111110", bin_tostring(0xFE, buffer));
 }
 
 MU_TEST_SUITE(test_suite_bit_utils)

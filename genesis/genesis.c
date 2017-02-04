@@ -22,6 +22,9 @@ Genesis* genesis_make()
 
 void genesis_free(Genesis* g)
 {
+    if (g == NULL)
+        return;
+
     m68k_free(g->m68k);
     vdp_free(g->vdp);
     free(g->memory);

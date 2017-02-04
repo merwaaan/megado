@@ -59,4 +59,4 @@ uint8_t size_in_bytes(Size);
 uint16_t bin_parse(char* bin);
 
 // Return the binary representation of a number
-char* bin_tostring(int x);
+char* bin_tostring(int value, char* buffer);

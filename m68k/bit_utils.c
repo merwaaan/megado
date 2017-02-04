@@ -28,13 +28,17 @@ uint16_t bin_parse(char* bin)
     return value;
 }
 
-char* bin_tostring(int x) // TODO pass buffer
+char* bin_tostring(int value, char* buffer)
 {
-    if (x == 0)
-        return "0";
+    if (value == 0)
+    {
+        buffer[0] = '0';
+        buffer[1] = '\0';
+        return buffer;
+    }
 
     // Count the number of bits
-    int x2 = x;
+    int x2 = value;
     int bits = 0;
     while (x2 != 0)
     {
@@ -43,9 +47,8 @@ char* bin_tostring(int x) // TODO pass buffer
     }
 
     // Build the string bit by bit
-    char buffer[33];
     for (int i = 0; i < bits; ++i)
-        buffer[i] = BIT(x, bits - i - 1) + '0';
+        buffer[i] = BIT(value, bits - i - 1) + '0';
     buffer[bits] = '\0';
 
     return buffer;
