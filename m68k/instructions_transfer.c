@@ -8,9 +8,9 @@
 
 int exg(Instruction* i)
 {
-    int32_t dst = GET(i->dst);
-    SET(i->dst, GET(i->src));
-    SET(i->src, dst);
+    int32_t dst = GETE(i->dst);
+    SETE(i->dst, GETE(i->src));
+    SETE(i->src, dst);
 
     return 0;
 }
@@ -19,6 +19,7 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "EXG", exg);
     i->size = Long;
+    i->base_cycles = 6;
 
     int mode = FRAGMENT(opcode, 7, 3);
     switch (mode)
@@ -45,13 +46,13 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
 
 int lea(Instruction* i)
 {
-    uint32_t ea = EA(i->src);
+    uint32_t ea = FETCH_EA_AND_GETE(i->src);
 
     // TODO not documented but Regen does this, need to check other emulators
     if (i->src->type == AbsoluteShort)
         ea = SIGN_EXTEND_W(ea);
 
-    SET(i->dst, ea);
+    SETE(i->dst, ea);
 
     return 0;
 }
@@ -99,8 +100,8 @@ int move_cycles_l[12][9] = // TODO fill this when you want to feel like a robot
 
 int move(Instruction* i)
 {
-    int32_t value = GET(i->src);
-    SET(i->dst, value);
+    uint32_t value = FETCH_EA_AND_GETE(i->src);
+    FETCH_EA_AND_SETE(i->dst, value);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -145,7 +146,7 @@ int movem(Instruction* i)
 
                 // In post-increment mode, increment after EACH transfer
                 if (i->src->type == AddressRegisterIndirectPostInc)
-                    i->src->post(i->src);
+                    i->src->post_func(i->src);
             }
             // register -> memory
             else
@@ -183,8 +184,8 @@ Instruction* gen_movem(uint16_t opcode, M68k* m)
 
 int moveq(Instruction* i)
 {
-    int32_t value = SIGN_EXTEND_B_L(GET(i->src));
-    SET(i->dst, value);
+    int32_t value = SIGN_EXTEND_B_L(GETE(i->src));
+    SETE(i->dst, value);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -205,12 +206,13 @@ Instruction* gen_moveq(uint16_t opcode, M68k* m)
 
 int movea(Instruction* i)
 {
-    int32_t value = GET(i->src);
+    uint32_t src_ea = FETCH_EAE(i->src);
+    int32_t value = GETE(i->src);
 
     if (i->size == Word)
         value = SIGN_EXTEND_W(value);
 
-    SET(i->dst, value);
+    SETE(i->dst, value);
 
     return 0;
 }
@@ -226,7 +228,7 @@ Instruction* gen_movea(uint16_t opcode, M68k* m)
 
 int move_from_sr(Instruction* i)
 {
-    SET(i->dst, i->context->status);
+    FETCH_EA_AND_SETE(i->dst, i->context->status);
 
     return 0;
 }
@@ -241,8 +243,8 @@ Instruction* gen_move_from_sr(uint16_t opcode, M68k* m)
 
 int move_to_sr(Instruction* i)
 {
-    uint16_t value = GET(i->src);
-    i->context->status = value;
+    uint16_t value = FETCH_EA_AND_GETE(i->src);
+    i->context->status = value; // TODO whole SR should be affected
 
     CARRY_SET(i->context, BIT(value, 0));
     OVERFLOW_SET(i->context, BIT(value, 1));
@@ -265,10 +267,10 @@ int move_usp(Instruction* i)
 {
     // Register to stack pointer
     if (i->src != NULL)
-        i->context->address_registers[7] = GET(i->src);
+        i->context->address_registers[7] = GETE(i->src);
     // Stack pointer to register
     else
-        SET(i->dst, i->context->address_registers[7]);
+        SETE(i->dst, i->context->address_registers[7]);
 
     return 0;
 }

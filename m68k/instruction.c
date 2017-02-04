@@ -113,18 +113,18 @@ int instruction_execute(Instruction* instr)
 {
     // TODO faster to use noops?
     // Pre-execution actions
-    if (instr->src != NULL && instr->src->pre != NULL)
-        instr->src->pre(instr->src);
-    if (instr->dst != NULL && instr->dst->pre != NULL)
-        instr->dst->pre(instr->dst);
+    if (instr->src != NULL && instr->src->pre_func != NULL)
+        instr->src->pre_func(instr->src);
+    if (instr->dst != NULL && instr->dst->pre_func != NULL)
+        instr->dst->pre_func(instr->dst);
 
     int additional_cycles = instr->func(instr);
 
     // Post-execution actions
-    if (instr->src != NULL && instr->src->post != NULL)
-        instr->src->post(instr->src);
-    if (instr->dst != NULL && instr->dst->post != NULL)
-        instr->dst->post(instr->dst);
+    if (instr->src != NULL && instr->src->post_func != NULL)
+        instr->src->post_func(instr->src);
+    if (instr->dst != NULL && instr->dst->post_func != NULL)
+        instr->dst->post_func(instr->dst);
 
     return instr->base_cycles + additional_cycles;
 }

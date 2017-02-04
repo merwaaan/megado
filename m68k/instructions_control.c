@@ -11,7 +11,7 @@ int bcc(Instruction* i)
 {
     if (i->condition->func(i->context))
     {
-        uint16_t displacement = GET(i->src); // TODO does this always work? not if 8bit offset stored in 16bit part for soem reason
+        uint16_t displacement = GETE(i->src); // TODO does this always work? not if 8bit offset stored in 16bit part for soem reason
         i->context->pc += displacement > MAX_VALUE(Byte) ? (int16_t) displacement : (int8_t) displacement;
 
         return 0; // TODO timings
@@ -41,6 +41,7 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
 
 int bra(Instruction* i)
 {
+//TODO step
     int32_t displacement = m68k_read_b(i->context, i->context->pc + 1);
     if (displacement == 0)
         displacement = m68k_read_w(i->context, i->context->pc + 2);
@@ -61,7 +62,7 @@ int bsr(Instruction* i)
 {
     i->context->address_registers[7] -= 4;
     m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
-    i->context->pc += GET(i->src); // TODO why +2?
+    i->context->pc += GETE(i->src); // TODO why +2?
     i->context->pc -= i->total_length - 2;
 
     return 0;
@@ -86,11 +87,11 @@ int dbcc(Instruction* i)
 {
     //if (i->condition->func(i->context)) TODO unclear about the condition
 
-    uint16_t reg = GET(i->src);
+    uint16_t reg = GETE(i->src);
     if (reg > 0)
         i->context->pc += (int16_t)m68k_read_w(i->context, i->context->pc + 2) - 2;
 
-    SET(i->src, reg - 1);
+    SETE(i->src, reg - 1);
 
     return 0; // TODO timings
 }
@@ -108,7 +109,7 @@ Instruction* gen_dbcc(uint16_t opcode, M68k* m)
 
 int jmp(Instruction* i)
 {
-    i->context->pc = GET(i->src);
+    i->context->pc = FETCH_EA_AND_GETE(i->src);
 
     return 0;
 }

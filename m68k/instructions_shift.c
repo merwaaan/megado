@@ -23,12 +23,15 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
 
 int asr(Instruction* i)
 {
-    uint32_t initial = GET(i->dst);
-    uint8_t shift = GET(i->src);
-    uint32_t shifted_in = BIT(initial, i->size - 1) ? MASK_BELOW(0xFFFFFFFF, i->size - shift) : 0;
-    SET(i->dst, initial >> shift | shifted_in);
+    uint8_t shift = FETCH_EA_AND_GETE(i->src);
 
-    uint32_t result = GET(i->dst);
+    FETCH_EAE(i->dst);
+    uint32_t initial = GETE(i->dst);
+    uint32_t shifted_in = BIT(initial, i->size - 1) ? MASK_BELOW(0xFFFFFFFF, i->size - shift) : 0;
+
+    SETE(i->dst, initial >> shift | shifted_in);
+
+    uint32_t result = GETE(i->dst);
     CARRY_SET(i->context, BIT(initial, 0)); // TODO not sure, should be last bit shifter out?
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
@@ -40,11 +43,13 @@ int asr(Instruction* i)
 
 int lsl(Instruction* i)
 {
-    uint32_t initial = GET(i->dst);
-    uint8_t shift = GET(i->src);
-    SET(i->dst, initial << shift);
+    uint8_t shift = GETE(i->src);
 
-    uint32_t result = GET(i->dst);
+    FETCH_EAE(i->dst);
+    uint32_t initial = GETE(i->dst);
+    SETE(i->dst, initial << shift);
+
+    uint32_t result = GETE(i->dst);
     CARRY_SET(i->context, BIT(initial, i->size - 1)); // TODO not sure, should be last bit shifter out?
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
@@ -56,11 +61,13 @@ int lsl(Instruction* i)
 
 int lsr(Instruction* i)
 {
-    uint32_t initial = GET(i->dst);
-    uint8_t shift = GET(i->src);
-    SET(i->dst, initial >> shift);
+    uint8_t shift = GETE(i->src);
 
-    uint32_t result = GET(i->dst);
+    FETCH_EAE(i->dst);
+    uint32_t initial = GETE(i->dst); 
+    SETE(i->dst, initial >> shift);
+
+    uint32_t result = GETE(i->dst);
     CARRY_SET(i->context, BIT(initial, 0)); // TODO not sure, should be last bit shifter out?
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);

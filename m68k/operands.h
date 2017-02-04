@@ -7,24 +7,32 @@
 struct Operand;
 struct Instruction;
 
-// Read/Write functions for each type of operand
+// Effective address resolution function
 //
-// The address of the instance of the instruction that the operand is part of
-// must be passed in order to handle context-dependent operands (eg. extension
-// words). In most cases, this address will be the current PC.
-typedef uint32_t(*GetFunc)(struct Operand* o, uint32_t instr_address);
-typedef void(*SetFunc)(struct Operand* o, uint32_t instr_address, uint32_t value);
+// Calling such a function might trigger a data fetch so it must not be done
+// more than once per instruction call.
+typedef uint32_t(*FetchEAFunc)(struct Operand* o);
 
-// Shortcuts to quickly read/write operand data
-// -- Relative to a given address
-#define EA_RELATIVE(operand, instr_address) (operand)->ea((operand), (instr_address)) 
-#define GET_RELATIVE(operand, instr_address) (operand)->get((operand), (instr_address)) 
-#define SET_RELATIVE(operand, instr_address, value) (operand)->set((operand), (instr_address), (value))
-// -- Relative to the current PC
-#define EA(operand) (operand)->ea((operand), (operand)->instruction->context->pc) 
-#define GET(operand) (operand)->get((operand), (operand)->instruction->context->pc) 
-#define SET(operand, value) (operand)->set((operand), (operand)->instruction->context->pc, (value))
+// Read/Write functions to access an operand's data from its effective address.
+typedef uint32_t(*GetValueFunc)(struct Operand* o, uint32_t ea);
+typedef void(*SetValueFunc)(struct Operand* o, uint32_t ea, uint32_t value);
 
+/*
+ * Macros to read/write operand data
+ */
+
+// Fetch and store the operand's effective address
+#define FETCH_EAE(operand) (operand)->last_ea = (operand)->fetch_ea_func(operand) 
+
+// Get/Set the operand's value, the stored effective address will be used
+#define GETE(operand) (operand)->get_value_func((operand), (operand)->last_ea) 
+#define SETE(operand, value) (operand)->set_value_func((operand), (operand)->last_ea, (value))
+
+// Fetch the operand's effective address and then get/set its value
+#define FETCH_EA_AND_GETE(operand) (operand)->get_value_func((operand), (operand)->last_ea = (operand)->fetch_ea_func(operand)) 
+#define FETCH_EA_AND_SETE(operand, value) (operand)->set_value_func((operand), (operand)->last_ea = (operand)->fetch_ea_func(operand), (value))
+
+// Pre/Post instruction action
 typedef void(*Action)(struct Operand* this);
 
 typedef enum
@@ -49,19 +57,23 @@ typedef enum
 
 typedef struct Operand
 {
-    // The instruction that the operand instance is bound to.
-    // The operand data depends on the instruction size.
+    // The instruction that the operand instance is bound to
     struct Instruction* instruction;
 
     OperandType type;
 
-    // Functions to access/modify the operand's value
-    GetFunc ea; // Return the effective address when applicable
-    GetFunc get; // Get/Set the pointed value
-    SetFunc set;
-    
-    Action pre;
-    Action post;
+    // Last effective address computed
+    uint32_t last_ea;
+
+    // Compute and store the operand's effective address
+    FetchEAFunc fetch_ea_func;
+
+    // Get/Set the operand's value
+    GetValueFunc get_value_func;
+    SetValueFunc set_value_func;
+
+    Action pre_func;
+    Action post_func;
 
     int n;
 } Operand;

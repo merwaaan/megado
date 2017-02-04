@@ -6,11 +6,14 @@
 
 int add(Instruction* i)
 {
-    uint32_t a = GET(i->dst);
-    uint32_t b = GET(i->src);
-    SET(i->dst, a + b);
+    FETCH_EAE(i->src);
+    FETCH_EAE(i->dst);
+
+    uint32_t a = GETE(i->dst);
+    uint32_t b = GETE(i->src);
+    SETE(i->dst, a + b);
     
-    uint32_t result = GET(i->dst);
+    uint32_t result = GETE(i->dst);
     CARRY_SET(i->context, CHECK_CARRY_ADD(a, b, i->size));
     OVERFLOW_SET(i->context, CHECK_OVERFLOW_ADD(a, b, i->size));
     ZERO_SET(i->context, result == 0);
@@ -46,7 +49,7 @@ Instruction* gen_add(uint16_t opcode, M68k* m)
 
 int clr(Instruction* i)
 {
-    SET(i->src, MASK_BELOW(GET(i->src), i->size));
+    FETCH_EA_AND_SETE(i->src, 0);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -66,8 +69,8 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
 
 int cmp(Instruction* i)
 {
-    uint32_t a = GET(i->dst);
-    uint32_t b = GET(i->src);
+    uint32_t a = FETCH_EA_AND_GETE(i->dst);
+    uint32_t b = FETCH_EA_AND_GETE(i->src);
 
     CARRY_SET(i->context, CHECK_CARRY_SUB(a, b, i->size));
     OVERFLOW_SET(i->context, CHECK_OVERFLOW_SUB(a, b, i->size));
@@ -88,7 +91,7 @@ Instruction* gen_cmp(uint16_t opcode, M68k* m)
 
 int ext(Instruction* i)
 {
-    int x = GET(i->src);
+    int x = GETE(i->src);
 
     uint32_t extended;
     switch (i->size) {
@@ -100,7 +103,7 @@ int ext(Instruction* i)
         break;
     }
 
-    SET(i->src, extended);
+    SETE(i->src, extended);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -120,7 +123,7 @@ Instruction* gen_ext(uint16_t opcode, M68k* m)
 
 int muls(Instruction* i)
 {
-    SET(i->src, GET(i->src) * GET(i->dst));
+    // TODO SET(i->src, GET(i->src) * GET(i->dst));
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false); // TODO
@@ -142,7 +145,7 @@ Instruction* gen_muls(uint16_t opcode, M68k* m)
 
 int mulu(Instruction* i)
 {
-    SET(i->src, GET(i->src) * GET(i->dst));
+    // TODO SET(i->src, GET(i->src) * GET(i->dst));
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false); // TODO

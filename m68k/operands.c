@@ -43,9 +43,7 @@ void operand_free(Operand* operand)
     free(operand);
 }
 
-// The 'instr_address' argument is the address of the instruction that the operand is part of.
-// We need to pass it since some addressing modes are context-dependent.
-int operand_tostring(Operand* operand, uint32_t instr_address, char* buffer)
+int operand_tostring(Operand* operand, uint32_t ea, char* buffer)
 {
     if (operand == NULL)
         return 0;
@@ -63,23 +61,23 @@ int operand_tostring(Operand* operand, uint32_t instr_address, char* buffer)
     case AddressRegisterIndirectPostInc:
         return sprintf(buffer, "(A%d)+", operand->n);
     case AddressRegisterIndirectDisplacement:
-        return sprintf(buffer, "TODO (%010x,A%d)", GET_RELATIVE(operand, instr_address), operand->n);
+        return sprintf(buffer, "TODO (%010x,A%d)", GET_FROM_EA(operand, ea), operand->n);
     case AddressRegisterIndirectIndexed:
         return sprintf(buffer, "TODO %d(A%d, D%d)", operand->n, operand->n, operand->n);
     case ProgramCounterDisplacement:
-        return sprintf(buffer, "TODO (%010x,PC)", GET_RELATIVE(operand, instr_address));
+        return sprintf(buffer, "TODO (%010x,PC)", GET_FROM_EA(operand, ea));
     case ProgramCounterIndexed:
         return sprintf(buffer, "TODO %d(PC, D%d)", operand->n, operand->n);
     case Immediate:
-        return sprintf(buffer, "#$%04x", GET_RELATIVE(operand, instr_address));
+        return sprintf(buffer, "#$%04x", GET_FROM_EA(operand, ea));
     case Value:
         return sprintf(buffer, "#$%04x", operand->n);
     case AbsoluteShort:
-        return sprintf(buffer, "($%06x).w", m68k_read_w(operand->instruction->context, instr_address + operand->instruction->base_length));
+        return sprintf(buffer, "($%06x).w", GET_FROM_EA(operand, ea));
     case AbsoluteLong:
-        return sprintf(buffer, "($%010x).l", m68k_read_l(operand->instruction->context, instr_address + operand->instruction->base_length));
+        return sprintf(buffer, "($%010x).l", GET_FROM_EA(operand, ea));
     case BranchingOffset:
-        return sprintf(buffer, "$%010x", instr_address + GET_RELATIVE(operand, instr_address) + 2);
+        return sprintf(buffer, "$%010x", GET_FROM_EA(operand, ea) + 2);
     default:
         return 0;
     }
@@ -101,7 +99,7 @@ Size operand_size(uint8_t pattern)
     }
 }
 
-rsize_t operand_size2(uint8_t pattern)
+Size operand_size2(uint8_t pattern)
 {
     switch (pattern)
     {
@@ -176,14 +174,21 @@ void noop(Operand* o, uint32_t instr_address, uint32_t value)
 
 // Most operands that point to memory data will use those to get/set values from the effective address
 
-uint32_t get_from_ea(Operand* o, uint32_t instr_address)
+uint32_t get_from_ea(Operand* o, uint32_t ea)
 {
-    return m68k_read(o->instruction->context, o->instruction->size, o->ea(o, instr_address));
+    return m68k_read(o->instruction->context, o->instruction->size, ea);
 }
 
-void set_from_ea(Operand* o, uint32_t instr_address, uint32_t value)
+void set_from_ea(Operand* o, uint32_t ea, uint32_t value)
 {
-    m68k_write(o->instruction->context, o->instruction->size, o->ea(o, instr_address), value);
+    m68k_write(o->instruction->context, o->instruction->size, ea, value);
+}
+
+// Placeholder function for addressing modes that do not have effective address to compute
+
+uint32_t fetch_no_ea(Operand* o)
+{
+    return 0;
 }
 
 /*
@@ -207,22 +212,23 @@ Operand* operand_make_data_register(int n, Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = DataRegister;
-    op->get = data_register_get;
-    op->set = data_register_set;
+    op->fetch_ea_func = fetch_no_ea;
+    op->get_value_func = data_register_get;
+    op->set_value_func = data_register_set;
     op->n = n;
     return op;
 }
 
 /*
- * Address register value
+ * Address register
  */
 
-uint32_t address_get(Operand* o, uint32_t instr_address)
+uint32_t address_register_get(Operand* o, uint32_t instr_address)
 {
     return MASK_ABOVE_INC(o->instruction->context->address_registers[o->n], o->instruction->size);
 }
 
-void address_set(Operand* o, uint32_t instr_address, uint32_t value)
+void address_register_set(Operand* o, uint32_t instr_address, uint32_t value)
 {
     o->instruction->context->address_registers[o->n] =
         MASK_BELOW(o->instruction->context->address_registers[o->n], o->instruction->size) |
@@ -234,8 +240,9 @@ Operand* operand_make_address_register(int n, Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegister;
-    op->get = address_get;
-    op->set = address_set;
+    op->fetch_ea_func = fetch_no_ea;
+    op->get_value_func = address_register_get;
+    op->set_value_func = address_register_set;
     op->n = n;
     return op;
 }
@@ -246,7 +253,7 @@ Operand* operand_make_address_register(int n, Instruction* instr)
  * The register contains the address of the data in memory.
  */
 
-uint32_t address_indirect_ea(Operand* o, uint32_t instr_address)
+uint32_t address_indirect_ea(Operand* o)
 {
     return o->instruction->context->address_registers[o->n] & 0xFFFFFF;
 }
@@ -256,9 +263,9 @@ Operand* operand_make_address_register_indirect(int n, Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirect;
-    op->ea = address_indirect_ea;
-    op->get = get_from_ea;
-    op->set = set_from_ea;
+    op->fetch_ea_func = address_indirect_ea;
+    op->get_value_func = get_from_ea;
+    op->set_value_func = set_from_ea;
     op->n = n;
     return op;
 }
@@ -280,10 +287,10 @@ Operand* operand_make_address_register_indirect_postinc(int n, struct Instructio
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirectPostInc;
-    op->ea = address_indirect_ea;
-    op->get = get_from_ea;
-    op->set = set_from_ea;
-    op->post = address_inc;
+    op->fetch_ea_func = address_indirect_ea;
+    op->get_value_func = get_from_ea;
+    op->set_value_func = set_from_ea;
+    op->post_func = address_inc;
     op->n = n;
     return op;
 }
@@ -305,10 +312,10 @@ Operand* operand_make_address_register_indirect_predec(int n, struct Instruction
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirectPreDec;
-    op->ea = address_indirect_ea;
-    op->get = get_from_ea;
-    op->set = set_from_ea;
-    op->pre = address_dec;
+    op->fetch_ea_func = address_indirect_ea;
+    op->get_value_func = get_from_ea;
+    op->set_value_func = set_from_ea;
+    op->pre_func = address_dec;
     op->n = n;
     return op;
 }
@@ -316,15 +323,13 @@ Operand* operand_make_address_register_indirect_predec(int n, struct Instruction
 /*
  * Address indirect with displacement
  *
- * The data is at the stored address + a displacement (extension)
+ * The data is located at the stored address + a displacement (extension)
  */
 
-uint32_t address_indirect_displacement_ea(Operand* o, uint32_t instr_address)
+uint32_t address_indirect_displacement_ea(Operand* o)
 {
-    M68k* m = o->instruction->context;
-    uint32_t address = m->address_registers[o->n];
-    int16_t displacement = m68k_read_w(m, instr_address + 2);
-    return  address + displacement;
+    int16_t displacement = m68k_fetch(o->instruction->context);
+    return  o->instruction->context->address_registers[o->n] + displacement;
 }
 
 Operand* operand_make_address_register_indirect_displacement(int n, struct Instruction* instr)
@@ -332,9 +337,9 @@ Operand* operand_make_address_register_indirect_displacement(int n, struct Instr
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirectDisplacement;
-    op->ea = address_indirect_displacement_ea;
-    op->get = get_from_ea;
-    op->set = set_from_ea;
+    op->fetch_ea_func = address_indirect_displacement_ea;
+    op->get_value_func = get_from_ea;
+    op->set_value_func = set_from_ea;
     op->n = n;
     return op;
 }
@@ -343,19 +348,19 @@ Operand* operand_make_address_register_indirect_displacement(int n, struct Instr
 * Immediate value encoded in the extension words of an instruction
 */
 
-uint32_t immediate_get_byte(Operand* o, uint32_t instr_address)
+uint32_t immediate_get_byte(Operand* o)
 {
-    return m68k_read_b(o->instruction->context, instr_address + 3);
+    return MASK_ABOVE_INC(m68k_fetch(o->instruction->context), 8);
 }
 
-uint32_t immediate_get_word(Operand* o, uint32_t instr_address)
+uint32_t immediate_get_word(Operand* o)
 {
-    return m68k_read_w(o->instruction->context, instr_address + 2);
+    return m68k_fetch(o->instruction->context);
 }
 
-uint32_t immediate_get_long(Operand* o, uint32_t instr_address)
+uint32_t immediate_get_long(Operand* o)
 {
-    return m68k_read_l(o->instruction->context, instr_address + 2);
+    return m68k_fetch(o->instruction->context) << 16 | m68k_fetch(o->instruction->context);
 }
 
 Operand* operand_make_immediate_value(Size size, Instruction* instr)
@@ -366,13 +371,13 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
 
     switch (size) {
     case Byte:
-        op->get = immediate_get_byte;
+        op->fetch_ea_func = immediate_get_byte;
         break;
     case Word:
-        op->get = immediate_get_word;
+        op->fetch_ea_func = immediate_get_word;
         break;
     case Long:
-        op->get = immediate_get_long;
+        op->fetch_ea_func = immediate_get_long;
         break;
     }
 
@@ -383,11 +388,9 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
  * Address encoded in the extension words of an instruction
  */
 
-uint32_t absolute_short_ea(Operand* o, uint32_t instr_address)
+uint32_t absolute_short_ea(Operand* o)
 {
-    M68k* m = o->instruction->context;
-    uint16_t address = m68k_read_w(m, instr_address + o->instruction->base_length);
-    return  address;
+    return m68k_fetch(o->instruction->context);
 }
 
 Operand* operand_make_absolute_short(Instruction* instr)
@@ -395,17 +398,16 @@ Operand* operand_make_absolute_short(Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AbsoluteShort;
-    op->ea = absolute_short_ea;
-    op->get = get_from_ea;
-    op->set = set_from_ea;
+    op->fetch_ea_func = absolute_short_ea;
+    op->get_value_func = get_from_ea;
+    op->set_value_func = set_from_ea;
     return op;
 }
 
-uint32_t absolute_long_ea(Operand* o, uint32_t instr_address)
+uint32_t absolute_long_ea(Operand* o)
 {
-    M68k* m = o->instruction->context;
-    uint32_t address = m68k_fetch(m) << 16 | m68k_fetch(m);
-    return  address; // TODO not sure about w.l
+    return m68k_fetch(o->instruction->context) << 16 | m68k_fetch(o->instruction->context);
+    // TODO not sure about w.l
 }
 
 Operand* operand_make_absolute_long(Instruction* instr)
@@ -413,9 +415,9 @@ Operand* operand_make_absolute_long(Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AbsoluteLong;
-    op->ea = absolute_long_ea;
-    op->get = get_from_ea;
-    op->set = set_from_ea;
+    op->fetch_ea_func = absolute_long_ea;
+    op->get_value_func = get_from_ea;
+    op->set_value_func = set_from_ea;
     return op;
 }
 
@@ -423,11 +425,10 @@ Operand* operand_make_absolute_long(Instruction* instr)
  *
  */
 
-uint32_t pc_displacement_word_ea(Operand* o, uint32_t instr_address)
+uint32_t pc_displacement_word_ea(Operand* o)
 {
-    M68k* m = o->instruction->context;
-    int16_t displacement = m68k_read_w(m, instr_address + 2);
-    return m->pc + displacement + 2; // TODO no idea why +2
+    int16_t displacement = m68k_fetch(o->instruction->context);
+    return o->instruction->context->pc + displacement + 2; // TODO no idea why +2
 }
 
 Operand* operand_make_pc_displacement(Instruction* instr)
@@ -435,9 +436,9 @@ Operand* operand_make_pc_displacement(Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->type = ProgramCounterDisplacement;
     op->instruction = instr;
-    op->ea = pc_displacement_word_ea;
-    op->get = get_from_ea;
-    op->set = set_from_ea;
+    op->fetch_ea_func = pc_displacement_word_ea;
+    op->get_value_func = get_from_ea;
+    op->set_value_func = set_from_ea;
     return op;
 }
 
@@ -456,7 +457,7 @@ Operand* operand_make_value(int value, struct Instruction* instr)
     op->type = Value;
     op->instruction = instr;
     op->n = value;
-    op->get = value_get;
+    op->get_value_func = value_get;
     return op;
 }
 
@@ -486,18 +487,18 @@ Operand* operand_make_branching_offset(Instruction* instr, Size size)
     op->instruction = instr;
     op->type = BranchingOffset;
 
-    op->set = noop;
+    op->set_value_func = noop;
 
     switch (size)
     {
     case Byte:
-        op->get = branching_offset_byte_get;
+        op->get_value_func = branching_offset_byte_get;
         break;
     case Word:
-        op->get = branching_offset_word_get;
+        op->get_value_func = branching_offset_word_get;
         break;
     case Long:
-        op->get = branching_offset_long_get;
+        op->get_value_func = branching_offset_long_get;
         break;
     }
 
@@ -518,13 +519,13 @@ int operand_length(Operand* operand)
     case AbsoluteLong:
         return 4;
     case Immediate:
-        if (operand->get == immediate_get_byte || operand->get == immediate_get_word)
+        if (operand->fetch_ea_func == immediate_get_byte || operand->fetch_ea_func == immediate_get_word)
             return 2;
         return 4;
     case BranchingOffset:
-        if (operand->get == branching_offset_word_get)
+        if (operand->get_value_func == branching_offset_word_get)
             return 2;
-        else if (operand->get == branching_offset_long_get)
+        else if (operand->get_value_func == branching_offset_long_get)
             return 4;
     default:
         return 0;
