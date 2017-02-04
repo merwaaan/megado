@@ -50,7 +50,7 @@ void check_decoding(Genesis* g, char* opcode_bin)
 void test_rom(Genesis* g, char* path)
 {
     genesis_load_rom_file(g, path);
-    genesis_setup(g);
+    genesis_initialize(g);
 
     for (int i = 0; i < 5000000; ++i)
         genesis_step(g);

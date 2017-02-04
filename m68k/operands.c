@@ -404,7 +404,7 @@ Operand* operand_make_absolute_short(Instruction* instr)
 uint32_t absolute_long_ea(Operand* o, uint32_t instr_address)
 {
     M68k* m = o->instruction->context;
-    uint32_t address = m68k_read_l(m, instr_address + o->instruction->base_length);
+    uint32_t address = m68k_fetch(m) << 16 | m68k_fetch(m);
     return  address; // TODO not sure about w.l
 }
 

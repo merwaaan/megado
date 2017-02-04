@@ -12,10 +12,6 @@ M68k* m68k_make()
 {
     M68k* m68k = calloc(1, sizeof(M68k));
 
-    // TODO not sure if those are fixed by the hardware or the ROMs just set them up
-    m68k->status = 0x2704; // TODO not sure about Z
-    m68k->address_registers[7] = 0xFFFE00;
-
     // Generate every possible opcode
 
     m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
@@ -49,6 +45,17 @@ void m68k_free(M68k* m)
 
     free(m->opcode_table);
     free(m);
+}
+
+void m68k_initialize(M68k* m)
+{
+    m->status = 0x2700;
+    m->address_registers[7] = m68k_read_l(m, 0); // TODO really required? Games seem to do this as part of their startup routine
+
+    // Entry point
+    m->pc = m68k_read_l(m, 4);
+
+    m->prefetch_address = 0xFFFFFFFF; // Invalid value, will initiate the initial prefetch
 }
 
 DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
@@ -100,11 +107,12 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 uint32_t m68k_step(M68k* m)
 {
     // Fetch the instruction
-    uint16_t opcode = m68k_read_w(m, m->pc);
+    uint32_t instr_pc = m->pc;
+    uint16_t opcode = m68k_fetch(m);
     Instruction* instr = m->opcode_table[opcode];
 
     // Manual breakpoint!
-    if (m->pc == 0x358)
+    if (m->pc == 0x1246)
         printf("breakpoint\n");
 
     // 35C: weird move with unknown regmode
@@ -115,14 +123,14 @@ uint32_t m68k_step(M68k* m)
     }
     else
     {
-        DecodedInstruction* d = m68k_decode(m, m->pc);
+        DecodedInstruction* d = m68k_decode(m, instr_pc);
 
         if (m->instruction_callback != NULL)
             m->instruction_callback(m);
 
         m->cycles += instruction_execute(instr);
 
-        m->pc += instr->total_length;
+        //m->pc += instr->total_length;
         // TODO can only address 2^24 bytes in practice
 
         free(d);
@@ -160,4 +168,26 @@ void m68k_write(M68k* m, Size size, uint32_t address, uint32_t value)
         m68k_write_l(m, address, value);
         break;
     }
+}
+
+uint16_t m68k_fetch(M68k* m)
+{
+    // If the PC jumped, discard the prefetch queue
+    if (m->pc != m->prefetch_address)
+    {
+        uint16_t word = m68k_read_w(m, m->pc);
+        m->pc = m->prefetch_address = m->pc + 2;
+
+        m->prefetch_queue[0] = m68k_read_w(m, m->pc);
+        m->prefetch_queue[1] = m68k_read_w(m, m->pc + 2);
+        
+        return word;
+    }
+
+    // Otherwise, shift the prefetch queue
+    uint16_t word = m->prefetch_queue[0];
+    m->prefetch_queue[0] = m->prefetch_queue[1];
+    m->pc = m->prefetch_address = m->pc + 2;
+    m->prefetch_queue[1] = m68k_read_w(m, m->pc + 2);
+    return word;
 }

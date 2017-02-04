@@ -61,7 +61,8 @@ int bsr(Instruction* i)
 {
     i->context->address_registers[7] -= 4;
     m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
-    i->context->pc += GET(i->src);
+    i->context->pc += GET(i->src); // TODO why +2?
+    i->context->pc -= i->total_length - 2;
 
     return 0;
 }

@@ -20,8 +20,8 @@ void genesis_load_rom_data(Genesis* g, uint8_t* data);
 
 struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc);
 
-// Setup the Genesis with the data in the ROM header
-void genesis_setup(Genesis* g);
+// Prepare the Genesis for execution
+void genesis_initialize(Genesis* g);
 
 // Step forward one instruction and return the current program counter value
 uint32_t genesis_step(Genesis* g);

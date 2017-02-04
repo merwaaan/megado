@@ -63,13 +63,12 @@ struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc)
 #define WORD(x) ((x)[0] << 8 | (x)[1])
 #define LONG(x) ((x)[0] << 24 | (x)[1] << 16 | (x)[2] << 8 | (x)[3])
 
-void genesis_setup(Genesis* g)
+void genesis_initialize(Genesis* g)
 {
     // http://darkdust.net/writings/megadrive/initializing
     // http://md.squee.co/Howto:Initialise_a_Mega_Drive
 
-    g->m68k->address_registers[7] = LONG(g->memory); // TODO really required? Games seem to do this as part of their startup routine
-    g->m68k->pc = LONG(g->memory + 4); // Entry point
+    m68k_initialize(g->m68k);
 
     // TODO interrupts
 

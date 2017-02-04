@@ -39,6 +39,10 @@ typedef struct M68k {
     uint32_t pc;
     uint64_t cycles;
 
+    // Prefetching pipeline containing the two next words of the program stream
+    uint16_t prefetch_queue[2];
+    uint64_t prefetch_address;
+
     struct Instruction** opcode_table;
 
     // Callbacks
@@ -61,11 +65,25 @@ void m68k_free(M68k*);
 
 struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
 
+// Prepare the CPU for execution (stack pointer, program start, initial prefetch...)
+void m68k_initialize(M68k*);
+
 // Execute one instruction and return the current program counter value
 uint32_t m68k_step(M68k*); 
 
 uint32_t m68k_read(M68k*, Size size, uint32_t address);
 void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);
+
+// Return the word currently under the program counter
+// and make it advance.
+//
+// All reads should go through this function to properly
+// emulate the CPU's two-words long prefetching pipeline.
+//
+// http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+// http://ataristeven.exxoshost.co.uk/txt/Prefetch.txt
+// "Assembly Language and Systems Programming for the M68000 Family", p. 790
+uint16_t m68k_fetch(M68k* m);
 
 // -----
 // The following I/O functions must be implemented
