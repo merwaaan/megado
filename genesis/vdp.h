@@ -44,27 +44,27 @@ typedef struct Vdp
     bool display_mode;
 
     // Register $02
-    bool plane_a_nametable;
+    uint32_t plane_a_nametable;
 
     // Register $03
-    bool window_nametable;
+    uint32_t window_nametable;
 
     // Register $04
-    bool plane_b_nametable;
+    uint32_t plane_b_nametable;
 
     // Register $05
-    bool sprites_attributetable;
+    uint32_t sprites_attributetable;
 
     // Register $07
-    bool background_color_palette;
-    bool background_color_entry;
+    uint8_t background_color_palette;
+    uint8_t background_color_entry;
 
     // Register $0A
-    bool hblank_counter; // TODO unclear
+    uint8_t hblank_counter; // TODO unclear
 
     // Register $0B
-    bool vertical_scrolling;
-    bool horizontal_scrolling;
+    uint8_t vertical_scrolling;
+    uint8_t horizontal_scrolling;
 
     // Register $0C
     int display_width;
