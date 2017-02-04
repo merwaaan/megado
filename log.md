@@ -1,5 +1,91 @@
 # Logs
 
+## 04/02/2016
+
+### Rethinking the CPU pipeline - **DRAFT**
+
+#### Issue
+
+Since the last log, I have implemented the most common opcodes and the emulator can advance through a good portion of some Genesis roms. However, I'm realizing that my current approach for decoding instructions and advancing through programs might be inappropriate.
+
+Currently, each possible instruction variant is precomputed and packed in a structure that holds metadata (name, length, timings) and operands.
+
+```
+struct Instruction {
+    char* name;
+
+    // Implementation
+    InstructionFunc* func;
+
+    // Operands
+    struct Operand* src;
+    struct Operand* dst;
+
+    // Size of the operation (byte, word, long)
+    Size size;
+
+    // Instruction length in bytes
+    uint8_t length;
+}
+```
+
+An operand basically is some additional metadata (addressing mode) as well as a pointer to a function to get the target data, and another to a function for modifying said data.
+
+```
+struct Operand
+{
+    AddressingMode mode;
+
+    // Functions to access/modify the operand's data
+    GetFunc get;
+    SetFunc set;
+    
+    // Additional metadata ...
+}
+```
+
+For instance, the *Address register indirect* mode functions looks like:
+
+```
+uint8_t address_register_indirect_get(Operand* op, uint32_t address)
+{
+  uint32_t address = M68K->address_registers[op->reg_number];
+  return MEMORY[address];
+}
+
+void address_register_indirect_set(Operand* op, uint32_t address, uint8_t value)
+{
+  // ...
+  MEMORY[address] = value;
+}
+```
+
+This approach seems like it would reduce addressing modes to a small set of get/set functions; clean and easy to manage. However, things gets a little messy for operands that target data located in memory. For example, the instruction `NOT ($ABCD).w` (Invert the bits of the value at address `ABCD`) is encoded as `4639 ABCD`: `4639` is the NOT opcode and `ABCD` is the operand data as an extension word. The *Absolute short* mode used in this instruction is currently coded like:
+
+```
+uint16_t absolute_short_get(Operand* op, uint32_t address)
+{
+  // The address is stored just after the 2-bits long opcode
+  uint16_t address = MEMORY[INSTRUCTION_ADDRESS + 2] << 8 | MEMORY[INSTRUCTION_ADDRESS + 3];
+  return MEMORY[address];
+}
+```
+
+The issue here is that the operand data is stored as an extension word that follows the opcode, so the code that extracts the data is dependent on the global context of execution and not just on the operand's internal metadata. To illustrate this issue, let's look at `MOVE ($ABCD) ($1234)` (move the data at address `ABCD` to address `1234`). It is is encoded as `11F8 1234 ABCD`: `11F8` is MOVE, `1234` is the destination address, `ABCD` is the source address. Both addresses are stored as extension words. The `absolute_short_get` is thus incorrect because the value targeted by both operands will be `1234`, because of the fixed +2 offset.
+
+A possible solution to this issue would be to track which operands have been extracted, with some kind of virtual cursor but this would complexify the operand functions and couple the function to the execution context furthermore. I feel like the current design is just wrong.
+
+### Rework
+
+The way that the CPU reads the program stream is not consistent with what a real 68000 would do. In practice, the CPU cannot move back and forth around its program counter (PC) to pick data anywhere. The PC is the eye of the CPU and the 68000 can only decodes what's under its PC. This is the same for the operands data, the CPU need to advance its PC past the opcode word to read extension words.
+
+The emulator should reflect this mechanics. First, this would fix the aforementioned issues. Second, this is a step towards a more accurate emulation since some programs rely on prefetching to work... TODO
+
+References
+- http://pasti.fxatari.com/68kdocs/68kPrefetch.html
+- http://ataristeven.exxoshost.co.uk/txt/Prefetch.txt
+- "Assembly Language and Systems Programming for the M68000 Family", p. 790
+
 ## 11/12/2016
 
 I now want to want the plug the M68000 emulator to the JS UI so I looked more closely at [emscripten](http://kripken.github.io/emscripten-site/) the past few days. I experienced *a lot* of trouble compiling my M68000 C library to JS and I'm not there yet.
@@ -73,7 +159,7 @@ I looked at other m68k implementations and Musashi, a reference emulator used in
 
 ## 10/26/2016
 
-I wanted to start writing a new console emulator for some time now. There's still work to be done on my other projects -- could add some fun features to [Boyo.js](https://github.com/merwaaan/boyo.js) and [mr.genesis](https://github.com/merwaaan/mr.system) is far from being functional -- but I need something fresh. I chose to try and emulate the Sega Genesis/Megadrive since it was my first game console and it's a bit special to me.
+I wanted to start writing a new console emulator for some time now. There's still work to be done on my other projects -- could add some fun features to [Boyo.js](https://github.com/merwaaan/boyo.js) and [mr.systel](https://github.com/merwaaan/mr.system) is far from being functional -- but I need something fresh. I chose to try and emulate the Sega Genesis/Megadrive since it was my first game console and it's a bit special to me.
 
 Technically, the Genesis is reknowned for its performance compared to the other game systems of its time so I will have to pay particular attention to this aspect (Boyo.js was not on the fast side). I won't use Javascript to emulate the chips, it was too much trouble last time (no byte type, no unsigned type, needed to mask every computation by 0xFF...). However, I'd love for this project to be rendered in the browser with a nice UI for the debugger.
 
