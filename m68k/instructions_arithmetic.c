@@ -47,6 +47,34 @@ Instruction* gen_add(uint16_t opcode, M68k* m)
     return i;
 }
 
+int addq(Instruction* i)
+{
+    // Extract the quick value, 0 represents 8
+    uint32_t quick = GETE(i->src);
+    if (quick == 0)
+        quick = 8;
+
+    uint32_t initial = FETCH_EA_AND_GETE(i->dst);
+    SETE(i->dst, initial + quick);
+
+    uint32_t result = GETE(i->dst);
+    CARRY_SET(i->context, CHECK_CARRY_ADD(initial, quick, i->size));
+    OVERFLOW_SET(i->context, CHECK_OVERFLOW_ADD(initial, quick, i->size));
+    ZERO_SET(i->context, result == 0);
+    NEGATIVE_SET(i->context, BIT(result, i->size - 1));
+
+    return 0;
+}
+
+Instruction* gen_addq(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "ADDQ", addq);
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+    i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}
+
 int clr(Instruction* i)
 {
     FETCH_EA_AND_SETE(i->src, 0);

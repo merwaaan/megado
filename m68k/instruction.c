@@ -53,6 +53,7 @@ static Pattern all_patterns[] =
     { 0x4EC0, 0xFFC0, &gen_jmp },
     { 0x50C8, 0xF0F8, &gen_dbcc },
     //{ 0x5000, 0xF000, &gen_scc },
+    { 0x5000, 0xF100, &gen_addq },
     { 0x5100, 0xF100, &gen_subq },
     { 0x6000, 0xFF00, &gen_bra },
     { 0x6100, 0xFF00, &gen_bsr },
