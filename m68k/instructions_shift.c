@@ -64,7 +64,7 @@ int lsr(Instruction* i)
     uint8_t shift = GETE(i->src);
 
     FETCH_EAE(i->dst);
-    uint32_t initial = GETE(i->dst); 
+    uint32_t initial = GETE(i->dst);
     SETE(i->dst, initial >> shift);
 
     uint32_t result = GETE(i->dst);
@@ -91,14 +91,15 @@ Instruction* gen_lsd(uint16_t opcode, M68k* m)
 
 int rol(Instruction* i)
 {
-    uint32_t initial = GET(i->dst);
-    int rotation = GET(i->src) % i->size;
+    FETCH_EAE(i->dst);
+    uint32_t initial = GETE(i->dst);
+    int rotation = GETE(i->src) % i->size;
 
     if (rotation > 0)
-        SET(i->dst, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
+        SETE(i->dst, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
 
     // TODO what if rot = 0?
-    uint32_t result = GET(i->dst);
+    uint32_t result = GETE(i->dst);
     CARRY_SET(i->context, BIT(initial, i->size - rotation));
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
@@ -109,14 +110,15 @@ int rol(Instruction* i)
 
 int ror(Instruction* i)
 {
-    uint32_t initial = GET(i->dst);
-    int rotation = GET(i->src) % i->size;
+    FETCH_EAE(i->dst);
+    uint32_t initial = GETE(i->dst);
+    int rotation = GETE(i->src) % i->size;
 
     if (rotation > 0)
-        SET(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));
+        SETE(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));
 
     // TODO what if rot = 0?
-    uint32_t result = GET(i->dst);
+    uint32_t result = GETE(i->dst);
     CARRY_SET(i->context, BIT(initial, i->size - rotation));
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
@@ -133,11 +135,11 @@ Instruction* gen_rod(uint16_t opcode, M68k* m)
 
 int swap(Instruction* i)
 {
-    int32_t value = GET(i->src);
+    int32_t value = GETE(i->src);
     int16_t lo = value & 0xFFFF;
     int16_t hi = value >> 16;
     int32_t result = (lo << 16) | hi;
-    SET(i->src, result);
+    SETE(i->src, result);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);

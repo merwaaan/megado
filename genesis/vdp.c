@@ -79,7 +79,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
             int to = v->dma_address + v->dma_length;
             for (int i = from; i < to; i += v->auto_increment)
             {
-                v->vram[i] = NIBBLE_HI(value);
+                v->vram[i] = NIBBLE_HI(value); // TODO optim, compute hi/lo once
                 v->vram[i + 1] = NIBBLE_LO(value);
             }
 

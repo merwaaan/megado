@@ -106,34 +106,35 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 
 uint32_t m68k_step(M68k* m)
 {
-    // Fetch the instruction
-    uint32_t instr_pc = m->pc;
-    uint16_t opcode = m68k_fetch(m);
-    Instruction* instr = m->opcode_table[opcode];
-
+    printf("%#06X\n", m->pc);
     // Manual breakpoint!
-    if (m->pc == 0x1246)
+    if (m->pc == 0x18C8)
         printf("breakpoint\n");
+
+    // Fetch the instruction
+    //uint32_t instr_pc = m->pc;
+    m->instruction_register = m68k_fetch(m);
+    Instruction* instr = m->opcode_table[m->instruction_register];
 
     // 35C: weird move with unknown regmode
 
     if (instr == NULL)
     {
-        printf("Opcode %#06X cannot be found in the opcode table\n", opcode);
+        printf("Opcode %#06X cannot be found in the opcode table\n", m->instruction_register);
     }
     else
     {
-        DecodedInstruction* d = m68k_decode(m, instr_pc);
+        //DecodedInstruction* d = m68k_decode(m, instr_pc);
 
-        if (m->instruction_callback != NULL)
-            m->instruction_callback(m);
+        //if (m->instruction_callback != NULL)
+        //    m->instruction_callback(m);
 
         m->cycles += instruction_execute(instr);
 
         //m->pc += instr->total_length;
         // TODO can only address 2^24 bytes in practice
 
-        free(d);
+        //free(d);
     }
 
     return m->pc;

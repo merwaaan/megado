@@ -172,8 +172,6 @@ int main(int argc, char* argv[])
 
     // Load the rom file
 
-    uint8_t rom[MAX_ROM_SIZE];
-
     FILE* rom_file = fopen(argv[1], "rb");
     if (rom_file == NULL)
     {

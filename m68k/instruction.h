@@ -109,6 +109,7 @@ DEFINE_INSTR(cmp);
 DEFINE_INSTR(ext);
 DEFINE_INSTR(mulu);
 DEFINE_INSTR(muls);
+DEFINE_INSTR(subq);
 
 // Shit & rotate
 DEFINE_INSTR(asd);
@@ -125,6 +126,8 @@ DEFINE_INSTR(movea);
 DEFINE_INSTR(movem);
 DEFINE_INSTR(moveq);
 DEFINE_INSTR(movep);
+DEFINE_INSTR(move_from_ccr);
+DEFINE_INSTR(move_to_ccr);
 DEFINE_INSTR(move_from_sr);
 DEFINE_INSTR(move_to_sr);
 DEFINE_INSTR(move_usp);
@@ -137,6 +140,7 @@ DEFINE_INSTR(bsr);
 DEFINE_INSTR(dbcc);
 DEFINE_INSTR(jmp);
 DEFINE_INSTR(jsr);
+DEFINE_INSTR(nop);
 //DEFINE_INSTR(rtd);
 //DEFINE_INSTR(rtr);
 DEFINE_INSTR(rts);

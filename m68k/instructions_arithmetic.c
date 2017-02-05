@@ -12,7 +12,7 @@ int add(Instruction* i)
     uint32_t a = GETE(i->dst);
     uint32_t b = GETE(i->src);
     SETE(i->dst, a + b);
-    
+
     uint32_t result = GETE(i->dst);
     CARRY_SET(i->context, CHECK_CARRY_ADD(a, b, i->size));
     OVERFLOW_SET(i->context, CHECK_OVERFLOW_ADD(a, b, i->size));
@@ -69,7 +69,7 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
 
 int cmp(Instruction* i)
 {
-    uint32_t a = FETCH_EA_AND_GETE(i->dst);
+    uint32_t a = GETE(i->dst);
     uint32_t b = FETCH_EA_AND_GETE(i->src);
 
     CARRY_SET(i->context, CHECK_CARRY_SUB(a, b, i->size));
@@ -161,6 +161,33 @@ Instruction* gen_mulu(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "MULU", mulu);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}
+
+int subq(Instruction* i)
+{
+    // Extract the quick value, 0 represents 8
+    uint32_t quick = GETE(i->src);
+    if (quick == 0)
+        quick = 8;
+
+    uint32_t initial = FETCH_EA_AND_GETE(i->dst);
+    SETE(i->dst, initial - quick);
+
+    CARRY_SET(i->context, CHECK_CARRY_SUB(initial, quick, i->size));
+    OVERFLOW_SET(i->context, CHECK_OVERFLOW_SUB(initial, quick, i->size));
+    ZERO_SET(i->context, initial == quick);
+    NEGATIVE_SET(i->context, BIT(initial - quick, i->size - 1));
+
+    return 0;
+}
+
+Instruction* gen_subq(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "SUBQ", subq);
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+    i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }

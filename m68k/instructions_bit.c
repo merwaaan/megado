@@ -92,8 +92,8 @@ Instruction* gen_btst(uint16_t opcode, M68k* m)
 }
 
 int btst_imm(Instruction* i)
-{ // TODO step?
-    int bit = m68k_read_b(i->context, i->context->pc + 3) % i->size;
+{
+    int bit = m68k_fetch(i->context) % i->size;
     int set = BIT(FETCH_EA_AND_GETE(i->dst), bit);
 
     ZERO_SET(i->context, !set);

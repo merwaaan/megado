@@ -50,7 +50,7 @@ int operand_tostring(Operand* operand, uint32_t ea, char* buffer)
 
     switch (operand->type)
     {
-    case DataRegister:
+    /*case DataRegister:
         return sprintf(buffer, "D%d", operand->n);
     case AddressRegister:
         return sprintf(buffer, "A%d", operand->n);
@@ -77,7 +77,7 @@ int operand_tostring(Operand* operand, uint32_t ea, char* buffer)
     case AbsoluteLong:
         return sprintf(buffer, "($%010x).l", GET_FROM_EA(operand, ea));
     case BranchingOffset:
-        return sprintf(buffer, "$%010x", GET_FROM_EA(operand, ea) + 2);
+        return sprintf(buffer, "$%010x", GET_FROM_EA(operand, ea) + 2);*/
     default:
         return 0;
     }
@@ -348,19 +348,32 @@ Operand* operand_make_address_register_indirect_displacement(int n, struct Instr
 * Immediate value encoded in the extension words of an instruction
 */
 
-uint32_t immediate_get_byte(Operand* o)
+uint32_t immediate_byte_word_ea(Operand* o)
 {
-    return MASK_ABOVE_INC(m68k_fetch(o->instruction->context), 8);
+    m68k_fetch(o->instruction->context);
+    return o->instruction->context->pc - 2;
 }
 
-uint32_t immediate_get_word(Operand* o)
+uint32_t immediate_long_ea(Operand* o)
 {
-    return m68k_fetch(o->instruction->context);
+    m68k_fetch(o->instruction->context);
+    m68k_fetch(o->instruction->context);
+    return o->instruction->context->pc - 4;
 }
 
-uint32_t immediate_get_long(Operand* o)
+uint32_t immediate_byte_get(Operand* o)
 {
-    return m68k_fetch(o->instruction->context) << 16 | m68k_fetch(o->instruction->context);
+    return MASK_ABOVE_INC(m68k_read_w(o->instruction->context, o->last_ea), 8);
+}
+
+uint32_t immediate_word_get(Operand* o)
+{
+    return m68k_read_w(o->instruction->context, o->last_ea);
+}
+
+uint32_t immediate_long_get(Operand* o)
+{
+    return m68k_read_l(o->instruction->context, o->last_ea);
 }
 
 Operand* operand_make_immediate_value(Size size, Instruction* instr)
@@ -371,13 +384,16 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
 
     switch (size) {
     case Byte:
-        op->fetch_ea_func = immediate_get_byte;
+        op->fetch_ea_func = immediate_byte_word_ea;
+        op->get_value_func = immediate_byte_get;
         break;
     case Word:
-        op->fetch_ea_func = immediate_get_word;
+        op->fetch_ea_func = immediate_byte_word_ea;
+        op->get_value_func = immediate_word_get;
         break;
     case Long:
-        op->fetch_ea_func = immediate_get_long;
+        op->fetch_ea_func = immediate_long_ea;
+        op->get_value_func = immediate_long_get;
         break;
     }
 
@@ -428,7 +444,7 @@ Operand* operand_make_absolute_long(Instruction* instr)
 uint32_t pc_displacement_word_ea(Operand* o)
 {
     int16_t displacement = m68k_fetch(o->instruction->context);
-    return o->instruction->context->pc + displacement + 2; // TODO no idea why +2
+    return o->instruction->context->pc + displacement - 2; // TODO why -2?
 }
 
 Operand* operand_make_pc_displacement(Instruction* instr)
@@ -466,19 +482,19 @@ Operand* operand_make_value(int value, struct Instruction* instr)
  * TODO can't I factor this?
  */
 
-uint32_t branching_offset_byte_get(Operand* o, uint32_t instr_address)
+uint32_t branching_offset_byte_get(Operand* o, uint32_t ea)
 {
-    return m68k_read_b(o->instruction->context, instr_address + 1);
+    return o->instruction->context->instruction_register & 0xFF;
 }
 
-uint32_t branching_offset_word_get(Operand* o, uint32_t instr_address)
+uint32_t branching_offset_word_get(Operand* o, uint32_t ea) // TODO
 {
-    return m68k_read_w(o->instruction->context, instr_address + 2);
+    return m68k_read_w(o->instruction->context, o->instruction->context->instruction_register + 2);
 }
 
-uint32_t branching_offset_long_get(Operand* o, uint32_t instr_address)
+uint32_t branching_offset_long_get(Operand* o, uint32_t ea) // TODO
 {
-    return m68k_read_l(o->instruction->context, instr_address + 2);
+    return m68k_read_l(o->instruction->context, o->instruction->context->instruction_register + 2);
 }
 
 Operand* operand_make_branching_offset(Instruction* instr, Size size)
@@ -519,7 +535,7 @@ int operand_length(Operand* operand)
     case AbsoluteLong:
         return 4;
     case Immediate:
-        if (operand->fetch_ea_func == immediate_get_byte || operand->fetch_ea_func == immediate_get_word)
+        if (operand->fetch_ea_func == immediate_byte_word_ea)
             return 2;
         return 4;
     case BranchingOffset:

@@ -46,7 +46,7 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
 
 int lea(Instruction* i)
 {
-    uint32_t ea = FETCH_EA_AND_GETE(i->src);
+    uint32_t ea = FETCH_EAE(i->src);
 
     // TODO not documented but Regen does this, need to check other emulators
     if (i->src->type == AbsoluteShort)
@@ -126,7 +126,7 @@ int movem(Instruction* i)
     // TODO
     // incomplete version, this opcode is super confusing
 
-    uint16_t mask = m68k_read_w(i->context, i->context->pc + 2);
+    uint16_t mask = m68k_fetch(i->context);
 
     uint32_t cursor = i->context->address_registers[i->src->n] & 0xFFFFFF;
 
@@ -206,8 +206,7 @@ Instruction* gen_moveq(uint16_t opcode, M68k* m)
 
 int movea(Instruction* i)
 {
-    uint32_t src_ea = FETCH_EAE(i->src);
-    int32_t value = GETE(i->src);
+    int32_t value = FETCH_EA_AND_GETE(i->src);
 
     if (i->size == Word)
         value = SIGN_EXTEND_W(value);
@@ -226,6 +225,22 @@ Instruction* gen_movea(uint16_t opcode, M68k* m)
     return i;
 }
 
+int move_from_ccr(Instruction* i)
+{
+    // Only move the CCR segment of the status register
+    FETCH_EA_AND_SETE(i->dst, i->context->status & 0x1F);
+
+    return 0;
+}
+
+Instruction* gen_move_from_ccr(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "MOVE from CCR", move_from_ccr);
+    i->size = Word;
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}
+
 int move_from_sr(Instruction* i)
 {
     FETCH_EA_AND_SETE(i->dst, i->context->status);
@@ -241,16 +256,25 @@ Instruction* gen_move_from_sr(uint16_t opcode, M68k* m)
     return i;
 }
 
+int move_to_ccr(Instruction* i)
+{
+    // Only update the CCR segment of the status register
+    i->context->status = i->context->status & 0xFFE0 | FETCH_EA_AND_GETE(i->src) & 0x1F;
+
+    return 0;
+}
+
+Instruction* gen_move_to_ccr(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "MOVE to CCR", move_to_ccr);
+    i->size = Word;
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}
+
 int move_to_sr(Instruction* i)
 {
-    uint16_t value = FETCH_EA_AND_GETE(i->src);
-    i->context->status = value; // TODO whole SR should be affected
-
-    CARRY_SET(i->context, BIT(value, 0));
-    OVERFLOW_SET(i->context, BIT(value, 1));
-    ZERO_SET(i->context, BIT(value, 2));
-    NEGATIVE_SET(i->context, BIT(value, 3));
-    EXTENDED_SET(i->context, BIT(value, 4));
+    i->context->status = FETCH_EA_AND_GETE(i->src);
 
     return 0;
 }

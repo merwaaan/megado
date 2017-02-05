@@ -42,6 +42,7 @@ typedef struct M68k {
     // Prefetching pipeline containing the two next words of the program stream
     uint16_t prefetch_queue[2];
     uint64_t prefetch_address;
+    uint16_t instruction_register; // Instruction currently being decoded
 
     struct Instruction** opcode_table;
 
