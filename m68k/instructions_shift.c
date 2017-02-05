@@ -96,11 +96,15 @@ int rol(Instruction* i)
     int rotation = GETE(i->src) % i->size;
 
     if (rotation > 0)
+    {
         SETE(i->dst, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
 
-    // TODO what if rot = 0?
+        CARRY_SET(i->context, BIT(initial, i->size - rotation));
+    }
+    else
+        CARRY_SET(i->context, 0);
+
     uint32_t result = GETE(i->dst);
-    CARRY_SET(i->context, BIT(initial, i->size - rotation));
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -115,11 +119,15 @@ int ror(Instruction* i)
     int rotation = GETE(i->src) % i->size;
 
     if (rotation > 0)
+    {
         SETE(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));
 
-    // TODO what if rot = 0?
+        CARRY_SET(i->context, BIT(initial, i->size - rotation));
+    }
+    else
+        CARRY_SET(i->context, 0);
+
     uint32_t result = GETE(i->dst);
-    CARRY_SET(i->context, BIT(initial, i->size - rotation));
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -131,6 +139,60 @@ Instruction* gen_rod(uint16_t opcode, M68k* m)
 {
     bool direction = BIT(opcode, 8);
     return gen_shift_instruction(opcode, m, direction ? "ROL" : "ROR", direction ? rol : ror);
+}
+
+int roxl(Instruction* i)
+{
+    FETCH_EAE(i->dst);
+    uint32_t initial = GETE(i->dst);
+
+    int rotation = GETE(i->src) % i->size;
+    if (rotation > 0)
+    {
+        SETE(i->dst, initial << rotation | EXTENDED(i->context) << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation - 1));
+
+        uint8_t shifted_out = BIT(initial, i->size - rotation);
+        CARRY_SET(i->context, shifted_out);
+        EXTENDED_SET(i->context, shifted_out);
+    }
+    else
+        CARRY_SET(i->context, EXTENDED(i->context));
+
+    uint32_t result = GETE(i->dst);
+    OVERFLOW_SET(i->context, false);
+    ZERO_SET(i->context, result == 0);
+    NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
+
+    return 2 * rotation;
+}
+
+int roxr(Instruction* i)
+{
+    FETCH_EAE(i->dst);
+    uint32_t initial = GETE(i->dst);
+
+    int rotation = GETE(i->src) % i->size;
+    if (rotation > 0)
+    {
+        SETE(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation + 1) | EXTENDED(i->context) << (i->size - rotation));
+
+        uint8_t shifted_out = BIT(initial, rotation - 1);
+        CARRY_SET(i->context, shifted_out);
+        EXTENDED_SET(i->context, shifted_out);
+    }
+
+    uint32_t result = GETE(i->dst);
+    OVERFLOW_SET(i->context, false);
+    ZERO_SET(i->context, result == 0);
+    NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
+
+    return 2 * rotation;
+}
+
+Instruction* gen_roxd(uint16_t opcode, M68k* m)
+{
+    bool direction = BIT(opcode, 8);
+    return gen_shift_instruction(opcode, m, direction ? "ROXL" : "ROXR", direction ? roxl : roxr);
 }
 
 int swap(Instruction* i)

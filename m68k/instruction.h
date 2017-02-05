@@ -115,6 +115,7 @@ DEFINE_INSTR(subq);
 DEFINE_INSTR(asd);
 DEFINE_INSTR(lsd);
 DEFINE_INSTR(rod);
+DEFINE_INSTR(roxd);
 DEFINE_INSTR(swap);
 
 // Data transfer

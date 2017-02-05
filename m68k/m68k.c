@@ -108,7 +108,7 @@ uint32_t m68k_step(M68k* m)
 {
     printf("%#06X\n", m->pc);
     // Manual breakpoint!
-    if (m->pc == 0x18C8)
+    if (m->pc == 0x18FC)
         printf("breakpoint\n");
 
     // Fetch the instruction
