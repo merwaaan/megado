@@ -86,6 +86,7 @@ Operand* operand_make_address_register_indirect(int n, struct Instruction*);
 Operand* operand_make_address_register_indirect_predec(int n, struct Instruction*);
 Operand* operand_make_address_register_indirect_postinc(int n, struct Instruction*);
 Operand* operand_make_address_register_indirect_displacement(int n, struct Instruction*);
+Operand* operand_make_address_register_indirect_index(int n, struct Instruction*);
 Operand* operand_make_immediate_value(Size, struct Instruction*);
 Operand* operand_make_absolute_short(struct Instruction*);
 Operand* operand_make_absolute_long(struct Instruction*);

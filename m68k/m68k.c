@@ -19,7 +19,7 @@ M68k* m68k_make()
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
         // Manual breakpoint!
-        if (opcode == 0x0200)
+        if (opcode == 0x1031)
         {
             printf("breakpoint\n");
         }

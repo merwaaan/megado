@@ -21,6 +21,8 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
         return operand_make_address_register_indirect_predec(pattern & 7, instr);
     case 0x28:
         return operand_make_address_register_indirect_displacement(pattern & 7, instr);
+    case 0x30:
+        return operand_make_address_register_indirect_index(pattern & 7, instr);
     case 0x38:
         switch (pattern & 7)
         {
@@ -50,34 +52,34 @@ int operand_tostring(Operand* operand, uint32_t ea, char* buffer)
 
     switch (operand->type)
     {
-    /*case DataRegister:
-        return sprintf(buffer, "D%d", operand->n);
-    case AddressRegister:
-        return sprintf(buffer, "A%d", operand->n);
-    case AddressRegisterIndirect:
-        return sprintf(buffer, "(A%d)", operand->n);
-    case AddressRegisterIndirectPreDec:
-        return sprintf(buffer, "-(A%d)", operand->n);
-    case AddressRegisterIndirectPostInc:
-        return sprintf(buffer, "(A%d)+", operand->n);
-    case AddressRegisterIndirectDisplacement:
-        return sprintf(buffer, "TODO (%010x,A%d)", GET_FROM_EA(operand, ea), operand->n);
-    case AddressRegisterIndirectIndexed:
-        return sprintf(buffer, "TODO %d(A%d, D%d)", operand->n, operand->n, operand->n);
-    case ProgramCounterDisplacement:
-        return sprintf(buffer, "TODO (%010x,PC)", GET_FROM_EA(operand, ea));
-    case ProgramCounterIndexed:
-        return sprintf(buffer, "TODO %d(PC, D%d)", operand->n, operand->n);
-    case Immediate:
-        return sprintf(buffer, "#$%04x", GET_FROM_EA(operand, ea));
-    case Value:
-        return sprintf(buffer, "#$%04x", operand->n);
-    case AbsoluteShort:
-        return sprintf(buffer, "($%06x).w", GET_FROM_EA(operand, ea));
-    case AbsoluteLong:
-        return sprintf(buffer, "($%010x).l", GET_FROM_EA(operand, ea));
-    case BranchingOffset:
-        return sprintf(buffer, "$%010x", GET_FROM_EA(operand, ea) + 2);*/
+        /*case DataRegister:
+            return sprintf(buffer, "D%d", operand->n);
+        case AddressRegister:
+            return sprintf(buffer, "A%d", operand->n);
+        case AddressRegisterIndirect:
+            return sprintf(buffer, "(A%d)", operand->n);
+        case AddressRegisterIndirectPreDec:
+            return sprintf(buffer, "-(A%d)", operand->n);
+        case AddressRegisterIndirectPostInc:
+            return sprintf(buffer, "(A%d)+", operand->n);
+        case AddressRegisterIndirectDisplacement:
+            return sprintf(buffer, "TODO (%010x,A%d)", GET_FROM_EA(operand, ea), operand->n);
+        case AddressRegisterIndirectIndexed:
+            return sprintf(buffer, "TODO %d(A%d, D%d)", operand->n, operand->n, operand->n);
+        case ProgramCounterDisplacement:
+            return sprintf(buffer, "TODO (%010x,PC)", GET_FROM_EA(operand, ea));
+        case ProgramCounterIndexed:
+            return sprintf(buffer, "TODO %d(PC, D%d)", operand->n, operand->n);
+        case Immediate:
+            return sprintf(buffer, "#$%04x", GET_FROM_EA(operand, ea));
+        case Value:
+            return sprintf(buffer, "#$%04x", operand->n);
+        case AbsoluteShort:
+            return sprintf(buffer, "($%06x).w", GET_FROM_EA(operand, ea));
+        case AbsoluteLong:
+            return sprintf(buffer, "($%010x).l", GET_FROM_EA(operand, ea));
+        case BranchingOffset:
+            return sprintf(buffer, "$%010x", GET_FROM_EA(operand, ea) + 2);*/
     default:
         return 0;
     }
@@ -321,10 +323,10 @@ Operand* operand_make_address_register_indirect_predec(int n, struct Instruction
 }
 
 /*
- * Address indirect with displacement
- *
- * The data is located at the stored address + a displacement (extension)
- */
+* Address indirect with displacement
+*
+* The data is located at the stored address + a displacement (extension)
+*/
 
 uint32_t address_indirect_displacement_ea(Operand* o)
 {
@@ -338,6 +340,40 @@ Operand* operand_make_address_register_indirect_displacement(int n, struct Instr
     op->instruction = instr;
     op->type = AddressRegisterIndirectDisplacement;
     op->fetch_ea_func = address_indirect_displacement_ea;
+    op->get_value_func = get_from_ea;
+    op->set_value_func = set_from_ea;
+    op->n = n;
+    return op;
+}
+
+/*
+* Address indirect with index
+*
+* The data is located at the stored address + a displacement + the value of an index register (extensions)
+*
+* https://github.com/traviscross/libzrtp/blob/master/third_party/bnlib/lbn68000.c#L342
+*/
+
+#define INDEX_REGISTER(extension) (BIT(extension, 15) ? o->instruction->context->address_registers : o->instruction->context->data_registers)[FRAGMENT(extension, 14, 12)]
+#define INDEX_LENGTH(extension) (BIT(extension, 11))
+#define INDEX_SCALE(extension) (FRAGMENT(extension, 10, 9)) // Not supported by the 68000
+#define INDEX_DISPLACEMENT(extension) (FRAGMENT(extension, 7, 0))
+
+uint32_t address_indirect_index_ea(Operand* o)
+{
+    M68k* m = o->instruction->context;
+    uint32_t ext = m68k_fetch(m);
+
+    uint32_t index = INDEX_LENGTH(ext) ? INDEX_REGISTER(ext) : SIGN_EXTEND_W(INDEX_REGISTER(ext));
+    return m->address_registers[o->n] + (int8_t) INDEX_DISPLACEMENT(ext) + (int32_t)index;
+}
+
+Operand* operand_make_address_register_indirect_index(int n, struct Instruction* instr)
+{
+    Operand* op = calloc(1, sizeof(Operand));
+    op->instruction = instr;
+    op->type = AddressRegisterIndirectIndexed;
+    op->fetch_ea_func = address_indirect_index_ea;
     op->get_value_func = get_from_ea;
     op->set_value_func = set_from_ea;
     op->n = n;
