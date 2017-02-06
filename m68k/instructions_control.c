@@ -49,11 +49,11 @@ int bra(Instruction* i)
     uint8_t displacement = i->context->instruction_register & 0xFF;
 
     if (displacement == 0) // TODO step
-        i->context->pc += (int16_t) m68k_read_w(i->context, i->context->pc + 2);
+        i->context->pc += (int16_t)m68k_read_w(i->context, i->context->pc + 2);
     else if (displacement == 0xFF) // TODO step
-        i->context->pc += (int32_t) m68k_read_l(i->context, i->context->pc + 2);
+        i->context->pc += (int32_t)m68k_read_l(i->context, i->context->pc + 2);
     else
-        i->context->pc += (int8_t) displacement;
+        i->context->pc += (int8_t)displacement;
 
     return 0;
 }
@@ -137,8 +137,14 @@ Instruction* gen_jmp(uint16_t opcode, M68k* m)
 
 int jsr(Instruction* i)
 {
-    //m68k_push(i->context->pc);
-    //m68k_jump(GET(i->src));
+    uint32_t ea = FETCH_EAE(i->dst) - 2; // TODO always -2?
+
+    // Push the address following the instruction to the stack
+    i->context->address_registers[7] -= 4;
+    m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
+
+    // Jump to the location specified by ea
+    i->context->pc = ea;
 
     return 0;
 }
@@ -146,7 +152,7 @@ int jsr(Instruction* i)
 Instruction* gen_jsr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "JSR", jsr);
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
 
@@ -163,7 +169,7 @@ Instruction* gen_nop(uint16_t opcode, M68k* m)
 int rts(Instruction* i)
 {
     //i->context->pc = m68k_pop();
-    
+
     i->context->pc = m68k_read_l(i->context, i->context->address_registers[7]);
     i->context->address_registers[7] += 4;
 

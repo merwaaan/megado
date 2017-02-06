@@ -32,6 +32,8 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
             return operand_make_absolute_long(instr);
         case 2:
             return operand_make_pc_displacement(instr);
+        case 3:
+            return operand_make_pc_index(instr);
         case 4:
             return operand_make_immediate_value(instr->size, instr);
         }
@@ -489,6 +491,34 @@ Operand* operand_make_pc_displacement(Instruction* instr)
     op->type = ProgramCounterDisplacement;
     op->instruction = instr;
     op->fetch_ea_func = pc_displacement_word_ea;
+    op->get_value_func = get_from_ea;
+    op->set_value_func = set_from_ea;
+    return op;
+}
+
+/*
+* Program Counter with index
+*
+* The data is located at the current program counter + a displacement + the value of an index register (extensions)
+*
+* https://github.com/traviscross/libzrtp/blob/master/third_party/bnlib/lbn68000.c#L342
+*/
+
+uint32_t pc_index_ea(Operand* o)
+{
+    M68k* m = o->instruction->context;
+    uint32_t ext = m68k_fetch(m);
+
+    uint32_t index = INDEX_LENGTH(ext) ? INDEX_REGISTER(ext) : SIGN_EXTEND_W(INDEX_REGISTER(ext));
+    return m->pc + (int8_t)INDEX_DISPLACEMENT(ext) + (int32_t)index;
+}
+
+Operand* operand_make_pc_index(struct Instruction* instr)
+{
+    Operand* op = calloc(1, sizeof(Operand));
+    op->instruction = instr;
+    op->type = ProgramCounterIndexed;
+    op->fetch_ea_func = pc_index_ea;
     op->get_value_func = get_from_ea;
     op->set_value_func = set_from_ea;
     return op;

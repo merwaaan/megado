@@ -91,6 +91,7 @@ Operand* operand_make_immediate_value(Size, struct Instruction*);
 Operand* operand_make_absolute_short(struct Instruction*);
 Operand* operand_make_absolute_long(struct Instruction*);
 Operand* operand_make_pc_displacement(struct Instruction*);
+Operand* operand_make_pc_index(struct Instruction*);
 Operand* operand_make_value(int value, struct Instruction*);
 Operand* operand_make_branching_offset(struct Instruction*, Size size);
 
