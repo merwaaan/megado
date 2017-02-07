@@ -9,6 +9,7 @@ void setup()
 {
     memory = calloc(0x1000000, sizeof(uint8_t));
     m = m68k_make();
+    m68k_initialize(m);
 }
 
 void teardown()

@@ -31,13 +31,13 @@ MU_TEST(test_data_b)
     o->instruction->size = Byte;
 
     DATA(1, 0xFF);
-    ASSERT(0xFF, GET(o));
+    ASSERT(0xFF, GETE(o));
 
     SET(o, 0x1F);
     DATA_CHECK(1, 0x1F);
 
     DATA(1, 0xAAFF);
-    ASSERT(0xFF, GET(o));
+    ASSERT(0xFF, GETE(o));
 
     SET(o, 0x1F1F);
     DATA_CHECK(1, 0xAA1F);
