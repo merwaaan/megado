@@ -149,7 +149,7 @@ int roxl(Instruction* i)
     int rotation = GETE(i->src) % i->size;
     if (rotation > 0)
     {
-        SETE(i->dst, initial << rotation | EXTENDED(i->context) << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation - 1));
+        SETE(i->dst, initial << rotation | EXTENDED(i->context) << (rotation - 1) | FRAGMENT(initial, i->size - 1, i->size - rotation - 1));
 
         uint8_t shifted_out = BIT(initial, i->size - rotation);
         CARRY_SET(i->context, shifted_out);
