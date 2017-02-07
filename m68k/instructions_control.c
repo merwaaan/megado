@@ -17,7 +17,7 @@ int bcc(Instruction* i)
 
     if (i->condition->func(i->context))
     {
-        i->context->pc += offset > MAX_VALUE(Byte) ? (int16_t)offset : (int8_t)offset;
+        i->context->pc += offset > MAX_VALUE(Byte) ? (int16_t)offset : (int8_t)offset; // TODO not sure, could .w but the value is low???
 
         return 0; // TODO timings
     }
@@ -46,14 +46,13 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
 
 int bra(Instruction* i)
 {
-    uint8_t displacement = i->context->instruction_register & 0xFF;
-
-    if (displacement == 0) // TODO step
-        i->context->pc += (int16_t)m68k_read_w(i->context, i->context->pc + 2);
-    else if (displacement == 0xFF) // TODO step
-        i->context->pc += (int32_t)m68k_read_l(i->context, i->context->pc + 2);
+    uint32_t offset = i->context->instruction_register & 0xFF;
+    if (offset == 0)
+        i->context->pc += (int16_t)m68k_fetch(i->context) - 2;
+    else if (offset == 0xFF)
+        i->context->pc += (int32_t)(m68k_fetch(i->context) << 16 | m68k_fetch(i->context)) - 4;
     else
-        i->context->pc += (int8_t)displacement;
+        i->context->pc += (int8_t)offset;
 
     return 0;
 }
@@ -66,15 +65,16 @@ Instruction* gen_bra(uint16_t opcode, M68k* m)
 int bsr(Instruction* i)
 {
     uint32_t offset = i->context->instruction_register & 0xFF;
-    if (offset == 0)
-        offset = m68k_fetch(i->context);
-    else if (offset == 0xFF)
-        offset = m68k_fetch(i->context) << 16 | m68k_fetch(i->context);
 
     i->context->address_registers[7] -= 4;
-    m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
+    m68k_write_l(i->context, i->context->address_registers[7], i->context->pc + (offset == 0 ? 2 : 0) + (offset == 0xFF ? 4 : 0));
 
-    i->context->pc += offset - 2;
+    if (offset == 0)
+        i->context->pc += (int16_t) m68k_fetch(i->context) - 2;
+    else if (offset == 0xFF)
+        i->context->pc += (int32_t) (m68k_fetch(i->context) << 16 | m68k_fetch(i->context)) - 4;
+    else
+        i->context->pc += (int8_t) offset;
 
     return 0;
 }
