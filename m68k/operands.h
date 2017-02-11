@@ -24,8 +24,8 @@ struct Instruction;
 
 // Effective address resolution function
 //
-// Calling such a function might trigger a data fetch so it must not be done
-// more than once per instruction call.
+// Calling such a function might trigger a data fetch and advance the program counter
+// so it must not be done more than once per instruction call.
 typedef uint32_t(*FetchEAFunc)(struct Operand* o);
 
 // Read/Write functions to access an operand's data after its effective address has been computed

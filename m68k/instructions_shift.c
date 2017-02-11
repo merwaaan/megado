@@ -23,11 +23,11 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
 
 int asr(Instruction* i)
 {
-    uint8_t shift = FETCH_EA_AND_GET(i->src);
+    uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
+    uint8_t shift = FETCH_EA_AND_GET(i->src);
     if (shift > 0)
     {
-        uint32_t initial = FETCH_EA_AND_GET(i->dst);
         uint32_t shifted_in = BIT(initial, i->size - 1) ? MASK_BELOW(0xFFFFFFFF, i->size - shift) : 0;
         SET(i->dst, initial >> shift | shifted_in);
         
@@ -46,11 +46,11 @@ int asr(Instruction* i)
 
 int lsl(Instruction* i)
 {
-    uint8_t shift = GET(i->src);
+    uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
+    uint8_t shift = GET(i->src);
     if (shift > 0)
     {
-        uint32_t initial = FETCH_EA_AND_GET(i->dst);
         SET(i->dst, initial << shift);
 
         uint8_t last_shifted_out = shift > i->size ? 0 : BIT(initial, i->size - shift);
@@ -68,11 +68,11 @@ int lsl(Instruction* i)
 
 int lsr(Instruction* i)
 {
-    uint8_t shift = GET(i->src);
+    uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
+    uint8_t shift = GET(i->src);
     if (shift > 0)
     {
-        uint32_t initial = FETCH_EA_AND_GET(i->dst);
         SET(i->dst, initial >> shift);
 
         uint8_t last_shifted_out = shift > i->size ? 0 : BIT(initial, shift - 1);
@@ -102,10 +102,9 @@ Instruction* gen_lsd(uint16_t opcode, M68k* m)
 
 int rol(Instruction* i)
 {
-    FETCH_EA(i->dst);
-    uint32_t initial = GET(i->dst);
-    int rotation = GET(i->src) % i->size;
+    uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
+    int rotation = GET(i->src) % i->size;
     if (rotation > 0)
     {
         SET(i->dst, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
@@ -125,10 +124,9 @@ int rol(Instruction* i)
 
 int ror(Instruction* i)
 {
-    FETCH_EA(i->dst);
-    uint32_t initial = GET(i->dst);
-    int rotation = GET(i->src) % i->size;
+    uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
+    int rotation = GET(i->src) % i->size;
     if (rotation > 0)
     {
         SET(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));
@@ -154,8 +152,7 @@ Instruction* gen_rod(uint16_t opcode, M68k* m)
 
 int roxl(Instruction* i)
 {
-    FETCH_EA(i->dst);
-    uint32_t initial = GET(i->dst);
+    uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
     int rotation = GET(i->src) % i->size;
     if (rotation > 0)
