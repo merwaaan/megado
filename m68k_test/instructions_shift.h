@@ -270,9 +270,72 @@ MU_TEST(test_asr)
 
 MU_TEST(test_rol)
 {
+    DATA(6, 1);
+
+    DATA(1, 0x12345678);
+    RUN("1110 110 1 00 1 11 001"); // ROL.b D6, D1 (1 bit)
+    DATA_CHECK(1, 0x123456F0);
+    STATUS_CHECK(0, 1, 0, 0, 0);
+
+    DATA(1, 0x12345687);
+    RUN("1110 110 1 00 1 11 001"); // ROL.b D6, D1 (1 bit)
+    DATA_CHECK(1, 0x1234560F);
+    STATUS_CHECK(0, 0, 0, 0, 1);
+
+    DATA(1, 0x12345678);
+    RUN("1110 110 1 01 1 11 001"); // ROL.w D6, D1 (1 bit)
+    DATA_CHECK(1, 0x1234ACF0);
+    STATUS_CHECK(0, 1, 0, 0, 0);
+
+    DATA(1, 0x1234D687);
+    RUN("1110 110 1 01 1 11 001"); // ROL.w D6, D1 (1 bit)
+    DATA_CHECK(1, 0x1234AD0F);
+    STATUS_CHECK(0, 1, 0, 0, 1);
+
+    DATA(1, 0x12345678);
+    RUN("1110 110 1 10 1 11 001"); // ROL.l D6, D1 (1 bit)
+    DATA_CHECK(1, 0x2468ACF0);
+    STATUS_CHECK(0, 0, 0, 0, 0);
+
+    DATA(1, 0x92345678);
+    RUN("1110 110 1 10 1 11 001"); // ROL.l D6, D1 (1 bit)
+    DATA_CHECK(1, 0x2468ACF1);
+    STATUS_CHECK(0, 0, 0, 0, 1);
+
+    DATA(6, 12);
+
+    DATA(1, 0x12345678);
+    RUN("1110 110 1 00 1 11 001"); // ROL.b D6, D1 (12 bits)
+    DATA_CHECK(1, 0x12345687);
+    STATUS_CHECK(0, 1, 0, 0, 1);
+
+    DATA(1, 0x12345687);
+    RUN("1110 110 1 00 1 11 001"); // ROL.b D6, D1 (12 bits)
+    DATA_CHECK(1, 0x12345678);
+    STATUS_CHECK(0, 0, 0, 0, 0);
+
+    DATA(1, 0x12345678);
+    RUN("1110 110 1 01 1 11 001"); // ROL.w D6, D1 (12 bits)
+    DATA_CHECK(1, 0x12348567);
+    STATUS_CHECK(0, 1, 0, 0, 1);
+
+    DATA(1, 0x1234D687);
+    RUN("1110 110 1 01 1 11 001"); // ROL.w D6, D1 (12 bits)
+    DATA_CHECK(1, 0x12347D68);
+    STATUS_CHECK(0, 0, 0, 0, 0);
+
+    DATA(1, 0x12345678);
+    RUN("1110 110 1 10 1 11 001"); // ROL.l D6, D1 (12 bits)
+    DATA_CHECK(1, 0x45678123);
+    STATUS_CHECK(0, 0, 0, 0, 1);
+
+    DATA(1, 0x92345678);
+    RUN("1110 110 1 10 1 11 001"); // ROL.l D6, D1 (12 bits)
+    DATA_CHECK(1, 0x45678923);
+    STATUS_CHECK(0, 0, 0, 0, 1);
 }
 
-MU_TEST(test_ror)
+MU_TEST(test_ror) // TODO
 {
 }
 
