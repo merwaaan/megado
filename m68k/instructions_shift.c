@@ -23,20 +23,20 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
 
 int asr(Instruction* i)
 {
-    uint8_t shift = FETCH_EA_AND_GETE(i->src);
+    uint8_t shift = FETCH_EA_AND_GET(i->src);
 
     if (shift > 0)
     {
-        uint32_t initial = FETCH_EA_AND_GETE(i->dst);
+        uint32_t initial = FETCH_EA_AND_GET(i->dst);
         uint32_t shifted_in = BIT(initial, i->size - 1) ? MASK_BELOW(0xFFFFFFFF, i->size - shift) : 0;
-        SETE(i->dst, initial >> shift | shifted_in);
+        SET(i->dst, initial >> shift | shifted_in);
         
         uint8_t last_shifted_out = shift > i->size ? 0 : BIT(initial, shift - 1);
         CARRY_SET(i->context, last_shifted_out);
         EXTENDED_SET(i->context, last_shifted_out);
     }
 
-    uint32_t result = GETE(i->dst);
+    uint32_t result = GET(i->dst);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -46,19 +46,19 @@ int asr(Instruction* i)
 
 int lsl(Instruction* i)
 {
-    uint8_t shift = GETE(i->src);
+    uint8_t shift = GET(i->src);
 
     if (shift > 0)
     {
-        uint32_t initial = FETCH_EA_AND_GETE(i->dst);
-        SETE(i->dst, initial << shift);
+        uint32_t initial = FETCH_EA_AND_GET(i->dst);
+        SET(i->dst, initial << shift);
 
         uint8_t last_shifted_out = shift > i->size ? 0 : BIT(initial, i->size - shift);
         EXTENDED_SET(i->context, last_shifted_out);
         CARRY_SET(i->context, last_shifted_out);
     }
 
-    uint32_t result = GETE(i->dst);
+    uint32_t result = GET(i->dst);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -68,19 +68,19 @@ int lsl(Instruction* i)
 
 int lsr(Instruction* i)
 {
-    uint8_t shift = GETE(i->src);
+    uint8_t shift = GET(i->src);
 
     if (shift > 0)
     {
-        uint32_t initial = FETCH_EA_AND_GETE(i->dst);
-        SETE(i->dst, initial >> shift);
+        uint32_t initial = FETCH_EA_AND_GET(i->dst);
+        SET(i->dst, initial >> shift);
 
         uint8_t last_shifted_out = shift > i->size ? 0 : BIT(initial, shift - 1);
         CARRY_SET(i->context, last_shifted_out);
         EXTENDED_SET(i->context, last_shifted_out);
     }
 
-    uint32_t result = GETE(i->dst);
+    uint32_t result = GET(i->dst);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -102,20 +102,20 @@ Instruction* gen_lsd(uint16_t opcode, M68k* m)
 
 int rol(Instruction* i)
 {
-    FETCH_EAE(i->dst);
-    uint32_t initial = GETE(i->dst);
-    int rotation = GETE(i->src) % i->size;
+    FETCH_EA(i->dst);
+    uint32_t initial = GET(i->dst);
+    int rotation = GET(i->src) % i->size;
 
     if (rotation > 0)
     {
-        SETE(i->dst, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
+        SET(i->dst, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
 
         CARRY_SET(i->context, BIT(initial, i->size - rotation));
     }
     else
         CARRY_SET(i->context, 0);
 
-    uint32_t result = GETE(i->dst);
+    uint32_t result = GET(i->dst);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -125,20 +125,20 @@ int rol(Instruction* i)
 
 int ror(Instruction* i)
 {
-    FETCH_EAE(i->dst);
-    uint32_t initial = GETE(i->dst);
-    int rotation = GETE(i->src) % i->size;
+    FETCH_EA(i->dst);
+    uint32_t initial = GET(i->dst);
+    int rotation = GET(i->src) % i->size;
 
     if (rotation > 0)
     {
-        SETE(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));
+        SET(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));
 
         CARRY_SET(i->context, BIT(initial, i->size - rotation));
     }
     else
         CARRY_SET(i->context, 0);
 
-    uint32_t result = GETE(i->dst);
+    uint32_t result = GET(i->dst);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -154,13 +154,13 @@ Instruction* gen_rod(uint16_t opcode, M68k* m)
 
 int roxl(Instruction* i)
 {
-    FETCH_EAE(i->dst);
-    uint32_t initial = GETE(i->dst);
+    FETCH_EA(i->dst);
+    uint32_t initial = GET(i->dst);
 
-    int rotation = GETE(i->src) % i->size;
+    int rotation = GET(i->src) % i->size;
     if (rotation > 0)
     {
-        SETE(i->dst, initial << rotation | EXTENDED(i->context) << (rotation - 1) | FRAGMENT(initial, i->size - 1, i->size - rotation - 1));
+        SET(i->dst, initial << rotation | EXTENDED(i->context) << (rotation - 1) | FRAGMENT(initial, i->size - 1, i->size - rotation - 1));
 
         uint8_t shifted_out = BIT(initial, i->size - rotation);
         CARRY_SET(i->context, shifted_out);
@@ -169,7 +169,7 @@ int roxl(Instruction* i)
     else
         CARRY_SET(i->context, EXTENDED(i->context));
 
-    uint32_t result = GETE(i->dst);
+    uint32_t result = GET(i->dst);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -179,20 +179,20 @@ int roxl(Instruction* i)
 
 int roxr(Instruction* i)
 {
-    FETCH_EAE(i->dst);
-    uint32_t initial = GETE(i->dst);
+    FETCH_EA(i->dst);
+    uint32_t initial = GET(i->dst);
 
-    int rotation = GETE(i->src) % i->size;
+    int rotation = GET(i->src) % i->size;
     if (rotation > 0)
     {
-        SETE(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation + 1) | EXTENDED(i->context) << (i->size - rotation));
+        SET(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation + 1) | EXTENDED(i->context) << (i->size - rotation));
 
         uint8_t shifted_out = BIT(initial, rotation - 1);
         CARRY_SET(i->context, shifted_out);
         EXTENDED_SET(i->context, shifted_out);
     }
 
-    uint32_t result = GETE(i->dst);
+    uint32_t result = GET(i->dst);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
@@ -208,11 +208,11 @@ Instruction* gen_roxd(uint16_t opcode, M68k* m)
 
 int swap(Instruction* i)
 {
-    int32_t value = GETE(i->src);
+    int32_t value = GET(i->src);
     int16_t lo = value & 0xFFFF;
     int16_t hi = value >> 16;
     int32_t result = (lo << 16) | hi;
-    SETE(i->src, result);
+    SET(i->src, result);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);

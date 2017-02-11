@@ -42,10 +42,10 @@ Instruction* gen_boolean_instruction_immediate(uint16_t opcode, M68k* m, char* n
 int and(Instruction* i)
 {
     // Fetch both effective addresses to cover the two variants: AND ea, Dn & AND Dn, ea
-    FETCH_EAE(i->src);
-    FETCH_EAE(i->dst);
-    uint32_t result = GETE(i->src) & GETE(i->dst);
-    SETE(i->dst, result);
+    FETCH_EA(i->src);
+    FETCH_EA(i->dst);
+    uint32_t result = GET(i->src) & GET(i->dst);
+    SET(i->dst, result);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -67,9 +67,9 @@ Instruction* gen_andi(uint16_t opcode, M68k* m)
 
 int eor(Instruction* i)
 {
-    FETCH_EAE(i->dst);
-    uint32_t result = GETE(i->src) ^ GETE(i->dst);
-    SETE(i->dst, result);
+    FETCH_EA(i->dst);
+    uint32_t result = GET(i->src) ^ GET(i->dst);
+    SET(i->dst, result);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -91,9 +91,9 @@ Instruction* gen_eori(uint16_t opcode, M68k* m)
 
 int or (Instruction* i)
 {
-    FETCH_EAE(i->dst);
-    uint32_t result = GETE(i->src) | GETE(i->dst);
-    SETE(i->dst, result);
+    FETCH_EA(i->dst);
+    uint32_t result = GET(i->src) | GET(i->dst);
+    SET(i->dst, result);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -115,10 +115,10 @@ Instruction* gen_ori(uint16_t opcode, M68k* m)
 
 int not(Instruction* i)
 {
-    FETCH_EAE(i->dst);
-    SETE(i->dst, ~GETE(i->dst));
+    FETCH_EA(i->dst);
+    SET(i->dst, ~GET(i->dst));
 
-    uint32_t result = GETE(i->dst);
+    uint32_t result = GET(i->dst);
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
@@ -137,7 +137,7 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
 
 int scc(Instruction* i)
 {
-    FETCH_EA_AND_SETE(i->dst, i->condition->func(i->context) ? 0xFF : 0);
+    FETCH_EA_AND_SET(i->dst, i->condition->func(i->context) ? 0xFF : 0);
 
     return 0;
 }
@@ -153,7 +153,7 @@ Instruction* gen_scc(uint16_t opcode, M68k* m)
 
 int tst(Instruction* i)
 {
-    uint32_t value = FETCH_EA_AND_GETE(i->src);
+    uint32_t value = FETCH_EA_AND_GET(i->src);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);

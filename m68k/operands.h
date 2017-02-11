@@ -12,15 +12,15 @@ struct Instruction;
  */
 
 // Fetch and store the operand's effective address
-#define FETCH_EAE(operand) (operand)->last_ea = (operand)->fetch_ea_func(operand) 
+#define FETCH_EA(operand) (operand)->last_ea = (operand)->fetch_ea_func(operand) 
 
 // Get/Set the operand's value, the stored effective address will be used
-#define GETE(operand) (operand)->get_value_func((operand)) 
-#define SETE(operand, value) (operand)->set_value_func((operand), (value))
+#define GET(operand) (operand)->get_value_func((operand)) 
+#define SET(operand, value) (operand)->set_value_func((operand), (value))
 
 // Fetch the operand's effective address and then get/set its value, in one call
-#define FETCH_EA_AND_GETE(operand) ((operand)->last_ea = (operand)->fetch_ea_func(operand), (operand)->get_value_func((operand))) 
-#define FETCH_EA_AND_SETE(operand, value) ((operand)->last_ea = (operand)->fetch_ea_func(operand), (operand)->set_value_func((operand), (value)))
+#define FETCH_EA_AND_GET(operand) ((operand)->last_ea = (operand)->fetch_ea_func(operand), (operand)->get_value_func((operand))) 
+#define FETCH_EA_AND_SET(operand, value) ((operand)->last_ea = (operand)->fetch_ea_func(operand), (operand)->set_value_func((operand), (value)))
 
 // Effective address resolution function
 //

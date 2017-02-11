@@ -22,11 +22,11 @@ Instruction* gen_bit_instruction(uint16_t opcode, M68k* m, char* name, Instructi
 
 int bchg(Instruction* i)
 {
-    uint8_t bit = GETE(i->src) % i->size; // TODO
+    uint8_t bit = GET(i->src) % i->size; // TODO
 
-    FETCH_EAE(i->dst);
-    uint32_t initial = GETE(i->dst);
-    SETE(i->dst, BIT_CHG(initial, bit, !BIT(initial, bit)));
+    FETCH_EA(i->dst);
+    uint32_t initial = GET(i->dst);
+    SET(i->dst, BIT_CHG(initial, bit, !BIT(initial, bit)));
 
     ZERO_SET(i->context, BIT(initial, bit) == 0);
 
@@ -40,11 +40,11 @@ Instruction* gen_bchg(uint16_t opcode, M68k* m)
 
 int bclr(Instruction* i)
 {
-    uint8_t bit = GETE(i->src) % i->size;
+    uint8_t bit = GET(i->src) % i->size;
 
-    FETCH_EAE(i->dst);
-    int initial = GETE(i->dst);
-    SETE(i->dst, BIT_CLR(initial, bit));
+    FETCH_EA(i->dst);
+    int initial = GET(i->dst);
+    SET(i->dst, BIT_CLR(initial, bit));
 
     ZERO_SET(i->context, BIT(initial, bit) == 0);
 
@@ -58,11 +58,11 @@ Instruction* gen_bclr(uint16_t opcode, M68k* m)
 
 int bset(Instruction* i)
 {
-    uint8_t bit = GETE(i->src) % i->size;
+    uint8_t bit = GET(i->src) % i->size;
 
-    FETCH_EAE(i->dst);
-    uint32_t initial = GETE(i->dst);
-    SETE(i->dst, BIT_SET(initial, bit));
+    FETCH_EA(i->dst);
+    uint32_t initial = GET(i->dst);
+    SET(i->dst, BIT_SET(initial, bit));
 
     ZERO_SET(i->context, BIT(initial, bit) == 0);
 
@@ -76,10 +76,10 @@ Instruction* gen_bset(uint16_t opcode, M68k* m)
 
 int btst(Instruction* i)
 {
-    int bit = GETE(i->src) % i->size;
+    int bit = GET(i->src) % i->size;
 
-    FETCH_EAE(i->dst);
-    int set = BIT(GETE(i->dst), bit);
+    FETCH_EA(i->dst);
+    int set = BIT(GET(i->dst), bit);
 
     ZERO_SET(i->context, !set);
 
@@ -94,7 +94,7 @@ Instruction* gen_btst(uint16_t opcode, M68k* m)
 int btst_imm(Instruction* i)
 {
     int bit = m68k_fetch(i->context) % i->size;
-    int set = BIT(FETCH_EA_AND_GETE(i->dst), bit);
+    int set = BIT(FETCH_EA_AND_GET(i->dst), bit);
 
     ZERO_SET(i->context, !set);
 

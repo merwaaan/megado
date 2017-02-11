@@ -6,14 +6,14 @@
 
 int add(Instruction* i)
 {
-    FETCH_EAE(i->src);
-    FETCH_EAE(i->dst);
+    FETCH_EA(i->src);
+    FETCH_EA(i->dst);
 
-    uint32_t a = GETE(i->dst);
-    uint32_t b = GETE(i->src);
-    SETE(i->dst, a + b);
+    uint32_t a = GET(i->dst);
+    uint32_t b = GET(i->src);
+    SET(i->dst, a + b);
 
-    uint32_t result = GETE(i->dst);
+    uint32_t result = GET(i->dst);
     CARRY_SET(i->context, CHECK_CARRY_ADD(a, b, i->size));
     OVERFLOW_SET(i->context, CHECK_OVERFLOW_ADD(a, b, i->size));
     ZERO_SET(i->context, result == 0);
@@ -50,14 +50,14 @@ Instruction* gen_add(uint16_t opcode, M68k* m)
 int addq(Instruction* i)
 {
     // Extract the quick value, 0 represents 8
-    uint32_t quick = GETE(i->src);
+    uint32_t quick = GET(i->src);
     if (quick == 0)
         quick = 8;
 
-    uint32_t initial = FETCH_EA_AND_GETE(i->dst);
-    SETE(i->dst, initial + quick);
+    uint32_t initial = FETCH_EA_AND_GET(i->dst);
+    SET(i->dst, initial + quick);
 
-    uint32_t result = GETE(i->dst);
+    uint32_t result = GET(i->dst);
     CARRY_SET(i->context, CHECK_CARRY_ADD(initial, quick, i->size));
     OVERFLOW_SET(i->context, CHECK_OVERFLOW_ADD(initial, quick, i->size));
     ZERO_SET(i->context, result == 0);
@@ -77,7 +77,7 @@ Instruction* gen_addq(uint16_t opcode, M68k* m)
 
 int clr(Instruction* i)
 {
-    FETCH_EA_AND_SETE(i->src, 0);
+    FETCH_EA_AND_SET(i->src, 0);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -97,8 +97,8 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
 
 int cmp(Instruction* i)
 {
-    uint32_t a = GETE(i->dst);
-    uint32_t b = FETCH_EA_AND_GETE(i->src);
+    uint32_t a = GET(i->dst);
+    uint32_t b = FETCH_EA_AND_GET(i->src);
 
     CARRY_SET(i->context, CHECK_CARRY_SUB(a, b, i->size));
     OVERFLOW_SET(i->context, CHECK_OVERFLOW_SUB(a, b, i->size));
@@ -119,7 +119,7 @@ Instruction* gen_cmp(uint16_t opcode, M68k* m)
 
 int ext(Instruction* i)
 {
-    int x = GETE(i->src);
+    int x = GET(i->src);
 
     uint32_t extended;
     switch (i->size) {
@@ -131,7 +131,7 @@ int ext(Instruction* i)
         break;
     }
 
-    SETE(i->src, extended);
+    SET(i->src, extended);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -196,12 +196,12 @@ Instruction* gen_mulu(uint16_t opcode, M68k* m)
 int subq(Instruction* i)
 {
     // Extract the quick value, 0 represents 8
-    uint32_t quick = GETE(i->src);
+    uint32_t quick = GET(i->src);
     if (quick == 0)
         quick = 8;
 
-    uint32_t initial = FETCH_EA_AND_GETE(i->dst);
-    SETE(i->dst, initial - quick);
+    uint32_t initial = FETCH_EA_AND_GET(i->dst);
+    SET(i->dst, initial - quick);
 
     CARRY_SET(i->context, CHECK_CARRY_SUB(initial, quick, i->size));
     OVERFLOW_SET(i->context, CHECK_OVERFLOW_SUB(initial, quick, i->size));

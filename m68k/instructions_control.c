@@ -100,11 +100,11 @@ int dbcc(Instruction* i)
 
     int16_t offset = m68k_fetch(i->context); // TODO should only be read if cond true??
 
-    uint16_t reg = GETE(i->src);
+    uint16_t reg = GET(i->src);
     if (reg > 0)
         i->context->pc += offset - 2;
 
-    SETE(i->src, reg - 1);
+    SET(i->src, reg - 1);
 
     return 0; // TODO timings
 }
@@ -123,7 +123,7 @@ Instruction* gen_dbcc(uint16_t opcode, M68k* m)
 
 int jmp(Instruction* i)
 {
-    i->context->pc = FETCH_EA_AND_GETE(i->src);
+    i->context->pc = FETCH_EA_AND_GET(i->src);
 
     return 0;
 }
@@ -137,7 +137,7 @@ Instruction* gen_jmp(uint16_t opcode, M68k* m)
 
 int jsr(Instruction* i)
 {
-    uint32_t ea = FETCH_EAE(i->dst) - 2; // TODO always -2?
+    uint32_t ea = FETCH_EA(i->dst) - 2; // TODO always -2?
 
     // Push the address following the instruction to the stack
     i->context->address_registers[7] -= 4;
