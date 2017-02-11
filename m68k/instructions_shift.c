@@ -157,11 +157,12 @@ int roxl(Instruction* i)
     int rotation = GET(i->src) % i->size;
     if (rotation > 0)
     {
-        SET(i->dst, initial << rotation | EXTENDED(i->context) << (rotation - 1) | FRAGMENT(initial, i->size - 1, i->size - rotation - 1));
+        uint32_t rotated = rotation > 1 ? FRAGMENT(initial, i->size - 1, i->size - rotation + 1) : 0;
+        SET(i->dst, initial << rotation | EXTENDED(i->context) << (rotation - 1) | rotated);
 
-        uint8_t shifted_out = BIT(initial, i->size - rotation);
-        CARRY_SET(i->context, shifted_out);
-        EXTENDED_SET(i->context, shifted_out);
+        uint8_t last_shifted_out = BIT(initial, i->size - rotation);
+        CARRY_SET(i->context, last_shifted_out);
+        EXTENDED_SET(i->context, last_shifted_out);
     }
     else
         CARRY_SET(i->context, EXTENDED(i->context));
@@ -184,9 +185,9 @@ int roxr(Instruction* i)
     {
         SET(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation + 1) | EXTENDED(i->context) << (i->size - rotation));
 
-        uint8_t shifted_out = BIT(initial, rotation - 1);
-        CARRY_SET(i->context, shifted_out);
-        EXTENDED_SET(i->context, shifted_out);
+        uint8_t last_shifted_out = BIT(initial, rotation - 1);
+        CARRY_SET(i->context, last_shifted_out);
+        EXTENDED_SET(i->context, last_shifted_out);
     }
 
     uint32_t result = GET(i->dst);

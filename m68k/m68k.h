@@ -16,7 +16,7 @@
 #define NEGATIVE(context) BIT(context->status, NEGATIVE_BIT)
 #define EXTENDED(context) BIT(context->status, EXTENDED_BIT)
 
-#define CARRY_SET(context, b) context->status = BIT_CHG(context->status, CARRY_BIT, b) // TODO optim: do not use chg
+#define CARRY_SET(context, b) context->status = BIT_CHG(context->status, CARRY_BIT, b) // TODO optim: do not use chg (or optim bchg)
 #define OVERFLOW_SET(context, b) context->status = BIT_CHG(context->status, OVERFLOW_BIT, b)
 #define ZERO_SET(context, b) context->status = BIT_CHG(context->status, ZERO_BIT, b)
 #define NEGATIVE_SET(context, b) context->status = BIT_CHG(context->status, NEGATIVE_BIT, b)

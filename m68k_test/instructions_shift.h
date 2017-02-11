@@ -24,6 +24,7 @@ MU_TEST(test_lsl) // refactor with asl
     DATA_CHECK(0, 0x2468ACF0);
     STATUS_CHECK(0, 0, 0, 0, 0);
 
+
     DATA(7, 10);
 
     DATA(0, 0x12345678);
@@ -41,6 +42,7 @@ MU_TEST(test_lsl) // refactor with asl
     DATA_CHECK(0, 0xD159E000);
     STATUS_CHECK(0, 1, 0, 0, 0);
 
+
     DATA(2, 5);
 
     DATA(1, 0xF0F0F0F0);
@@ -57,6 +59,7 @@ MU_TEST(test_lsl) // refactor with asl
     RUN("1110 010 1 10 1 01 001"); // LSL.l D2, D1 (5 bits)
     DATA_CHECK(1, 0x1E1E1E00);
     STATUS_CHECK(0, 0, 0, 0, 0);
+
 
     DATA(2, 20);
 
@@ -100,6 +103,7 @@ MU_TEST(test_lsr)
     DATA_CHECK(0, 0x091A2B3C);
     STATUS_CHECK(0, 0, 0, 0, 0);
 
+
     DATA(7, 10);
 
     DATA(0, 0x12345678);
@@ -137,6 +141,7 @@ MU_TEST(test_asl)
     DATA_CHECK(0, 0x2468ACF0);
     STATUS_CHECK(0, 0, 0, 0, 0);
 
+
     DATA(7, 10);
 
     DATA(0, 0x12345678);
@@ -154,6 +159,7 @@ MU_TEST(test_asl)
     DATA_CHECK(0, 0xD159E000);
     STATUS_CHECK(0, 1, 0, 0, 0);
 
+
     DATA(2, 5);
 
     DATA(1, 0xF0F0F0F0);
@@ -170,6 +176,7 @@ MU_TEST(test_asl)
     RUN("1110 010 1 10 1 00 001"); // ASL.l D2, D1 (5 bits)
     DATA_CHECK(1, 0x1E1E1E00);
     STATUS_CHECK(0, 0, 0, 0, 0);
+
 
     DATA(2, 20);
 
@@ -223,6 +230,7 @@ MU_TEST(test_asr)
     DATA_CHECK(1, 0x01E1E1E1);
     STATUS_CHECK(1, 0, 0, 0, 1);
 
+
     DATA(7, 1);
 
     DATA(0, 0x12345601);
@@ -249,6 +257,7 @@ MU_TEST(test_asr)
     RUN("1110 111 0 10 1 00 000"); // ASR.l D7, D0 (1 bit)
     DATA_CHECK(0, 0x091A2B3C);
     STATUS_CHECK(0, 0, 0, 0, 0);
+
 
     DATA(7, 10);
 
@@ -302,6 +311,7 @@ MU_TEST(test_rol)
     DATA_CHECK(1, 0x2468ACF1);
     STATUS_CHECK(0, 0, 0, 0, 1);
 
+
     DATA(6, 12);
 
     DATA(1, 0x12345678);
@@ -341,9 +351,117 @@ MU_TEST(test_ror) // TODO
 
 MU_TEST(test_roxl)
 {
+    DATA(6, 0);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 0);
+    RUN("1110 110 1 00 1 10 001"); // ROXL.b D6, D1 (0 bits)
+    DATA_CHECK(1, 0x12345678);
+    STATUS_CHECK(0, 0, 0, 0, 0);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 1);
+    RUN("1110 110 1 00 1 10 001"); // ROXL.b D6, D1 (0 bits)
+    DATA_CHECK(1, 0x12345678);
+    STATUS_CHECK(1, 0, 0, 0, 1);
+
+
+    DATA(6, 1);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 0);
+    RUN("1110 110 1 00 1 10 001"); // ROXL.b D6, D1 (1 bit)
+    DATA_CHECK(1, 0x123456F0);
+    STATUS_CHECK(0, 1, 0, 0, 0);
+
+    DATA(1, 0x12345687); EXTENDED_SET(m, 0);
+    RUN("1110 110 1 00 1 10 001"); // ROXL.b D6, D1 (1 bit)
+    DATA_CHECK(1, 0x1234560E);
+    STATUS_CHECK(1, 0, 0, 0, 1);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 1);
+    RUN("1110 110 1 00 1 10 001"); // ROXL.b D6, D1 (1 bit)
+    DATA_CHECK(1, 0x123456F1);
+    STATUS_CHECK(0, 1, 0, 0, 0);
+
+    DATA(1, 0x12345687); EXTENDED_SET(m, 1);
+    RUN("1110 110 1 00 1 10 001"); // ROXL.b D6, D1 (1 bit)
+    DATA_CHECK(1, 0x1234560F);
+    STATUS_CHECK(1, 0, 0, 0, 1);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 0);
+    RUN("1110 110 1 01 1 10 001"); // ROXL.w D6, D1 (1 bit)
+    DATA_CHECK(1, 0x1234ACF0);
+    STATUS_CHECK(0, 1, 0, 0, 0);
+
+    DATA(1, 0x1234D678); EXTENDED_SET(m, 0);
+    RUN("1110 110 1 01 1 10 001"); // ROXL.w D6, D1 (1 bit)
+    DATA_CHECK(1, 0x1234ACF0);
+    STATUS_CHECK(1, 1, 0, 0, 1);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 1);
+    RUN("1110 110 1 01 1 10 001"); // ROXL.w D6, D1 (1 bit)
+    DATA_CHECK(1, 0x1234ACF1);
+    STATUS_CHECK(0, 1, 0, 0, 0);
+
+    DATA(1, 0x1234D678); EXTENDED_SET(m, 1);
+    RUN("1110 110 1 01 1 10 001"); // ROXL.w D6, D1 (1 bit)
+    DATA_CHECK(1, 0x1234ACF1);
+    STATUS_CHECK(1, 1, 0, 0, 1);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 0);
+    RUN("1110 110 1 10 1 10 001"); // ROXL.l D6, D1 (1 bit)
+    DATA_CHECK(1, 0x2468ACF0);
+    STATUS_CHECK(0, 0, 0, 0, 0);
+
+    DATA(1, 0x92345678); EXTENDED_SET(m, 0);
+    RUN("1110 110 1 10 1 10 001"); // ROXL.l D6, D1 (1 bit)
+    DATA_CHECK(1, 0x2468ACF0);
+    STATUS_CHECK(1, 0, 0, 0, 1);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 1);
+    RUN("1110 110 1 10 1 10 001"); // ROXL.l D6, D1 (1 bit)
+    DATA_CHECK(1, 0x2468ACF1);
+    STATUS_CHECK(0, 0, 0, 0, 0);
+
+    DATA(1, 0x92345678); EXTENDED_SET(m, 1);
+    RUN("1110 110 1 10 1 10 001"); // ROXL.l D6, D1 (1 bit)
+    DATA_CHECK(1, 0x2468ACF1);
+    STATUS_CHECK(1, 0, 0, 0, 1);
+
+
+    DATA(6, 12);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 0);
+    RUN("1110 110 1 00 1 10 001"); // ROXL.b D6, D1 (12 bits)
+    DATA_CHECK(1, 0x12345683);
+    STATUS_CHECK(1, 1, 0, 0, 1);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 1);
+    RUN("1110 110 1 00 1 10 001"); // ROXL.b D6, D1 (12 bits)
+    DATA_CHECK(1, 0x1234568B);
+    STATUS_CHECK(1, 1, 0, 0, 1);
+
+    // TODO wrong after this point 
+    DATA(1, 0x12345678); EXTENDED_SET(m, 0);
+    RUN("1110 110 1 01 1 10 001"); // ROXL.w D6, D1 (12 bits)
+    DATA_CHECK(1, 0x12348567);
+    STATUS_CHECK(0, 1, 0, 0, 1);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 1);
+    RUN("1110 110 1 01 1 10 001"); // ROXL.w D6, D1 (12 bits)
+    DATA_CHECK(1, 0x12347D68);
+    STATUS_CHECK(0, 0, 0, 0, 0);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 0);
+    RUN("1110 110 1 10 1 10 001"); // ROXL.l D6, D1 (12 bits)
+    DATA_CHECK(1, 0x45678123);
+    STATUS_CHECK(0, 0, 0, 0, 1);
+
+    DATA(1, 0x12345678); EXTENDED_SET(m, 1);
+    RUN("1110 110 1 10 1 10 001"); // ROXL.l D6, D1 (12 bits)
+    DATA_CHECK(1, 0x45678923);
+    STATUS_CHECK(0, 0, 0, 0, 1);
 }
 
-MU_TEST(test_roxr)
+MU_TEST(test_roxr) // TODO
 {
 }
 
