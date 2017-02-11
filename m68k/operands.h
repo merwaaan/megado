@@ -7,16 +7,6 @@
 struct Operand;
 struct Instruction;
 
-// Effective address resolution function
-//
-// Calling such a function might trigger a data fetch so it must not be done
-// more than once per instruction call.
-typedef uint32_t(*FetchEAFunc)(struct Operand* o);
-
-// Read/Write functions to access an operand's data from its effective address.
-typedef uint32_t(*GetValueFunc)(struct Operand* o, uint32_t ea);
-typedef void(*SetValueFunc)(struct Operand* o, uint32_t ea, uint32_t value);
-
 /*
  * Macros to read/write operand data
  */
@@ -25,12 +15,24 @@ typedef void(*SetValueFunc)(struct Operand* o, uint32_t ea, uint32_t value);
 #define FETCH_EAE(operand) (operand)->last_ea = (operand)->fetch_ea_func(operand) 
 
 // Get/Set the operand's value, the stored effective address will be used
-#define GETE(operand) (operand)->get_value_func((operand), (operand)->last_ea) 
-#define SETE(operand, value) (operand)->set_value_func((operand), (operand)->last_ea, (value))
+#define GETE(operand) (operand)->get_value_func((operand)) 
+#define SETE(operand, value) (operand)->set_value_func((operand), (value))
 
-// Fetch the operand's effective address and then get/set its value
-#define FETCH_EA_AND_GETE(operand) (operand)->get_value_func((operand), (operand)->last_ea = (operand)->fetch_ea_func(operand)) 
-#define FETCH_EA_AND_SETE(operand, value) (operand)->set_value_func((operand), (operand)->last_ea = (operand)->fetch_ea_func(operand), (value))
+// Fetch the operand's effective address and then get/set its value, in one call
+#define FETCH_EA_AND_GETE(operand) ((operand)->last_ea = (operand)->fetch_ea_func(operand), (operand)->get_value_func((operand))) 
+#define FETCH_EA_AND_SETE(operand, value) ((operand)->last_ea = (operand)->fetch_ea_func(operand), (operand)->set_value_func((operand), (value)))
+
+// Effective address resolution function
+//
+// Calling such a function might trigger a data fetch so it must not be done
+// more than once per instruction call.
+typedef uint32_t(*FetchEAFunc)(struct Operand* o);
+
+// Read/Write functions to access an operand's data after its effective address has been computed
+//
+// Can be called as many times as necessary.
+typedef uint32_t(*GetValueFunc)(struct Operand* o);
+typedef void(*SetValueFunc)(struct Operand* o, uint32_t value);
 
 // Pre/Post instruction action
 typedef void(*Action)(struct Operand* this);

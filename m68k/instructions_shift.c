@@ -25,18 +25,21 @@ int asr(Instruction* i)
 {
     uint8_t shift = FETCH_EA_AND_GETE(i->src);
 
-    FETCH_EAE(i->dst);
-    uint32_t initial = GETE(i->dst);
-    uint32_t shifted_in = BIT(initial, i->size - 1) ? MASK_BELOW(0xFFFFFFFF, i->size - shift) : 0;
-
-    SETE(i->dst, initial >> shift | shifted_in);
+    if (shift > 0)
+    {
+        uint32_t initial = FETCH_EA_AND_GETE(i->dst);
+        uint32_t shifted_in = BIT(initial, i->size - 1) ? MASK_BELOW(0xFFFFFFFF, i->size - shift) : 0;
+        SETE(i->dst, initial >> shift | shifted_in);
+        
+        uint8_t last_shifted_out = shift > i->size ? 0 : BIT(initial, shift - 1);
+        CARRY_SET(i->context, last_shifted_out);
+        EXTENDED_SET(i->context, last_shifted_out);
+    }
 
     uint32_t result = GETE(i->dst);
-    CARRY_SET(i->context, BIT(initial, 0)); // TODO not sure, should be last bit shifter out?
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
-    EXTENDED_SET(i->context, CARRY(i->context));
 
     return 2 * shift;
 }
@@ -45,16 +48,20 @@ int lsl(Instruction* i)
 {
     uint8_t shift = GETE(i->src);
 
-    FETCH_EAE(i->dst);
-    uint32_t initial = GETE(i->dst);
-    SETE(i->dst, initial << shift);
+    if (shift > 0)
+    {
+        uint32_t initial = FETCH_EA_AND_GETE(i->dst);
+        SETE(i->dst, initial << shift);
+
+        uint8_t last_shifted_out = shift > i->size ? 0 : BIT(initial, i->size - shift);
+        EXTENDED_SET(i->context, last_shifted_out);
+        CARRY_SET(i->context, last_shifted_out);
+    }
 
     uint32_t result = GETE(i->dst);
-    CARRY_SET(i->context, BIT(initial, i->size - 1)); // TODO not sure, should be last bit shifter out?
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
-    EXTENDED_SET(i->context, CARRY(i->context));
 
     return 2 * shift;
 }
@@ -63,16 +70,20 @@ int lsr(Instruction* i)
 {
     uint8_t shift = GETE(i->src);
 
-    FETCH_EAE(i->dst);
-    uint32_t initial = GETE(i->dst);
-    SETE(i->dst, initial >> shift);
+    if (shift > 0)
+    {
+        uint32_t initial = FETCH_EA_AND_GETE(i->dst);
+        SETE(i->dst, initial >> shift);
+
+        uint8_t last_shifted_out = shift > i->size ? 0 : BIT(initial, shift - 1);
+        CARRY_SET(i->context, last_shifted_out);
+        EXTENDED_SET(i->context, last_shifted_out);
+    }
 
     uint32_t result = GETE(i->dst);
-    CARRY_SET(i->context, BIT(initial, 0)); // TODO not sure, should be last bit shifter out?
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
     NEGATIVE_SET(i->context, BIT(result, i->size - 1) == 1);
-    EXTENDED_SET(i->context, CARRY(i->context));
 
     return 2 * shift;
 }

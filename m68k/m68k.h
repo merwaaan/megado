@@ -16,7 +16,7 @@
 #define NEGATIVE(context) BIT(context->status, NEGATIVE_BIT)
 #define EXTENDED(context) BIT(context->status, EXTENDED_BIT)
 
-#define CARRY_SET(context, b) context->status = BIT_CHG(context->status, CARRY_BIT, b)
+#define CARRY_SET(context, b) context->status = BIT_CHG(context->status, CARRY_BIT, b) // TODO optim: do not use chg
 #define OVERFLOW_SET(context, b) context->status = BIT_CHG(context->status, OVERFLOW_BIT, b)
 #define ZERO_SET(context, b) context->status = BIT_CHG(context->status, ZERO_BIT, b)
 #define NEGATIVE_SET(context, b) context->status = BIT_CHG(context->status, NEGATIVE_BIT, b)
@@ -41,7 +41,7 @@ typedef struct M68k {
 
     // Prefetching pipeline containing the two next words of the program stream
     uint16_t prefetch_queue[2];
-    uint64_t prefetch_address;
+    uint32_t prefetch_address;
     uint16_t instruction_register; // Instruction currently being decoded
 
     struct Instruction** opcode_table;

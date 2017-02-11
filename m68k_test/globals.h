@@ -15,6 +15,12 @@
 #define MEM_CHECK_W(a, x) mu_assert_int_eq_hex(x, m68k_read_w(m, a))
 #define MEM_CHECK_L(a, x) mu_assert_int_eq_hex(x, m68k_read_l(m, a))
 
+#define STATUS_CHECK(x, n, z, v, c) mu_assert_int_eq(x, EXTENDED(m)); \
+    mu_assert_int_eq(n, NEGATIVE(m)); \
+    mu_assert_int_eq(z, ZERO(m)); \
+    mu_assert_int_eq(v, OVERFLOW(m)); \
+    mu_assert_int_eq(c, CARRY(m))
+
 #define ASSERT(a, b) mu_assert_int_eq_hex(a, b)
 #define ASSERT_BIN(a, b) mu_assert_int_eq_bin(a, b)
 #define ASSERT_STR(a, b) mu_assert_str_eq(a, b)

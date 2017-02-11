@@ -33,13 +33,13 @@ MU_TEST(test_data_b)
     DATA(1, 0xFF);
     ASSERT(0xFF, GETE(o));
 
-    SET(o, 0x1F);
+    SETE(o, 0x1F);
     DATA_CHECK(1, 0x1F);
 
     DATA(1, 0xAAFF);
     ASSERT(0xFF, GETE(o));
 
-    SET(o, 0x1F1F);
+    SETE(o, 0x1F1F);
     DATA_CHECK(1, 0xAA1F);
 }
 
@@ -51,13 +51,13 @@ MU_TEST(test_data_w)
     DATA(1, 0xFFFF);
     ASSERT(0xFFFF, GET(o));
 
-    SET(o, 0x1F1F);
+    SETE(o, 0x1F1F);
     DATA_CHECK(1, 0x1F1F);
 
     DATA(1, 0xAAAAFFFF);
     ASSERT(0xFFFF, GET(o));
 
-    SET(o, 0xBBBB1F1F);
+    SETE(o, 0xBBBB1F1F);
     DATA_CHECK(1, 0xAAAA1F1F);
 }
 

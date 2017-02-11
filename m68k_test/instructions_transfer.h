@@ -29,7 +29,7 @@ MU_TEST(test_exg_data_address)
 MU_TEST(test_lea)
 {
     DATA(1, 0xF0F0); ADDR(0, 0xFFFF0000);
-    RUN("0100 000 111 000001"); // LEA D1, A1
+    RUN("0100 000 111 000001"); // LEA D1, A0
     ADDR_CHECK(0, 0xF0F0);
 }
 

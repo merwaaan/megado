@@ -172,20 +172,20 @@ int operand_get_cycles(Operand* o)
 }
 
 
-void noop(Operand* o, uint32_t instr_address, uint32_t value)
+void noop(Operand* o, uint32_t value)
 {
 }
 
 // Most operands that point to memory data will use those to get/set values from the effective address
 
-uint32_t get_from_ea(Operand* o, uint32_t ea)
+uint32_t get_from_ea(Operand* o)
 {
-    return m68k_read(o->instruction->context, o->instruction->size, ea);
+    return m68k_read(o->instruction->context, o->instruction->size, o->last_ea);
 }
 
-void set_from_ea(Operand* o, uint32_t ea, uint32_t value)
+void set_from_ea(Operand* o, uint32_t value)
 {
-    m68k_write(o->instruction->context, o->instruction->size, ea, value);
+    m68k_write(o->instruction->context, o->instruction->size, o->last_ea, value);
 }
 
 // Placeholder function for addressing modes that do not have effective address to compute
@@ -199,12 +199,17 @@ uint32_t fetch_no_ea(Operand* o)
  * Data register
  */
 
-uint32_t data_register_get(Operand* o, uint32_t instr_address)
+uint32_t data_register_ea(Operand* o)
 {
     return MASK_ABOVE_INC(o->instruction->context->data_registers[o->n], o->instruction->size);
 }
 
-void data_register_set(Operand* o, uint32_t instr_address, uint32_t value)
+uint32_t data_register_get(Operand* o)
+{
+    return MASK_ABOVE_INC(o->instruction->context->data_registers[o->n], o->instruction->size);
+}
+
+void data_register_set(Operand* o, uint32_t value)
 {
     o->instruction->context->data_registers[o->n] =
         MASK_BELOW(o->instruction->context->data_registers[o->n], o->instruction->size) |
@@ -216,7 +221,7 @@ Operand* operand_make_data_register(int n, Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = DataRegister;
-    op->fetch_ea_func = fetch_no_ea;
+    op->fetch_ea_func = data_register_ea;
     op->get_value_func = data_register_get;
     op->set_value_func = data_register_set;
     op->n = n;
@@ -227,12 +232,17 @@ Operand* operand_make_data_register(int n, Instruction* instr)
  * Address register
  */
 
-uint32_t address_register_get(Operand* o, uint32_t instr_address)
+uint32_t address_register_ea(Operand* o)
 {
     return MASK_ABOVE_INC(o->instruction->context->address_registers[o->n], o->instruction->size);
 }
 
-void address_register_set(Operand* o, uint32_t instr_address, uint32_t value)
+uint32_t address_register_get(Operand* o)
+{
+    return MASK_ABOVE_INC(o->instruction->context->address_registers[o->n], o->instruction->size);
+}
+
+void address_register_set(Operand* o, uint32_t value)
 {
     o->instruction->context->address_registers[o->n] =
         MASK_BELOW(o->instruction->context->address_registers[o->n], o->instruction->size) |
@@ -244,7 +254,7 @@ Operand* operand_make_address_register(int n, Instruction* instr)
     Operand* op = calloc(1, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegister;
-    op->fetch_ea_func = fetch_no_ea;
+    op->fetch_ea_func = address_register_ea;
     op->get_value_func = address_register_get;
     op->set_value_func = address_register_set;
     op->n = n;
@@ -353,7 +363,7 @@ Operand* operand_make_address_register_indirect_displacement(int n, struct Instr
 *
 * The data is located at the stored address + a displacement + the value of an index register (extensions)
 *
-* https://github.com/traviscross/libzrtp/blob/master/third_party/bnlib/lbn68000.c#L342
+* Extension word format: https://github.com/traviscross/libzrtp/blob/master/third_party/bnlib/lbn68000.c#L342
 */
 
 #define INDEX_REGISTER(extension) (BIT(extension, 15) ? o->instruction->context->address_registers : o->instruction->context->data_registers)[FRAGMENT(extension, 14, 12)]
@@ -528,7 +538,7 @@ Operand* operand_make_pc_index(struct Instruction* instr)
 * Value directly stored within the opcode
 */
 
-uint32_t value_get(Operand* o, uint32_t instr_address)
+uint32_t value_get(Operand* o)
 {
     return o->n;
 }
@@ -548,17 +558,17 @@ Operand* operand_make_value(int value, struct Instruction* instr)
  * TODO can't I factor this?
  */
 
-uint32_t branching_offset_byte_get(Operand* o, uint32_t ea)
+uint32_t branching_offset_byte_get(Operand* o)
 {
     return o->instruction->context->instruction_register & 0xFF;
 }
 
-uint32_t branching_offset_word_get(Operand* o, uint32_t ea) // TODO
+uint32_t branching_offset_word_get(Operand* o) // TODO
 {
     return m68k_read_w(o->instruction->context, o->instruction->context->instruction_register + 2);
 }
 
-uint32_t branching_offset_long_get(Operand* o, uint32_t ea) // TODO
+uint32_t branching_offset_long_get(Operand* o) // TODO
 {
     return m68k_read_l(o->instruction->context, o->instruction->context->instruction_register + 2);
 }
