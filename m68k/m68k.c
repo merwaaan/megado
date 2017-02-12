@@ -116,8 +116,11 @@ uint32_t m68k_step(M68k* m)
 {
     printf("%#06X\n", m->pc);
     // Manual breakpoint!
-    if (m->pc == 0x37e) // 37a ok
+    if (m->pc == 0x2e1c) // 37a ok
         printf("breakpoint\n");
+
+    // TODO Sonic@37E, D5 is wrong
+    // TODO Sonic@29a8 weird status move
 
     // Fetch the instruction
     //uint32_t instr_pc = m->pc;
