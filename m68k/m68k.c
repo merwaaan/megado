@@ -60,7 +60,11 @@ void m68k_initialize(M68k* m)
 
 DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 {
-    uint16_t opcode = m68k_read_w(m, instr_address);
+    // Save the current PC, will be restored at the end
+    uint32_t initial_pc = m->pc;
+
+    m->pc = instr_address;
+    uint16_t opcode = m68k_fetch(m);
 
     Instruction* instr = m->opcode_table[opcode];
     if (instr == NULL)
@@ -91,15 +95,18 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     pos += sprintf(decoded->mnemonics + pos, "%s ", size_symbol);
 
     if (instr->src != NULL)
-        pos += operand_tostring(instr->src, instr_address, decoded->mnemonics + pos);
+        pos += operand_tostring(instr->src, decoded->mnemonics + pos);
 
     if (instr->src != NULL && instr->dst != NULL)
         pos += sprintf(decoded->mnemonics + pos, ", ");
 
     if (instr->dst != NULL)
-        pos += operand_tostring(instr->dst, instr_address, decoded->mnemonics + pos);
+        pos += operand_tostring(instr->dst, decoded->mnemonics + pos);
 
     decoded->mnemonics[pos] = '\0';
+
+    // Restore the initial PC
+    m->pc = initial_pc;
 
     return decoded;
 }
@@ -108,7 +115,7 @@ uint32_t m68k_step(M68k* m)
 {
     printf("%#06X\n", m->pc);
     // Manual breakpoint!
-    if (m->pc == 0x34e) // 37a ok
+    if (m->pc == 0x18c8 && m->data_registers[4] == 0xA || m->pc == 0x18AC) // 37a ok
         printf("breakpoint\n");
 
     // Fetch the instruction
@@ -124,17 +131,15 @@ uint32_t m68k_step(M68k* m)
     }
     else
     {
-        //DecodedInstruction* d = m68k_decode(m, instr_pc);
+        DecodedInstruction* d = m68k_decode(m, m->pc - 2);
+        printf("%s\n", d->mnemonics);
 
         //if (m->instruction_callback != NULL)
         //    m->instruction_callback(m);
 
         m->cycles += instruction_execute(instr);
 
-        //m->pc += instr->total_length;
-        // TODO can only address 2^24 bytes in practice
-
-        //free(d);
+        free(d);
     }
 
     return m->pc;
@@ -181,7 +186,7 @@ uint16_t m68k_fetch(M68k* m)
 
         m->prefetch_queue[0] = m68k_read_w(m, m->pc);
         m->prefetch_queue[1] = m68k_read_w(m, m->pc + 2);
-        
+
         return word;
     }
 

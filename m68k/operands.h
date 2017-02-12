@@ -80,7 +80,7 @@ typedef struct Operand
     int n;
 } Operand;
 
-int operand_tostring(Operand* operand, uint32_t instr_address, char* buffer);
+int operand_tostring(Operand* operand, char* buffer); // TODO make private in decoding code?
 
 Operand* operand_make_data_register(int n, struct Instruction*); // TODO put instr first to be consistent with the order modules
 Operand* operand_make_address_register(int n, struct Instruction*);

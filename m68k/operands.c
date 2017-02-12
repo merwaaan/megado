@@ -47,41 +47,49 @@ void operand_free(Operand* operand)
     free(operand);
 }
 
-int operand_tostring(Operand* operand, uint32_t ea, char* buffer)
+int operand_tostring(Operand* operand, char* buffer)
 {
     if (operand == NULL)
         return 0;
 
     switch (operand->type)
     {
-        /*case DataRegister:
-            return sprintf(buffer, "D%d", operand->n);
-        case AddressRegister:
-            return sprintf(buffer, "A%d", operand->n);
-        case AddressRegisterIndirect:
-            return sprintf(buffer, "(A%d)", operand->n);
-        case AddressRegisterIndirectPreDec:
-            return sprintf(buffer, "-(A%d)", operand->n);
-        case AddressRegisterIndirectPostInc:
-            return sprintf(buffer, "(A%d)+", operand->n);
-        case AddressRegisterIndirectDisplacement:
-            return sprintf(buffer, "TODO (%010x,A%d)", GET_FROM_EA(operand, ea), operand->n);
-        case AddressRegisterIndirectIndexed:
-            return sprintf(buffer, "TODO %d(A%d, D%d)", operand->n, operand->n, operand->n);
-        case ProgramCounterDisplacement:
-            return sprintf(buffer, "TODO (%010x,PC)", GET_FROM_EA(operand, ea));
-        case ProgramCounterIndexed:
-            return sprintf(buffer, "TODO %d(PC, D%d)", operand->n, operand->n);
-        case Immediate:
-            return sprintf(buffer, "#$%04x", GET_FROM_EA(operand, ea));
-        case Value:
-            return sprintf(buffer, "#$%04x", operand->n);
-        case AbsoluteShort:
-            return sprintf(buffer, "($%06x).w", GET_FROM_EA(operand, ea));
-        case AbsoluteLong:
-            return sprintf(buffer, "($%010x).l", GET_FROM_EA(operand, ea));
-        case BranchingOffset:
-            return sprintf(buffer, "$%010x", GET_FROM_EA(operand, ea) + 2);*/
+    case DataRegister:
+        return sprintf(buffer, "D%d", operand->n);
+    case AddressRegister:
+        return sprintf(buffer, "A%d", operand->n);
+    case AddressRegisterIndirect:
+        return sprintf(buffer, "(A%d)", operand->n);
+    case AddressRegisterIndirectPreDec:
+        return sprintf(buffer, "-(A%d)", operand->n);
+    case AddressRegisterIndirectPostInc:
+        return sprintf(buffer, "(A%d)+", operand->n);
+    case AddressRegisterIndirectDisplacement:
+    {
+        int16_t displacement = m68k_fetch(operand->instruction->context);
+        uint32_t target = operand->instruction->context->address_registers[operand->n] + displacement;
+        return sprintf(buffer, "(%010x,A%d) [%010x]", displacement, operand->n, target);
+    }
+    case AddressRegisterIndirectIndexed:
+        return sprintf(buffer, "TODO %d(A%d, D%d)", operand->n, operand->n, operand->n);
+    case ProgramCounterDisplacement:
+    {
+        int16_t displacement = m68k_fetch(operand->instruction->context);
+        uint32_t target = operand->instruction->context->pc + displacement - 2;
+        return sprintf(buffer, "(%010x,PC) [%010x]", displacement, target);
+    }
+    case ProgramCounterIndexed:
+        return sprintf(buffer, "TODO %d(PC, D%d)", operand->n, operand->n);
+    case Immediate:
+        return sprintf(buffer, "#$%04x", FETCH_EA_AND_GET(operand));
+    case Value:
+        return sprintf(buffer, "#$%04x", operand->n);
+    case AbsoluteShort:
+        return sprintf(buffer, "($%06x).w", FETCH_EA(operand, ea));
+    case AbsoluteLong:
+        return sprintf(buffer, "($%010x).l", FETCH_EA(operand, ea));
+    case BranchingOffset:
+        return sprintf(buffer, "$%010x", FETCH_EA_AND_GET(operand, ea) + 2);
     default:
         return 0;
     }
