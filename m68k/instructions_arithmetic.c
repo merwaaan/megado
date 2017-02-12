@@ -97,7 +97,7 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
 
 int cmp(Instruction* i)
 {
-    uint32_t a = GET(i->dst);
+    uint32_t a = FETCH_EA_AND_GET(i->dst);
     uint32_t b = FETCH_EA_AND_GET(i->src);
 
     CARRY_SET(i->context, CHECK_CARRY_SUB(a, b, i->size));
@@ -114,6 +114,15 @@ Instruction* gen_cmp(uint16_t opcode, M68k* m)
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    return i;
+}
+
+Instruction* gen_cmpi(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "CMP", cmp);
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+    i->src = operand_make_immediate_value(i->size, i);
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
 

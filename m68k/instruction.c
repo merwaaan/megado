@@ -28,6 +28,7 @@ void instruction_free(Instruction* instr)
 static Pattern all_patterns[] =
 {
     { 0x0200, 0xFF00, &gen_andi },
+    { 0x0C00, 0xFF00, &gen_cmpi },
     { 0x0800, 0xFFC0, &gen_btst_imm },
     { 0x0100, 0xF1C0, &gen_btst },
     { 0x0140, 0xF1C0, &gen_bchg }, // TODO other bchg form

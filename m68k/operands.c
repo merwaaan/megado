@@ -85,11 +85,11 @@ int operand_tostring(Operand* operand, char* buffer)
     case Value:
         return sprintf(buffer, "#$%04x", operand->n);
     case AbsoluteShort:
-        return sprintf(buffer, "($%06x).w", FETCH_EA(operand, ea));
+        return sprintf(buffer, "($%06x).w", FETCH_EA(operand));
     case AbsoluteLong:
-        return sprintf(buffer, "($%010x).l", FETCH_EA(operand, ea));
+        return sprintf(buffer, "($%010x).l", FETCH_EA(operand));
     case BranchingOffset:
-        return sprintf(buffer, "$%010x", FETCH_EA_AND_GET(operand, ea) + 2);
+        return sprintf(buffer, "$%010x", FETCH_EA_AND_GET(operand) + 2);
     default:
         return 0;
     }
