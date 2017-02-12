@@ -88,6 +88,10 @@ uint16_t m68k_fetch(M68k* m);
 
 // -----
 // The following I/O functions must be implemented
+//
+// Note: While the 68000 handles 32-bit addresses, its address
+// bus is 24-bit. The I/O functions must take that into account
+// (eg. by masking the addresses by 0xFFFFFF).
 // -----
 
 uint8_t m68k_read_b(M68k*, uint32_t address);

@@ -7,6 +7,8 @@
 
 uint8_t m68k_read_b(M68k* m, uint32_t address)
 {
+    address &= 0xFFFFFF; // 24-bit address bus
+
     switch (address)
     {
     // TODO temp, simulate z80
@@ -52,11 +54,13 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     // TODO Byte-wide writes quirks for VDP ???
     // http://www.tmeeco.eu/BitShit/CMDHW.TXT
 
-    GENESIS(m)->memory[address] = value;
+    GENESIS(m)->memory[address & 0xFFFFFF] = value;
 }
 
 void m68k_write_w(M68k* m, uint32_t address, uint16_t value)
 {
+    address &= 0xFFFFFF;
+
     switch (address)
     {
         // VDP data port

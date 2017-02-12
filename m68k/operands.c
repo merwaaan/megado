@@ -377,7 +377,7 @@ uint32_t address_indirect_index_ea(Operand* o)
     uint32_t ext = m68k_fetch(m);
 
     uint32_t index = INDEX_LENGTH(ext) ? INDEX_REGISTER(ext) : SIGN_EXTEND_W(INDEX_REGISTER(ext));
-    return m->address_registers[o->n] + (int8_t) INDEX_DISPLACEMENT(ext) + (int32_t)index;
+    return m->address_registers[o->n] + (int8_t)INDEX_DISPLACEMENT(ext) + (int32_t)index;
 }
 
 Operand* operand_make_address_register_indirect_index(int n, struct Instruction* instr)
@@ -454,7 +454,8 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
 
 uint32_t absolute_short_ea(Operand* o)
 {
-    return m68k_fetch(o->instruction->context);
+    uint16_t address = m68k_fetch(o->instruction->context);
+    return SIGN_EXTEND_W(address);
 }
 
 Operand* operand_make_absolute_short(Instruction* instr)
