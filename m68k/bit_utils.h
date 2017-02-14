@@ -39,6 +39,10 @@
 
 #define SIGN_BIT(x, size) BIT(x, size - 1)
 
+#define SIGN_EXTEND_B(x) (((x) & 0xFF) | (BIT((x), 7) ? 0xFF00 : 0)) // Byte -> word
+#define SIGN_EXTEND_W(x) (((x) & 0xFFFF) | (BIT((x), 15) ? 0xFFFF0000 : 0)) // Word -> long
+#define SIGN_EXTEND_B_L(x) (((x) & 0xFF) | (BIT((x), 7) ? 0xFFFFFFFFFFFFFF00 : 0)) // Byte -> long
+
 // http://teaching.idallen.com/dat2343/10f/notes/040_overflow.txt
 #define CHECK_CARRY_ADD(a, b, size) (MASK_ABOVE_INC((a) + (b), (size)) < (a))
 #define CHECK_CARRY_SUB(a, b, size) (MASK_ABOVE_INC((a) - (b), (size)) > (a))

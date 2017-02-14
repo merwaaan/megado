@@ -22,9 +22,9 @@
 #define NEGATIVE_SET(context, b) context->status = BIT_CHG(context->status, NEGATIVE_BIT, b)
 #define EXTENDED_SET(context, b) context->status = BIT_CHG(context->status, EXTENDED_BIT, b)
 
-#define SIGN_EXTEND_B(x) (((x) & 0xFF) | (BIT((x), 7) ? 0xFF00 : 0))
-#define SIGN_EXTEND_W(x) (((x) & 0xFFFF) | (BIT((x), 15) ? 0xFFFF0000 : 0))
-#define SIGN_EXTEND_B_L(x) (((x) & 0xFF) | (BIT((x), 7) ? 0xFFFFFFFFFFFFFF00 : 0))
+#define STATUS_TRACE_MODE(context) FRAGMENT((context)->status, 15, 14)
+#define STATUS_SUPERVISOR_MODE(context) BIT((context)->status, 13)
+#define STATUS_INTERRUPT_MASK(context) FRAGMENT((context)->status, 10, 8)
 
 struct Instruction;
 struct DecodedInstruction;
@@ -39,9 +39,12 @@ typedef struct M68k {
     uint32_t pc;
     uint64_t cycles;
 
-    // Prefetching pipeline containing the two next words of the program stream
-    uint16_t prefetch_queue[2];
-    uint32_t prefetch_address;
+    // Level of any pending interrupt (negative values means no interrupts)
+    int pending_interrupt;
+
+    // Prefetching pipeline
+    uint16_t prefetch_queue[2]; // The two next words of the program stream
+    uint32_t prefetch_address; // Address of the value at the head of the queue
     uint16_t instruction_register; // Instruction currently being decoded
 
     struct Instruction** opcode_table;
@@ -49,7 +52,7 @@ typedef struct M68k {
     // Callbacks
     CallbackFunc instruction_callback;
 
-    // Arbitrary user-defined data associated with this M68000 instance
+    // Arbitrary user-defined data associated with this 68000 instance
     void* user_data;
 } M68k;
 
@@ -64,13 +67,11 @@ typedef struct {
 M68k* m68k_make();
 void m68k_free(M68k*);
 
-struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
-
 // Prepare the CPU for execution (stack pointer, program start, initial prefetch...)
 void m68k_initialize(M68k*);
 
 // Execute one instruction and return the current program counter value
-uint32_t m68k_step(M68k*); 
+uint32_t m68k_step(M68k*);
 
 uint32_t m68k_read(M68k*, Size size, uint32_t address);
 void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);
@@ -85,6 +86,15 @@ void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);
 // http://ataristeven.exxoshost.co.uk/txt/Prefetch.txt
 // "Assembly Language and Systems Programming for the M68000 Family", p. 790
 uint16_t m68k_fetch(M68k* m);
+
+// Interrupt handling
+//
+// Requested interrupts will be filtered depending on the current mask.
+// Pending interrupts will be serviced after the current instruction.
+void m68k_request_interrupt(M68k* m, uint8_t level);
+void m68k_handle_interrupt(M68k* m);
+
+struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
 
 // -----
 // The following I/O functions must be implemented

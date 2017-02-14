@@ -139,7 +139,7 @@ int jsr(Instruction* i)
 {
     uint32_t ea = FETCH_EA(i->dst) - 2; // TODO always -2?
 
-    // Push the address following the instruction to the stack
+    // Push the address following the instruction onto the stack
     i->context->address_registers[7] -= 4;
     m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
 

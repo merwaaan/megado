@@ -202,3 +202,44 @@ uint16_t m68k_fetch(M68k* m)
     m->prefetch_queue[1] = m68k_read_w(m, m->pc + 2);
     return word;
 }
+
+#define IRQ_VECTOR_OFFSET 104
+
+// TODO filter/record interrupt but only service it on the next step
+
+void m68k_request_interrupt(M68k* m, uint8_t level)
+{
+    // Ignore low-priority interrupts (except for level 7, which is non-maskable)
+    if (level <= STATUS_INTERRUPT_MASK(m) && level != 7)
+        return;
+
+    m->pending_interrupt = level;
+}
+
+void m68k_handle_interrupt(M68k* m)
+{
+    if (m->pending_interrupt < 0)
+        return;
+
+    // Push the current PC onto the stack
+    m->address_registers[7] -= 4;
+    m68k_write_l(m, m->address_registers[7], m->pc);
+
+    // Push the status register onto the stack
+    m->address_registers[7] -= 2;
+    m68k_write_w(m, m->address_registers[7], m->status);
+
+    // Update the interrupt mask
+    m->status = m->status & 0xF8FF | m->pending_interrupt << 8;
+
+    m->pc = m68k_read_l(m, IRQ_VECTOR_OFFSET + m->pending_interrupt);
+}
+
+void reti(Instruction* i)
+{
+    i->context->status = m68k_read_l(i->context, i->context->address_registers[7]);
+    i->context->address_registers[7] += 4;
+
+    i->context->pc = m68k_read_l(i->context, i->context->address_registers[7]);
+    i->context->address_registers[7] += 4;
+}
