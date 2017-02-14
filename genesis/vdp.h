@@ -5,6 +5,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define HBLANK_IRQ 4
+#define VBLANK_IRQ 6
+
 // Extract color components from a palette word
 #define RED(c) FRAGMENT((c), 3, 1)
 #define GREEN(c) FRAGMENT((c), 7, 5)
@@ -97,6 +100,8 @@ typedef struct Vdp
     int dma_type;
 
     bool dma_in_progress;
+
+    M68k* cpu;
 
     SDL_Window* window;
     SDL_Renderer* renderer;

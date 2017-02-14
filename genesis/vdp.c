@@ -1,11 +1,13 @@
+#include <m68k/m68k.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "vdp.h"
 
-Vdp* vdp_make()
+Vdp* vdp_make(M68k* cpu)
 {
     Vdp* v = calloc(1, sizeof(Vdp));
+    v->cpu = cpu;
     v->vram = calloc(0x10000, sizeof(uint8_t));
     v->cram = calloc(64, sizeof(uint16_t));
     v->vsram = calloc(40, sizeof(uint16_t));
@@ -245,8 +247,25 @@ void vdp_write_control(Vdp* v, uint16_t value)
     }
 }
 
+int pixel = 0;
+int line = 0;
+
 void vdp_draw(Vdp* v)
 {
+    ++pixel;
+    if (pixel > 480)
+    {
+        ++line;
+        m68k_request_interrupt(v->cpu, HBLANK_IRQ);
+    }
+    if (line > 320)
+    {
+        m68k_request_interrupt(v->cpu, VBLANK_IRQ);
+    }
+
+    // State of the art emulation accuracy
+
+
     /*if (v->renderer == NULL)
         return;
 
