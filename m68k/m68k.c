@@ -11,6 +11,7 @@
 M68k* m68k_make()
 {
     M68k* m68k = calloc(1, sizeof(M68k));
+    m68k->pending_interrupt = -1;
 
     // Generate every possible opcode
 
@@ -115,8 +116,9 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 uint32_t m68k_step(M68k* m)
 {
     printf("%#06X\n", m->pc);
+
     // Manual breakpoint!
-    if (m->pc == 0x2e1c) // 37a ok
+    if (m->pc == 0x0b10) // 37a ok
         printf("breakpoint\n");
 
     // TODO Sonic@37E, D5 is wrong
@@ -143,6 +145,8 @@ uint32_t m68k_step(M68k* m)
         //    m->instruction_callback(m);
 
         m->cycles += instruction_execute(instr);
+
+        m68k_handle_interrupt(m);
 
         //free(d);
     }
@@ -203,7 +207,7 @@ uint16_t m68k_fetch(M68k* m)
     return word;
 }
 
-#define IRQ_VECTOR_OFFSET 104
+#define IRQ_VECTOR_OFFSET 96
 
 // TODO filter/record interrupt but only service it on the next step
 
@@ -232,7 +236,9 @@ void m68k_handle_interrupt(M68k* m)
     // Update the interrupt mask
     m->status = m->status & 0xF8FF | m->pending_interrupt << 8;
 
-    m->pc = m68k_read_l(m, IRQ_VECTOR_OFFSET + m->pending_interrupt);
+    m->pc = m68k_read_l(m, IRQ_VECTOR_OFFSET + m->pending_interrupt * 4);
+
+    m->pending_interrupt = -1;
 }
 
 void reti(Instruction* i)

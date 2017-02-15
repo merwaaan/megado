@@ -123,44 +123,63 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
 
 int movem(Instruction* i)
 {
-    // TODO
+    // TODO (refactor)
     // incomplete version, this opcode is super confusing
 
     uint16_t mask = m68k_fetch(i->context);
 
-    uint32_t cursor = i->context->address_registers[i->src->n] & 0xFFFFFF;
+    Operand* ea = i->src != NULL ? i->src : i->dst;
+    uint32_t offset = FETCH_EA(ea);
+    
+    // Revert the initial pre-increment (hackish)
+    /*if (ea->type == AddressRegisterIndirectPreDec)
+        i->context->address_registers[ea->n] += size_in_bytes(ea->instruction->size);*/
 
     int moved = 0;
     for (int m = 0; m < 16; ++m)
         if (BIT(mask, m))
         {
+            // In pre-decrement mode, increment before EACH transfer
+            if (ea->type == AddressRegisterIndirectPreDec)
+                ea->pre_func(ea);
+
             // memory -> register
             if (i->src != NULL)
             {
                 uint32_t* reg = m < 8 ? i->context->data_registers + m : i->context->address_registers + m - 8;
 
-                *reg = m68k_read(i->context, i->size, cursor);
+                *reg = m68k_read(i->context, i->size, offset);
 
                 if (i->size == Word)
                     *reg = SIGN_EXTEND_W(*reg);
-
-                // In post-increment mode, increment after EACH transfer
-                if (i->src->type == AddressRegisterIndirectPostInc)
-                    i->src->post_func(i->src);
             }
             // register -> memory
             else
             {
-                // TODO
+                uint32_t reg = m < 8 ? i->context->address_registers[7 - m] : i->context->data_registers[7 - (m - 8)];
+
+                if (i->size == Word)
+                    reg = SIGN_EXTEND_W(reg);
+
+                m68k_write(i->context, i->size, offset, reg);
             }
 
-            cursor += i->size == 16 ? 2 : 4;
+            // In post-increment mode, increment after EACH transfer
+            if (ea->type == AddressRegisterIndirectPostInc)
+                ea->post_func(ea);
+
+            // TODO just fetch_ea instead of computing offset manually?
+            if (ea->type == AddressRegisterIndirectPostInc)
+                offset += i->size == 16 ? 2 : 4;
+            else if (ea->type == AddressRegisterIndirectPreDec)
+                offset -= i->size == 16 ? 2 : 4;
+
             ++moved;
         }
 
     // Revert the initial post-increment (hackish)
-    if (i->src->type == AddressRegisterIndirectPostInc)
-        i->context->address_registers[i->src->n] -= size_in_bytes(i->src->instruction->size);
+    if (ea->type == AddressRegisterIndirectPostInc)
+        i->context->address_registers[ea->n] -= size_in_bytes(ea->instruction->size);
 
     return 4 * moved;
 }

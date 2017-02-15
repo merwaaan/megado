@@ -78,7 +78,7 @@ uint32_t genesis_step(Genesis* g)
 {
     uint32_t pc = m68k_step(g->m68k);
 
-    //vdp_draw(g->vdp);
+    vdp_draw(g->vdp);
 
     return pc;
 }
