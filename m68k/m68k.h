@@ -46,6 +46,7 @@ typedef struct M68k {
     uint16_t prefetch_queue[2]; // The two next words of the program stream
     uint32_t prefetch_address; // Address of the value at the head of the queue
     uint16_t instruction_register; // Instruction currently being decoded
+    uint32_t instruction_address; // Instruction currently being decoded
 
     struct Instruction** opcode_table;
 

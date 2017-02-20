@@ -6,11 +6,8 @@
 
 int add(Instruction* i)
 {
-    FETCH_EA(i->src);
-    FETCH_EA(i->dst);
-
-    uint32_t a = GET(i->dst);
-    uint32_t b = GET(i->src);
+    uint32_t b = FETCH_EA_AND_GET(i->src);
+    uint32_t a = FETCH_EA_AND_GET(i->dst);
     SET(i->dst, a + b);
 
     uint32_t result = GET(i->dst);
@@ -47,6 +44,21 @@ Instruction* gen_add(uint16_t opcode, M68k* m)
     return i;
 }
 
+Instruction* gen_adda(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "ADDA", not_implemented);
+    return i;
+}
+
+Instruction* gen_addi(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "ADDI", add);
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+    i->src = operand_make_immediate_value(i->size, i);
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}
+
 int addq(Instruction* i)
 {
     // Extract the quick value, 0 represents 8
@@ -75,6 +87,13 @@ Instruction* gen_addq(uint16_t opcode, M68k* m)
     return i;
 }
 
+
+Instruction* gen_addx(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "ADDX", not_implemented);
+    return i;
+}
+
 int clr(Instruction* i)
 {
     FETCH_EA_AND_SET(i->src, 0);
@@ -97,8 +116,8 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
 
 int cmp(Instruction* i)
 {
-    uint32_t a = FETCH_EA_AND_GET(i->dst);
     uint32_t b = FETCH_EA_AND_GET(i->src);
+    uint32_t a = FETCH_EA_AND_GET(i->dst);
 
     CARRY_SET(i->context, CHECK_CARRY_SUB(a, b, i->size));
     OVERFLOW_SET(i->context, CHECK_OVERFLOW_SUB(a, b, i->size));
@@ -117,12 +136,36 @@ Instruction* gen_cmp(uint16_t opcode, M68k* m)
     return i;
 }
 
+Instruction* gen_cmpa(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "CMPA", not_implemented);
+    return i;
+}
+
 Instruction* gen_cmpi(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "CMP", cmp);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_immediate_value(i->size, i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}
+
+Instruction* gen_cmpm(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "SUB", not_implemented);
+    return i;
+}
+
+Instruction* gen_divs(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "DIVS", not_implemented);
+    return i;
+}
+
+Instruction* gen_divu(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "DIVU", not_implemented);
     return i;
 }
 
@@ -171,6 +214,12 @@ int muls(Instruction* i)
     return 0;
 }
 
+
+Instruction* gen_muls(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "MULS", not_implemented);
+    return i;
+}/*
 Instruction* gen_muls(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "MULS", muls);
@@ -178,7 +227,7 @@ Instruction* gen_muls(uint16_t opcode, M68k* m)
     i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
-}
+}*/
 
 int mulu(Instruction* i)
 {
@@ -195,9 +244,63 @@ int mulu(Instruction* i)
 
 Instruction* gen_mulu(uint16_t opcode, M68k* m)
 {
+    Instruction* i = instruction_make(m, "MULU", not_implemented);
+    return i;
+}
+/*
+Instruction* gen_mulu(uint16_t opcode, M68k* m)
+{
     Instruction* i = instruction_make(m, "MULU", mulu);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    i->src = operand_make_data_register(FRAGaMENT(opcode, 11, 9), i);
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}*/
+
+Instruction* gen_neg(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "NEG", not_implemented);
+    return i;
+}
+
+Instruction* gen_negx(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "NEGX", not_implemented);
+    return i;
+}
+
+int sub(Instruction* i)
+{
+    uint32_t b = FETCH_EA_AND_GET(i->src);
+    uint32_t a = FETCH_EA_AND_GET(i->dst);
+    SET(i->dst, a - b);
+
+    CARRY_SET(i->context, CHECK_CARRY_SUB(a, b, i->size));
+    OVERFLOW_SET(i->context, CHECK_OVERFLOW_SUB(a, b, i->size));
+    ZERO_SET(i->context, a == b);
+    NEGATIVE_SET(i->context, BIT(a - b, i->size - 1));
+    EXTENDED_SET(i->context, CARRY(i->context));
+
+    return 0;
+}
+
+Instruction* gen_sub(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "SUB", not_implemented);
+    return i;
+}
+
+Instruction* gen_suba(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "SUBA", not_implemented);
+    return i;
+}
+
+Instruction* gen_subi(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "SUBI", sub);
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+    i->src = operand_make_immediate_value(i->size, i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
@@ -216,6 +319,7 @@ int subq(Instruction* i)
     OVERFLOW_SET(i->context, CHECK_OVERFLOW_SUB(initial, quick, i->size));
     ZERO_SET(i->context, initial == quick);
     NEGATIVE_SET(i->context, BIT(initial - quick, i->size - 1));
+    EXTENDED_SET(i->context, CARRY(i->context));
 
     return 0;
 }
@@ -226,5 +330,11 @@ Instruction* gen_subq(uint16_t opcode, M68k* m)
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}
+
+Instruction* gen_subx(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "SUBX", not_implemented);
     return i;
 }

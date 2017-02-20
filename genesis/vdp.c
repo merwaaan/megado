@@ -87,8 +87,6 @@ void vdp_write_data(Vdp* v, uint16_t value)
 
             v->dma_in_progress = false;
         }
-
-        // TODO other DMA modes
     }
     else
     {
@@ -115,6 +113,7 @@ uint16_t vdp_read_control(Vdp* v)
     v->pending_command = false;
     // TODO
     return
+        0x3400 |
         (false << 9) | // FIFO not empty
         (false << 8) | // FIFO not full
         (false << 7) | // Vertical interrupt occurred
@@ -232,17 +231,56 @@ void vdp_write_control(Vdp* v, uint16_t value)
     // Data address set
     else
     {
-        if (!v->pending_command) {
+        if (!v->pending_command)
+        {
             v->access_mode = (v->access_mode & 0xFC) | FRAGMENT(value, 15, 14); // B15-14 -> B1-0 of access mode
             v->access_address = (v->access_address & 0xC000) | FRAGMENT(value, 13, 0); // B13-0 -> B13-0 of address
 
             v->pending_command = true;
         }
-        else {
+        else
+        {
             v->access_mode = (v->access_mode & 3) | (FRAGMENT(value, 7, 4) << 2); // B7-4 -> B5-2 of access mode
             v->access_address = (v->access_address & 0x3FFF) | (FRAGMENT(value, 1, 0) << 14); // B1-0 -> B15-14 of address
 
             v->pending_command = false;
+
+            // Memory to VRAM transfer
+            // TODO confused. difference bw dma type & access mode?
+            if (v->dma_enabled && v->dma_type == 1)
+            {
+                // to CRAM
+                if ((v->access_mode & 0x1F) == 3)
+                {
+                    // TODO do not freeze during the transfer
+                    v->dma_in_progress = true;
+
+                    int from = v->dma_address;
+                    int to = v->dma_address + v->dma_length;
+                    for (int i = from; i < to; i += v->auto_increment)
+                        v->cram[i] = m68k_read_w(v->cpu, i);
+
+                    v->dma_in_progress = false;
+                }
+                // to VRAM
+                if ((v->access_mode & 0x1F) == 1)
+                {
+                    // TODO do not freeze during the transfer
+                    v->dma_in_progress = true;
+
+                    for (int i = 0; i < v->dma_length; i += v->auto_increment)
+                    {
+                        int source = v->dma_address + i;
+                        uint8_t value = m68k_read_w(v->cpu, source);
+
+                        int destination = v->access_address + i;
+                        v->vram[destination] = NIBBLE_HI(value); // TODO optim, compute hi/lo once
+                        v->vram[destination + 1] = NIBBLE_LO(value);
+                    }
+
+                    v->dma_in_progress = false;
+                }
+            }
         }
     }
 }
@@ -255,12 +293,18 @@ void vdp_draw(Vdp* v)
     ++pixel;
     if (pixel > 480)
     {
+        pixel = 0;
         ++line;
-        m68k_request_interrupt(v->cpu, HBLANK_IRQ);
+
+        if (v->hblank_enabled)
+            m68k_request_interrupt(v->cpu, HBLANK_IRQ);
     }
     if (line > 320)
     {
-        m68k_request_interrupt(v->cpu, VBLANK_IRQ);
+        line = 0;
+
+        if (v->vblank_enabled)
+            m68k_request_interrupt(v->cpu, VBLANK_IRQ);
     }
 
     // State of the art emulation accuracy

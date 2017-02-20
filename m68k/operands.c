@@ -501,7 +501,7 @@ Operand* operand_make_absolute_long(Instruction* instr)
 uint32_t pc_displacement_word_ea(Operand* o)
 {
     int16_t displacement = m68k_fetch(o->instruction->context);
-    return o->instruction->context->pc + displacement - 2; // TODO why -2?
+    return o->instruction->context->instruction_address + 2 + displacement;
 }
 
 Operand* operand_make_pc_displacement(Instruction* instr)
@@ -529,7 +529,7 @@ uint32_t pc_index_ea(Operand* o)
     uint32_t ext = m68k_fetch(m);
 
     uint32_t index = INDEX_LENGTH(ext) ? INDEX_REGISTER(ext) : SIGN_EXTEND_W(INDEX_REGISTER(ext));
-    return m->pc + (int8_t)INDEX_DISPLACEMENT(ext) + (int32_t)index;
+    return m->instruction_address + 2 + (int8_t)INDEX_DISPLACEMENT(ext) + (int32_t)index;
 }
 
 Operand* operand_make_pc_index(struct Instruction* instr)

@@ -76,6 +76,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     }
 
     DecodedInstruction* decoded = calloc(1, sizeof(DecodedInstruction));
+    decoded->mnemonics = calloc(100, sizeof(char));
 
     int pos = sprintf(decoded->mnemonics, "%s", instr->name);
 
@@ -113,19 +114,20 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     return decoded;
 }
 
+uint32_t breakpoint = 0x7272e;// 725bc; // 0b10 -> Sonic@vblank
+// TODO Sonic@37E, D5 is wrong
+// TODO Sonic@29a8 weird status move
+
 uint32_t m68k_step(M68k* m)
 {
     printf("%#06X\n", m->pc);
 
     // Manual breakpoint!
-    if (m->pc == 0x0b10) // 37a ok
+    if (m->pc == breakpoint)
         printf("breakpoint\n");
 
-    // TODO Sonic@37E, D5 is wrong
-    // TODO Sonic@29a8 weird status move
-
     // Fetch the instruction
-    //uint32_t instr_pc = m->pc;
+    m->instruction_address = m->pc;
     m->instruction_register = m68k_fetch(m);
     Instruction* instr = m->opcode_table[m->instruction_register];
 
@@ -137,9 +139,9 @@ uint32_t m68k_step(M68k* m)
     }
     else
     {
-        /*DecodedInstruction* d = m68k_decode(m, m->pc - 2);
+        DecodedInstruction* d = m->pc >= breakpoint || true ? m68k_decode(m, m->instruction_address) : NULL;
         if (d != NULL)
-            printf("%s\n", d->mnemonics);*/
+            printf("%s\n", d->mnemonics);
 
         //if (m->instruction_callback != NULL)
         //    m->instruction_callback(m);
@@ -148,7 +150,7 @@ uint32_t m68k_step(M68k* m)
 
         m68k_handle_interrupt(m);
 
-        //free(d);
+        decoded_instruction_free(d);
     }
 
     return m->pc;

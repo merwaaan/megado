@@ -66,6 +66,12 @@ Instruction* gen_lea(uint16_t opcode, M68k* m)
     return i;
 }
 
+Instruction* gen_link(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "LINK", not_implemented);
+    return i;
+}
+
 int move_cycles_bw[12][9] =
 {
     { 4, 4, 8, 8, 8, 12, 14, 12, 16 },
@@ -121,6 +127,10 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
     return i;
 }
 
+// Computer pointers to the nth register in post-inc or pre-dec order
+#define MOVEM_POSTINC_ORDER(n) (n < 8 ? i->context->data_registers + n : i->context->address_registers + n - 8)
+#define MOVEM_PREDEC_ORDER(n) (n < 8 ? i->context->address_registers + (7 - n) : i->context->data_registers + (7 - (n - 8)))
+
 int movem(Instruction* i)
 {
     // TODO (refactor)
@@ -130,23 +140,15 @@ int movem(Instruction* i)
 
     Operand* ea = i->src != NULL ? i->src : i->dst;
     uint32_t offset = FETCH_EA(ea);
-    
-    // Revert the initial pre-increment (hackish)
-    /*if (ea->type == AddressRegisterIndirectPreDec)
-        i->context->address_registers[ea->n] += size_in_bytes(ea->instruction->size);*/
 
     int moved = 0;
     for (int m = 0; m < 16; ++m)
         if (BIT(mask, m))
         {
-            // In pre-decrement mode, increment before EACH transfer
-            if (ea->type == AddressRegisterIndirectPreDec)
-                ea->pre_func(ea);
-
             // memory -> register
             if (i->src != NULL)
             {
-                uint32_t* reg = m < 8 ? i->context->data_registers + m : i->context->address_registers + m - 8;
+                uint32_t* reg = ea->type == AddressRegisterIndirectPreDec ? MOVEM_PREDEC_ORDER(m) : MOVEM_POSTINC_ORDER(m);
 
                 *reg = m68k_read(i->context, i->size, offset);
 
@@ -156,7 +158,7 @@ int movem(Instruction* i)
             // register -> memory
             else
             {
-                uint32_t reg = m < 8 ? i->context->address_registers[7 - m] : i->context->data_registers[7 - (m - 8)];
+                uint32_t reg = *(ea->type == AddressRegisterIndirectPreDec ? MOVEM_PREDEC_ORDER(m) : MOVEM_POSTINC_ORDER(m));
 
                 if (i->size == Word)
                     reg = SIGN_EXTEND_W(reg);
@@ -164,22 +166,20 @@ int movem(Instruction* i)
                 m68k_write(i->context, i->size, offset, reg);
             }
 
-            // In post-increment mode, increment after EACH transfer
-            if (ea->type == AddressRegisterIndirectPostInc)
-                ea->post_func(ea);
-
-            // TODO just fetch_ea instead of computing offset manually?
-            if (ea->type == AddressRegisterIndirectPostInc)
-                offset += i->size == 16 ? 2 : 4;
-            else if (ea->type == AddressRegisterIndirectPreDec)
-                offset -= i->size == 16 ? 2 : 4;
+            if (ea->type == AddressRegisterIndirectPreDec)
+                offset -= size_in_bytes(i->size);
+            else
+                offset += size_in_bytes(i->size);
 
             ++moved;
         }
 
-    // Revert the initial post-increment (hackish)
-    if (ea->type == AddressRegisterIndirectPostInc)
-        i->context->address_registers[ea->n] -= size_in_bytes(ea->instruction->size);
+    // Update the address register in pre-dec/post-inc modes
+    // (take into account the one dec/inc that is handled by the operand's pre/post functions) 
+    if (ea->type == AddressRegisterIndirectPreDec)
+        i->context->address_registers[ea->n] = offset + size_in_bytes(i->size);
+    else if (ea->type == AddressRegisterIndirectPostInc)
+        i->context->address_registers[ea->n] = offset - size_in_bytes(i->size);
 
     return 4 * moved;
 }
@@ -347,5 +347,11 @@ Instruction* gen_pea(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "PEA", pea);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}
+
+Instruction* gen_unlk(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "UNLK", not_implemented);
     return i;
 }

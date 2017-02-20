@@ -4,6 +4,11 @@
 #include "m68k.h"
 #include "operands.h"
 
+int not_implemented(Instruction* i)
+{
+    return 0;
+}
+
 Instruction* instruction_make(M68k* context, char* name, InstructionFunc func)
 {
     Instruction* i = calloc(1, sizeof(Instruction));
@@ -28,6 +33,8 @@ void instruction_free(Instruction* instr)
 static Pattern all_patterns[] =
 {
     { 0x0200, 0xFF00, &gen_andi },
+    { 0x0400, 0xFF00, &gen_subi },
+    { 0x0600, 0xFF00, &gen_addi },
     { 0x0C00, 0xFF00, &gen_cmpi },
     { 0x0800, 0xFFC0, &gen_btst_imm },
     { 0x0100, 0xF1C0, &gen_btst },
@@ -39,11 +46,15 @@ static Pattern all_patterns[] =
     { 0x40C0, 0xFFC0, &gen_move_from_sr },
     { 0x44C0, 0xFFC0, &gen_move_to_ccr },
     { 0x46C0, 0xFFC0, &gen_move_to_sr },
+    { 0x4000, 0xFF00, &gen_negx },
     { 0x41C0, 0xF1C0, &gen_lea },
     { 0x4200, 0xFF00, &gen_clr },
+    { 0x4400, 0xFF00, &gen_neg },
     { 0x4600, 0xFF00, &gen_not },
     { 0x4840, 0xFFF8, &gen_swap },
     { 0x4840, 0xFFC0, &gen_pea },
+    { 0x4E50, 0xFFF8, &gen_link },
+    { 0x4E58, 0xFFF8, &gen_unlk },
     { 0x4880, 0xFEB8, &gen_ext },
     { 0x4880, 0xFB80, &gen_movem },
     { 0x4A00, 0xFF00, &gen_tst },
@@ -60,12 +71,20 @@ static Pattern all_patterns[] =
     { 0x6100, 0xFF00, &gen_bsr },
     { 0x6000, 0xF000, &gen_bcc },
     { 0x7000, 0xF100, &gen_moveq },
+    { 0x80C0, 0xF1C0, &gen_divu },
+    { 0x81C0, 0xF1C0, &gen_divs },
     { 0x8000, 0xF000, &gen_or },
+    { 0x9000, 0xF000, &gen_sub },
+    { 0x9100, 0xF000, &gen_subx },
     { 0xB100, 0xF100, &gen_eor },
+    { 0xB108, 0xF138, &gen_cmpm },
     { 0xB000, 0xF100, &gen_cmp },
+    { 0xB0C0, 0xF0C0, &gen_cmpa },
     { 0xC100, 0xF100, &gen_exg },
     { 0xC000, 0xF000, &gen_and },
     { 0xD000, 0xF000, &gen_add },
+    { 0xD100, 0xF130, &gen_addx },
+    { 0xD0C0, 0xF0C0, &gen_adda },
     { 0xC0C0, 0xF1C0, &gen_mulu },
     { 0xC1C0, 0xF1C0, &gen_muls },
     { 0xE000, 0xF018, &gen_asd },
@@ -133,4 +152,14 @@ int instruction_execute(Instruction* instr)
         instr->dst->post_func(instr->dst);
 
     return instr->base_cycles + additional_cycles;
+}
+
+
+void decoded_instruction_free(DecodedInstruction* decoded)
+{
+    if (decoded == NULL)
+        return;
+
+    free(decoded->mnemonics);
+    free(decoded);
 }

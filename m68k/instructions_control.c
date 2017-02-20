@@ -9,15 +9,24 @@
 
 int bcc(Instruction* i)
 {
-    uint32_t offset = i->context->instruction_register & 0xFF;
-    if (offset == 0)
+    // TODO refactor
+
+    uint32_t base_offset = i->context->instruction_register & 0xFF;
+    uint32_t offset = base_offset;
+
+    if (base_offset == 0)
         offset = m68k_fetch(i->context);
-    else if (offset == 0xFF)
+    else if (base_offset == 0xFF)
         offset = m68k_fetch(i->context) << 16 | m68k_fetch(i->context);
 
     if (i->condition->func(i->context))
     {
-        i->context->pc += offset > MAX_VALUE(Byte) ? (int16_t)offset : (int8_t)offset; // TODO not sure, could .w but the value is low???
+        if (base_offset == 0)
+            i->context->pc = i->context->instruction_address + 2 + (int16_t)offset;
+        else if (base_offset == 0xFF)
+            i->context->pc = i->context->instruction_address + 2 + (int32_t)offset;
+        else
+            i->context->pc = i->context->instruction_address + 2 + (int8_t)offset;
 
         return 0; // TODO timings
     }
@@ -70,11 +79,11 @@ int bsr(Instruction* i)
     m68k_write_l(i->context, i->context->address_registers[7], i->context->pc + (offset == 0 ? 2 : 0) + (offset == 0xFF ? 4 : 0));
 
     if (offset == 0)
-        i->context->pc += (int16_t) m68k_fetch(i->context) - 2;
+        i->context->pc += (int16_t)m68k_fetch(i->context) - 2;
     else if (offset == 0xFF)
-        i->context->pc += (int32_t) (m68k_fetch(i->context) << 16 | m68k_fetch(i->context)) - 4;
+        i->context->pc += (int32_t)(m68k_fetch(i->context) << 16 | m68k_fetch(i->context)) - 4;
     else
-        i->context->pc += (int8_t) offset;
+        i->context->pc += (int8_t)offset;
 
     return 0;
 }
@@ -137,7 +146,7 @@ Instruction* gen_jmp(uint16_t opcode, M68k* m)
 
 int jsr(Instruction* i)
 {
-    uint32_t ea = FETCH_EA(i->dst) - 2; // TODO always -2?
+    uint32_t ea = FETCH_EA(i->dst);
 
     // Push the address following the instruction onto the stack
     i->context->address_registers[7] -= 4;
@@ -168,8 +177,6 @@ Instruction* gen_nop(uint16_t opcode, M68k* m)
 
 int rts(Instruction* i)
 {
-    //i->context->pc = m68k_pop();
-
     i->context->pc = m68k_read_l(i->context, i->context->address_registers[7]);
     i->context->address_registers[7] += 4;
 
@@ -178,7 +185,5 @@ int rts(Instruction* i)
 
 Instruction* gen_rts(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "RTS", rts);
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    return i;
+    return instruction_make(m, "RTS", rts);
 }

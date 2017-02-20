@@ -54,7 +54,7 @@ typedef struct Instruction {
 
 // TODO just make it a char*?
 typedef struct DecodedInstruction {
-    char mnemonics[50];
+    char* mnemonics;
 } DecodedInstruction;
 
 Instruction* instruction_make(struct M68k* context, char* name, InstructionFunc func);
@@ -70,6 +70,9 @@ bool instruction_valid(Instruction*);
 // Execute the given instruction.
 // Returns the elapsed cycles.
 int instruction_execute(Instruction*);
+
+DecodedInstruction* decoded_instruction_make(); // TODO
+void decoded_instruction_free(DecodedInstruction*);
 
 /*
  * Instruction generators
@@ -106,11 +109,21 @@ DEFINE_INSTR(addq);
 DEFINE_INSTR(addx);
 DEFINE_INSTR(clr);
 DEFINE_INSTR(cmp);
+DEFINE_INSTR(cmpa);
 DEFINE_INSTR(cmpi);
+DEFINE_INSTR(cmpm);
+DEFINE_INSTR(divs);
+DEFINE_INSTR(divu);
 DEFINE_INSTR(ext);
 DEFINE_INSTR(mulu);
 DEFINE_INSTR(muls);
+DEFINE_INSTR(neg);
+DEFINE_INSTR(negx);
+DEFINE_INSTR(sub);
+DEFINE_INSTR(suba);
+DEFINE_INSTR(subi);
 DEFINE_INSTR(subq);
+DEFINE_INSTR(subx);
 
 // Shit & rotate
 DEFINE_INSTR(asd);
@@ -122,18 +135,22 @@ DEFINE_INSTR(swap);
 // Data transfer
 DEFINE_INSTR(exg);
 DEFINE_INSTR(lea);
-DEFINE_INSTR(move);
+DEFINE_INSTR(link);
 DEFINE_INSTR(move);
 DEFINE_INSTR(movea);
 DEFINE_INSTR(movem);
 DEFINE_INSTR(moveq);
 DEFINE_INSTR(movep);
+DEFINE_INSTR(pea);
+DEFINE_INSTR(unlk);
+
+// Privileged isntructions
+// TODO move to own file
 DEFINE_INSTR(move_from_ccr);
 DEFINE_INSTR(move_to_ccr);
 DEFINE_INSTR(move_from_sr);
 DEFINE_INSTR(move_to_sr);
 DEFINE_INSTR(move_usp);
-DEFINE_INSTR(pea);
 
 // Program control
 DEFINE_INSTR(bcc);
@@ -146,3 +163,5 @@ DEFINE_INSTR(nop);
 //DEFINE_INSTR(rtd);
 //DEFINE_INSTR(rtr);
 DEFINE_INSTR(rts);
+
+int not_implemented(Instruction* i);
