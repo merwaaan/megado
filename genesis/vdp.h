@@ -14,7 +14,7 @@
 #define BLUE(c) FRAGMENT((c), 11, 9)
 
 // Convert 3-bit components to 8-bit
-#define COLOR_8(c) (c) * 31
+#define COLOR_8(c) (c) * 32
 #define RED_8(c) COLOR_8(RED(c))
 #define GREEN_8(c) COLOR_8(GREEN(c))
 #define BLUE_8(c) COLOR_8(BLUE(c))
@@ -32,7 +32,10 @@ typedef struct Vdp
     // Read/Write configuration.
     // Set through the control port.
     int access_mode;
-    int access_address;
+    uint16_t access_address;
+
+    // The next word written to the data port will trigger a DMA fill
+    bool pending_dma_fill;
 
     // http://md.squee.co/VDP#VDP_Registers
 
@@ -96,7 +99,7 @@ typedef struct Vdp
     uint16_t dma_length;
 
     // Register $15 - $17
-    int dma_address;
+    int dma_source_address;
     int dma_type;
 
     bool dma_in_progress;

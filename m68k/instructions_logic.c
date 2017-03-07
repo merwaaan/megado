@@ -16,7 +16,7 @@ Instruction* gen_boolean_instruction(uint16_t opcode, M68k* m, char* name, Instr
     Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     int direction = BIT(opcode, 8);
-    if (direction == 0)
+    if (direction == 1)
     {
         i->src = reg;
         i->dst = ea;
@@ -42,9 +42,7 @@ Instruction* gen_boolean_instruction_immediate(uint16_t opcode, M68k* m, char* n
 int and(Instruction* i)
 {
     // Fetch both effective addresses to cover the two variants: AND ea, Dn & AND Dn, ea
-    FETCH_EA(i->src);
-    FETCH_EA(i->dst);
-    uint32_t result = GET(i->src) & GET(i->dst);
+    uint32_t result = FETCH_EA_AND_GET(i->src) & FETCH_EA_AND_GET(i->dst);
     SET(i->dst, result);
 
     CARRY_SET(i->context, false);
@@ -65,10 +63,37 @@ Instruction* gen_andi(uint16_t opcode, M68k* m)
     return gen_boolean_instruction_immediate(opcode, m, "ANDI", and);
 }
 
+int andi_sr(Instruction* i)
+{
+    i->context->status &= FETCH_EA_AND_GET(i->src);
+
+    return 0;
+}
+
+Instruction* gen_andi_sr(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "ANDI SR", andi_sr);
+    i->src = operand_make_immediate_value(Byte, i);
+    return i;
+}
+
+int andi_ccr(Instruction* i)
+{
+    i->context->status = (i->context->status & 0xFFE0) | (i->context->status & FETCH_EA_AND_GET(i->src) & 0x1F);
+
+    return 0;
+}
+
+Instruction* gen_andi_ccr(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "ANDI CCR", andi_ccr);
+    i->src = operand_make_immediate_value(Word, i);
+    return i;
+}
+
 int eor(Instruction* i)
 {
-    FETCH_EA(i->dst);
-    uint32_t result = GET(i->src) ^ GET(i->dst);
+    uint32_t result = FETCH_EA_AND_GET(i->src) ^ FETCH_EA_AND_GET(i->dst);
     SET(i->dst, result);
 
     CARRY_SET(i->context, false);
@@ -91,8 +116,7 @@ Instruction* gen_eori(uint16_t opcode, M68k* m)
 
 int or (Instruction* i)
 {
-    FETCH_EA(i->dst);
-    uint32_t result = GET(i->src) | GET(i->dst);
+    uint32_t result = FETCH_EA_AND_GET(i->src) | FETCH_EA_AND_GET(i->dst);
     SET(i->dst, result);
 
     CARRY_SET(i->context, false);
@@ -105,12 +129,40 @@ int or (Instruction* i)
 
 Instruction* gen_or(uint16_t opcode, M68k* m)
 {
-    return gen_boolean_instruction(opcode, m, "OR", or );
+    return gen_boolean_instruction(opcode, m, "OR", or);
 }
 
 Instruction* gen_ori(uint16_t opcode, M68k* m)
 {
-    return gen_boolean_instruction_immediate(opcode, m, "ORI", or );
+    return gen_boolean_instruction_immediate(opcode, m, "ORI", or);
+}
+
+int ori_sr(Instruction* i)
+{
+    i->context->status |= FETCH_EA_AND_GET(i->src);
+
+    return 0;
+}
+
+Instruction* gen_ori_sr(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "ORI SR", ori_sr);
+    i->src = operand_make_immediate_value(Byte, i);
+    return i;
+}
+
+int ori_ccr(Instruction* i)
+{
+    i->context->status = (i->context->status & 0xFFE0) | (i->context->status | FETCH_EA_AND_GET(i->src)) & 0x1F;
+
+    return 0;
+}
+
+Instruction* gen_ori_ccr(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "ORI CCR", ori_ccr);
+    i->src = operand_make_immediate_value(Word, i);
+    return i;
 }
 
 int not(Instruction* i)

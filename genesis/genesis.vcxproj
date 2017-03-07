@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClInclude Include="genesis.h" />
     <ClInclude Include="vdp.h" />
+    <ClInclude Include="ym2612.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\m68k\m68k.vcxproj">

@@ -52,7 +52,7 @@ void test_rom(Genesis* g, char* path)
     genesis_load_rom_file(g, path);
     genesis_initialize(g);
 
-    for (int i = 0; i < 5000000; ++i)
+    for (int i = 0; i < 5000000000; ++i)
         genesis_step(g);
 }
 
@@ -68,8 +68,8 @@ int main()
     Genesis* g = genesis_make();
     g->m68k->instruction_callback = instr_callback;
 
-    check_alignment(g);
-    check_endianness();
+    //check_alignment(g);
+    //check_endianness();
 
     test_rom(g, "../browser/test.bin");
 

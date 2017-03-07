@@ -93,10 +93,15 @@ DEFINE_INSTR(btst_imm);
 // Logic operations
 DEFINE_INSTR(and);
 DEFINE_INSTR(andi);
+DEFINE_INSTR(andi_sr);
+DEFINE_INSTR(andi_ccr);
+DEFINE_INSTR(andi);
 DEFINE_INSTR(eor);
 DEFINE_INSTR(eori);
 DEFINE_INSTR(or);
 DEFINE_INSTR(ori);
+DEFINE_INSTR(ori_sr);
+DEFINE_INSTR(ori_ccr);
 DEFINE_INSTR(not);
 DEFINE_INSTR(scc);
 DEFINE_INSTR(tst);
@@ -142,6 +147,7 @@ DEFINE_INSTR(movem);
 DEFINE_INSTR(moveq);
 DEFINE_INSTR(movep);
 DEFINE_INSTR(pea);
+DEFINE_INSTR(trap);
 DEFINE_INSTR(unlk);
 
 // Privileged isntructions
@@ -162,6 +168,7 @@ DEFINE_INSTR(jsr);
 DEFINE_INSTR(nop);
 //DEFINE_INSTR(rtd);
 //DEFINE_INSTR(rtr);
+DEFINE_INSTR(rte);
 DEFINE_INSTR(rts);
 
 int not_implemented(Instruction* i);

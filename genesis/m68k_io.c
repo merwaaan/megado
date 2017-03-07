@@ -11,19 +11,18 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
 
     switch (address)
     {
-    // TODO temp, simulate z80
+        // TODO temp, simulate z80
     case 0xA11100:
         return 0;
-        // VDP data port
-    case 0xC00000:
+
+    case 0xC00000: // VDP data port
     case 0xC00002:
         return vdp_read_data_hi(GENESIS(m)->vdp);
     case 0xC00001:
     case 0xC00003:
         return vdp_read_data_lo(GENESIS(m)->vdp);
 
-        // VDP control port
-    case 0xC00004:
+    case 0xC00004: // VDP control port
     case 0xC00006:
         return BYTE_HI(vdp_read_control(GENESIS(m)->vdp));
     case 0xC00005:
@@ -51,8 +50,17 @@ uint32_t m68k_read_l(M68k* m, uint32_t address)
 
 void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
 {
-    // TODO Byte-wide writes quirks for VDP ???
+    // " Writing to the VDP control or data ports is interpreted as a 16-bit
+    //   write, with the LSB duplicated in the MSB"
     // http://www.tmeeco.eu/BitShit/CMDHW.TXT
+    if (address == 0xC00000)
+    {
+        vdp_write_data(GENESIS(m)->vdp, value & (value << 8));
+    }
+    else if (address == 0xC00004)
+    {
+        vdp_write_control(GENESIS(m)->vdp, value & (value << 8));
+    }
 
     GENESIS(m)->memory[address & 0xFFFFFF] = value;
 }
@@ -63,14 +71,12 @@ void m68k_write_w(M68k* m, uint32_t address, uint16_t value)
 
     switch (address)
     {
-        // VDP data port
-    case 0xC00000:
+    case 0xC00000: // VDP data port
     case 0xC00002:
         vdp_write_data(GENESIS(m)->vdp, value);
         break;
 
-        // VDP control port
-    case 0xC00004:
+    case 0xC00004: // VDP control port
     case 0xC00006:
         vdp_write_control(GENESIS(m)->vdp, value);
         break;

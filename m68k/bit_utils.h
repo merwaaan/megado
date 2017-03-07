@@ -53,7 +53,9 @@ typedef enum
 {
     Byte = 8,
     Word = 16,
-    Long = 32
+    Long = 32,
+
+    InvalidSize = -1
 } Size;
 
 // Give the byte count for each size

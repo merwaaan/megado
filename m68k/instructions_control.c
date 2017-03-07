@@ -105,13 +105,13 @@ Instruction* gen_bsr(uint16_t opcode, M68k* m)
 
 int dbcc(Instruction* i)
 {
-    //if (i->condition->func(i->context)) TODO unclear about the condition
-
-    int16_t offset = m68k_fetch(i->context); // TODO should only be read if cond true??
-
+    int16_t offset = m68k_fetch(i->context);
+    if (i->condition->func(i->context))
+        return 0;
+    
     uint16_t reg = GET(i->src);
     if (reg > 0)
-        i->context->pc += offset - 2;
+        i->context->pc = i->context->instruction_address + offset + 2;
 
     SET(i->src, reg - 1);
 
@@ -132,7 +132,7 @@ Instruction* gen_dbcc(uint16_t opcode, M68k* m)
 
 int jmp(Instruction* i)
 {
-    i->context->pc = FETCH_EA_AND_GET(i->src);
+    i->context->pc = FETCH_EA(i->src);
 
     return 0;
 }
@@ -147,6 +147,9 @@ Instruction* gen_jmp(uint16_t opcode, M68k* m)
 int jsr(Instruction* i)
 {
     uint32_t ea = FETCH_EA(i->dst);
+
+    if (i->dst->type == AbsoluteShort)
+        ea = SIGN_EXTEND_W(ea);
 
     // Push the address following the instruction onto the stack
     i->context->address_registers[7] -= 4;
@@ -175,6 +178,21 @@ Instruction* gen_nop(uint16_t opcode, M68k* m)
     return instruction_make(m, "NOP", nop);
 }
 
+int rte(Instruction* i)
+{
+    i->context->status = m68k_read_w(i->context, i->context->address_registers[7]);
+    i->context->address_registers[7] += 2;
+    i->context->pc = m68k_read_l(i->context, i->context->address_registers[7]);
+    i->context->address_registers[7] += 4;
+
+    return 0;
+}
+
+Instruction* gen_rte(uint16_t opcode, M68k* m)
+{
+    return instruction_make(m, "RTE", rte);
+}
+
 int rts(Instruction* i)
 {
     i->context->pc = m68k_read_l(i->context, i->context->address_registers[7]);
@@ -186,4 +204,26 @@ int rts(Instruction* i)
 Instruction* gen_rts(uint16_t opcode, M68k* m)
 {
     return instruction_make(m, "RTS", rts);
+}
+
+int trap(Instruction* i)
+{
+    // Push the current PC onto the stack
+    i->context->address_registers[7] -= 4;
+    m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
+
+    // Push the status register onto the stack
+    i->context->address_registers[7] -= 2;
+    m68k_write_w(i->context, i->context->address_registers[7], i->context->status);
+
+    i->context->pc = m68k_read_l(i->context, 0x80 + i->src->n * 4);
+
+    return 0;
+}
+
+Instruction* gen_trap(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "TRAP", trap);
+    i->src = operand_make_value(FRAGMENT(opcode, 3, 0), i);
+    return i;
 }

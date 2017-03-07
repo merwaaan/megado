@@ -230,7 +230,7 @@ int movea(Instruction* i)
     if (i->size == Word)
         value = SIGN_EXTEND_W(value);
 
-    SET(i->dst, value);
+    i->context->address_registers[i->dst->n] = value;
 
     return 0;
 }

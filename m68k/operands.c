@@ -106,8 +106,7 @@ Size operand_size(uint8_t pattern)
     case 2:
         return Long;
     default:
-        //printf("Invalid operand size %d", pattern); // TODO logging fw?
-        return 0;
+        return InvalidSize;
     }
 }
 
@@ -122,8 +121,7 @@ Size operand_size2(uint8_t pattern)
     case 2:
         return Long;
     default:
-        //printf("Invalid operand size %d", pattern); // TODO logging fw?
-        return 0;
+        return InvalidSize;
     }
 }
 
@@ -136,8 +134,7 @@ Size operand_size3(uint8_t pattern)
     case 1:
         return Long;
     default:
-        //printf("Invalid operand size %d", pattern); // TODO logging fw?
-        return 0;
+        return InvalidSize;
     }
 }
 
@@ -558,6 +555,7 @@ Operand* operand_make_value(int value, struct Instruction* instr)
     op->type = Value;
     op->instruction = instr;
     op->n = value;
+    op->fetch_ea_func = fetch_no_ea;
     op->get_value_func = value_get;
     return op;
 }

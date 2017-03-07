@@ -7,12 +7,12 @@
 
 bool False(M68k* context)
 {
-    return false;
+    return ZERO(context);
 }
 
 bool True(M68k* context)
 {
-    return true;
+    return !ZERO(context);
 }
 
 bool High(M68k* context)
@@ -86,8 +86,8 @@ bool LessOrEqual(M68k* context)
 }
 
 static Condition all_conditions[] = {
-    { False, "F" },
     { True, "T" },
+    { False, "F" },
     { High, "HI" },
     { LowOrSame, "LS" },
     { CarryClear, "CC" },

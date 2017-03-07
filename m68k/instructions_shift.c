@@ -25,7 +25,7 @@ int asr(Instruction* i)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
-    uint8_t shift = FETCH_EA_AND_GET(i->src);
+    uint8_t shift = FETCH_EA_AND_GET(i->src); // TODO 1-8?
     if (shift > 0)
     {
         uint32_t shifted_in = BIT(initial, i->size - 1) ? MASK_BELOW(0xFFFFFFFF, i->size - shift) : 0;
@@ -48,7 +48,10 @@ int lsl(Instruction* i)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
-    uint8_t shift = GET(i->src);
+    uint8_t shift = FETCH_EA_AND_GET(i->src);
+    if (shift == 0)
+        shift = 8;
+
     if (shift > 0)
     {
         SET(i->dst, initial << shift);
@@ -70,7 +73,7 @@ int lsr(Instruction* i)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
-    uint8_t shift = GET(i->src);
+    uint8_t shift = FETCH_EA_AND_GET(i->src); // TODO 1-8?
     if (shift > 0)
     {
         SET(i->dst, initial >> shift);
@@ -104,7 +107,7 @@ int rol(Instruction* i)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
-    int rotation = GET(i->src) % i->size;
+    int rotation = FETCH_EA_AND_GET(i->src) % i->size;
     if (rotation > 0)
     {
         SET(i->dst, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
@@ -126,7 +129,7 @@ int ror(Instruction* i)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
-    int rotation = GET(i->src) % i->size;
+    int rotation = FETCH_EA_AND_GET(i->src) % i->size;
     if (rotation > 0)
     {
         SET(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));

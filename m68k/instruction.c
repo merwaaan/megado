@@ -32,15 +32,24 @@ void instruction_free(Instruction* instr)
 
 static Pattern all_patterns[] =
 {
+    { 0x003C, 0xFFFF, &gen_ori_ccr },
+    { 0x007C, 0xFFFF, &gen_ori_sr },
+    { 0x0000, 0xFF00, &gen_ori },
+    { 0x023C, 0xFFFF, &gen_andi_ccr },
+    { 0x027C, 0xFFFF, &gen_andi_sr },
     { 0x0200, 0xFF00, &gen_andi },
     { 0x0400, 0xFF00, &gen_subi },
     { 0x0600, 0xFF00, &gen_addi },
+    { 0x0A00, 0xFF00, &gen_eori },
     { 0x0C00, 0xFF00, &gen_cmpi },
     { 0x0800, 0xFFC0, &gen_btst_imm },
+    { 0x0840, 0xFFC0, &gen_bchg_imm },
+    { 0x0880, 0xFFC0, &gen_bclr_imm },
+    { 0x08C0, 0xFFC0, &gen_bset_imm },
     { 0x0100, 0xF1C0, &gen_btst },
-    { 0x0140, 0xF1C0, &gen_bchg }, // TODO other bchg form
-    { 0x0180, 0xF1C0, &gen_bclr }, // TODO other bclr form
-    { 0x01C0, 0xF1C0, &gen_bset }, // TODO other bset form
+    { 0x0140, 0xF1C0, &gen_bchg },
+    { 0x0180, 0xF1C0, &gen_bclr },
+    { 0x01C0, 0xF1C0, &gen_bset },
     { 0x0040, 0xC1C0, &gen_movea },
     { 0x0000, 0xC000, &gen_move },
     { 0x40C0, 0xFFC0, &gen_move_from_sr },
@@ -58,15 +67,17 @@ static Pattern all_patterns[] =
     { 0x4880, 0xFEB8, &gen_ext },
     { 0x4880, 0xFB80, &gen_movem },
     { 0x4A00, 0xFF00, &gen_tst },
+    { 0x4E40, 0xFFF0, &gen_trap },
     { 0x4E60, 0xFFF0, &gen_move_usp },
     { 0x4E71, 0xFFFF, &gen_nop },
+    { 0x4E73, 0xFFFF, &gen_rte },
     { 0x4E75, 0xFFFF, &gen_rts },
     { 0x4E80, 0xFFC0, &gen_jsr },
     { 0x4EC0, 0xFFC0, &gen_jmp },
     { 0x50C8, 0xF0F8, &gen_dbcc },
-    //{ 0x5000, 0xF000, &gen_scc },
     { 0x5000, 0xF100, &gen_addq },
     { 0x5100, 0xF100, &gen_subq },
+    { 0x50C0, 0xF0C0, &gen_scc },
     { 0x6000, 0xFF00, &gen_bra },
     { 0x6100, 0xFF00, &gen_bsr },
     { 0x6000, 0xF000, &gen_bcc },
@@ -80,13 +91,13 @@ static Pattern all_patterns[] =
     { 0xB108, 0xF138, &gen_cmpm },
     { 0xB000, 0xF100, &gen_cmp },
     { 0xB0C0, 0xF0C0, &gen_cmpa },
-    { 0xC100, 0xF100, &gen_exg },
-    { 0xC000, 0xF000, &gen_and },
-    { 0xD000, 0xF000, &gen_add },
-    { 0xD100, 0xF130, &gen_addx },
-    { 0xD0C0, 0xF0C0, &gen_adda },
     { 0xC0C0, 0xF1C0, &gen_mulu },
     { 0xC1C0, 0xF1C0, &gen_muls },
+    { 0xC000, 0xF000, &gen_and },
+    { 0xD100, 0xF130, &gen_addx },
+    { 0xD0C0, 0xF0C0, &gen_adda },
+    { 0xD000, 0xF000, &gen_add },
+    { 0xC100, 0xF100, &gen_exg },
     { 0xE000, 0xF018, &gen_asd },
     { 0xE008, 0xF018, &gen_lsd },
     { 0xE018, 0xF018, &gen_rod },
@@ -113,10 +124,18 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
             // Generate the instruction
             Instruction* instr = pattern_generate(all_patterns[i], opcode, context);
 
-            if (instr == NULL)
-                return NULL;
+            // If the generated instruction is invalid, try the following opcodes
+            if (instr == NULL ||
+                instr->size == InvalidSize ||
+                instr->src != NULL && instr->src->type == Unsupported ||
+                instr->dst != NULL && instr->dst->type == Unsupported)
+            {
+                free(instr);
+                continue;
+            }
 
             // Compute its total length in bytes
+            // TODO still necessary?
             instr->total_length = instr->base_length + operand_length(instr->src) + operand_length(instr->dst);
 
             return instr;

@@ -19,8 +19,7 @@ M68k* m68k_make()
 
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
-        // Manual breakpoint!
-        if (opcode == 0x1031)
+        if (opcode == 0x51c9)
         {
             printf("breakpoint\n");
         }
@@ -114,17 +113,16 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     return decoded;
 }
 
-uint32_t breakpoint = 0x7272e;// 725bc; // 0b10 -> Sonic@vblank
+uint32_t breakpoint = 0x260;// 725bc; // 0b10 -> Sonic@vblank
+bool breakpoint_triggered = false;
 // TODO Sonic@37E, D5 is wrong
 // TODO Sonic@29a8 weird status move
 
 uint32_t m68k_step(M68k* m)
 {
-    printf("%#06X\n", m->pc);
-
     // Manual breakpoint!
     if (m->pc == breakpoint)
-        printf("breakpoint\n");
+        breakpoint_triggered = true;
 
     // Fetch the instruction
     m->instruction_address = m->pc;
@@ -135,13 +133,13 @@ uint32_t m68k_step(M68k* m)
 
     if (instr == NULL)
     {
-        printf("Opcode %#06X cannot be found in the opcode table\n", m->instruction_register);
+        printf("\tOpcode %#06X cannot be found in the opcode table\n", m->instruction_register);
     }
     else
     {
-        DecodedInstruction* d = m->pc >= breakpoint || true ? m68k_decode(m, m->instruction_address) : NULL;
+        DecodedInstruction* d = breakpoint_triggered && false ? m68k_decode(m, m->instruction_address) : NULL;
         if (d != NULL)
-            printf("%s\n", d->mnemonics);
+            printf("%#06X   %s\n", m->pc - 2, d->mnemonics);
 
         //if (m->instruction_callback != NULL)
         //    m->instruction_callback(m);

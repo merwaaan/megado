@@ -44,9 +44,24 @@ Instruction* gen_add(uint16_t opcode, M68k* m)
     return i;
 }
 
+int adda(Instruction* i)
+{
+    uint32_t a = FETCH_EA_AND_GET(i->src);
+
+    if (i->size == Word)
+        SIGN_EXTEND_W(a);
+
+    SET(i->dst, GET(i->dst) + a);
+
+    return 0;
+}
+
 Instruction* gen_adda(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "ADDA", not_implemented);
+    Instruction* i = instruction_make(m, "ADDA", adda);
+    i->size = BIT(opcode, 8) ? Long : Word;
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
     return i;
 }
 
@@ -136,15 +151,34 @@ Instruction* gen_cmp(uint16_t opcode, M68k* m)
     return i;
 }
 
+int cmpa(Instruction* i)
+{
+    uint32_t b = FETCH_EA_AND_GET(i->src);
+    if (i->size == Word)
+        b = SIGN_EXTEND_W(b);
+
+    uint32_t a = i->context->address_registers[i->dst->n];
+
+    CARRY_SET(i->context, CHECK_CARRY_SUB(a, b, i->size));
+    OVERFLOW_SET(i->context, CHECK_OVERFLOW_SUB(a, b, i->size));
+    ZERO_SET(i->context, a == b);
+    NEGATIVE_SET(i->context, BIT(a - b, i->size - 1));
+
+    return 0;
+}
+
 Instruction* gen_cmpa(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "CMPA", not_implemented);
+    Instruction* i = instruction_make(m, "CMPA", cmpa);
+    i->size = BIT(opcode, 8) ? Long : Word;
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
     return i;
 }
 
 Instruction* gen_cmpi(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "CMP", cmp);
+    Instruction* i = instruction_make(m, "CMPI", cmp);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_immediate_value(i->size, i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
@@ -203,59 +237,47 @@ Instruction* gen_ext(uint16_t opcode, M68k* m)
 
 int muls(Instruction* i)
 {
-    // TODO SET(i->src, GET(i->src) * GET(i->dst));
+    SET(i->dst, FETCH_EA_AND_GET(i->src) * GET(i->dst));
 
+    uint32_t result = GET(i->dst);
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false); // TODO
-    ZERO_SET(i->context, true); // TODO
-    NEGATIVE_SET(i->context, false); // TODO
-                                     // TODO EXT
+    ZERO_SET(i->context, result == 0);
+    NEGATIVE_SET(i->context, BIT(result, i->size - 1));
 
     return 0;
 }
 
-
-Instruction* gen_muls(uint16_t opcode, M68k* m)
-{
-    Instruction* i = instruction_make(m, "MULS", not_implemented);
-    return i;
-}/*
 Instruction* gen_muls(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "MULS", muls);
-    i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->size = Long;
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     return i;
-}*/
+}
 
 int mulu(Instruction* i)
 {
-    // TODO SET(i->src, GET(i->src) * GET(i->dst));
+    SET(i->dst, FETCH_EA_AND_GET(i->src) * GET(i->dst));
 
+    uint32_t result = GET(i->dst);
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false); // TODO
-    ZERO_SET(i->context, true); // TODO
-    NEGATIVE_SET(i->context, false); // TODO
-                                     // TODO EXT
+    ZERO_SET(i->context, result == 0);
+    NEGATIVE_SET(i->context, false); // TODO ??
 
     return 0;
 }
 
 Instruction* gen_mulu(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "MULU", not_implemented);
+    Instruction* i = instruction_make(m, "MULU", mulu);
+    i->size = Long;
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     return i;
 }
-/*
-Instruction* gen_mulu(uint16_t opcode, M68k* m)
-{
-    Instruction* i = instruction_make(m, "MULU", mulu);
-    i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make_data_register(FRAGaMENT(opcode, 11, 9), i);
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
-    return i;
-}*/
 
 Instruction* gen_neg(uint16_t opcode, M68k* m)
 {
@@ -286,13 +308,45 @@ int sub(Instruction* i)
 
 Instruction* gen_sub(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "SUB", not_implemented);
+    Instruction* i = instruction_make(m, "SUB", sub);
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+    
+    Operand* reg = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
+
+    int direction = BIT(opcode, 8);
+    if (direction == 0)
+    {
+        i->src = ea;
+        i->dst = reg;
+    }
+    else
+    {
+        i->src = reg;
+        i->dst = ea;
+    }
+
     return i;
+}
+
+int suba(Instruction* i)
+{
+    uint32_t a = FETCH_EA_AND_GET(i->src);
+
+    if (i->size == Word)
+        SIGN_EXTEND_W(a);
+
+    SET(i->dst, GET(i->dst) - a);
+
+    return 0;
 }
 
 Instruction* gen_suba(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "SUBA", not_implemented);
+    Instruction* i = instruction_make(m, "SUBA", suba);
+    i->size = BIT(opcode, 8) ? Long : Word;
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
     return i;
 }
 
