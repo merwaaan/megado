@@ -10,6 +10,9 @@ void draw(Vdp* v);
 // Black & white debug palette
 uint16_t* debug_palette;
 
+// Plane size codes for register 0x10
+uint8_t plane_size_codes[] = { 32, 64, 0, 128 };
+
 Vdp* vdp_make(M68k* cpu)
 {
     Vdp* v = calloc(1, sizeof(Vdp));
@@ -22,7 +25,7 @@ Vdp* vdp_make(M68k* cpu)
     // Fill the debug palette
     debug_palette = calloc(16, sizeof(uint16_t));
     for (int i = 0; i < 16; ++i)
-        debug_palette[i] = i;
+        debug_palette[i] = i; // TODO wrong!
 
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -31,7 +34,7 @@ Vdp* vdp_make(M68k* cpu)
     }
     else
     {
-        SDL_CreateWindowAndRenderer(800, 600, SDL_WINDOW_OPENGL, &v->window, &v->renderer);
+        SDL_CreateWindowAndRenderer(1000, 1000, SDL_WINDOW_OPENGL, &v->window, &v->renderer);
     }
 
     for (int i = 0; i < 64; ++i)
@@ -55,18 +58,41 @@ void vdp_free(Vdp* v)
     free(v);
 }
 
-uint8_t vdp_read_data_hi(Vdp* v)
+uint16_t vdp_read_data(Vdp* v)
 {
     v->pending_command = false;
 
-    return 0; // TODO
-}
+    uint16_t value = 0;
+    switch (v->access_mode & 0xF) // TODO do it if DMA bit on? (& 7 / & 3f) 
+    {
+    case 0: // VRAM read
 
-uint8_t vdp_read_data_lo(Vdp* v)
-{
-    v->pending_command = false;
+        printf("Reading VRAM @ %04x\n", v->access_address);
 
-    return 0; // TODO
+        value = v->vram[v->access_address] << 8 | v->vram[v->access_address + 1];
+        break;
+
+    case 8: // CRAM read
+
+        printf("Reading CRAM @ %02x\n", v->access_address >> 1);
+
+        value = v->cram[v->access_address >> 1 & 0x3F];
+        break;
+
+    case 4: // VSRAM read
+
+        printf("Reading VSRAM @ %02x\n", v->access_address >> 1);
+
+        value = v->vsram[v->access_address >> 1 & 0x3F];
+        break;
+
+    default:
+        printf("WARNING! Unhandled access mode\n");
+    }
+
+    v->access_address += v->auto_increment;
+
+    return value;
 }
 
 static int break_counter;
@@ -75,7 +101,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
 {
     v->pending_command = false;
 
-    switch (v->access_mode & 7) // TODO do it if DMA bit on? (& 7 / & 3f) 
+    switch (v->access_mode & 0xF) // TODO do it if DMA bit on? (& 7 / & 3f) 
     {
     case 1: // VRAM write
 
@@ -84,7 +110,6 @@ void vdp_write_data(Vdp* v, uint16_t value)
         v->vram[v->access_address] = BYTE_HI(value); // TODO sure about that?
         v->vram[v->access_address ^ 1] = BYTE_LO(value);
         v->access_address += v->auto_increment;
-        //draw(v);
         break;
 
     case 3: // CRAM write
@@ -93,7 +118,6 @@ void vdp_write_data(Vdp* v, uint16_t value)
 
         v->cram[v->access_address >> 1 & 0x3F] = value;
         v->access_address += v->auto_increment;
-        //draw(v);
         break;
 
     case 5: // VSRAM write
@@ -114,9 +138,10 @@ void vdp_write_data(Vdp* v, uint16_t value)
     {
         v->pending_dma_fill = false;
 
-        // VRAM
-        if (v->dma_type == 2)
+        switch (v->access_mode & 0xF)
         {
+        case 1: // VRAM fill
+
             /* TODO not sure about that
             // The lower byte is written to the address specified
             v->vram[v->access_address] = NIBBLE_LO(value);
@@ -131,29 +156,52 @@ void vdp_write_data(Vdp* v, uint16_t value)
             }*/
 
             printf("DMA Fill to VRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address, value, v->dma_length, v->auto_increment);
-
-            uint8_t hi = NIBBLE_HI(value);
+            draw(v);
+            if (break_counter++ == 5)
+            {
+               //__asm int 3
+            }
+            uint8_t hi = BYTE_HI(value);
             do
             {
-                //assert(v->access_address < 0x10000);
-
                 v->vram[v->access_address] = hi;
                 v->access_address += v->auto_increment;
 
                 // The DMA source address is not used in this process but must be incremented anyway
-                ++v->dma_source_address;
+                ++v->dma_source_address_lo;
 
             } while (--v->dma_length);
 
-            /*if (break_counter++ == 7)
-            {
-                __asm int 3
-            }*/
+            //draw(v);
+            break;
 
-            draw(v);
-            return;
-        }
-        else {
+        case 3: // CRAM fill
+        
+            printf("DMA Fill to CRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address >> 1, value, v->dma_length, v->auto_increment);
+
+            do {
+                v->cram[v->access_address >> 1 & 0x3F] = value;
+                v->access_address += v->auto_increment;
+
+                ++v->dma_source_address_lo;
+
+            } while (--v->dma_length);
+            break;
+
+        case 5: // VSRAM fill
+        
+            printf("DMA Fill to VSRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address >> 1, value, v->dma_length, v->auto_increment);
+
+            do {
+                v->vsram[v->access_address >> 1 & 0x3F] = value;
+                v->access_address += v->auto_increment;
+
+                ++v->dma_source_address_lo;
+
+            } while (--v->dma_length);
+            break;
+
+        default:
             printf("?");
         }
     }
@@ -273,8 +321,8 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 0x10:
-            v->vertical_plane_size = FRAGMENT(reg_value, 5, 4); // TODO Convert to size
-            v->horizontal_plane_size = FRAGMENT(reg_value, 1, 0); // TODO
+            v->vertical_plane_size = plane_size_codes[FRAGMENT(reg_value, 5, 4)];
+            v->horizontal_plane_size = plane_size_codes[FRAGMENT(reg_value, 1, 0)];
 
             printf("\tVertical plane size %d, Horizontal plane size %d\n", v->vertical_plane_size, v->horizontal_plane_size);
             return;
@@ -305,22 +353,22 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 0x15:
-            v->dma_source_address = (v->dma_source_address & 0xFFFF00) | reg_value;
+            v->dma_source_address_lo = (v->dma_source_address_lo & 0xFF00) | reg_value;
 
-            printf("\tDMA source address low %02x (%08x)\n", reg_value, v->dma_source_address);
+            printf("\tDMA source address low %02x (%08x)\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo);
             return;
         case 0x16:
-            v->dma_source_address = (v->dma_source_address & 0xFF00FF) | (reg_value << 8);
+            v->dma_source_address_lo = (v->dma_source_address_lo & 0x00FF) | (reg_value << 8);
 
-            printf("\tDMA source address med %02x (%08x)\n", reg_value, v->dma_source_address);
+            printf("\tDMA source address med %02x (%08x)\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo);
             return;
         case 0x17:
             v->dma_type = FRAGMENT(reg_value, 7, 6); // TODO convert
 
-            uint8_t hi_address_mask = v->dma_type > 1 ? 0x3F : 0x7F; // Bit 6 is only pazrt of the address for memory to VRAM DMA transfers
-            v->dma_source_address = (v->dma_source_address & 0x00FFFF) | ((reg_value & hi_address_mask) << 16);
+            uint8_t address_mask = v->dma_type > 1 ? 0x3F : 0x7F; // Bit 6 is only part of the address for memory to VRAM DMA transfers
+            v->dma_source_address_hi = reg_value & address_mask;
 
-            printf("\tDMA source address high %02x (%08x), DMA type %04x\n", reg_value, v->dma_source_address, v->dma_type);
+            printf("\tDMA source address high %02x (%08x), DMA type %04x\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo, v->dma_type);
             return;
 
         case 6:
@@ -361,14 +409,14 @@ void vdp_write_control(Vdp* v, uint16_t value)
                     // to VRAM
                     if ((v->access_mode & 7) == 1)
                     {
-                        printf("DMA transfer from %08x to VRAM @ %04x, length %04x, auto increment %04x\n", v->dma_source_address << 1, v->access_address, v->dma_length, v->auto_increment);
+                        printf("DMA transfer from %08x to VRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do {
-                            uint16_t value = m68k_read_w(v->cpu, v->dma_source_address << 1);
+                            uint16_t value = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
                             v->vram[v->access_address] = NIBBLE_HI(value);
                             v->vram[v->access_address ^ 1] = NIBBLE_LO(value);
 
-                            ++v->dma_source_address;
+                            ++v->dma_source_address_lo;
                             v->access_address += v->auto_increment;
                         } while (--v->dma_length);
 
@@ -377,31 +425,27 @@ void vdp_write_control(Vdp* v, uint16_t value)
                     // to CRAM
                     else if ((v->access_mode & 7) == 3)
                     {
-                        printf("DMA transfer from %04x to CRAM @ %04x, length %04x, auto increment %04x\n", v->dma_source_address, v->access_address, v->dma_length, v->auto_increment);
+                        printf("DMA transfer from %04x to CRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do {
                             // "When doing a transfer to CRAM, the operation is aborted
                             //  once the address register is larger than 7Fh" - genvdp.txt
-                            if (v->access_address > 0x7F)
-                                break;
+                            /*if (v->access_address > 0x7F)
+                                break;*/
 
-                            v->cram[v->access_address >> 1] = m68k_read_w(v->cpu, v->dma_source_address << 1);
-                            v->cram[v->access_address >> 1] = m68k_read_w(v->cpu, v->dma_source_address << 1);
+                            v->cram[v->access_address >> 1 & 0x3F] = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
 
-                            ++v->dma_source_address;
+                            ++v->dma_source_address_lo;
                             v->access_address += v->auto_increment;
                         } while (--v->dma_length);
                     }
                     else {
-                        printf("DMA transfer from %04x to VSRAM @ %04x, length %04x, auto increment %04x\n", v->dma_source_address, v->access_address, v->dma_length, v->auto_increment);
+                        printf("DMA transfer from %04x to VSRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do {
-                            if (v->access_address >= 0x40)
-                                break;
+                            v->vsram[v->access_address >> 1 & 0x3F] = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
 
-                            v->vsram[v->access_address >> 1] = m68k_read_w(v->cpu, v->dma_source_address << 1);
-
-                            ++v->dma_source_address;
+                            ++v->dma_source_address_lo;
                             v->access_address += v->auto_increment;
                         } while (--v->dma_length);
                     }
@@ -435,15 +479,15 @@ void draw_pattern(Vdp* v, int id, uint16_t* palette, int x, int y)
 
             uint8_t color_index = (color_indexes & 0xF0) >> 4;
             if (color_index > 0) {
-                uint8_t color = COLOR_8(palette[color_index]);
-                SDL_SetRenderDrawColor(v->renderer, color, color, color, 255);
+                uint16_t color = palette[color_index];
+                SDL_SetRenderDrawColor(v->renderer, RED_8(color), GREEN_8(color), BLUE_8(color), 255);
                 SDL_RenderDrawPoint(v->renderer, x + px * 2, y + py);
             }
 
             color_index = color_indexes & 0x0F;
             if (color_index > 0) {
-                uint8_t color = COLOR_8(palette[color_index]);
-                SDL_SetRenderDrawColor(v->renderer, color, color, color, 255);
+                uint16_t color = palette[color_index];
+                SDL_SetRenderDrawColor(v->renderer, RED_8(color), GREEN_8(color), BLUE_8(color), 255);
                 SDL_RenderDrawPoint(v->renderer, x + px * 2 + 1, y + py);
             }
         }
@@ -451,18 +495,20 @@ void draw_pattern(Vdp* v, int id, uint16_t* palette, int x, int y)
 
 void draw_plane(Vdp* v, int x, int y, uint8_t* nametable)
 {
-    for (int i = 0; i < 1000; ++i)
-    {
-        uint16_t data = (nametable[i] << 8) | nametable[i + 1];
+    for (int py = 0; py < v->vertical_plane_size; ++py)
+        for (int px = 0; px < v->horizontal_plane_size; ++px)
+        {
+            uint16_t offset = py * v->horizontal_plane_size + px;
+            uint16_t data = (nametable[offset] << 8) | nametable[offset + 1];
 
-        bool priority = BIT(data, 15);
-        uint16_t* palette = v->cram + FRAGMENT(data, 14, 13) * 16;
-        bool vertical_flip = BIT(data, 12);
-        bool horizontal_flip = BIT(data, 11);
-        uint16_t pattern = FRAGMENT(data, 10, 0);
+            bool priority = BIT(data, 15);
+            uint16_t* palette = v->cram + FRAGMENT(data, 14, 13) * 16;
+            bool vertical_flip = BIT(data, 12);
+            bool horizontal_flip = BIT(data, 11);
+            uint16_t pattern = FRAGMENT(data, 10, 0);
 
-        draw_pattern(v, pattern, palette, x + 8 * (i % 30), y + 8 * (i / 30));
-    }
+            draw_pattern(v, pattern, palette, x + px * 8, y + py * 8);
+        }
 }
 
 void draw(Vdp* v)
@@ -490,14 +536,14 @@ void draw(Vdp* v)
         cell.y += 10;
     }
 
-    // Draw the planes
-    draw_plane(v, 300, 0, v->vram + v->plane_a_nametable);
-    draw_plane(v, 300, 400, v->vram + v->plane_b_nametable);
-
     // Draw patterns
     int columns = 30;
     for (int pattern = 0; pattern < 0x7FF; ++pattern)
-        draw_pattern(v, pattern, debug_palette, 8 * (pattern % columns), 50 + 8 * (pattern / columns));
+        draw_pattern(v, pattern, v->cram, 8 * (pattern % columns), 50 + 8 * (pattern / columns));
+        
+    // Draw the planes
+    draw_plane(v, 300, 0, v->vram + v->plane_a_nametable);
+    draw_plane(v, 300, 400, v->vram + v->plane_b_nametable);
 
     SDL_RenderPresent(v->renderer);
 }
@@ -513,7 +559,7 @@ void vdp_draw(Vdp* v)
         pixel = 0;
         ++line;
 
-        if (v->hblank_enabled)
+        if (line % 20 == 0 && v->hblank_enabled)
             m68k_request_interrupt(v->cpu, HBLANK_IRQ);
     }
     if (line > 320)

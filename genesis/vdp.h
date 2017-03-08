@@ -99,7 +99,8 @@ typedef struct Vdp
     uint16_t dma_length;
 
     // Register $15 - $17
-    int dma_source_address;
+    uint16_t dma_source_address_lo;
+    uint8_t dma_source_address_hi;
     int dma_type;
 
     bool dma_in_progress;
@@ -110,7 +111,7 @@ typedef struct Vdp
     SDL_Renderer* renderer;
 } Vdp;
 
-Vdp* vdp_make();
+Vdp* vdp_make(M68k* cpu);
 void vdp_free(Vdp*);
 
 uint8_t vdp_read_data_hi(Vdp*);

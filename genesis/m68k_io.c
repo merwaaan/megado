@@ -17,10 +17,10 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
 
     case 0xC00000: // VDP data port
     case 0xC00002:
-        return vdp_read_data_hi(GENESIS(m)->vdp);
+        return BYTE_HI(vdp_read_data(GENESIS(m)->vdp)); // TODO add direct read 16b read in m68k_read_w
     case 0xC00001:
     case 0xC00003:
-        return vdp_read_data_lo(GENESIS(m)->vdp);
+        return BYTE_LO(vdp_read_data(GENESIS(m)->vdp));
 
     case 0xC00004: // VDP control port
     case 0xC00006:
