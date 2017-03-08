@@ -156,7 +156,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
             }*/
 
             printf("DMA Fill to VRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address, value, v->dma_length, v->auto_increment);
-            draw(v);
+            //draw(v);
             if (break_counter++ == 5)
             {
                //__asm int 3
@@ -470,7 +470,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
 void draw_pattern(Vdp* v, int id, uint16_t* palette, int x, int y)
 {
     uint16_t offset = id * 32;
-
+    //printf("drawing pattern %d at %d %d\n", id, x, y);
     for (int py = 0; py < 8; ++py)
         for (int px = 0; px < 4; ++px)
         {
@@ -483,6 +483,7 @@ void draw_pattern(Vdp* v, int id, uint16_t* palette, int x, int y)
                 SDL_SetRenderDrawColor(v->renderer, RED_8(color), GREEN_8(color), BLUE_8(color), 255);
                 SDL_RenderDrawPoint(v->renderer, x + px * 2, y + py);
             }
+            //printf("drawing pixels %d %d (%d) / %d %d (%d)\n", x + px * 2, y + py, color_index, x + px * 2 + 1, y + py, color_indexes & 0x0F);
 
             color_index = color_indexes & 0x0F;
             if (color_index > 0) {

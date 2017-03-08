@@ -113,7 +113,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     return decoded;
 }
 
-uint32_t breakpoint = 0x142c;// 725bc; // 0b10 -> Sonic@vblank
+uint32_t breakpoint = 0x414;// 725bc; // 0b10 -> Sonic@vblank
 bool breakpoint_triggered = false;
 // TODO Sonic@37E, D5 is wrong
 // TODO Sonic@29a8 weird status move
@@ -137,7 +137,7 @@ uint32_t m68k_step(M68k* m)
     }
     else
     {
-        DecodedInstruction* d = breakpoint_triggered && false ? m68k_decode(m, m->instruction_address) : NULL;
+        DecodedInstruction* d = breakpoint_triggered || true ? m68k_decode(m, m->instruction_address) : NULL;
         if (d != NULL)
             printf("%#06X   %s\n", m->pc - 2, d->mnemonics);
 

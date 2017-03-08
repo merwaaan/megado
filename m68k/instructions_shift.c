@@ -134,7 +134,7 @@ int ror(Instruction* i)
     {
         SET(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));
 
-        CARRY_SET(i->context, BIT(initial, i->size - rotation));
+        CARRY_SET(i->context, BIT(initial, rotation - 1));
     }
     else
         CARRY_SET(i->context, 0);
