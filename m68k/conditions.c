@@ -7,12 +7,12 @@
 
 bool False(M68k* context)
 {
-    return ZERO(context);
+    return false;
 }
 
 bool True(M68k* context)
 {
-    return !ZERO(context);
+    return true;
 }
 
 bool High(M68k* context)
@@ -27,62 +27,62 @@ bool LowOrSame(M68k* context)
 
 bool CarryClear(M68k* context)
 {
-    return CARRY(context) == 0;
+    return !CARRY(context);
 }
 
 bool CarrySet(M68k* context)
 {
-    return CARRY(context) == 1;
+    return CARRY(context);
 }
 
 bool NotEqual(M68k* context)
 {
-    return ZERO(context) == 0;
+    return !ZERO(context);
 }
 
 bool Equal(M68k* context)
 {
-    return ZERO(context) == 1;
+    return ZERO(context);
 }
 
 bool OverflowClear(M68k* context)
 {
-    return OVERFLOW(context) == 0;
+    return !OVERFLOW(context);
 }
 
 bool OverflowSet(M68k* context)
 {
-    return OVERFLOW(context) == 1;
+    return OVERFLOW(context);
 }
 
 bool Plus(M68k* context)
 {
-    return NEGATIVE(context) == 0;
+    return !NEGATIVE(context);
 }
 
 bool Minus(M68k* context)
 {
-    return NEGATIVE(context) == 1;
+    return NEGATIVE(context);
 }
 
 bool GreaterOrEqual(M68k* context)
 {
-    return 0; // TODO
+    return NEGATIVE(context) & OVERFLOW(context) | !NEGATIVE(context) & !OVERFLOW(context);
 }
 
 bool LessThan(M68k* context)
 {
-    return 0; // TODO
+    return NEGATIVE(context) & !OVERFLOW(context) | !NEGATIVE(context) & OVERFLOW(context);
 }
 
 bool GreaterThan(M68k* context)
 {
-    return 0; // TODO
+    return NEGATIVE(context) & OVERFLOW(context) & !ZERO(context) | !NEGATIVE(context) & !OVERFLOW(context) & !ZERO(context);
 }
 
 bool LessOrEqual(M68k* context)
 {
-    return 0; // TODO
+    return ZERO(context) | NEGATIVE(context) & !OVERFLOW(context) | !NEGATIVE(context) & OVERFLOW(context);
 }
 
 static Condition all_conditions[] = {
