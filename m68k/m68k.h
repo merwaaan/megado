@@ -33,10 +33,18 @@ struct M68k;
 typedef void(*CallbackFunc)(struct M68k*);
 
 typedef struct M68k {
+    uint32_t pc;
+    uint16_t status;
     int32_t data_registers[8];
     uint32_t address_registers[8];
-    uint16_t status;
-    uint32_t pc;
+
+    // The CPU uses different stack pointers in supervisor/user mode.
+    // Those variable only hold the value of the disabled mode while
+    // the CPU is in the other one. 
+    // The active stack pointer value must always be accessed via A7.
+    uint32_t ssp;
+    uint32_t usp;
+
     uint64_t cycles;
 
     // Level of any pending interrupt (negative values means no interrupts)

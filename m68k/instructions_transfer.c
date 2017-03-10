@@ -308,12 +308,12 @@ Instruction* gen_move_to_sr(uint16_t opcode, M68k* m)
 
 int move_usp(Instruction* i)
 {
-    // Register to stack pointer
+    // Register -> user stack pointer
     if (i->src != NULL)
-        i->context->address_registers[7] = GET(i->src);
-    // Stack pointer to register
+        i->context->usp = GET(i->src);
+    // User stack pointer -> register
     else
-        SET(i->dst, i->context->address_registers[7]);
+        SET(i->dst, i->context->usp);
 
     return 0;
 }
