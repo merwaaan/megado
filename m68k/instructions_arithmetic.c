@@ -191,15 +191,38 @@ Instruction* gen_cmpm(uint16_t opcode, M68k* m)
     return i;
 }
 
+int div_(Instruction* i)
+{
+    uint16_t a = FETCH_EA_AND_GET(i->src);
+    uint16_t b = GET(i->dst);
+
+    uint16_t quotient = a / b;
+    uint16_t remainder = a % b;
+    SET(i->dst, remainder << 16 | quotient);
+
+    CARRY_SET(i->context, false);
+    OVERFLOW_SET(i->context, false); // TODO
+    ZERO_SET(i->context, quotient == 0);
+    NEGATIVE_SET(i->context, BIT(quotient, 15));
+
+    return 0;
+}
+
 Instruction* gen_divs(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "DIVS", not_implemented);
+    Instruction* i = instruction_make(m, "DIVS", div_);
+    i->size = Long;
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     return i;
 }
 
 Instruction* gen_divu(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "DIVU", not_implemented);
+    Instruction* i = instruction_make(m, "DIVU", div_);
+    i->size = Long;
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     return i;
 }
 
@@ -235,7 +258,7 @@ Instruction* gen_ext(uint16_t opcode, M68k* m)
     return i;
 }
 
-int muls(Instruction* i)
+int mul(Instruction* i)
 {
     SET(i->dst, FETCH_EA_AND_GET(i->src) * GET(i->dst));
 
@@ -250,38 +273,42 @@ int muls(Instruction* i)
 
 Instruction* gen_muls(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "MULS", muls);
+    Instruction* i = instruction_make(m, "MULS", mul);
     i->size = Long;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     return i;
-}
-
-int mulu(Instruction* i)
-{
-    SET(i->dst, FETCH_EA_AND_GET(i->src) * GET(i->dst));
-
-    uint32_t result = GET(i->dst);
-    CARRY_SET(i->context, false);
-    OVERFLOW_SET(i->context, false); // TODO
-    ZERO_SET(i->context, result == 0);
-    NEGATIVE_SET(i->context, false); // TODO ??
-
-    return 0;
 }
 
 Instruction* gen_mulu(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "MULU", mulu);
+    Instruction* i = instruction_make(m, "MULU", mul);
     i->size = Long;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     return i;
 }
 
+int neg(Instruction* i)
+{
+    uint32_t value = FETCH_EA_AND_GET(i->dst);
+    SET(i->dst, 0 - value);
+
+    uint32_t result = GET(i->dst);
+    CARRY_SET(i->context, CHECK_CARRY_SUB(0, value, i->size));
+    OVERFLOW_SET(i->context, CHECK_OVERFLOW_SUB(0, value, i->size));
+    ZERO_SET(i->context, result == 0);
+    NEGATIVE_SET(i->context, BIT(result, i->size - 1));
+    EXTENDED_SET(i->context, CARRY(i->context));
+
+    return 0;
+}
+
 Instruction* gen_neg(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "NEG", not_implemented);
+    Instruction* i = instruction_make(m, "NEG", neg);
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
 

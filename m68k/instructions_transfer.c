@@ -323,7 +323,7 @@ Instruction* gen_move_usp(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "MOVE USP", move_usp);
     i->size = Long;
 
-    Operand* reg = operand_make_address_register_indirect(FRAGMENT(opcode, 2, 0), i);
+    Operand* reg = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
 
     int direction = BIT(opcode, 3);
     if (direction)
