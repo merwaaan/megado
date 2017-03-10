@@ -132,9 +132,13 @@ DEFINE_INSTR(subx);
 
 // Shit & rotate
 DEFINE_INSTR(asd);
+DEFINE_INSTR(asd_mem);
 DEFINE_INSTR(lsd);
+DEFINE_INSTR(lsd_mem);
 DEFINE_INSTR(rod);
+DEFINE_INSTR(rod_mem);
 DEFINE_INSTR(roxd);
+DEFINE_INSTR(roxd_mem);
 DEFINE_INSTR(swap);
 
 // Data transfer

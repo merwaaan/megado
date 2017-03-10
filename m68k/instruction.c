@@ -98,10 +98,14 @@ static Pattern all_patterns[] =
     { 0xD0C0, 0xF0C0, &gen_adda },
     { 0xD000, 0xF000, &gen_add },
     { 0xC100, 0xF100, &gen_exg },
+    { 0xE0C0, 0xFEC0, &gen_asd_mem },
+    { 0xE2C0, 0xFEC0, &gen_lsd_mem },
+    { 0xE4C0, 0xFEC0, &gen_roxd_mem },
+    { 0xE6C0, 0xFEC0, &gen_rod_mem },
     { 0xE000, 0xF018, &gen_asd },
     { 0xE008, 0xF018, &gen_lsd },
+    { 0xE010, 0xF018, &gen_roxd },
     { 0xE018, 0xF018, &gen_rod },
-    { 0xE010, 0xF018, &gen_roxd }
 };
 
 int pattern_match(uint16_t opcode, Pattern pattern)

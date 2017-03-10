@@ -223,15 +223,15 @@ uint16_t vdp_read_control(Vdp* v)
         (false << 3) | // Vertical blank
         (false << 2) | // Horizontal blank
         (v->dma_in_progress << 1) | // DMA transfer currently executing
-        false;        // NTSC (0) / PAL (1)
+        true;        // NTSC (0) / PAL (1)
 }
 
 void vdp_write_control(Vdp* v, uint16_t value)
 {
     // TODO see https://sourceforge.net/p/dgen/dgen/ci/master/tree/vdp.cpp for cancelling commands
 
-    // Register set
-    if ((value & 0xE000) == 0x8000)
+    // Register write
+    if ((value & 0xC000) == 0x8000)
     {
         uint8_t reg = FRAGMENT(value, 12, 8);
         uint8_t reg_value = WORD_LO(value);
@@ -379,7 +379,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
         }
     }
-    // Data address set
+    // Command word
     else
     {
         if (!v->pending_command)
@@ -389,7 +389,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
             v->pending_command = true;
 
-            printf("First command word %04x: mode %02x, address %04x\n", value, v->access_mode, v->access_address);
+            printf("First command word %04x: mode %04x, address %04x\n", value, v->access_mode, v->access_address);
         }
         else
         {

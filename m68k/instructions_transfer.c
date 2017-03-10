@@ -66,9 +66,27 @@ Instruction* gen_lea(uint16_t opcode, M68k* m)
     return i;
 }
 
+int link(Instruction* i)
+{
+    // Push the address register onto the stack
+    i->context->address_registers[7] -= 4;
+    m68k_write_l(i->context, i->context->address_registers[7], i->context->address_registers[i->src->n]);
+
+    // Place the new stack pointer in the address register
+    i->context->address_registers[i->src->n] = i->context->address_registers[7];
+
+    // Add the offset to the stack pointer
+    i->context->address_registers[7] += (int16_t)FETCH_EA_AND_GET(i->dst);
+
+    return 0;
+}
+
 Instruction* gen_link(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "LINK", not_implemented);
+    Instruction* i = instruction_make(m, "LINK", link);
+    i->size = Long;
+    i->src = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
+    i->dst = operand_make_immediate_value(Word, i);
     return i;
 }
 
@@ -336,9 +354,8 @@ Instruction* gen_move_usp(uint16_t opcode, M68k* m)
 
 int pea(Instruction* i)
 {
-    // TODO
-    //i->context->memory[i->context->address_registers[7]] = GET(i->src);
-    //i->context->address_registers[7]--;
+    i->context->address_registers[7] -= 4;
+    m68k_write_l(i->context, i->context->address_registers[7], FETCH_EA(i->src));
 
     return 0;
 }
@@ -346,12 +363,27 @@ int pea(Instruction* i)
 Instruction* gen_pea(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "PEA", pea);
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->size = Long;
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
+}
+
+int unlk(Instruction* i)
+{
+    // Load the stack pointer with the address register
+    i->context->address_registers[7] = i->context->address_registers[i->src->n];
+    
+    // Load the address register with the long word at the top of the stack
+    i->context->address_registers[i->src->n] = m68k_read_l(i->context, i->context->address_registers[7]);
+    i->context->address_registers[7] += 4;
+
+    return 0;
 }
 
 Instruction* gen_unlk(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "UNLK", not_implemented);
+    Instruction* i = instruction_make(m, "UNLK", unlk);
+    i->size = Long;
+    i->src = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
     return i;
 }

@@ -21,6 +21,15 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
     return i;
 }
 
+Instruction* gen_shift_memory_instruction(uint16_t opcode, M68k* m, char* name, InstructionFunc func)
+{
+    Instruction* i = instruction_make(m, name, func);
+    i->size = Word;
+    i->src = operand_make_value(1, i); // The shift count is always 1
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}
+
 int asr(Instruction* i)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst);
@@ -52,7 +61,7 @@ int lsl(Instruction* i)
     if (shift == 0)
         shift = 8;
 
-    if (shift > 0)
+    if (shift > 0) // TODO always > 0!!
     {
         SET(i->dst, initial << shift);
 
@@ -73,8 +82,11 @@ int lsr(Instruction* i)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
-    uint8_t shift = FETCH_EA_AND_GET(i->src); // TODO 1-8?
-    if (shift > 0)
+    uint8_t shift = FETCH_EA_AND_GET(i->src);
+    if (shift == 0)
+        shift = 8;
+
+    if (shift > 0) // TODO always > 0!!
     {
         SET(i->dst, initial >> shift);
 
@@ -97,10 +109,22 @@ Instruction* gen_asd(uint16_t opcode, M68k* m)
     return gen_shift_instruction(opcode, m, direction ? "ASL" : "ASR", direction ? lsl : asr); // ASL = LSL
 }
 
+Instruction* gen_asd_mem(uint16_t opcode, M68k* m)
+{
+    bool direction = BIT(opcode, 8);
+    return gen_shift_memory_instruction(opcode, m, direction ? "ASL" : "ASR", direction ? lsl : asr); // ASL = LSL
+}
+
 Instruction* gen_lsd(uint16_t opcode, M68k* m)
 {
     bool direction = BIT(opcode, 8);
     return gen_shift_instruction(opcode, m, direction ? "LSL" : "LSR", direction ? lsl : lsr);
+}
+
+Instruction* gen_lsd_mem(uint16_t opcode, M68k* m)
+{
+    bool direction = BIT(opcode, 8);
+    return gen_shift_memory_instruction(opcode, m, direction ? "LSL" : "LSR", direction ? lsl : lsr);
 }
 
 int rol(Instruction* i)
@@ -108,7 +132,10 @@ int rol(Instruction* i)
     uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
     int rotation = FETCH_EA_AND_GET(i->src) % i->size;
-    if (rotation > 0)
+    if (rotation == 0)
+        rotation = 8;
+
+    if (rotation > 0) // TODO always true!
     {
         SET(i->dst, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
 
@@ -130,7 +157,10 @@ int ror(Instruction* i)
     uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
     int rotation = FETCH_EA_AND_GET(i->src) % i->size;
-    if (rotation > 0)
+    if (rotation == 0)
+        rotation = 8;
+
+    if (rotation > 0) //TODO always true!
     {
         SET(i->dst, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));
 
@@ -153,12 +183,21 @@ Instruction* gen_rod(uint16_t opcode, M68k* m)
     return gen_shift_instruction(opcode, m, direction ? "ROL" : "ROR", direction ? rol : ror);
 }
 
+Instruction* gen_rod_mem(uint16_t opcode, M68k* m)
+{
+    bool direction = BIT(opcode, 8);
+    return gen_shift_memory_instruction(opcode, m, direction ? "ROL" : "ROR", direction ? rol : ror);
+}
+
 int roxl(Instruction* i)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
     int rotation = GET(i->src) % i->size;
-    if (rotation > 0)
+    if (rotation == 0)
+        rotation = 8;
+
+    if (rotation > 0) // TODO always true
     {
         uint32_t rotated = rotation > 1 ? FRAGMENT(initial, i->size - 1, i->size - rotation + 1) : 0;
         SET(i->dst, initial << rotation | EXTENDED(i->context) << (rotation - 1) | rotated);
@@ -205,6 +244,12 @@ Instruction* gen_roxd(uint16_t opcode, M68k* m)
 {
     bool direction = BIT(opcode, 8);
     return gen_shift_instruction(opcode, m, direction ? "ROXL" : "ROXR", direction ? roxl : roxr);
+}
+
+Instruction* gen_roxd_mem(uint16_t opcode, M68k* m)
+{
+    bool direction = BIT(opcode, 8);
+    return gen_shift_memory_instruction(opcode, m, direction ? "ROXL" : "ROXR", direction ? roxl : roxr);
 }
 
 int swap(Instruction* i)
