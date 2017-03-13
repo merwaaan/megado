@@ -95,8 +95,6 @@ uint16_t vdp_read_data(Vdp* v)
     return value;
 }
 
-static int break_counter;
-
 void vdp_write_data(Vdp* v, uint16_t value)
 {
     v->pending_command = false;
@@ -156,15 +154,11 @@ void vdp_write_data(Vdp* v, uint16_t value)
             }*/
 
             printf("DMA Fill to VRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address, value, v->dma_length, v->auto_increment);
-            //draw(v);
-            if (break_counter++ == 5)
-            {
-               //__asm int 3
-            }
+
             uint8_t hi = BYTE_HI(value);
             do
             {
-                v->vram[v->access_address] = hi;
+                v->vram[v->access_address ^ 1] = hi;
                 v->access_address += v->auto_increment;
 
                 // The DMA source address is not used in this process but must be incremented anyway
@@ -172,11 +166,10 @@ void vdp_write_data(Vdp* v, uint16_t value)
 
             } while (--v->dma_length);
 
-            //draw(v);
             break;
 
         case 3: // CRAM fill
-        
+
             printf("DMA Fill to CRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address >> 1, value, v->dma_length, v->auto_increment);
 
             do {
@@ -189,7 +182,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
             break;
 
         case 5: // VSRAM fill
-        
+
             printf("DMA Fill to VSRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address >> 1, value, v->dma_length, v->auto_increment);
 
             do {
@@ -400,15 +393,16 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
             printf("Second command word %04x: mode %04x, address %04x\n", value, v->access_mode, v->access_address);
 
-            // Handle DMA transfers
-            if (v->dma_enabled)
+            // Handle DMA transfers (CD5 set)
+            if (v->dma_enabled && v->access_mode & 0x20)
             {
-                // Memory to VRAM transfer
+                // Memory to...
                 if (v->dma_type < 2)
                 {
-                    // to VRAM
-                    if ((v->access_mode & 7) == 1)
+                    switch (v->access_mode & 0xF)
                     {
+                    case 1:
+                        // ... VRAM
                         printf("DMA transfer from %08x to VRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do {
@@ -420,26 +414,27 @@ void vdp_write_control(Vdp* v, uint16_t value)
                             v->access_address += v->auto_increment;
                         } while (--v->dma_length);
 
-                        //draw(v);
-                    }
-                    // to CRAM
-                    else if ((v->access_mode & 7) == 3)
-                    {
+                        break;
+
+                    case 3:
+                        // ... CRAM
                         printf("DMA transfer from %04x to CRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do {
                             // "When doing a transfer to CRAM, the operation is aborted
                             //  once the address register is larger than 7Fh" - genvdp.txt
                             /*if (v->access_address > 0x7F)
-                                break;*/
+                            break;*/
 
                             v->cram[v->access_address >> 1 & 0x3F] = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
 
                             ++v->dma_source_address_lo;
                             v->access_address += v->auto_increment;
                         } while (--v->dma_length);
-                    }
-                    else {
+
+                        break;
+
+                    case 5:
                         printf("DMA transfer from %04x to VSRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do {
@@ -448,6 +443,8 @@ void vdp_write_control(Vdp* v, uint16_t value)
                             ++v->dma_source_address_lo;
                             v->access_address += v->auto_increment;
                         } while (--v->dma_length);
+
+                        break;
                     }
                 }
                 // VRAM fill (will be triggered on the next data port write)
@@ -499,7 +496,7 @@ void draw_plane(Vdp* v, int x, int y, uint8_t* nametable)
     for (int py = 0; py < v->vertical_plane_size; ++py)
         for (int px = 0; px < v->horizontal_plane_size; ++px)
         {
-            uint16_t offset = py * v->horizontal_plane_size + px;
+            uint16_t offset = py * v->horizontal_plane_size * 2 + px * 2;
             uint16_t data = (nametable[offset] << 8) | nametable[offset + 1];
 
             bool priority = BIT(data, 15);
@@ -541,7 +538,7 @@ void draw(Vdp* v)
     int columns = 30;
     for (int pattern = 0; pattern < 0x7FF; ++pattern)
         draw_pattern(v, pattern, v->cram, 8 * (pattern % columns), 50 + 8 * (pattern / columns));
-        
+
     // Draw the planes
     draw_plane(v, 300, 0, v->vram + v->plane_a_nametable);
     draw_plane(v, 300, 400, v->vram + v->plane_b_nametable);
