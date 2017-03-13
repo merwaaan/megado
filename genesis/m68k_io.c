@@ -11,7 +11,18 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
 
     switch (address)
     {
-        // TODO temp, simulate z80
+    
+    // https://wiki.megadrive.org/index.php?title=IO_Registers
+
+    case 0xA10000: // Version port
+    case 0xA10001:
+        return
+            false << 7 | // Domestic (0) / Export (1)
+            false << 6 | // PAL (0) / NTSC (0)
+            false << 5 | // Sega CD connected
+            false; // Version
+
+            // TODO temp, simulate z80
     case 0xA11100:
         return 0;
 
