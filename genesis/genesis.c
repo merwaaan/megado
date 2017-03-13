@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "genesis.h"
+#include "joypad.h"
 #include "vdp.h"
 
 Genesis* genesis_make()
@@ -12,6 +13,7 @@ Genesis* genesis_make()
     g->memory = calloc(0x1000000, sizeof(uint8_t));
     g->m68k = m68k_make();
     g->vdp = vdp_make(g->m68k);
+    g->joypad = joypad_make();
 
     // Store a pointer to the Genesis instance in the M68k
     // In this way, the various modules can be accessed from M68k-centric I/O functions (see m68k_io.c)
@@ -27,6 +29,8 @@ void genesis_free(Genesis* g)
 
     m68k_free(g->m68k);
     vdp_free(g->vdp);
+    joypad_free(g->joypad);
+
     free(g->memory);
     free(g);
 }
@@ -69,16 +73,32 @@ void genesis_initialize(Genesis* g)
     // http://md.squee.co/Howto:Initialise_a_Mega_Drive
 
     m68k_initialize(g->m68k);
-
-    // TODO interrupts
-
 }
+
+SDL_Event event;
 
 uint32_t genesis_step(Genesis* g)
 {
     uint32_t pc = m68k_step(g->m68k);
 
     vdp_draw(g->vdp);
+
+    // Handle keyboard input
+    SDL_PollEvent(&event);
+    switch (event.type)
+    {
+    case SDL_KEYDOWN:
+        switch (event.key.keysym.sym)
+        {
+        case SDLK_LEFT: joypad_press(g->joypad, Left); break;
+        case SDLK_RIGHT: joypad_press(g->joypad, Right); break;
+        case SDLK_UP: joypad_press(g->joypad, Up); break;
+        case SDLK_RETURN: joypad_press(g->joypad, Start); break;
+        case SDLK_a: joypad_press(g->joypad, ButtonA); break;
+        case SDLK_z: joypad_press(g->joypad, ButtonB); break;
+        case SDLK_e: joypad_press(g->joypad, ButtonC); break;
+        }
+    }
 
     return pc;
 }

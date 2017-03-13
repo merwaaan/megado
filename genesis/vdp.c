@@ -207,15 +207,15 @@ uint16_t vdp_read_control(Vdp* v)
     // TODO
     return
         0x3400 |
-        (false << 9) | // FIFO not empty
-        (false << 8) | // FIFO not full
-        (false << 7) | // Vertical interrupt occurred
-        (false << 6) | // Sprite overflow
-        (false << 5) | // Sprite collision
-        (false << 4) | // Odd frame
-        (false << 3) | // Vertical blank
-        (false << 2) | // Horizontal blank
-        (v->dma_in_progress << 1) | // DMA transfer currently executing
+        false << 9 | // FIFO not empty
+        false << 8 | // FIFO not full
+        false << 7 | // Vertical interrupt occurred
+        false << 6 | // Sprite overflow
+        false << 5 | // Sprite collision
+        false << 4 | // Odd frame
+        false << 3 | // Vertical blank
+        false << 2 | // Horizontal blank
+        v->dma_in_progress << 1 | // DMA transfer currently executing
         true;        // NTSC (0) / PAL (1)
 }
 

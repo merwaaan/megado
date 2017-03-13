@@ -10,6 +10,7 @@ typedef struct {
     uint8_t* memory;
     struct M68k* m68k;
     struct Vdp* vdp;
+    struct Joypad* joypad;
 } Genesis;
 
 Genesis* genesis_make();
