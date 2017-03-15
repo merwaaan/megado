@@ -17,7 +17,7 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
     case 0xA10000: // Version port
     case 0xA10001:
         return
-            false << 7 | // Domestic (0) / Export (1)
+            true << 7 | // Domestic (0) / Export (1)
             false << 6 | // PAL (0) / NTSC (0)
             false << 5 | // Sega CD connected
             false; // Version
@@ -72,6 +72,9 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     {
         vdp_write_control(GENESIS(m)->vdp, value & (value << 8));
     }
+
+    if (address > 0x82e0 && address < 0x82ff)
+        printf("");
 
     GENESIS(m)->memory[address & 0xFFFFFF] = value;
 }

@@ -213,8 +213,8 @@ uint16_t vdp_read_control(Vdp* v)
         false << 6 | // Sprite overflow
         false << 5 | // Sprite collision
         false << 4 | // Odd frame
-        false << 3 | // Vertical blank
-        false << 2 | // Horizontal blank
+        v->vblank_in_progress << 3 | // Vertical blanking
+        v->hblank_in_progress << 2 | // Horizontal blanking
         v->dma_in_progress << 1 | // DMA transfer currently executing
         true;        // NTSC (0) / PAL (1)
 }

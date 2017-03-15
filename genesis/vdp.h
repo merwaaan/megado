@@ -104,6 +104,8 @@ typedef struct Vdp
     int dma_type;
 
     bool dma_in_progress;
+    bool hblank_in_progress;
+    bool vblank_in_progress;
 
     M68k* cpu;
 
