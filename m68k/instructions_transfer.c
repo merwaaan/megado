@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "bit_utils.h"
+#include "cycles.h"
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
@@ -90,38 +91,6 @@ Instruction* gen_link(uint16_t opcode, M68k* m)
     return i;
 }
 
-int move_cycles_bw[12][9] =
-{
-    { 4, 4, 8, 8, 8, 12, 14, 12, 16 },
-    { 4, 4, 8, 8, 8, 12, 14, 12, 16 },
-    { 8, 8, 12, 12, 12, 16, 18, 16, 20 },
-    { 8, 8, 12, 12, 12, 16, 18, 16, 20 },
-    { 10, 10, 14, 14, 14, 18, 20, 18, 22 },
-    { 12, 12, 16, 16, 16, 20, 22, 20, 24 },
-    { 14, 14, 18, 18, 18, 22, 24, 22, 26 },
-    { 12, 12, 16, 16, 16, 20, 22, 20, 24 },
-    { 16, 16, 20, 20, 20, 24, 26, 24, 28 },
-    { 12, 12, 16, 16, 16, 20, 22, 20, 24 },
-    { 14, 14, 18, 18, 18, 22, 24, 22, 26 },
-    { 8, 8, 12, 12, 12, 16, 18, 16, 20 }
-};
-
-int move_cycles_l[12][9] = // TODO fill this when you want to feel like a robot
-{
-    { 4, 4, 8, 8, 8, 12, 14, 12, 16 },
-    { 4, 4, 8, 8, 8, 12, 14, 12, 16 },
-    { 8, 8, 12, 12, 12, 16, 18, 16, 20 },
-    { 8, 8, 12, 12, 12, 16, 18, 16, 20 },
-    { 10, 10, 14, 14, 14, 18, 20, 18, 22 },
-    { 12, 12, 16, 16, 16, 20, 22, 20, 24 },
-    { 14, 14, 18, 18, 18, 22, 24, 22, 26 },
-    { 12, 12, 16, 16, 16, 20, 22, 20, 24 },
-    { 16, 16, 20, 20, 20, 24, 26, 24, 28 },
-    { 12, 12, 16, 16, 16, 20, 22, 20, 24 },
-    { 14, 14, 18, 18, 18, 22, 24, 22, 26 },
-    { 8, 8, 12, 12, 12, 16, 18, 16, 20 }
-};
-
 int move(Instruction* i)
 {
     uint32_t value = FETCH_EA_AND_GET(i->src);
@@ -139,9 +108,11 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "MOVE", move);
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
-    i->base_cycles = (i->size == Long ? move_cycles_l : move_cycles_bw)[0][0]; // TODO
     i->dst = operand_make(FRAGMENT(opcode, 11, 9) | FRAGMENT(opcode, 8, 6) << 3, i);
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+
+    i->base_cycles = cycles_move_table[i->size == Long][i->src->type][i->dst->type];
+
     return i;
 }
 

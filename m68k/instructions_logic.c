@@ -3,6 +3,7 @@
 
 #include "bit_utils.h"
 #include "conditions.h"
+#include "cycles.h"
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
@@ -55,7 +56,13 @@ int and(Instruction* i)
 
 Instruction* gen_and(uint16_t opcode, M68k* m)
 {
-    return gen_boolean_instruction(opcode, m, "AND", and);
+    Instruction* i = gen_boolean_instruction(opcode, m, "AND", and);
+
+    i->base_cycles = i->size == Long ?
+        cycles_standard_instruction(i, 0, 4, 8) :
+        cycles_standard_instruction(i, 0, 6, 12);
+
+    return i;
 }
 
 Instruction* gen_andi(uint16_t opcode, M68k* m)
@@ -106,7 +113,13 @@ int eor(Instruction* i)
 
 Instruction* gen_eor(uint16_t opcode, M68k* m)
 {
-    return gen_boolean_instruction(opcode, m, "EOR", eor);
+    Instruction* i = gen_boolean_instruction(opcode, m, "EOR", eor);
+
+    i->base_cycles = i->size == Long ?
+        cycles_standard_instruction(i, 0, 4, 8) :
+        cycles_standard_instruction(i, 0, 8, 12);
+
+    return i;
 }
 
 Instruction* gen_eori(uint16_t opcode, M68k* m)
@@ -129,7 +142,13 @@ int or (Instruction* i)
 
 Instruction* gen_or(uint16_t opcode, M68k* m)
 {
-    return gen_boolean_instruction(opcode, m, "OR", or);
+    Instruction* i = gen_boolean_instruction(opcode, m, "OR", or);
+    
+    i->base_cycles = i->size == Long ?
+        cycles_standard_instruction(i, 0, 4, 8) :
+        cycles_standard_instruction(i, 0, 6, 12);
+    
+    return i;
 }
 
 Instruction* gen_ori(uint16_t opcode, M68k* m)
@@ -184,6 +203,11 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "NOT", not);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+
+    i->base_cycles = i->size == Long ?
+        cycles_single_operand_instruction(i, 6, 12) :
+        cycles_single_operand_instruction(i, 4, 8);
+
     return i;
 }
 
@@ -200,6 +224,11 @@ Instruction* gen_scc(uint16_t opcode, M68k* m)
     i->size = Byte;
     i->condition = condition_get(FRAGMENT(opcode, 11, 8));
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+
+    i->base_cycles = i->size == Long ?
+        cycles_single_operand_instruction(i, 6, 8) :
+        cycles_single_operand_instruction(i, 4, 8);
+
     return i;
 }
 
@@ -220,5 +249,10 @@ Instruction* gen_tst(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "TST", tst);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+
+    i->base_cycles = i->size == Long ?
+        cycles_single_operand_instruction(i, 4, 4) :
+        cycles_single_operand_instruction(i, 4, 4);
+
     return i;
 }

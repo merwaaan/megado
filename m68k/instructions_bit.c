@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "bit_utils.h"
+#include "cycles.h"
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
@@ -18,7 +19,7 @@ Instruction* gen_bit_instruction(uint16_t opcode, M68k* m, char* name, Instructi
         i->size = i->dst->type == DataRegister ? Long : Byte;
 
     i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-
+    
     return i;
 }
 
@@ -51,12 +52,24 @@ int bchg(Instruction* i)
 
 Instruction* gen_bchg(uint16_t opcode, M68k* m)
 {
-    return gen_bit_instruction(opcode, m, "BCHG", bchg);
+    Instruction* i = gen_bit_instruction(opcode, m, "BCHG", bchg);
+
+    i->base_cycles = i->size == Long ?
+        cycles_bit_manipulation_instruction(i, 8, 0) :
+        cycles_bit_manipulation_instruction(i, 0, 8);
+
+    return i;
 }
 
 Instruction* gen_bchg_imm(uint16_t opcode, M68k* m)
 {
-    return gen_bit_instruction_immediate(opcode, m, "BCHG", bchg);
+    Instruction* i = gen_bit_instruction_immediate(opcode, m, "BCHG", bchg);
+
+    i->base_cycles = i->size == Long ?
+        cycles_bit_manipulation_instruction(i, 12, 0) :
+        cycles_bit_manipulation_instruction(i, 0, 12);
+
+    return i;
 }
 
 int bclr(Instruction* i)
@@ -73,12 +86,24 @@ int bclr(Instruction* i)
 
 Instruction* gen_bclr(uint16_t opcode, M68k* m)
 {
-    return gen_bit_instruction(opcode, m, "BCLR", bclr);
+    Instruction* i = gen_bit_instruction(opcode, m, "BCLR", bclr);
+
+    i->base_cycles = i->size == Long ?
+        cycles_bit_manipulation_instruction(i, 10, 0) :
+        cycles_bit_manipulation_instruction(i, 0, 8);
+
+    return i;
 }
 
 Instruction* gen_bclr_imm(uint16_t opcode, M68k* m)
 {
-    return gen_bit_instruction_immediate(opcode, m, "BCLR", bclr);
+    Instruction* i = gen_bit_instruction_immediate(opcode, m, "BCLR", bclr);
+
+    i->base_cycles = i->size == Long ?
+        cycles_bit_manipulation_instruction(i, 14, 0) :
+        cycles_bit_manipulation_instruction(i, 0, 12);
+
+    return i;
 }
 
 int bset(Instruction* i)
@@ -95,12 +120,24 @@ int bset(Instruction* i)
 
 Instruction* gen_bset(uint16_t opcode, M68k* m)
 {
-    return gen_bit_instruction(opcode, m, "BSET", bset);
+    Instruction* i = gen_bit_instruction(opcode, m, "BSET", bset);
+
+    i->base_cycles = i->size == Long ?
+        cycles_bit_manipulation_instruction(i, 8, 0) :
+        cycles_bit_manipulation_instruction(i, 0, 8);
+
+    return i;
 }
 
 Instruction* gen_bset_imm(uint16_t opcode, M68k* m)
 {
-    return gen_bit_instruction_immediate(opcode, m, "BSET", bset);
+    Instruction* i = gen_bit_instruction_immediate(opcode, m, "BSET", bset);
+
+    i->base_cycles = i->size == Long ?
+        cycles_bit_manipulation_instruction(i, 12, 0) :
+        cycles_bit_manipulation_instruction(i, 0, 12);
+
+    return i;
 }
 
 int btst(Instruction* i) // TODO check doc
@@ -115,10 +152,22 @@ int btst(Instruction* i) // TODO check doc
 
 Instruction* gen_btst(uint16_t opcode, M68k* m)
 {
-    return gen_bit_instruction(opcode, m, "BTST", btst);
+    Instruction* i = gen_bit_instruction(opcode, m, "BTST", btst);
+
+    i->base_cycles = i->size == Long ?
+        cycles_bit_manipulation_instruction(i, 6, 0) :
+        cycles_bit_manipulation_instruction(i, 0, 4);
+
+    return i;
 }
 
 Instruction* gen_btst_imm(uint16_t opcode, M68k* m)
 {
-    return gen_bit_instruction_immediate(opcode, m, "BTST", btst);
+    Instruction* i = gen_bit_instruction_immediate(opcode, m, "BTST", btst);
+
+    i->base_cycles = i->size == Long ?
+        cycles_bit_manipulation_instruction(i, 10, 0) :
+        cycles_bit_manipulation_instruction(i, 0, 8);
+
+    return i;
 }

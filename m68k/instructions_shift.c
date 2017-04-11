@@ -2,9 +2,12 @@
 #include <stdlib.h>
 
 #include "bit_utils.h"
+#include "cycles.h"
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
+
+// TODO check all timings
 
 Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, InstructionFunc func)
 {
@@ -18,6 +21,8 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
     else
         i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
 
+    i->base_cycles = 6;
+
     return i;
 }
 
@@ -27,6 +32,9 @@ Instruction* gen_shift_memory_instruction(uint16_t opcode, M68k* m, char* name, 
     i->size = Word;
     i->src = operand_make_value(1, i); // The shift count is always 1
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    
+    i->base_cycles = 8 + cycles_ea_calculation_table[i->src->type][i->dst->type];
+
     return i;
 }
 

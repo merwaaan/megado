@@ -42,18 +42,19 @@ typedef enum
     DataRegister,
     AddressRegister,
     AddressRegisterIndirect,
-    AddressRegisterIndirectPreDec,
     AddressRegisterIndirectPostInc,
+    AddressRegisterIndirectPreDec,
     AddressRegisterIndirectDisplacement,
     AddressRegisterIndirectIndexed,
+    AbsoluteShort,
+    AbsoluteLong,
     ProgramCounterDisplacement,
     ProgramCounterIndexed,
     Immediate,
-    AbsoluteShort,
-    AbsoluteLong,
-    Value,
 
+    Value,
     BranchingOffset,
+
     Unsupported
 } OperandType;
 
