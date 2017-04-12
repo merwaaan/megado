@@ -148,10 +148,15 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
     return NULL;
 }
 
-bool instruction_valid(Instruction* instr)
+bool instruction_is_valid(Instruction* instr, bool has_src, bool has_dst)
 {
-    // Check that the generated instruction is valid
-    if (instr == NULL)
+    if (instr == NULL || instr->size == InvalidSize)
+        return false;
+
+    if (has_src && (instr->src == NULL || instr->src->type == Unsupported))
+        return false;
+
+    if (has_dst && (instr->dst == NULL || instr->dst->type == Unsupported))
         return false;
 
     return true;

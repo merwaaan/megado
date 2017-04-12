@@ -5,7 +5,7 @@
 
 struct Instruction;
 
-// Cycles required to computed an effective address.
+// Cycles required to compute an effective address.
 // layout: cycles[bw/l][addressing mode]
 extern uint8_t cycles_ea_calculation_table[2][12]; 
 

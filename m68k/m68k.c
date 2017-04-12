@@ -26,7 +26,7 @@ M68k* m68k_make()
 
         Instruction* instr = instruction_generate(m68k, opcode);
 
-        if (!instruction_valid(instr))
+        if (!instruction_is_valid(instr, false, false))
         {
             instruction_free(instr);
             continue;

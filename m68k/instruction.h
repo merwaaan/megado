@@ -63,9 +63,8 @@ void instruction_free(Instruction*);
 // Generate the appropriate instruction from an opcode
 Instruction* instruction_generate(struct M68k* context, uint16_t opcode);
 
-// Check if an instruction is fully formed, ie. a function have been
-// assigned and all operands have been setup
-bool instruction_valid(Instruction*);
+// Check if an instruction is valid (bound to an implementation, valid size, valid operands)
+bool instruction_is_valid(Instruction*, bool has_src, bool has_dst);
 
 // Execute the given instruction.
 // Returns the elapsed cycles.

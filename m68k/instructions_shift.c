@@ -33,7 +33,8 @@ Instruction* gen_shift_memory_instruction(uint16_t opcode, M68k* m, char* name, 
     i->src = operand_make_value(1, i); // The shift count is always 1
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     
-    i->base_cycles = 8 + cycles_ea_calculation_table[i->src->type][i->dst->type];
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = 8 + cycles_ea_calculation_table[i->src->type][i->dst->type];
 
     return i;
 }

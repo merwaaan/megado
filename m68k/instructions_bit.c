@@ -54,9 +54,10 @@ Instruction* gen_bchg(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_bit_instruction(opcode, m, "BCHG", bchg);
 
-    i->base_cycles = i->size == Long ?
-        cycles_bit_manipulation_instruction(i, 8, 0) :
-        cycles_bit_manipulation_instruction(i, 0, 8);
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+            cycles_bit_manipulation_instruction(i, 8, 0) :
+            cycles_bit_manipulation_instruction(i, 0, 8);
 
     return i;
 }
@@ -65,9 +66,10 @@ Instruction* gen_bchg_imm(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_bit_instruction_immediate(opcode, m, "BCHG", bchg);
 
-    i->base_cycles = i->size == Long ?
-        cycles_bit_manipulation_instruction(i, 12, 0) :
-        cycles_bit_manipulation_instruction(i, 0, 12);
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+            cycles_bit_manipulation_instruction(i, 12, 0) :
+            cycles_bit_manipulation_instruction(i, 0, 12);
 
     return i;
 }
@@ -88,9 +90,10 @@ Instruction* gen_bclr(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_bit_instruction(opcode, m, "BCLR", bclr);
 
-    i->base_cycles = i->size == Long ?
-        cycles_bit_manipulation_instruction(i, 10, 0) :
-        cycles_bit_manipulation_instruction(i, 0, 8);
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+            cycles_bit_manipulation_instruction(i, 10, 0) :
+            cycles_bit_manipulation_instruction(i, 0, 8);
 
     return i;
 }
@@ -99,9 +102,10 @@ Instruction* gen_bclr_imm(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_bit_instruction_immediate(opcode, m, "BCLR", bclr);
 
-    i->base_cycles = i->size == Long ?
-        cycles_bit_manipulation_instruction(i, 14, 0) :
-        cycles_bit_manipulation_instruction(i, 0, 12);
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+            cycles_bit_manipulation_instruction(i, 14, 0) :
+            cycles_bit_manipulation_instruction(i, 0, 12);
 
     return i;
 }
@@ -121,10 +125,11 @@ int bset(Instruction* i)
 Instruction* gen_bset(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_bit_instruction(opcode, m, "BSET", bset);
-
-    i->base_cycles = i->size == Long ?
-        cycles_bit_manipulation_instruction(i, 8, 0) :
-        cycles_bit_manipulation_instruction(i, 0, 8);
+    
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+            cycles_bit_manipulation_instruction(i, 8, 0) :
+            cycles_bit_manipulation_instruction(i, 0, 8);
 
     return i;
 }
@@ -133,9 +138,10 @@ Instruction* gen_bset_imm(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_bit_instruction_immediate(opcode, m, "BSET", bset);
 
-    i->base_cycles = i->size == Long ?
-        cycles_bit_manipulation_instruction(i, 12, 0) :
-        cycles_bit_manipulation_instruction(i, 0, 12);
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+            cycles_bit_manipulation_instruction(i, 12, 0) :
+            cycles_bit_manipulation_instruction(i, 0, 12);
 
     return i;
 }
@@ -154,9 +160,10 @@ Instruction* gen_btst(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_bit_instruction(opcode, m, "BTST", btst);
 
-    i->base_cycles = i->size == Long ?
-        cycles_bit_manipulation_instruction(i, 6, 0) :
-        cycles_bit_manipulation_instruction(i, 0, 4);
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+            cycles_bit_manipulation_instruction(i, 6, 0) :
+            cycles_bit_manipulation_instruction(i, 0, 4);
 
     return i;
 }
@@ -164,10 +171,11 @@ Instruction* gen_btst(uint16_t opcode, M68k* m)
 Instruction* gen_btst_imm(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_bit_instruction_immediate(opcode, m, "BTST", btst);
-
-    i->base_cycles = i->size == Long ?
-        cycles_bit_manipulation_instruction(i, 10, 0) :
-        cycles_bit_manipulation_instruction(i, 0, 8);
+    
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+            cycles_bit_manipulation_instruction(i, 10, 0) :
+            cycles_bit_manipulation_instruction(i, 0, 8);
 
     return i;
 }

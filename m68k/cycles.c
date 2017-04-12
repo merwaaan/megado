@@ -12,10 +12,10 @@ uint8_t cycles_move_table[2][12][9] =
 {
     // Byte, Word
     {
-        { 4,  4,  8,  8,  8, 12, 14, 12, 16 },
-        { 4,  4,  8,  8,  8, 12, 14, 12, 16 },
-        { 8,  8, 12, 12, 12, 16, 18, 16, 20 },
-        { 8,  8, 12, 12, 12, 16, 18, 16, 20 },
+        {  4,  4,  8,  8,  8, 12, 14, 12, 16 },
+        {  4,  4,  8,  8,  8, 12, 14, 12, 16 },
+        {  8,  8, 12, 12, 12, 16, 18, 16, 20 },
+        {  8,  8, 12, 12, 12, 16, 18, 16, 20 },
         { 10, 10, 14, 14, 14, 18, 20, 18, 22 },
         { 12, 12, 16, 16, 16, 20, 22, 20, 24 },
         { 14, 14, 18, 18, 18, 22, 24, 22, 26 },
@@ -23,13 +23,13 @@ uint8_t cycles_move_table[2][12][9] =
         { 16, 16, 20, 20, 20, 24, 26, 24, 28 },
         { 12, 12, 16, 16, 16, 20, 22, 20, 24 },
         { 14, 14, 18, 18, 18, 22, 24, 22, 26 },
-        { 8,  8, 12, 12, 12, 16, 18, 16, 20 }
+        {  8,  8, 12, 12, 12, 16, 18, 16, 20 }
     },
 
     // Long
     {
-        { 4,  4, 12, 12, 12, 16, 18, 16, 20 },
-        { 4,  4, 12, 12, 12, 16, 18, 16, 20 },
+        {  4,  4, 12, 12, 12, 16, 18, 16, 20 },
+        {  4,  4, 12, 12, 12, 16, 18, 16, 20 },
         { 12, 12, 20, 20, 20, 24, 26, 24, 28 },
         { 12, 12, 20, 20, 20, 24, 26, 24, 28 },
         { 14, 14, 22, 22, 22, 26, 28, 26, 30 },
@@ -66,10 +66,10 @@ uint8_t cycles_standard_instruction(Instruction* i, uint8_t ea_an_cycles, uint8_
 
 uint8_t cycles_single_operand_instruction(Instruction* i, uint8_t register_cycles, uint8_t memory_cycles)
 {
-    if (i->src->type == DataRegister || i->src->type == AddressRegister)
+    if (i->dst->type == DataRegister || i->dst->type == AddressRegister)
         return register_cycles;
     else
-        return memory_cycles + cycles_ea_calculation_table[i->size][i->src->type];
+        return memory_cycles + cycles_ea_calculation_table[i->size][i->dst->type];
 }
 
 uint8_t cycles_bit_manipulation_instruction(struct Instruction* i, uint8_t register_cycles, uint8_t memory_cycles)

@@ -111,7 +111,8 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
     i->dst = operand_make(FRAGMENT(opcode, 11, 9) | FRAGMENT(opcode, 8, 6) << 3, i);
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    i->base_cycles = cycles_move_table[i->size == Long][i->src->type][i->dst->type];
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = cycles_move_table[i->size == Long][i->src->type][i->dst->type];
 
     return i;
 }
