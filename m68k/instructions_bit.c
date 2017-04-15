@@ -7,6 +7,8 @@
 #include "m68k.h"
 #include "operands.h"
 
+// TOFO merge versions
+
 Instruction* gen_bit_instruction(uint16_t opcode, M68k* m, char* name, InstructionFunc func)
 {
     Instruction* i = instruction_make(m, name, func);
@@ -26,7 +28,6 @@ Instruction* gen_bit_instruction(uint16_t opcode, M68k* m, char* name, Instructi
 Instruction* gen_bit_instruction_immediate(uint16_t opcode, M68k* m, char* name, InstructionFunc func)
 {
     Instruction* i = instruction_make(m, name, func);
-    i->base_length = 4; // TODO still necessary?
 
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
     

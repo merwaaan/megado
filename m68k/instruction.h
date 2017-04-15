@@ -28,12 +28,6 @@ typedef struct Instruction {
     // Size of the operation (byte, word, long)
     Size size;
 
-    // Instruction length in bytes
-    uint8_t base_length;
-
-    // Total instruction length (take into account the operands' length)
-    uint8_t total_length;
-
     // Base execution time (fixed part of the instruction's timing)
     //
     // The implementation will return an additional context-dependent

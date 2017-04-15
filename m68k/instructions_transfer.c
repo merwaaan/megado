@@ -178,7 +178,6 @@ Instruction* gen_movem(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "MOVEM", movem);
     i->size = operand_size3(BIT(opcode, 6));
-    i->base_length = 4;
 
     Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
 

@@ -122,7 +122,6 @@ Instruction* gen_dbcc(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "DBcc", dbcc);// TODO set name wrt condition
     i->size = Word;
-    i->base_length = 4;
     i->condition = condition_get(FRAGMENT(opcode, 11, 8));
     //sprintf(i->name, "B%s", i->condition->mnemonics);
     i->src = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);

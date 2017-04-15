@@ -15,7 +15,6 @@ Instruction* instruction_make(M68k* context, char* name, InstructionFunc func)
     i->context = context;
     i->name = name;
     i->func = func;
-    i->base_length = 2; // Most instructions take two bytes
     i->base_cycles = 0; // TODO
     return i;
 }
@@ -137,10 +136,6 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
                 free(instr);
                 continue;
             }
-
-            // Compute its total length in bytes
-            // TODO still necessary?
-            instr->total_length = instr->base_length + operand_length(instr->src) + operand_length(instr->dst);
 
             return instr;
         }
