@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "genesis.h"
-#include "joypad.h"
+//#include "joypad.h"
 #include "vdp.h"
 
 Genesis* genesis_make()
@@ -13,11 +13,13 @@ Genesis* genesis_make()
     g->memory = calloc(0x1000000, sizeof(uint8_t));
     g->m68k = m68k_make();
     g->vdp = vdp_make(g->m68k);
-    g->joypad = joypad_make();
+    //g->joypad = joypad_make();
 
     // Store a pointer to the Genesis instance in the M68k
     // In this way, the various modules can be accessed from M68k-centric I/O functions (see m68k_io.c)
     g->m68k->user_data = g;
+
+    g->region = USA;
 
     return g;
 }
@@ -29,7 +31,7 @@ void genesis_free(Genesis* g)
 
     m68k_free(g->m68k);
     vdp_free(g->vdp);
-    joypad_free(g->joypad);
+    //joypad_free(g->joypad);
 
     free(g->memory);
     free(g);
@@ -84,7 +86,7 @@ uint32_t genesis_step(Genesis* g)
     vdp_draw(g->vdp);
 
     // Handle keyboard input
-    SDL_PollEvent(&event);
+    /*SDL_PollEvent(&event);
     switch (event.type)
     {
     case SDL_KEYDOWN:
@@ -98,7 +100,7 @@ uint32_t genesis_step(Genesis* g)
         case SDLK_z: joypad_press(g->joypad, ButtonB); break;
         case SDLK_e: joypad_press(g->joypad, ButtonC); break;
         }
-    }
+    }*/
 
     return pc;
 }

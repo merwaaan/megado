@@ -6,11 +6,19 @@ struct M68k;
 struct Vdp;
 struct DecodedInstruction;
 
+typedef enum {
+    Japan,
+    Europe,
+    USA
+} Region;
+
 typedef struct {
     uint8_t* memory;
     struct M68k* m68k;
     struct Vdp* vdp;
     struct Joypad* joypad;
+
+    Region region;
 } Genesis;
 
 Genesis* genesis_make();

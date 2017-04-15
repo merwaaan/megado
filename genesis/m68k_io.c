@@ -17,8 +17,8 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
     case 0xA10000: // Version port
     case 0xA10001:
         return
-            true << 7 | // Domestic (0) / Export (1)
-            false << 6 | // PAL (0) / NTSC (0)
+            (GENESIS(m)->region != Japan) << 7 | // Domestic (0) / Export (1)
+            (GENESIS(m)->region == Europe) << 6 | // NTSC (0) / PAL (1)
             false << 5 | // Sega CD connected
             false; // Version
 
