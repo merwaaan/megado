@@ -113,7 +113,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     return decoded;
 }
 
-uint32_t breakpoint = 0xbef4;// 725bc; // 0b10 -> Sonic@vblank
+uint32_t breakpoint = 0x208;// 725bc; // 0b10 -> Sonic@vblank
 bool breakpoint_triggered = false;
 // TODO Sonic@37E, D5 is wrong
 // TODO Sonic@29a8 weird status move

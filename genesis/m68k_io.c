@@ -5,14 +5,16 @@
 
 #define GENESIS(m) ((Genesis*) (m)->user_data)
 
+bool z80_stopped;
+
 uint8_t m68k_read_b(M68k* m, uint32_t address)
 {
     address &= 0xFFFFFF; // 24-bit address bus
 
     switch (address)
     {
-    
-    // https://wiki.megadrive.org/index.php?title=IO_Registers
+
+        // https://wiki.megadrive.org/index.php?title=IO_Registers
 
     case 0xA10000: // Version port
     case 0xA10001:
@@ -22,8 +24,11 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
             false << 5 | // Sega CD connected
             false; // Version
 
-            // TODO temp, simulate z80
+            // TODO temp, stub z80
     case 0xA11100:
+        return !z80_stopped;
+
+    case 0xA11200:
         return 0;
 
     case 0xC00000: // VDP data port
@@ -61,10 +66,25 @@ uint32_t m68k_read_l(M68k* m, uint32_t address)
 
 void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
 {
+    address &= 0xFFFFFF; // 24-bit address bus
+
+    // Cannot write to ROM
+    if (address <= 0x3FFFFF)
+        return;
+
+    // Stubbed z80 control
+    if (address == 0xA11100)
+    {
+        if (value == 0)
+            z80_stopped = false;
+        else /*(value == 0x100) TODO must be exactly 0x100? */
+            z80_stopped = true;
+    }
+
     // " Writing to the VDP control or data ports is interpreted as a 16-bit
     //   write, with the LSB duplicated in the MSB"
     // http://www.tmeeco.eu/BitShit/CMDHW.TXT
-    if (address == 0xC00000)
+    else if (address == 0xC00000)
     {
         vdp_write_data(GENESIS(m)->vdp, value & (value << 8));
     }
@@ -73,7 +93,7 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
         vdp_write_control(GENESIS(m)->vdp, value & (value << 8));
     }
 
-    if (address > 0x82e0 && address < 0x82ff)
+    else if (address > 0x82e0 && address < 0x82ff)
         printf("");
 
     GENESIS(m)->memory[address & 0xFFFFFF] = value;
