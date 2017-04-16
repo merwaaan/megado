@@ -8,7 +8,25 @@
 void draw(Vdp* v);
 
 // Black & white debug palette
-uint16_t* debug_palette;
+uint16_t debug_palette[16] = {
+    0,
+    0x222,
+    0x444,
+    0x666,
+    0x888,
+    0xaaa,
+    0xccc,
+    0xeee,
+    // Cannot represent more than 8 greyscale values with 3 bits per components
+    0x10,
+    0x100,
+    0x1000,
+    0x110,
+    0x1010,
+    0x1100,
+    0x1084,
+    0x490
+};
 
 // Plane size codes for register 0x10
 uint8_t plane_size_codes[] = { 32, 64, 0, 128 };
@@ -21,11 +39,6 @@ Vdp* vdp_make(M68k* cpu)
     v->cram = calloc(64, sizeof(uint16_t));
     v->vsram = calloc(40, sizeof(uint16_t));
     v->pending_command = false;
-
-    // Fill the debug palette
-    debug_palette = calloc(16, sizeof(uint16_t));
-    for (int i = 0; i < 16; ++i)
-        debug_palette[i] = i; // TODO wrong!
 
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -414,7 +427,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
                             uint16_t value = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
                             v->vram[v->access_address] = BYTE_HI(value);
                             v->vram[v->access_address ^ 1] = BYTE_LO(value);
-                            
+
                             ++v->dma_source_address_lo;
                             v->access_address += v->auto_increment;
                         } while (--v->dma_length);
