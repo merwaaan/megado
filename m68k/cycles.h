@@ -14,6 +14,7 @@ extern uint8_t cycles_ea_calculation_table[2][12];
 extern uint8_t cycles_move_table[2][12][9]; 
 
 // http://oldwww.nvg.ntnu.no/amiga/MC680x0_Sections/mc68000timing.HTML
+uint8_t cycles_ea_calculation(struct Instruction* i);
 uint8_t cycles_standard_instruction(struct Instruction* i, uint8_t ea_an_cycles, uint8_t ea_dn_cycles, uint8_t dn_ea_cycles);
 uint8_t cycles_single_operand_instruction(struct Instruction* i, uint8_t register_cycles, uint8_t memory_cycles);
 uint8_t cycles_bit_manipulation_instruction(struct Instruction* i, uint8_t register_cycles, uint8_t memory_cycles);

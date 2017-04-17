@@ -68,7 +68,9 @@ int bra(Instruction* i)
 
 Instruction* gen_bra(uint16_t opcode, M68k* m)
 {
-    return instruction_make(m, "BRA", bra); // TODO
+    Instruction* i = instruction_make(m, "BRA", bra);
+    i->base_cycles = 18;
+    return i;
 }
 
 int bsr(Instruction* i)

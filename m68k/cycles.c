@@ -8,6 +8,20 @@ uint8_t cycles_ea_calculation_table[2][12] =
     { 0, 0, 8, 8, 10, 12, 14, 12, 16, 12, 14, 8 }  // Long
 };
 
+uint8_t cycles_ea_calculation(Instruction* i)
+{
+    uint8_t cycles = 0;
+
+    if (i->src != NULL && i->src->type != Unsupported)
+        cycles += cycles_ea_calculation_table[0][i->src->type];
+        
+    if (i->dst != NULL && i->dst->type != Unsupported)
+        cycles += cycles_ea_calculation_table[0][i->dst->type];
+
+    return cycles;
+}
+
+
 uint8_t cycles_move_table[2][12][9] =
 {
     // Byte, Word
