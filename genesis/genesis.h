@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 struct M68k;
@@ -32,8 +33,7 @@ struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc);
 // Prepare the Genesis for execution
 void genesis_initialize(Genesis* g);
 
-// Step forward one instruction and return the current program counter value
-uint32_t genesis_step(Genesis* g);
+bool genesis_run_frame(Genesis* g);
 
 // We have to use those to get pointers to different fields of the Genesis struct
 // TODO really necessary? Can't we just compute pointer offsets on the JS side?

@@ -537,7 +537,7 @@ void draw_plane(Vdp* v, int x, int y, uint8_t* nametable)
         }
 }
 
-void draw(Vdp* v)
+void vdp_draw_debug(Vdp* v)
 {
     if (v->renderer == NULL)
         return;
@@ -574,18 +574,12 @@ void draw(Vdp* v)
     SDL_RenderPresent(v->renderer);
 }
 
-void vdp_draw(Vdp* v)
+void vdp_draw_scanline(Vdp* v, int line)
 {
-    v->beam_position_h += 10;
+    ++v->beam_position_v;
 
-    if (v->beam_position_h > 480)
-    {
-        v->beam_position_h = 0;
-        ++v->beam_position_v;
-
-        if (v->beam_position_v % 20 == 0 && v->hblank_enabled)
-            m68k_request_interrupt(v->cpu, HBLANK_IRQ);
-    }
+    if (v->beam_position_v % 20 == 0 && v->hblank_enabled)
+        m68k_request_interrupt(v->cpu, HBLANK_IRQ);
 
     if (v->beam_position_v > 320)
     {
@@ -595,6 +589,6 @@ void vdp_draw(Vdp* v)
             m68k_request_interrupt(v->cpu, VBLANK_IRQ);
 
         // TODO tmp to debug faster
-        draw(v);
+        vdp_draw_debug(v);
     }
 }

@@ -128,7 +128,8 @@ void vdp_write_data(Vdp*, uint16_t value); // TODO 8bit writes OK but only 16bit
 uint16_t vdp_read_control(Vdp*);
 void vdp_write_control(Vdp*, uint16_t value);
 
-// Get the current value of the HV counter
-uint16_t vdp_get_hv_counter(Vdp*);
 
-void vdp_draw(Vdp*);
+uint16_t vdp_get_hv_counter(Vdp*); // Get the current value of the HV counter
+
+void vdp_draw_debug(Vdp*);
+void vdp_draw_scanline(Vdp*, int line);

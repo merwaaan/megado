@@ -113,12 +113,36 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     return decoded;
 }
 
+
+uint32_t m68k_run_cycles(M68k* m, int cycles)
+{
+    /*while (cycles > 0)
+        cycles -= m68k_step(m);*/
+
+        // TODO temporary version for tracking non-timed instructions
+    while (cycles > 0)
+    {
+        int c = m68k_step(m);
+
+        if (c == 0)
+        {
+            printf("WARNING, instruction took ZERO CYCLES");
+            c = 10; // we don't want to block the execution
+        }
+
+        cycles -= c;
+    }
+
+    // TODO in practice, should only consume available cycles and return the remainder
+    return cycles;
+}
+
 uint32_t breakpoint = 0x208;// 725bc; // 0b10 -> Sonic@vblank
 bool breakpoint_triggered = false;
 // TODO Sonic@37E, D5 is wrong
 // TODO Sonic@29a8 weird status move
 
-uint32_t m68k_step(M68k* m)
+uint8_t m68k_step(M68k* m)
 {
     // Manual breakpoint!
     if (m->pc == breakpoint)
@@ -134,24 +158,24 @@ uint32_t m68k_step(M68k* m)
     if (instr == NULL)
     {
         printf("\tOpcode %#06X cannot be found in the opcode table\n", m->instruction_register);
-    }
-    else
-    {
-        DecodedInstruction* d = breakpoint_triggered && false ? m68k_decode(m, m->instruction_address) : NULL;
-        if (d != NULL)
-            printf("%#06X   %s\n", m->pc - 2, d->mnemonics);
-
-        //if (m->instruction_callback != NULL)
-        //    m->instruction_callback(m);
-
-        m->cycles += instruction_execute(instr);
-
-        m68k_handle_interrupt(m);
-
-        decoded_instruction_free(d);
+        return;
     }
 
-    return m->pc;
+    DecodedInstruction* d = breakpoint_triggered && true ? m68k_decode(m, m->instruction_address) : NULL;
+    if (d != NULL)
+        printf("%#06X   %s\n", m->pc - 2, d->mnemonics);
+
+    //if (m->instruction_callback != NULL)
+    //    m->instruction_callback(m);
+
+    int cycles = instruction_execute(instr);
+    m->cycles += cycles;
+
+    m68k_handle_interrupt(m);
+
+    decoded_instruction_free(d);
+
+    return cycles;
 }
 
 uint32_t m68k_read(M68k* m, Size size, uint32_t address)
@@ -229,7 +253,7 @@ void m68k_handle_interrupt(M68k* m)
 {
     if (m->pending_interrupt < 0)
         return;
-        
+
     printf("Interrupt %d handled\n", m->pending_interrupt);
 
     // Push the current PC onto the stack

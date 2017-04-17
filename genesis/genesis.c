@@ -79,30 +79,43 @@ void genesis_initialize(Genesis* g)
 
 SDL_Event event;
 
-uint32_t genesis_step(Genesis* g)
+bool genesis_run_frame(Genesis* g)
 {
-    uint32_t pc = m68k_step(g->m68k);
+    // The number of scanlines depends on the region
+    // http://forums.sonicretro.org/index.php?showtopic=5615
+    uint16_t lines = g->region == Europe ? 312 : 262;
 
-    vdp_draw(g->vdp);
-
-    // Handle keyboard input
-    /*SDL_PollEvent(&event);
-    switch (event.type)
+    for (uint16_t line = 0; line < lines; ++line)
     {
-    case SDL_KEYDOWN:
-        switch (event.key.keysym.sym)
-        {
-        case SDLK_LEFT: joypad_press(g->joypad, Left); break;
-        case SDLK_RIGHT: joypad_press(g->joypad, Right); break;
-        case SDLK_UP: joypad_press(g->joypad, Up); break;
-        case SDLK_RETURN: joypad_press(g->joypad, Start); break;
-        case SDLK_a: joypad_press(g->joypad, ButtonA); break;
-        case SDLK_z: joypad_press(g->joypad, ButtonB); break;
-        case SDLK_e: joypad_press(g->joypad, ButtonC); break;
-        }
-    }*/
+        // Execute one scanline worth of instructions
+        m68k_run_cycles(g->m68k, 488); // TODO not sure about that value
 
-    return pc;
+        // Draw the scanline
+        vdp_draw_scanline(g->vdp, line);
+
+        // Handle keyboard input
+        SDL_PollEvent(&event);
+        switch (event.type)
+        {
+        case SDL_KEYDOWN:
+            switch (event.key.keysym.sym)
+            {
+            case SDLK_ESCAPE: return false;
+            /*case SDLK_LEFT: joypad_press(g->joypad, Left); break;
+            case SDLK_RIGHT: joypad_press(g->joypad, Right); break;
+            case SDLK_UP: joypad_press(g->joypad, Up); break;
+            case SDLK_RETURN: joypad_press(g->joypad, Start); break;
+            case SDLK_a: joypad_press(g->joypad, ButtonA); break;
+            case SDLK_z: joypad_press(g->joypad, ButtonB); break;
+            case SDLK_e: joypad_press(g->joypad, ButtonC); break;*/
+            }
+            break;
+
+        case SDL_QUIT: return false;
+        }
+    }
+
+    return true;
 }
 
 uint8_t* genesis_memory(Genesis* g) { return g->memory; }

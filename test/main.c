@@ -1,6 +1,7 @@
 #include <genesis/genesis.h>
 #include <m68k/instruction.h>
 #include <m68k/m68k.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <WinSock2.h>
 
@@ -52,8 +53,9 @@ void test_rom(Genesis* g, char* path)
     genesis_load_rom_file(g, path);
     genesis_initialize(g);
 
-    for (int i = 0; i < 5000000000; ++i)
-        genesis_step(g);
+    bool running = true;
+    while (running)
+        running = genesis_run_frame(g);
 }
 
 void instr_callback(M68k* m)
@@ -71,13 +73,13 @@ int main()
     //check_alignment(g);
     //check_endianness();
 
-    test_rom(g, "../browser/test.bin");
-
     //check_decoding(g, "0100 0110 00 000010"); // NOT D2
     //check_decoding(g, "1100 100 010 000001"); // AND D4, D1
     //check_decoding(g, "0100111011 000011"); // JMP D3
 
-    getchar();
+    //getchar();
+
+    test_rom(g, "../browser/test.bin");
 
     genesis_free(g);
 

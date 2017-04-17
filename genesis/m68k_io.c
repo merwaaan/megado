@@ -1,4 +1,5 @@
 #include <m68k/m68k.h>
+#include <stdio.h>
 
 #include "genesis.h"
 #include "vdp.h"

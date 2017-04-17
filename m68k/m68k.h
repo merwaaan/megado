@@ -79,8 +79,9 @@ void m68k_free(M68k*);
 // Prepare the CPU for execution (stack pointer, program start, initial prefetch...)
 void m68k_initialize(M68k*);
 
-// Execute one instruction and return the current program counter value
-uint32_t m68k_step(M68k*);
+
+uint8_t m68k_step(M68k*); // Execute one instruction, return cycles taken
+uint32_t m68k_run_cycles(M68k*, int); // Execute n cycles worth of instructions, return cycles that were not consumed
 
 uint32_t m68k_read(M68k*, Size size, uint32_t address);
 void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);
