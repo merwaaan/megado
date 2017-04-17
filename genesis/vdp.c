@@ -5,6 +5,12 @@
 
 #include "vdp.h"
 
+#if true
+#define LOG_VDP(...) printf(__VA_ARGS__)
+#else
+#define LOG_VDP(...)
+#endif
+
 void draw(Vdp* v);
 
 // Black & white debug palette
@@ -80,21 +86,21 @@ uint16_t vdp_read_data(Vdp* v)
     {
     case 0: // VRAM read
 
-        printf("Reading VRAM @ %04x\n", v->access_address);
+        LOG_VDP("Reading VRAM @ %04x\n", v->access_address);
 
         value = v->vram[v->access_address] << 8 | v->vram[v->access_address + 1];
         break;
 
     case 8: // CRAM read
 
-        printf("Reading CRAM @ %02x\n", v->access_address >> 1);
+        LOG_VDP("Reading CRAM @ %02x\n", v->access_address >> 1);
 
         value = v->cram[v->access_address >> 1 & 0x3F];
         break;
 
     case 4: // VSRAM read
 
-        printf("Reading VSRAM @ %02x\n", v->access_address >> 1);
+        LOG_VDP("Reading VSRAM @ %02x\n", v->access_address >> 1);
 
         value = v->vsram[v->access_address >> 1 & 0x3F];
         break;
@@ -118,7 +124,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
     {
     case 1: // VRAM write
 
-        printf("\tWrite %04x to VRAM @ %04x\n", value, v->access_address);
+        LOG_VDP("\tWrite %04x to VRAM @ %04x\n", value, v->access_address);
 
         v->vram[v->access_address] = BYTE_HI(value); // TODO sure about that?
         v->vram[v->access_address ^ 1] = BYTE_LO(value);
@@ -127,7 +133,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
 
     case 3: // CRAM write
 
-        printf("\tWrite %02x to CRAM @ %02x\n", value, v->access_address >> 1);
+        LOG_VDP("\tWrite %02x to CRAM @ %02x\n", value, v->access_address >> 1);
 
         v->cram[v->access_address >> 1 & 0x3F] = value;
         v->access_address += v->auto_increment;
@@ -135,7 +141,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
 
     case 5: // VSRAM write
 
-        printf("\tWrite %02x to VSRAM @ %02x\n", value, v->access_address >> 1);
+        LOG_VDP("\tWrite %02x to VSRAM @ %02x\n", value, v->access_address >> 1);
 
         //assert((v->access_address >> 1) < 0x28);
         v->vsram[v->access_address >> 1 & 0x28] = value;
@@ -168,7 +174,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
             v->access_address += v->auto_increment;
             }*/
 
-            printf("\tDMA Fill to VRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address, value, v->dma_length, v->auto_increment);
+            LOG_VDP("\tDMA Fill to VRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address, value, v->dma_length, v->auto_increment);
 
             uint8_t hi = BYTE_HI(value);
             do
@@ -181,12 +187,11 @@ void vdp_write_data(Vdp* v, uint16_t value)
 
             } while (--v->dma_length);
 
-            vdp_draw(v);
             break;
 
         case 3: // CRAM fill
 
-            printf("\tDMA Fill to CRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address >> 1, value, v->dma_length, v->auto_increment);
+            LOG_VDP("\tDMA Fill to CRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address >> 1, value, v->dma_length, v->auto_increment);
 
             do {
                 v->cram[v->access_address >> 1 & 0x3F] = value;
@@ -199,7 +204,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
 
         case 5: // VSRAM fill
 
-            printf("\tDMA Fill to VSRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address >> 1, value, v->dma_length, v->auto_increment);
+            LOG_VDP("\tDMA Fill to VSRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address >> 1, value, v->dma_length, v->auto_increment);
 
             do {
                 v->vsram[v->access_address >> 1 & 0x3F] = value;
@@ -237,7 +242,7 @@ uint16_t vdp_read_control(Vdp* v)
 
 void vdp_write_control(Vdp* v, uint16_t value)
 {
-    //printf("[%0x] control write: %02x\n", v->cpu->instruction_address, value);
+    LOG_VDP("[%0x] control write: %02x\n", v->cpu->instruction_address, value);
 
     // TODO see https://sourceforge.net/p/dgen/dgen/ci/master/tree/vdp.cpp for cancelling commands
 
@@ -247,7 +252,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
         uint8_t reg = FRAGMENT(value, 12, 8);
         uint8_t reg_value = WORD_LO(value);
 
-        printf("\tregister %02x, value %02x\n", reg, reg_value);
+        LOG_VDP("\tregister %02x, value %02x\n", reg, reg_value);
 
         switch (reg)
         {
@@ -255,7 +260,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->hblank_enabled = BIT(reg_value, 4);
             v->hv_counter_enabled = !BIT(reg_value, 1);
 
-            printf("\t\tH-blank enabled %d, HV-counter enabled %d\n", v->hblank_enabled, v->hv_counter_enabled);
+            LOG_VDP("\t\tH-blank enabled %d, HV-counter enabled %d\n", v->hblank_enabled, v->hv_counter_enabled);
             return;
 
         case 1:
@@ -264,51 +269,51 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->dma_enabled = BIT(reg_value, 4);
             v->display_mode = BIT(reg_value, 3);
 
-            printf("\t\tDisplay enabled %d, V-blank enabled %d, DMA enabled %d, Display mode %d\n", v->display_enabled, v->vblank_enabled, v->dma_enabled, v->display_mode);
+            LOG_VDP("\t\tDisplay enabled %d, V-blank enabled %d, DMA enabled %d, Display mode %d\n", v->display_enabled, v->vblank_enabled, v->dma_enabled, v->display_mode);
             return;
 
         case 2:
             v->plane_a_nametable = (reg_value & 0x38) * 0x400;
 
-            printf("\t\tPlane A nametable %04x\n", v->plane_a_nametable);
+            LOG_VDP("\t\tPlane A nametable %04x\n", v->plane_a_nametable);
             return;
 
         case 3:
             v->window_nametable = FRAGMENT(reg_value, 5, 1);
 
-            printf("\t\tWindow nametable %04x\n", v->window_nametable);
+            LOG_VDP("\t\tWindow nametable %04x\n", v->window_nametable);
             return;
 
         case 4:
             v->plane_b_nametable = ((reg_value & 7) << 3) * 0x400;
 
-            printf("\t\tPlane B nametable %04x\n", v->plane_b_nametable);
+            LOG_VDP("\t\tPlane B nametable %04x\n", v->plane_b_nametable);
             return;
 
         case 5:
             v->sprites_attributetable = FRAGMENT(reg_value, 6, 0);
 
-            printf("\t\tSprites attribute table %04x\n", v->sprites_attributetable);
+            LOG_VDP("\t\tSprites attribute table %04x\n", v->sprites_attributetable);
             return;
 
         case 7:
             v->background_color_palette = FRAGMENT(reg_value, 5, 4);
             v->background_color_entry = FRAGMENT(reg_value, 3, 0);
 
-            printf("\t\tBackground palette %d, entry %d\n", v->background_color_palette, v->background_color_entry);
+            LOG_VDP("\t\tBackground palette %d, entry %d\n", v->background_color_palette, v->background_color_entry);
             return;
 
         case 0xA:
             v->hblank_counter = reg_value;
 
-            printf("\t\tH-blank counter %04x\n", v->hblank_counter);
+            LOG_VDP("\t\tH-blank counter %04x\n", v->hblank_counter);
             return;
 
         case 0xB:
             v->vertical_scrolling = BIT(reg_value, 2);
             v->horizontal_scrolling = FRAGMENT(reg_value, 1, 0);
 
-            printf("\t\tVertical scrolling %d, Horizontal scrolling %d\n", v->vertical_scrolling, v->horizontal_scrolling);
+            LOG_VDP("\t\tVertical scrolling %d, Horizontal scrolling %d\n", v->vertical_scrolling, v->horizontal_scrolling);
             return;
 
         case 0xC:
@@ -316,62 +321,62 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->shadow_highlight_enabled = BIT(reg_value, 3);
             v->interlace_mode = FRAGMENT(reg_value, 2, 1);
 
-            printf("\t\tDisplay width %d, Shadow/Highlight enabled %d, Interlace mode  %d\n", v->display_mode, v->shadow_highlight_enabled, v->interlace_mode);
+            LOG_VDP("\t\tDisplay width %d, Shadow/Highlight enabled %d, Interlace mode  %d\n", v->display_mode, v->shadow_highlight_enabled, v->interlace_mode);
             return;
 
         case 0xD:
             v->horizontal_scrolltable = FRAGMENT(reg_value, 5, 0);
 
-            printf("\t\tHorizontal scrolltable %d\n", v->horizontal_scrolltable);
+            LOG_VDP("\t\tHorizontal scrolltable %d\n", v->horizontal_scrolltable);
             return;
 
         case 0xF:
             v->auto_increment = reg_value;
 
-            printf("\t\tAuto-increment %d\n", v->auto_increment);
+            LOG_VDP("\t\tAuto-increment %d\n", v->auto_increment);
             return;
 
         case 0x10:
             v->vertical_plane_size = plane_size_codes[FRAGMENT(reg_value, 5, 4)];
             v->horizontal_plane_size = plane_size_codes[FRAGMENT(reg_value, 1, 0)];
 
-            printf("\t\tVertical plane size %d, Horizontal plane size %d\n", v->vertical_plane_size, v->horizontal_plane_size);
+            LOG_VDP("\t\tVertical plane size %d, Horizontal plane size %d\n", v->vertical_plane_size, v->horizontal_plane_size);
             return;
 
         case 0x11:
             v->window_plane_horizontal_direction = BIT(reg_value, 7);
             v->window_plane_horizontal_offset = FRAGMENT(reg_value, 4, 0);
 
-            printf("\t\tHorizontal Window plane direction %d, Window plane offset %d\n", v->window_plane_horizontal_direction, v->window_plane_horizontal_offset);
+            LOG_VDP("\t\tHorizontal Window plane direction %d, Window plane offset %d\n", v->window_plane_horizontal_direction, v->window_plane_horizontal_offset);
             return;
 
         case 0x12:
             v->window_plane_vertical_direction = BIT(reg_value, 7);
             v->window_plane_vertical_offset = FRAGMENT(reg_value, 4, 0);
 
-            printf("\t\tVertical window plane direction %d, Window plane offset %d\n", v->window_plane_vertical_offset, v->window_plane_vertical_offset);
+            LOG_VDP("\t\tVertical window plane direction %d, Window plane offset %d\n", v->window_plane_vertical_offset, v->window_plane_vertical_offset);
             return;
 
         case 0x13:
             v->dma_length = (v->dma_length & 0xFF00) | reg_value;
 
-            printf("\t\tDMA length low %02x (%04x)\n", reg_value, v->dma_length);
+            LOG_VDP("\t\tDMA length low %02x (%04x)\n", reg_value, v->dma_length);
             return;
         case 0x14:
             v->dma_length = (v->dma_length & 0x00FF) | (reg_value << 8);
 
-            printf("\t\tDMA length high %02x (%04x)\n", reg_value, v->dma_length);
+            LOG_VDP("\t\tDMA length high %02x (%04x)\n", reg_value, v->dma_length);
             return;
 
         case 0x15:
             v->dma_source_address_lo = (v->dma_source_address_lo & 0xFF00) | reg_value;
 
-            printf("\t\tDMA source address low %02x (%08x)\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo);
+            LOG_VDP("\t\tDMA source address low %02x (%08x)\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo);
             return;
         case 0x16:
             v->dma_source_address_lo = (v->dma_source_address_lo & 0x00FF) | (reg_value << 8);
 
-            printf("\t\tDMA source address med %02x (%08x)\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo);
+            LOG_VDP("\t\tDMA source address med %02x (%08x)\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo);
             return;
         case 0x17:
             v->dma_type = FRAGMENT(reg_value, 7, 6); // TODO convert
@@ -379,14 +384,14 @@ void vdp_write_control(Vdp* v, uint16_t value)
             uint8_t address_mask = v->dma_type > 1 ? 0x3F : 0x7F; // Bit 6 is only part of the address for memory to VRAM DMA transfers
             v->dma_source_address_hi = reg_value & address_mask;
 
-            printf("\t\tDMA source address high %02x (%08x), DMA type %04x\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo, v->dma_type);
+            LOG_VDP("\t\tDMA source address high %02x (%08x), DMA type %04x\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo, v->dma_type);
             return;
 
         case 6:
         case 8:
         case 9:
         case 0xE:
-            printf("\t\tUnhandled register\n");
+            LOG_VDP("\t\tUnhandled register\n");
             return;
         }
     }
@@ -400,7 +405,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
             v->pending_command = true;
 
-            printf("\tFirst command word %04x: mode %04x, address %04x\n", value, v->access_mode, v->access_address);
+            LOG_VDP("\tFirst command word %04x: mode %04x, address %04x\n", value, v->access_mode, v->access_address);
         }
         else
         {
@@ -409,7 +414,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
             v->pending_command = false;
 
-            printf("\tSecond command word %04x: mode %04x, address %04x\n", value, v->access_mode, v->access_address);
+            LOG_VDP("\tSecond command word %04x: mode %04x, address %04x\n", value, v->access_mode, v->access_address);
 
             // Handle DMA transfers (CD5 set)
             if (v->dma_enabled && v->access_mode & 0x20)
@@ -421,7 +426,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
                     {
                     case 1:
                         // ... VRAM
-                        printf("\tDMA transfer from %08x to VRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
+                        LOG_VDP("\tDMA transfer from %08x to VRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do {
                             uint16_t value = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
@@ -432,12 +437,11 @@ void vdp_write_control(Vdp* v, uint16_t value)
                             v->access_address += v->auto_increment;
                         } while (--v->dma_length);
 
-                        draw(v);
                         break;
 
                     case 3:
                         // ... CRAM
-                        printf("\tDMA transfer from %04x to CRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
+                        LOG_VDP("\tDMA transfer from %04x to CRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do {
                             // "When doing a transfer to CRAM, the operation is aborted
@@ -454,7 +458,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
                         break;
 
                     case 5:
-                        printf("\tDMA transfer from %04x to VSRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
+                        LOG_VDP("\tDMA transfer from %04x to VSRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do {
                             v->vsram[v->access_address >> 1 & 0x3F] = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
@@ -469,24 +473,29 @@ void vdp_write_control(Vdp* v, uint16_t value)
                 // VRAM fill (will be triggered on the next data port write)
                 else if (v->dma_type == 2)
                 {
-                    printf("\tPending DMA fill\n");
+                    LOG_VDP("\tPending DMA fill\n");
 
                     v->pending_dma_fill = true;
                 }
                 // VRAM copy
                 else if (v->dma_type == 3)
                 {
-                    printf("WARNING! DMA copy not implemented\n");
+                    LOG_VDP("WARNING! DMA copy not implemented\n");
                 }
             }
         }
     }
 }
 
+uint16_t vdp_get_hv_counter(Vdp* v)
+{
+    return (v->beam_position_v << 8 & 0xFF00) | (v->beam_position_h >> 1 & 0xFF);
+}
+
 void draw_pattern(Vdp* v, int id, uint16_t* palette, int x, int y)
 {
     uint16_t offset = id * 32;
-    //printf("drawing pattern %d at %d %d\n", id, x, y);
+    //LOG_VDP("drawing pattern %d at %d %d\n", id, x, y);
     for (int py = 0; py < 8; ++py)
         for (int px = 0; px < 4; ++px)
         {
@@ -565,23 +574,22 @@ void draw(Vdp* v)
     SDL_RenderPresent(v->renderer);
 }
 
-int pixel = 0;
-int line = 0;
-
 void vdp_draw(Vdp* v)
 {
-    pixel += 10;
-    if (pixel > 480)
-    {
-        pixel = 0;
-        ++line;
+    v->beam_position_h += 10;
 
-        if (line % 20 == 0 && v->hblank_enabled)
+    if (v->beam_position_h > 480)
+    {
+        v->beam_position_h = 0;
+        ++v->beam_position_v;
+
+        if (v->beam_position_v % 20 == 0 && v->hblank_enabled)
             m68k_request_interrupt(v->cpu, HBLANK_IRQ);
     }
-    if (line > 320)
+
+    if (v->beam_position_v > 320)
     {
-        line = 0;
+        v->beam_position_v = 0;
 
         if (v->vblank_enabled)
             m68k_request_interrupt(v->cpu, VBLANK_IRQ);

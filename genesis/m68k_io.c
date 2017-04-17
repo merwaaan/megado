@@ -45,6 +45,11 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
     case 0xC00007:
         return BYTE_LO(vdp_read_control(GENESIS(m)->vdp));
 
+    case 0xC00008:
+        return BYTE_HI(vdp_get_hv_counter(GENESIS(m)->vdp));
+    case 0xC00009:
+        return BYTE_LO(vdp_get_hv_counter(GENESIS(m)->vdp));
+
     default:
         return GENESIS(m)->memory[address];
     }

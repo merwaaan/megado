@@ -137,7 +137,7 @@ uint32_t m68k_step(M68k* m)
     }
     else
     {
-        DecodedInstruction* d = breakpoint_triggered && true ? m68k_decode(m, m->instruction_address) : NULL;
+        DecodedInstruction* d = breakpoint_triggered && false ? m68k_decode(m, m->instruction_address) : NULL;
         if (d != NULL)
             printf("%#06X   %s\n", m->pc - 2, d->mnemonics);
 
@@ -213,9 +213,14 @@ uint16_t m68k_fetch(M68k* m)
 
 void m68k_request_interrupt(M68k* m, uint8_t level)
 {
+    printf("Interrupt %d requested\n", level);
+
     // Ignore low-priority interrupts (except for level 7, which is non-maskable)
     if (level <= STATUS_INTERRUPT_MASK(m) && level != 7)
+    {
+        printf("\tInterrupt ignored, current interrupt mask: %d\n", STATUS_INTERRUPT_MASK(m));
         return;
+    }
 
     m->pending_interrupt = level;
 }
@@ -224,6 +229,8 @@ void m68k_handle_interrupt(M68k* m)
 {
     if (m->pending_interrupt < 0)
         return;
+        
+    printf("Interrupt %d handled\n", m->pending_interrupt);
 
     // Push the current PC onto the stack
     m->address_registers[7] -= 4;
