@@ -542,10 +542,13 @@ void vdp_draw_debug(Vdp* v)
     if (v->renderer == NULL)
         return;
 
+    //SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
+    //SDL_RenderClear(v->renderer);
     SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
-    SDL_RenderClear(v->renderer);
+    SDL_Rect debug_area = { 0, 0, 900, 900 };
+    SDL_RenderFillRect(v->renderer, &debug_area);
 
-    // Draw the color palette
+        // Draw the color palette
     SDL_Rect cell = { 0, 0, 10, 10 };
     for (int row = 0; row < 4; ++row)
     {
@@ -574,20 +577,56 @@ void vdp_draw_debug(Vdp* v)
     SDL_RenderPresent(v->renderer);
 }
 
+void vdp_draw_pattern_scanline(Vdp* v, uint16_t pattern_id, uint8_t line, uint16_t* palette, bool horizontal_flip, bool vertical_flip, int x, int y)
+{
+    // TODO flip
+    // TODO render: directly write to bitmap?
+    // TODO directly pass pattern pointer
+
+    uint16_t pattern_offset = pattern_id * 32 + line * 4;
+
+    for (int px = 0; px < 4; ++px)
+    {
+        // 1 byte = 2 pixels
+        uint8_t color_indexes = v->vram[pattern_offset + px];
+
+        uint8_t color_index = (color_indexes & 0xF0) >> 4;
+        if (color_index > 0) {
+            uint16_t color = palette[color_index];
+            SDL_SetRenderDrawColor(v->renderer, RED_8(color), GREEN_8(color), BLUE_8(color), 255);
+            SDL_RenderDrawPoint(v->renderer, x + px * 2, y);
+        }
+
+        color_index = color_indexes & 0x0F;
+        if (color_index > 0) {
+            uint16_t color = palette[color_index];
+            SDL_SetRenderDrawColor(v->renderer, RED_8(color), GREEN_8(color), BLUE_8(color), 255);
+            SDL_RenderDrawPoint(v->renderer, x + px * 2 + 1, y);
+        }
+    }
+}
+
 void vdp_draw_plane_scanline(Vdp* v, uint8_t* nametable, int line, int x, int y)
 {
-    for (int px = 0; px < v->horizontal_plane_size; ++px)
+    // TODO scrolling
+
+    uint16_t line_offset = (line / 8) * v->horizontal_plane_size * 2; // 1 nametable entry = 2 bytes
+
+    for (int pattern_x = 0; pattern_x < v->horizontal_plane_size; ++pattern_x)
     {
-        uint16_t offset = line * v->horizontal_plane_size * 2 + px * 2;
-        uint16_t data = (nametable[offset] << 8) | nametable[offset + 1];
+        uint16_t pattern_offset = line_offset + pattern_x * 2;
+        uint16_t pattern_data = (nametable[pattern_offset] << 8) | nametable[pattern_offset + 1];
 
-        bool priority = BIT(data, 15);
-        uint16_t* palette = v->cram + FRAGMENT(data, 14, 13) * 16;
-        bool vertical_flip = BIT(data, 12);
-        bool horizontal_flip = BIT(data, 11);
-        uint16_t pattern = FRAGMENT(data, 10, 0);
+        // Extract the pattern info - http://md.squee.co/VDP#Nametables
+        bool priority = BIT(pattern_data, 15);
+        uint16_t* palette = v->cram + FRAGMENT(pattern_data, 14, 13) * 16;
+        bool vertical_flip = BIT(pattern_data, 12);
+        bool horizontal_flip = BIT(pattern_data, 11);
+        uint16_t id = FRAGMENT(pattern_data, 10, 0);
+        
+        uint16_t pattern_line = line % 8;
 
-        vdp_draw_pattern_scanline(v, pattern, palette,       x + px * 8, y + py * 8);
+        vdp_draw_pattern_scanline(v, id, pattern_line, palette, horizontal_flip, vertical_flip, x + pattern_x * 8, y);
     }
 }
 
