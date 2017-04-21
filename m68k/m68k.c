@@ -126,7 +126,7 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
 
         if (c == 0)
         {
-            printf("WARNING, instruction took ZERO CYCLES");
+            //printf("WARNING, instruction took ZERO CYCLES");
             c = 10; // we don't want to block the execution
         }
 

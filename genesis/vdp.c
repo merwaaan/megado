@@ -53,7 +53,7 @@ Vdp* vdp_make(M68k* cpu)
     }
     else
     {
-        SDL_CreateWindowAndRenderer(1000, 1000, SDL_WINDOW_OPENGL, &v->window, &v->renderer);
+        SDL_CreateWindowAndRenderer(1500, 1000, SDL_WINDOW_OPENGL, &v->window, &v->renderer);
     }
 
     for (int i = 0; i < 64; ++i)
@@ -574,8 +574,36 @@ void vdp_draw_debug(Vdp* v)
     SDL_RenderPresent(v->renderer);
 }
 
+void vdp_draw_plane_scanline(Vdp* v, uint8_t* nametable, int line, int x, int y)
+{
+    for (int px = 0; px < v->horizontal_plane_size; ++px)
+    {
+        uint16_t offset = line * v->horizontal_plane_size * 2 + px * 2;
+        uint16_t data = (nametable[offset] << 8) | nametable[offset + 1];
+
+        bool priority = BIT(data, 15);
+        uint16_t* palette = v->cram + FRAGMENT(data, 14, 13) * 16;
+        bool vertical_flip = BIT(data, 12);
+        bool horizontal_flip = BIT(data, 11);
+        uint16_t pattern = FRAGMENT(data, 10, 0);
+
+        vdp_draw_pattern_scanline(v, pattern, palette,       x + px * 8, y + py * 8);
+    }
+}
+
 void vdp_draw_scanline(Vdp* v, int line)
 {
+//    SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
+//    SDL_RenderClear(v->renderer);
+
+    vdp_draw_plane_scanline(v, v->vram + v->window_nametable, line, 900, line);
+    vdp_draw_plane_scanline(v, v->vram + v->plane_b_nametable, line, 900, line);
+    vdp_draw_plane_scanline(v, v->vram + v->plane_a_nametable, line, 900, line);
+
+    // TODO sprites
+
+    //
+
     ++v->beam_position_v;
 
     if (v->beam_position_v % 20 == 0 && v->hblank_enabled)
