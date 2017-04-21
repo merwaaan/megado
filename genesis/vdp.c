@@ -279,7 +279,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 3:
-            v->window_nametable = FRAGMENT(reg_value, 5, 1);
+            v->window_nametable = FRAGMENT(reg_value, 5, 1) * 0x400;
 
             LOG_VDP("\t\tWindow nametable %04x\n", v->window_nametable);
             return;
