@@ -279,7 +279,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 3:
-            v->window_nametable = FRAGMENT(reg_value, 5, 1) * 0x400;
+            v->window_nametable = (reg_value & 0x3E) * 0x400;
 
             LOG_VDP("\t\tWindow nametable %04x\n", v->window_nametable);
             return;
@@ -573,6 +573,7 @@ void vdp_draw_debug(Vdp* v)
     // Draw the planes
     draw_plane(v, 300, 0, v->vram + v->plane_a_nametable);
     draw_plane(v, 300, 400, v->vram + v->plane_b_nametable);
+    draw_plane(v, 300, 800, v->vram + v->window_nametable);
 
     SDL_RenderPresent(v->renderer);
 }
@@ -632,14 +633,18 @@ void vdp_draw_plane_scanline(Vdp* v, uint8_t* nametable, int line, int x, int y)
 
 void vdp_draw_scanline(Vdp* v, int line)
 {
-//    SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
-//    SDL_RenderClear(v->renderer);
+    // Background color
+    uint16_t background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
+    SDL_SetRenderDrawColor(v->renderer, RED_8(background_color), GREEN_8(background_color), BLUE_8(background_color), 255);
+    SDL_Rect draw_area = { 900, line, 500, 1 };
+    SDL_RenderFillRect(v->renderer, &draw_area);
 
+    // Planes
     vdp_draw_plane_scanline(v, v->vram + v->window_nametable, line, 900, line);
     vdp_draw_plane_scanline(v, v->vram + v->plane_b_nametable, line, 900, line);
     vdp_draw_plane_scanline(v, v->vram + v->plane_a_nametable, line, 900, line);
 
-    // TODO sprites
+    // Sprites TODO
 
     //
 
