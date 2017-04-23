@@ -647,8 +647,8 @@ bool vdp_get_plane_pixel_color(Vdp* v, uint8_t* nametable, int x, int y, uint16_
 
     // TODO handle flipping
     // TODO handle scrolling
-    uint8_t pattern_y = y % 8;
-    uint8_t pattern_x = x % 8;
+    uint8_t pattern_y = vertical_flip ? 7 - y % 8 : y % 8;
+    uint8_t pattern_x = horizontal_flip ? 7 - x % 8 : x % 8;
 
     // Get the pixel of the pattern at the specified position
 
