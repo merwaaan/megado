@@ -548,7 +548,7 @@ void vdp_draw_debug(Vdp* v)
     SDL_Rect debug_area = { 0, 0, 900, 900 };
     SDL_RenderFillRect(v->renderer, &debug_area);
 
-        // Draw the color palette
+    // Draw the color palette
     SDL_Rect cell = { 0, 0, 10, 10 };
     for (int row = 0; row < 4; ++row)
     {
@@ -574,8 +574,6 @@ void vdp_draw_debug(Vdp* v)
     draw_plane(v, 300, 0, v->vram + v->plane_a_nametable);
     draw_plane(v, 300, 400, v->vram + v->plane_b_nametable);
     draw_plane(v, 300, 800, v->vram + v->window_nametable);
-
-    SDL_RenderPresent(v->renderer);
 }
 
 void vdp_draw_pattern_scanline(Vdp* v, uint16_t pattern_id, uint8_t line, uint16_t* palette, bool horizontal_flip, bool vertical_flip, int x, int y)
@@ -624,27 +622,86 @@ void vdp_draw_plane_scanline(Vdp* v, uint8_t* nametable, int line, int x, int y)
         bool vertical_flip = BIT(pattern_data, 12);
         bool horizontal_flip = BIT(pattern_data, 11);
         uint16_t id = FRAGMENT(pattern_data, 10, 0);
-        
+
         uint16_t pattern_line = line % 8;
 
         vdp_draw_pattern_scanline(v, id, pattern_line, palette, horizontal_flip, vertical_flip, x + pattern_x * 8, y);
     }
 }
 
+bool vdp_get_plane_pixel_color(Vdp* v, uint8_t* nametable, int x, int y, uint16_t* color, bool* priority)
+{
+    // Get the pattern at the specified pixel coordinates
+
+    uint16_t pattern_offset = (y / 8 * v->horizontal_plane_size + x / 8) * 2; // * 2 because one nametable entry is two bytes
+    uint16_t pattern_data = (nametable[pattern_offset] << 8) | nametable[pattern_offset + 1];
+
+    // Extract the pattern attributes
+    // http://md.squee.co/VDP#Nametables
+
+    uint16_t pattern_id = FRAGMENT(pattern_data, 10, 0);
+    uint8_t palette_index = FRAGMENT(pattern_data, 14, 13);
+    bool vertical_flip = BIT(pattern_data, 12);
+    bool horizontal_flip = BIT(pattern_data, 11);
+    *priority = BIT(pattern_data, 15);
+
+    // TODO handle flipping
+    // TODO handle scrolling
+    uint8_t pattern_y = y % 8;
+    uint8_t pattern_x = x % 8;
+
+    // Get the pixel of the pattern at the specified position
+
+    uint16_t pixel_offset = pattern_id * 32 + pattern_y * 4 + pattern_x / 2; // / 2 because one byte encodes two pixels
+
+    uint8_t color_indexes = v->vram[pixel_offset];
+    uint8_t color_index = pattern_x % 2 == 0 ? (color_indexes & 0xF0) >> 4 : color_indexes & 0x0F;
+
+    // If the color is 0, this means transparent and nothing needs to be drawn
+    if (color_index == 0)
+        return false;
+
+    *color = v->cram[palette_index * 16 + color_index];
+
+    return true;
+}
+
 void vdp_draw_scanline(Vdp* v, int line)
 {
-    // Background color
     uint16_t background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
-    SDL_SetRenderDrawColor(v->renderer, RED_8(background_color), GREEN_8(background_color), BLUE_8(background_color), 255);
-    SDL_Rect draw_area = { 900, line, 500, 1 };
-    SDL_RenderFillRect(v->renderer, &draw_area);
 
-    // Planes
-    vdp_draw_plane_scanline(v, v->vram + v->window_nametable, line, 900, line);
-    vdp_draw_plane_scanline(v, v->vram + v->plane_b_nametable, line, 900, line);
-    vdp_draw_plane_scanline(v, v->vram + v->plane_a_nametable, line, 900, line);
+    // Draw the scanline, pixel by pixel
+    for (uint16_t pixel = 0; pixel < v->horizontal_plane_size * 8; ++pixel)
+    {
+        // Get the pixel values for each plane
 
-    // Sprites TODO
+        uint16_t plane_a_color, plane_b_color, sprites_color;
+        bool plane_a_priority, plane_b_priority, sprites_priority;
+
+        bool plane_a_drawn = vdp_get_plane_pixel_color(v, v->vram + v->plane_a_nametable, pixel, line, &plane_a_color, &plane_a_priority);
+        bool plane_b_drawn = vdp_get_plane_pixel_color(v, v->vram + v->plane_b_nametable, pixel, line, &plane_b_color, &plane_b_priority);
+
+        // Use the color from the plane with the highest priority
+
+        uint16_t pixel_color;
+
+        if (plane_a_drawn && plane_a_priority)
+            pixel_color = plane_a_color;
+        else if (plane_b_drawn && plane_b_priority)
+            pixel_color = plane_b_color;
+        else if (plane_a_drawn)
+            pixel_color = plane_a_color;
+        else if (plane_b_drawn)
+            pixel_color = plane_b_color;
+        else
+            pixel_color = background_color;
+
+        // Draw
+        // TODO direct to bitmap
+        SDL_SetRenderDrawColor(v->renderer, RED_8(pixel_color), GREEN_8(pixel_color), BLUE_8(pixel_color), 255);
+        SDL_Rect draw_area = { 900 + pixel, line, 500, 1 };
+        SDL_RenderFillRect(v->renderer, &draw_area);
+    }
 
     //
 
@@ -662,5 +719,7 @@ void vdp_draw_scanline(Vdp* v, int line)
 
         // TODO tmp to debug faster
         vdp_draw_debug(v);
+
+        SDL_RenderPresent(v->renderer);
     }
 }

@@ -161,7 +161,7 @@ uint8_t m68k_step(M68k* m)
         return;
     }
 
-    DecodedInstruction* d = breakpoint_triggered && true ? m68k_decode(m, m->instruction_address) : NULL;
+    DecodedInstruction* d = breakpoint_triggered && false ? m68k_decode(m, m->instruction_address) : NULL;
     if (d != NULL)
         printf("%#06X   %s\n", m->pc - 2, d->mnemonics);
 
