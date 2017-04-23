@@ -645,7 +645,6 @@ bool vdp_get_plane_pixel_color(Vdp* v, uint8_t* nametable, int x, int y, uint16_
     bool horizontal_flip = BIT(pattern_data, 11);
     *priority = BIT(pattern_data, 15);
 
-    // TODO handle flipping
     // TODO handle scrolling
     uint8_t pattern_y = vertical_flip ? 7 - y % 8 : y % 8;
     uint8_t pattern_x = horizontal_flip ? 7 - x % 8 : x % 8;
@@ -668,39 +667,42 @@ bool vdp_get_plane_pixel_color(Vdp* v, uint8_t* nametable, int x, int y, uint16_
 
 void vdp_draw_scanline(Vdp* v, int line)
 {
-    uint16_t background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
-
-    // Draw the scanline, pixel by pixel
-    for (uint16_t pixel = 0; pixel < v->horizontal_plane_size * 8; ++pixel)
+    if (v->display_enabled)
     {
-        // Get the pixel values for each plane
+        uint16_t background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
 
-        uint16_t plane_a_color, plane_b_color, sprites_color;
-        bool plane_a_priority, plane_b_priority, sprites_priority;
+        // Draw the scanline, pixel by pixel
+        for (uint16_t pixel = 0; pixel < v->horizontal_plane_size * 8; ++pixel)
+        {
+            // Get the pixel values for each plane
 
-        bool plane_a_drawn = vdp_get_plane_pixel_color(v, v->vram + v->plane_a_nametable, pixel, line, &plane_a_color, &plane_a_priority);
-        bool plane_b_drawn = vdp_get_plane_pixel_color(v, v->vram + v->plane_b_nametable, pixel, line, &plane_b_color, &plane_b_priority);
+            uint16_t plane_a_color, plane_b_color, sprites_color;
+            bool plane_a_priority, plane_b_priority, sprites_priority;
 
-        // Use the color from the plane with the highest priority
+            bool plane_a_drawn = vdp_get_plane_pixel_color(v, v->vram + v->plane_a_nametable, pixel, line, &plane_a_color, &plane_a_priority);
+            bool plane_b_drawn = vdp_get_plane_pixel_color(v, v->vram + v->plane_b_nametable, pixel, line, &plane_b_color, &plane_b_priority);
 
-        uint16_t pixel_color;
+            // Use the color from the plane with the highest priority
 
-        if (plane_a_drawn && plane_a_priority)
-            pixel_color = plane_a_color;
-        else if (plane_b_drawn && plane_b_priority)
-            pixel_color = plane_b_color;
-        else if (plane_a_drawn)
-            pixel_color = plane_a_color;
-        else if (plane_b_drawn)
-            pixel_color = plane_b_color;
-        else
-            pixel_color = background_color;
+            uint16_t pixel_color;
 
-        // Draw
-        // TODO direct to bitmap
-        SDL_SetRenderDrawColor(v->renderer, RED_8(pixel_color), GREEN_8(pixel_color), BLUE_8(pixel_color), 255);
-        SDL_Rect draw_area = { 900 + pixel, line, 500, 1 };
-        SDL_RenderFillRect(v->renderer, &draw_area);
+            if (plane_a_drawn && plane_a_priority)
+                pixel_color = plane_a_color;
+            else if (plane_b_drawn && plane_b_priority)
+                pixel_color = plane_b_color;
+            else if (plane_a_drawn)
+                pixel_color = plane_a_color;
+            else if (plane_b_drawn)
+                pixel_color = plane_b_color;
+            else
+                pixel_color = background_color;
+
+            // Draw
+            // TODO direct to bitmap
+            SDL_SetRenderDrawColor(v->renderer, RED_8(pixel_color), GREEN_8(pixel_color), BLUE_8(pixel_color), 255);
+            SDL_Rect draw_area = { 900 + pixel, line, 500, 1 };
+            SDL_RenderFillRect(v->renderer, &draw_area);
+        }
     }
 
     //
