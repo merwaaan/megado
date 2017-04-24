@@ -6,9 +6,9 @@
 #include "vdp.h"
 
 #if true
-#define LOG_VDP(...) printf(__VA_ARGS__)
+    #define LOG_VDP(...) printf(__VA_ARGS__)
 #else
-#define LOG_VDP(...)
+    #define LOG_VDP(...)
 #endif
 
 void draw(Vdp* v);
@@ -34,8 +34,11 @@ uint16_t debug_palette[16] = {
     0x490
 };
 
-// Plane size codes for register 0x10
-uint8_t plane_size_codes[] = { 32, 64, 0, 128 };
+// Display width values for register 0xC
+uint8_t display_width_values[] = { 32, 40 };
+
+// Plane size values for register 0x10
+uint8_t plane_size_values[] = { 32, 64, 0, 128 };
 
 Vdp* vdp_make(M68k* cpu)
 {
@@ -317,7 +320,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 0xC:
-            v->display_width = BIT(reg_value, 7); // Should be same value as bit 0
+            v->display_width = display_width_values[BIT(reg_value, 7)];
             v->shadow_highlight_enabled = BIT(reg_value, 3);
             v->interlace_mode = FRAGMENT(reg_value, 2, 1);
 
@@ -337,8 +340,8 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 0x10:
-            v->vertical_plane_size = plane_size_codes[FRAGMENT(reg_value, 5, 4)];
-            v->horizontal_plane_size = plane_size_codes[FRAGMENT(reg_value, 1, 0)];
+            v->vertical_plane_size = plane_size_values[FRAGMENT(reg_value, 5, 4)];
+            v->horizontal_plane_size = plane_size_values[FRAGMENT(reg_value, 1, 0)];
 
             LOG_VDP("\t\tVertical plane size %d, Horizontal plane size %d\n", v->vertical_plane_size, v->horizontal_plane_size);
             return;
@@ -672,7 +675,8 @@ void vdp_draw_scanline(Vdp* v, int line)
         uint16_t background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
 
         // Draw the scanline, pixel by pixel
-        for (uint16_t pixel = 0; pixel < v->horizontal_plane_size * 8; ++pixel)
+        uint16_t screen_width = v->display_width * 8;
+        for (uint16_t pixel = 0; pixel < screen_width; ++pixel)
         {
             // Get the pixel values for each plane
 
