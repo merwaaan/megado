@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "genesis.h"
-//#include "joypad.h"
+#include "joypad.h"
 #include "vdp.h"
 
 Genesis* genesis_make()
@@ -13,7 +13,7 @@ Genesis* genesis_make()
     g->memory = calloc(0x1000000, sizeof(uint8_t));
     g->m68k = m68k_make();
     g->vdp = vdp_make(g->m68k);
-    //g->joypad = joypad_make();
+    g->joypad = joypad_make();
 
     // Store a pointer to the Genesis instance in the M68k
     // In this way, the various modules can be accessed from M68k-centric I/O functions (see m68k_io.c)
@@ -31,7 +31,7 @@ void genesis_free(Genesis* g)
 
     m68k_free(g->m68k);
     vdp_free(g->vdp);
-    //joypad_free(g->joypad);
+    joypad_free(g->joypad);
 
     free(g->memory);
     free(g);
@@ -100,14 +100,26 @@ bool genesis_run_frame(Genesis* g)
         case SDL_KEYDOWN:
             switch (event.key.keysym.sym)
             {
-            case SDLK_ESCAPE: return false;
-            /*case SDLK_LEFT: joypad_press(g->joypad, Left); break;
+            case SDLK_LEFT: joypad_press(g->joypad, Left); break;
             case SDLK_RIGHT: joypad_press(g->joypad, Right); break;
             case SDLK_UP: joypad_press(g->joypad, Up); break;
             case SDLK_RETURN: joypad_press(g->joypad, Start); break;
             case SDLK_a: joypad_press(g->joypad, ButtonA); break;
             case SDLK_z: joypad_press(g->joypad, ButtonB); break;
-            case SDLK_e: joypad_press(g->joypad, ButtonC); break;*/
+            case SDLK_e: joypad_press(g->joypad, ButtonC); break;
+            }
+            break;
+        case SDL_KEYUP:
+            switch (event.key.keysym.sym)
+            {
+            case SDLK_ESCAPE: return false;
+            case SDLK_LEFT: joypad_release(g->joypad, Left); break;
+            case SDLK_RIGHT: joypad_release(g->joypad, Right); break;
+            case SDLK_UP: joypad_release(g->joypad, Up); break;
+            case SDLK_RETURN: joypad_release(g->joypad, Start); break;
+            case SDLK_a: joypad_release(g->joypad, ButtonA); break;
+            case SDLK_z: joypad_release(g->joypad, ButtonB); break;
+            case SDLK_e: joypad_release(g->joypad, ButtonC); break;
             }
             break;
 

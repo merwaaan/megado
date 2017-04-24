@@ -25,6 +25,11 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
             false << 5 | // Sega CD connected
             false; // Version
 
+    case 0xA10002:
+    case 0xA10003:
+        return joypad_read(GENESIS(m)->joypad);
+        break;
+
             // TODO temp, stub z80
     case 0xA11100:
         return !z80_stopped;
@@ -78,8 +83,11 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     if (address <= 0x3FFFFF)
         return;
 
+    if (address == 0xA10002 || address == 0xA10003)
+        joypad_write(GENESIS(m)->joypad, value);
+
     // Stubbed z80 control
-    if (address == 0xA11100)
+    else if (address == 0xA11100)
     {
         if (value == 0)
             z80_stopped = false;

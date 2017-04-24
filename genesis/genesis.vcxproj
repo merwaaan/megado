@@ -127,11 +127,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="genesis.c" />
+    <ClCompile Include="joypad.c" />
     <ClCompile Include="m68k_io.c" />
     <ClCompile Include="vdp.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="genesis.h" />
+    <ClInclude Include="joypad.h" />
     <ClInclude Include="vdp.h" />
   </ItemGroup>
   <ItemGroup>

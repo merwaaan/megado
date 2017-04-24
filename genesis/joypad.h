@@ -14,7 +14,7 @@ typedef enum
 
 typedef struct Joypad {
 
-    // Word containing all the buttons.
+    // Word containing all the buttons states.
     // Depending on bit 6, the high or low byte will be read.
     uint16_t buttons;
 } Joypad;
