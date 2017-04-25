@@ -43,7 +43,10 @@ int asr(Instruction* i)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst);
 
-    uint8_t shift = FETCH_EA_AND_GET(i->src); // TODO 1-8?
+    uint8_t shift = FETCH_EA_AND_GET(i->src);
+    if (shift == 0)
+        shift = 8;
+
     if (shift > 0)
     {
         uint32_t shifted_in = BIT(initial, i->size - 1) ? MASK_BELOW(0xFFFFFFFF, i->size - shift) : 0;

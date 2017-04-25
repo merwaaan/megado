@@ -136,9 +136,11 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
     return cycles;
 }
 
-uint32_t breakpoint = 0x21a;
-bool breakpoint_triggered = false;
+// TODO Aladdin, ok until 1e5834
 // TODO Sonic@37E, D5 is wrong
+
+uint32_t breakpoint = 0x1e5834;
+bool breakpoint_triggered = false;
 
 uint8_t m68k_step(M68k* m)
 {
