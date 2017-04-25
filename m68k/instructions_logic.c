@@ -81,7 +81,7 @@ int andi_sr(Instruction* i)
 Instruction* gen_andi_sr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "ANDI SR", andi_sr);
-    i->src = operand_make_immediate_value(Byte, i);
+    i->src = operand_make_immediate_value(Word, i);
     return i;
 }
 
@@ -95,7 +95,7 @@ int andi_ccr(Instruction* i)
 Instruction* gen_andi_ccr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "ANDI CCR", andi_ccr);
-    i->src = operand_make_immediate_value(Word, i);
+    i->src = operand_make_immediate_value(Byte, i);
     return i;
 }
 
@@ -169,7 +169,7 @@ int ori_sr(Instruction* i)
 Instruction* gen_ori_sr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "ORI SR", ori_sr);
-    i->src = operand_make_immediate_value(Byte, i);
+    i->src = operand_make_immediate_value(Word, i);
     return i;
 } // TODO cycles
 
@@ -183,7 +183,7 @@ int ori_ccr(Instruction* i)
 Instruction* gen_ori_ccr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "ORI CCR", ori_ccr);
-    i->src = operand_make_immediate_value(Word, i);
+    i->src = operand_make_immediate_value(Byte, i);
     return i;
 } // TODO cycles
 
