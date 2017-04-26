@@ -86,6 +86,7 @@ static Pattern all_patterns[] =
     { 0x8000, 0xF000, &gen_or },
     { 0x9000, 0xF000, &gen_sub },
     { 0x9100, 0xF000, &gen_subx },
+    { 0x90C0, 0xF0C0, &gen_suba },
     { 0xB100, 0xF100, &gen_eor },
     { 0xB108, 0xF138, &gen_cmpm },
     { 0xB000, 0xF100, &gen_cmp },
