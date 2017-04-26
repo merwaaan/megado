@@ -194,6 +194,24 @@ Instruction* gen_rte(uint16_t opcode, M68k* m)
     return instruction_make(m, "RTE", rte);
 }
 
+int rtr(Instruction* i)
+{
+    uint8_t ccr = m68k_read_w(i->context, i->context->address_registers[7]);
+    i->context->status = i->context->status & 0xFFE0 | ccr & 0x1F;
+
+    uint32_t pc = m68k_read_l(i->context, i->context->address_registers[7] + 2);
+    i->context->pc = pc;
+
+    i->context->address_registers[7] += 6;
+
+    return 0;
+}
+
+Instruction* gen_rtr(uint16_t opcode, M68k* m)
+{
+    return instruction_make(m, "RTR", rtr);
+}
+
 int rts(Instruction* i)
 {
     i->context->pc = m68k_read_l(i->context, i->context->address_registers[7]);

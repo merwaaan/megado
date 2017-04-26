@@ -71,6 +71,7 @@ static Pattern all_patterns[] =
     { 0x4E71, 0xFFFF, &gen_nop },
     { 0x4E73, 0xFFFF, &gen_rte },
     { 0x4E75, 0xFFFF, &gen_rts },
+    { 0x4E77, 0xFFFF, &gen_rtr },
     { 0x4E80, 0xFFC0, &gen_jsr },
     { 0x4EC0, 0xFFC0, &gen_jmp },
     { 0x50C8, 0xF0F8, &gen_dbcc },
