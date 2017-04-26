@@ -243,11 +243,11 @@ Instruction* gen_cmpm(uint16_t opcode, M68k* m)
 int div_(Instruction* i)
 {
     uint16_t a = FETCH_EA_AND_GET(i->src);
-    uint16_t b = GET(i->dst);
+    uint16_t b = i->context->data_registers[i->dst->n];
 
-    uint16_t quotient = a / b;
-    uint16_t remainder = a % b;
-    SET(i->dst, remainder << 16 | quotient);
+    uint16_t quotient = b / a;
+    uint16_t remainder = b % a;
+    i->context->data_registers[i->dst->n] = remainder << 16 | quotient;
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false); // TODO
@@ -260,7 +260,7 @@ int div_(Instruction* i)
 Instruction* gen_divs(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "DIVS", div_);
-    i->size = Long;
+    i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
 
@@ -273,7 +273,7 @@ Instruction* gen_divs(uint16_t opcode, M68k* m)
 Instruction* gen_divu(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "DIVU", div_);
-    i->size = Long;
+    i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
 
