@@ -68,7 +68,7 @@ void instr_callback(M68k* m)
     free(d);
 }
 
-int main()
+int main(int argc, char **argv)
 {
     Genesis* g = genesis_make();
 #ifdef DEBUG
@@ -84,7 +84,12 @@ int main()
 
     //getchar();
 
-    test_rom(g, "../browser/test.bin");
+    if (argc < 2) {
+      printf("No ROM specified, using default\n");
+      test_rom(g, "../browser/test.bin");
+    } else {
+      test_rom(g, argv[1]);
+    }
 
     genesis_free(g);
 
