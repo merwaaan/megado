@@ -43,7 +43,7 @@ void genesis_load_rom_file(Genesis* g, char* path)
     if (!file)
     {
         printf("Cannot read file \"%s\"", path);
-        return;
+        exit(1);
     }
 
     fseek(file, 0, SEEK_END);
