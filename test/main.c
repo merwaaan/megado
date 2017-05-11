@@ -3,10 +3,14 @@
 #include <m68k/m68k.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef _WIN32
 #include <WinSock2.h>
+#elif __linux__
+#include <arpa/inet.h>
 #endif
+
 
 void check_alignment(Genesis* g)
 {

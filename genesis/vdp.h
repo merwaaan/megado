@@ -120,6 +120,7 @@ typedef struct Vdp
 Vdp* vdp_make(M68k* cpu);
 void vdp_free(Vdp*);
 
+uint16_t vdp_read_data(Vdp* v);
 uint8_t vdp_read_data_hi(Vdp*);
 uint8_t vdp_read_data_lo(Vdp*);
 void vdp_write_data(Vdp*, uint16_t value); // TODO 8bit writes OK but only 16bit reads?

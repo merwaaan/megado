@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "genesis.h"
+#include "joypad.h"
 #include "vdp.h"
 
 #define GENESIS(m) ((Genesis*) (m)->user_data)
