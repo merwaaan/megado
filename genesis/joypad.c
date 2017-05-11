@@ -24,7 +24,7 @@ uint8_t joypad_read(Joypad* joypad)
 void joypad_write(Joypad* joypad, uint8_t value)
 {
     // Only write bit 6 and 7 (in both low and high bytes)
-    joypad->buttons = (joypad->buttons & 0x3F3F) | (value | value << 8) & 0xC0C0;
+    joypad->buttons = (joypad->buttons & 0x3F3F) | ((value | (value << 8)) & 0xC0C0);
 }
 
 void joypad_press(Joypad* joypad, JoypadButton button)
