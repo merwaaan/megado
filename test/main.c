@@ -3,7 +3,14 @@
 #include <m68k/m68k.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#ifdef _WIN32
 #include <WinSock2.h>
+#elif __linux__
+#include <arpa/inet.h>
+#endif
+
 
 void check_alignment(Genesis* g)
 {
@@ -65,10 +72,12 @@ void instr_callback(M68k* m)
     free(d);
 }
 
-int main()
+int main(int argc, char **argv)
 {
     Genesis* g = genesis_make();
+#ifdef DEBUG
     g->m68k->instruction_callback = instr_callback;
+#endif
 
     //check_alignment(g);
     //check_endianness();
@@ -79,7 +88,12 @@ int main()
 
     //getchar();
 
-    test_rom(g, "../browser/test.bin");
+    if (argc < 2) {
+      printf("No ROM specified, using default\n");
+      test_rom(g, "../browser/test.bin");
+    } else {
+      test_rom(g, argv[1]);
+    }
 
     genesis_free(g);
 

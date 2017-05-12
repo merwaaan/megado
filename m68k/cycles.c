@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "cycles.h"
 #include "instruction.h"
 #include "operands.h"

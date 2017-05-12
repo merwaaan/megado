@@ -5,7 +5,7 @@
 
 #include "vdp.h"
 
-#if true
+#ifdef DEBUG
     #define LOG_VDP(...) printf(__VA_ARGS__)
 #else
     #define LOG_VDP(...)

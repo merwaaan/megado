@@ -371,7 +371,7 @@ Operand* operand_make_address_register_indirect_displacement(int n, struct Instr
 * Extension word format: https://github.com/traviscross/libzrtp/blob/master/third_party/bnlib/lbn68000.c#L342
 */
 
-#define INDEX_REGISTER(extension) (BIT(extension, 15) ? o->instruction->context->address_registers : o->instruction->context->data_registers)[FRAGMENT(extension, 14, 12)]
+#define INDEX_REGISTER(extension) ((BIT((extension), 15) ? o->instruction->context->address_registers[FRAGMENT((extension), 14, 12)] : o->instruction->context->data_registers[FRAGMENT((extension), 14, 12)]))
 #define INDEX_LENGTH(extension) (BIT(extension, 11))
 #define INDEX_SCALE(extension) (FRAGMENT(extension, 10, 9)) // Not supported by the 68000
 #define INDEX_DISPLACEMENT(extension) (FRAGMENT(extension, 7, 0))

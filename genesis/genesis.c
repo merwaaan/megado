@@ -43,7 +43,7 @@ void genesis_load_rom_file(Genesis* g, char* path)
     if (!file)
     {
         printf("Cannot read file \"%s\"", path);
-        return;
+        exit(1);
     }
 
     fseek(file, 0, SEEK_END);
@@ -81,6 +81,41 @@ SDL_Event event;
 
 bool genesis_run_frame(Genesis* g)
 {
+  // Handle keyboard input
+  SDL_PollEvent(&event);
+  switch (event.type)
+    {
+    case SDL_KEYDOWN:
+      switch (event.key.keysym.scancode)
+        {
+        case SDL_SCANCODE_LEFT: joypad_press(g->joypad, Left); break;
+        case SDL_SCANCODE_RIGHT: joypad_press(g->joypad, Right); break;
+        case SDL_SCANCODE_UP: joypad_press(g->joypad, Up); break;
+        case SDL_SCANCODE_DOWN: joypad_press(g->joypad, Down); break;
+        case SDL_SCANCODE_RETURN: joypad_press(g->joypad, Start); break;
+        case SDL_SCANCODE_Q: joypad_press(g->joypad, ButtonA); break;
+        case SDL_SCANCODE_W: joypad_press(g->joypad, ButtonB); break;
+        case SDL_SCANCODE_E: joypad_press(g->joypad, ButtonC); break;
+        }
+      break;
+    case SDL_KEYUP:
+      switch (event.key.keysym.scancode)
+        {
+        case SDL_SCANCODE_ESCAPE: return false;
+        case SDL_SCANCODE_LEFT: joypad_release(g->joypad, Left); break;
+        case SDL_SCANCODE_RIGHT: joypad_release(g->joypad, Right); break;
+        case SDL_SCANCODE_UP: joypad_release(g->joypad, Up); break;
+        case SDL_SCANCODE_DOWN: joypad_release(g->joypad, Down); break;
+        case SDL_SCANCODE_RETURN: joypad_release(g->joypad, Start); break;
+        case SDL_SCANCODE_Q: joypad_release(g->joypad, ButtonA); break;
+        case SDL_SCANCODE_W: joypad_release(g->joypad, ButtonB); break;
+        case SDL_SCANCODE_E: joypad_release(g->joypad, ButtonC); break;
+        }
+      break;
+
+    case SDL_QUIT: return false;
+    }
+
     // The number of scanlines depends on the region
     // http://forums.sonicretro.org/index.php?showtopic=5615
     uint16_t lines = g->region == Europe ? 312 : 262;
@@ -92,39 +127,6 @@ bool genesis_run_frame(Genesis* g)
 
         // Draw the scanline
         vdp_draw_scanline(g->vdp, line);
-
-        // Handle keyboard input
-        SDL_PollEvent(&event);
-        switch (event.type)
-        {
-        case SDL_KEYDOWN:
-            switch (event.key.keysym.sym)
-            {
-            case SDLK_LEFT: joypad_press(g->joypad, Left); break;
-            case SDLK_RIGHT: joypad_press(g->joypad, Right); break;
-            case SDLK_UP: joypad_press(g->joypad, Up); break;
-            case SDLK_RETURN: joypad_press(g->joypad, Start); break;
-            case SDLK_a: joypad_press(g->joypad, ButtonA); break;
-            case SDLK_z: joypad_press(g->joypad, ButtonB); break;
-            case SDLK_e: joypad_press(g->joypad, ButtonC); break;
-            }
-            break;
-        case SDL_KEYUP:
-            switch (event.key.keysym.sym)
-            {
-            case SDLK_ESCAPE: return false;
-            case SDLK_LEFT: joypad_release(g->joypad, Left); break;
-            case SDLK_RIGHT: joypad_release(g->joypad, Right); break;
-            case SDLK_UP: joypad_release(g->joypad, Up); break;
-            case SDLK_RETURN: joypad_release(g->joypad, Start); break;
-            case SDLK_a: joypad_release(g->joypad, ButtonA); break;
-            case SDLK_z: joypad_release(g->joypad, ButtonB); break;
-            case SDLK_e: joypad_release(g->joypad, ButtonC); break;
-            }
-            break;
-
-        case SDL_QUIT: return false;
-        }
     }
 
     return true;

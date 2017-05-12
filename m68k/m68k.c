@@ -70,7 +70,9 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     if (instr == NULL)
     {
         // TODO restore pc
+#ifdef DEBUG
         printf("Opcode %#06X cannot be found in the opcode table\n", opcode);
+#endif
         return NULL;
     }
 
@@ -157,13 +159,18 @@ uint8_t m68k_step(M68k* m)
 
     if (instr == NULL)
     {
+#ifdef DEBUG
         printf("\tOpcode %#06X cannot be found in the opcode table\n", m->instruction_register);
-        return;
+#endif
+        return 0;
     }
 
+#ifdef DEBUG
     DecodedInstruction* d = breakpoint_triggered ? m68k_decode(m, m->instruction_address) : NULL;
     if (d != NULL)
         printf("%#06X   %s\n", m->pc - 2, d->mnemonics);
+    decoded_instruction_free(d);
+#endif
 
     //if (m->instruction_callback != NULL)
     //    m->instruction_callback(m);
@@ -172,8 +179,6 @@ uint8_t m68k_step(M68k* m)
     m->cycles += cycles;
 
     m68k_handle_interrupt(m);
-
-    decoded_instruction_free(d);
 
     return cycles;
 }
@@ -237,12 +242,16 @@ uint16_t m68k_fetch(M68k* m)
 
 void m68k_request_interrupt(M68k* m, uint8_t level)
 {
+#ifdef DEBUG
     printf("Interrupt %d requested\n", level);
+#endif
 
     // Ignore low-priority interrupts (except for level 7, which is non-maskable)
     if (level <= STATUS_INTERRUPT_MASK(m) && level != 7)
     {
+#ifdef DEBUG
         printf("\tInterrupt ignored, current interrupt mask: %d\n", STATUS_INTERRUPT_MASK(m));
+#endif
         return;
     }
 
@@ -254,7 +263,9 @@ void m68k_handle_interrupt(M68k* m)
     if (m->pending_interrupt < 0)
         return;
 
+#ifdef DEBUG
     printf("Interrupt %d handled\n", m->pending_interrupt);
+#endif
 
     // Push the current PC onto the stack
     m->address_registers[7] -= 4;
