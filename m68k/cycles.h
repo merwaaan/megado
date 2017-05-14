@@ -18,3 +18,4 @@ uint8_t cycles_ea_calculation(struct Instruction* i);
 uint8_t cycles_standard_instruction(struct Instruction* i, uint8_t ea_an_cycles, uint8_t ea_dn_cycles, uint8_t dn_ea_cycles);
 uint8_t cycles_single_operand_instruction(struct Instruction* i, uint8_t register_cycles, uint8_t memory_cycles);
 uint8_t cycles_bit_manipulation_instruction(struct Instruction* i, uint8_t register_cycles, uint8_t memory_cycles);
+uint8_t cycles_immediate_instruction(struct Instruction* i, uint8_t dn_cycles, uint8_t an_cycles, uint8_t memory_cycles);

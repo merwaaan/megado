@@ -68,7 +68,14 @@ Instruction* gen_and(uint16_t opcode, M68k* m)
 
 Instruction* gen_andi(uint16_t opcode, M68k* m)
 {
-    return gen_boolean_instruction_immediate(opcode, m, "ANDI", and);
+    Instruction* i = gen_boolean_instruction_immediate(opcode, m, "ANDI", and);
+
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+            cycles_immediate_instruction(i, 16, 0, 20) :
+            cycles_immediate_instruction(i, 8, 0, 12);
+
+    return i;
 }
 
 int andi_sr(Instruction* i)
@@ -126,7 +133,14 @@ Instruction* gen_eor(uint16_t opcode, M68k* m)
 
 Instruction* gen_eori(uint16_t opcode, M68k* m)
 {
-    return gen_boolean_instruction_immediate(opcode, m, "EORI", eor);
+    Instruction* i = gen_boolean_instruction_immediate(opcode, m, "EORI", eor);
+
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+        cycles_immediate_instruction(i, 16, 0, 20) :
+        cycles_immediate_instruction(i, 8, 0, 12);
+
+    return i;
 }
 
 int or (Instruction* i)
@@ -156,7 +170,14 @@ Instruction* gen_or(uint16_t opcode, M68k* m)
 
 Instruction* gen_ori(uint16_t opcode, M68k* m)
 {
-    return gen_boolean_instruction_immediate(opcode, m, "ORI", or);
+    Instruction* i = gen_boolean_instruction_immediate(opcode, m, "ORI", or);
+
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+            cycles_immediate_instruction(i, 16, 0, 20) :
+            cycles_immediate_instruction(i, 8, 0, 12);
+
+    return i;
 }
 
 int ori_sr(Instruction* i)

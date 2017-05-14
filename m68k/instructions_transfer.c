@@ -209,6 +209,10 @@ Instruction* gen_moveq(uint16_t opcode, M68k* m)
     i->size = Long;
     i->src = operand_make_value(BYTE_LO(opcode), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = cycles_immediate_instruction(i, 4, 0, 0);
+
     return i;
 }
 

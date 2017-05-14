@@ -75,6 +75,12 @@ Instruction* gen_addi(uint16_t opcode, M68k* m)
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_immediate_value(i->size, i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+        cycles_immediate_instruction(i, 16, 0, 20) :
+        cycles_immediate_instruction(i, 8, 0, 12);
+
     return i;
 }
 
@@ -103,6 +109,12 @@ Instruction* gen_addq(uint16_t opcode, M68k* m)
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+        cycles_immediate_instruction(i, 8, 8, 12) :
+        cycles_immediate_instruction(i, 4, 8, 8);
+
     return i;
 }
 
@@ -228,6 +240,12 @@ Instruction* gen_cmpi(uint16_t opcode, M68k* m)
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_immediate_value(i->size, i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+        cycles_immediate_instruction(i, 14, 0, 12) :
+        cycles_immediate_instruction(i, 8, 0, 8);
+
     return i;
 }
 
@@ -465,6 +483,12 @@ Instruction* gen_subi(uint16_t opcode, M68k* m)
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_immediate_value(i->size, i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+        cycles_immediate_instruction(i, 16, 0, 20) :
+        cycles_immediate_instruction(i, 8, 0, 12);
+
     return i;
 }
 
@@ -493,6 +517,12 @@ Instruction* gen_subq(uint16_t opcode, M68k* m)
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+
+    if (instruction_is_valid(i, true, true))
+        i->base_cycles = i->size == Long ?
+        cycles_immediate_instruction(i, 8, 8, 12) :
+        cycles_immediate_instruction(i, 4, 8, 8);
+
     return i;
 }
 
