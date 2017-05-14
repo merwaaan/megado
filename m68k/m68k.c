@@ -8,6 +8,12 @@
 #include "m68k.h"
 #include "operands.h"
 
+#ifdef DEBUG
+#define LOG_M68K(...) printf(__VA_ARGS__)
+#else
+#define LOG_M68K(...)
+#endif
+
 M68k* m68k_make()
 {
     M68k* m68k = calloc(1, sizeof(M68k));
@@ -21,7 +27,7 @@ M68k* m68k_make()
     {
         if (opcode == 0xe5f9)
         {
-            printf("breakpoint\n");
+            LOG_M68K("breakpoint\n");
         }
 
         Instruction* instr = instruction_generate(m68k, opcode);
@@ -70,9 +76,8 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     if (instr == NULL)
     {
         // TODO restore pc
-#ifdef DEBUG
-        printf("Opcode %#06X cannot be found in the opcode table\n", opcode);
-#endif
+        LOG_M68K("Opcode %#06X cannot be found in the opcode table\n", opcode);
+
         return NULL;
     }
 
@@ -127,7 +132,7 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
 
         if (c == 0)
         {
-            //printf("WARNING, instruction took ZERO CYCLES");
+            LOG_M68K("WARNING, instruction took ZERO CYCLES");
             c = 10; // we don't want to block the execution
         }
 
@@ -142,7 +147,7 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
 // TODO Sonic@37E, D5 is wrong
 
 uint32_t breakpoint = 0x1e5834;
-bool breakpoint_triggered = false;
+bool breakpoint_triggered = true;
 
 uint8_t m68k_step(M68k* m)
 {
@@ -159,9 +164,8 @@ uint8_t m68k_step(M68k* m)
 
     if (instr == NULL)
     {
-#ifdef DEBUG
-        printf("\tOpcode %#06X cannot be found in the opcode table\n", m->instruction_register);
-#endif
+        LOG_M68K("\tOpcode %#06X cannot be found in the opcode table\n", m->instruction_register);
+
         return 0;
     }
 
@@ -242,16 +246,13 @@ uint16_t m68k_fetch(M68k* m)
 
 void m68k_request_interrupt(M68k* m, uint8_t level)
 {
-#ifdef DEBUG
-    printf("Interrupt %d requested\n", level);
-#endif
+    LOG_M68K("Interrupt %d requested\n", level);
 
     // Ignore low-priority interrupts (except for level 7, which is non-maskable)
     if (level <= STATUS_INTERRUPT_MASK(m) && level != 7)
     {
-#ifdef DEBUG
-        printf("\tInterrupt ignored, current interrupt mask: %d\n", STATUS_INTERRUPT_MASK(m));
-#endif
+        LOG_M68K("\tInterrupt ignored, current interrupt mask: %d\n", STATUS_INTERRUPT_MASK(m));
+
         return;
     }
 
@@ -263,9 +264,7 @@ void m68k_handle_interrupt(M68k* m)
     if (m->pending_interrupt < 0)
         return;
 
-#ifdef DEBUG
-    printf("Interrupt %d handled\n", m->pending_interrupt);
-#endif
+    LOG_M68K("Interrupt %d handled\n", m->pending_interrupt);
 
     // Push the current PC onto the stack
     m->address_registers[7] -= 4;
