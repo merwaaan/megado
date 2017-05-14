@@ -7,11 +7,11 @@ struct Instruction;
 
 // Cycles required to compute an effective address.
 // layout: cycles[bw/l][addressing mode]
-extern uint8_t cycles_ea_calculation_table[2][12]; 
+extern uint8_t cycles_ea_calculation_table[2][12]; // TODO really need to be public?
 
 // Cycles required for MOVE operations
 // layout: cycles[bw/l][source addressing mode][dest addressing mode]
-extern uint8_t cycles_move_table[2][12][9]; 
+extern uint8_t cycles_move_table[2][12][9]; // TODO really need to be public?
 
 // http://oldwww.nvg.ntnu.no/amiga/MC680x0_Sections/mc68000timing.HTML
 uint8_t cycles_ea_calculation(struct Instruction* i);

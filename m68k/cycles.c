@@ -99,10 +99,10 @@ uint8_t cycles_bit_manipulation_instruction(struct Instruction* i, uint8_t regis
 uint8_t cycles_immediate_instruction(struct Instruction* i, uint8_t dn_cycles, uint8_t an_cycles, uint8_t memory_cycles)
 {
 
-    if (i->src->type == DataRegister)
+    if (i->dst->type == DataRegister)
         return dn_cycles;
 
-    if (i->src->type == AddressRegister)
+    if (i->dst->type == AddressRegister)
         return an_cycles;
 
     return memory_cycles;

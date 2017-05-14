@@ -330,6 +330,7 @@ Instruction* gen_ext(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "EXT", ext);
     i->size = operand_sign_extension(FRAGMENT(opcode, 8, 6));
     i->src = operand_make_data_register(FRAGMENT(opcode, 3, 0), i);
+    i->base_cycles = 4;
     return i;
 }
 

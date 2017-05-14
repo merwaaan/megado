@@ -25,7 +25,7 @@ M68k* m68k_make()
 
     for (int opcode = 0; opcode < 0x10000; ++opcode)
     {
-        if (opcode == 0xe5f9)
+        if (opcode == 0x7200)
         {
             LOG_M68K("breakpoint\n");
         }
@@ -132,7 +132,7 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
 
         if (c == 0)
         {
-            LOG_M68K("WARNING, instruction took ZERO CYCLES");
+            LOG_M68K("WARNING, instruction took ZERO CYCLES\n");
             c = 10; // we don't want to block the execution
         }
 
@@ -146,7 +146,7 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
 // TODO Aladdin, ok until 1e5834
 // TODO Sonic@37E, D5 is wrong
 
-uint32_t breakpoint = 0x1e5834;
+uint32_t breakpoint = 0x242;
 bool breakpoint_triggered = true;
 
 uint8_t m68k_step(M68k* m)

@@ -42,6 +42,8 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
         break;
     }
 
+    i->base_cycles = 6;
+
     return i;
 }
 
@@ -88,6 +90,7 @@ Instruction* gen_link(uint16_t opcode, M68k* m)
     i->size = Long;
     i->src = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
     i->dst = operand_make_immediate_value(Word, i);
+    i->base_cycles = 16;
     return i;
 }
 
@@ -323,6 +326,8 @@ Instruction* gen_move_usp(uint16_t opcode, M68k* m)
         i->dst = reg;
     else
         i->src = reg;
+
+    i->base_cycles = 4;
 
     return i;
 }

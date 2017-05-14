@@ -28,10 +28,10 @@ int bcc(Instruction* i)
         else
             i->context->pc = i->context->instruction_address + 2 + (int8_t)offset;
 
-        return 0; // TODO timings
+        return 10;
     }
 
-    return 0;
+    return i->size == Byte ? 8 : 12;
 }
 
 Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
@@ -69,7 +69,7 @@ int bra(Instruction* i)
 Instruction* gen_bra(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "BRA", bra);
-    i->base_cycles = 18;
+    i->base_cycles = 10;
     return i;
 }
 
@@ -102,6 +102,8 @@ Instruction* gen_bsr(uint16_t opcode, M68k* m)
     else
         i->src = operand_make_branching_offset(i, Byte);*/
 
+    i->size = 18;
+
     return i;
 }
 
@@ -109,15 +111,20 @@ int dbcc(Instruction* i)
 {
     int16_t offset = m68k_fetch(i->context);
     if (i->condition->func(i->context))
-        return 0;
+        return 12;
     
+    bool branch_taken = false;
+
     uint16_t reg = GET(i->src);
     if (reg > 0)
+    {
         i->context->pc = i->context->instruction_address + offset + 2;
+        branch_taken = true;
+    }
 
     SET(i->src, reg - 1);
 
-    return 0; // TODO timings
+    return branch_taken ? 10 : 14;
 }
 
 Instruction* gen_dbcc(uint16_t opcode, M68k* m)
@@ -176,7 +183,9 @@ int nop(Instruction* i)
 
 Instruction* gen_nop(uint16_t opcode, M68k* m)
 {
-    return instruction_make(m, "NOP", nop);
+    Instruction* i = instruction_make(m, "NOP", nop);
+    i->base_cycles = 4;
+    return i;
 }
 
 int rte(Instruction* i)
@@ -191,7 +200,9 @@ int rte(Instruction* i)
 
 Instruction* gen_rte(uint16_t opcode, M68k* m)
 {
-    return instruction_make(m, "RTE", rte);
+    Instruction* i = instruction_make(m, "RTE", rte);
+    i->base_cycles = 20;
+    return i;
 }
 
 int rtr(Instruction* i)
@@ -209,7 +220,9 @@ int rtr(Instruction* i)
 
 Instruction* gen_rtr(uint16_t opcode, M68k* m)
 {
-    return instruction_make(m, "RTR", rtr);
+    Instruction* i = instruction_make(m, "RTR", rtr);
+    i->base_cycles = 20;
+    return i;
 }
 
 int rts(Instruction* i)
@@ -222,7 +235,9 @@ int rts(Instruction* i)
 
 Instruction* gen_rts(uint16_t opcode, M68k* m)
 {
-    return instruction_make(m, "RTS", rts);
+    Instruction* i = instruction_make(m, "RTS", rts);
+    i->base_cycles = 16;
+    return i;
 }
 
 int trap(Instruction* i)
