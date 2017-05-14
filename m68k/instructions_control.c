@@ -102,7 +102,7 @@ Instruction* gen_bsr(uint16_t opcode, M68k* m)
     else
         i->src = operand_make_branching_offset(i, Byte);*/
 
-    i->size = 18;
+    i->base_cycles = 18;
 
     return i;
 }

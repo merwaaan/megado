@@ -21,7 +21,7 @@ Instruction* gen_shift_instruction(uint16_t opcode, M68k* m, char* name, Instruc
     else
         i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
 
-    i->base_cycles = i->size = Long ? 8 : 6;
+    i->base_cycles = i->size == Long ? 8 : 6;
 
     return i;
 }

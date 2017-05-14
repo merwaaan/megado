@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "m68k", "m68k\m68k.vcxproj", "{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}"
 EndProject
@@ -10,12 +10,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "genesis", "genesis\genesis.vcxproj", "{92C9C451-5A4F-4D05-86F4-76F37E3B106C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj", "{72121CF3-C003-43BD-B506-13DD898D4F8A}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "m68k_diff", "m68k_diff\m68k_diff.vcxproj", "{DFD107E7-E363-45EF-81BA-F5ED0D6AAEB8}"
-	ProjectSection(ProjectDependencies) = postProject
-		{5433B13F-17E1-48A4-B0C9-EB7546EA711F} = {5433B13F-17E1-48A4-B0C9-EB7546EA711F}
-		{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90} = {B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "musashi_make", "deps\musashi_make\musashi_make.vcxproj", "{5433B13F-17E1-48A4-B0C9-EB7546EA711F}"
 EndProject
@@ -59,14 +53,6 @@ Global
 		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Release|x64.Build.0 = Release|x64
 		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Release|x86.ActiveCfg = Release|Win32
 		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Release|x86.Build.0 = Release|Win32
-		{DFD107E7-E363-45EF-81BA-F5ED0D6AAEB8}.Debug|x64.ActiveCfg = Debug|x64
-		{DFD107E7-E363-45EF-81BA-F5ED0D6AAEB8}.Debug|x64.Build.0 = Debug|x64
-		{DFD107E7-E363-45EF-81BA-F5ED0D6AAEB8}.Debug|x86.ActiveCfg = Debug|Win32
-		{DFD107E7-E363-45EF-81BA-F5ED0D6AAEB8}.Debug|x86.Build.0 = Debug|Win32
-		{DFD107E7-E363-45EF-81BA-F5ED0D6AAEB8}.Release|x64.ActiveCfg = Release|x64
-		{DFD107E7-E363-45EF-81BA-F5ED0D6AAEB8}.Release|x64.Build.0 = Release|x64
-		{DFD107E7-E363-45EF-81BA-F5ED0D6AAEB8}.Release|x86.ActiveCfg = Release|Win32
-		{DFD107E7-E363-45EF-81BA-F5ED0D6AAEB8}.Release|x86.Build.0 = Release|Win32
 		{5433B13F-17E1-48A4-B0C9-EB7546EA711F}.Debug|x64.ActiveCfg = Debug|x64
 		{5433B13F-17E1-48A4-B0C9-EB7546EA711F}.Debug|x64.Build.0 = Debug|x64
 		{5433B13F-17E1-48A4-B0C9-EB7546EA711F}.Debug|x86.ActiveCfg = Debug|Win32
