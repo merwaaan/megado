@@ -154,7 +154,7 @@ int movem(Instruction* i)
                 uint32_t* reg = ea->type == AddressRegisterIndirectPreDec ? MOVEM_PREDEC_ORDER(m) : MOVEM_POSTINC_ORDER(m);
 
                 if (i->size == Word)
-                    reg = SIGN_EXTEND_W(*reg);
+                    *reg = SIGN_EXTEND_W(*reg);
 
                 m68k_write(i->context, i->size, offset, *reg);
             }
