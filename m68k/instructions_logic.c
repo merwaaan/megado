@@ -143,6 +143,34 @@ Instruction* gen_eori(uint16_t opcode, M68k* m)
     return i;
 }
 
+int eori_sr(Instruction* i)
+{
+    i->context->status ^= FETCH_EA_AND_GET(i->src);
+
+    return 0;
+}
+
+Instruction* gen_eori_sr(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "EORI SR", eori_sr);
+    i->src = operand_make_immediate_value(Word, i);
+    return i;
+} // TODO cycles
+
+int eori_ccr(Instruction* i)
+{
+    i->context->status = (i->context->status & 0xFFE0) | (i->context->status ^ FETCH_EA_AND_GET(i->src)) & 0x1F;
+
+    return 0;
+}
+
+Instruction* gen_eori_ccr(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "EORI CCR", eori_ccr);
+    i->src = operand_make_immediate_value(Byte, i);
+    return i;
+} // TODO cycles
+
 int or (Instruction* i)
 {
     uint32_t result = FETCH_EA_AND_GET(i->src) | FETCH_EA_AND_GET(i->dst);

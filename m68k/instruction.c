@@ -39,6 +39,8 @@ static Pattern all_patterns[] =
     { 0x0200, 0xFF00, &gen_andi },
     { 0x0400, 0xFF00, &gen_subi },
     { 0x0600, 0xFF00, &gen_addi },
+    { 0x0A3C, 0xFFFF, &gen_eori_ccr },
+    { 0x0A7C, 0xFFFF, &gen_eori_sr },
     { 0x0A00, 0xFF00, &gen_eori },
     { 0x0C00, 0xFF00, &gen_cmpi },
     { 0x0800, 0xFFC0, &gen_btst_imm },
