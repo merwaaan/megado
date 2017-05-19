@@ -67,6 +67,7 @@ static Pattern all_patterns[] =
     { 0x4E58, 0xFFF8, &gen_unlk },
     { 0x4880, 0xFEB8, &gen_ext },
     { 0x4880, 0xFB80, &gen_movem },
+    { 0x4AC0, 0xFFC0, &gen_tas },
     { 0x4A00, 0xFF00, &gen_tst },
     { 0x4E40, 0xFFF0, &gen_trap },
     { 0x4E60, 0xFFF0, &gen_move_usp },

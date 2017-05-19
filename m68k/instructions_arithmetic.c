@@ -532,3 +532,23 @@ Instruction* gen_subx(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "SUBX", not_implemented);
     return i;
 }
+
+int tas(Instruction* i)
+{
+    uint32_t value = FETCH_EA_AND_GET(i->src);
+
+    CARRY_SET(i->context, false);
+    OVERFLOW_SET(i->context, false);
+    ZERO_SET(i->context, value == 0);
+    NEGATIVE_SET(i->context, BIT(value, 7));
+
+    return 0;
+}
+
+Instruction* gen_tas(uint16_t opcode, M68k* m)
+{
+    Instruction* i = instruction_make(m, "TAS", tas);
+    i->size = Byte;
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    return i;
+}

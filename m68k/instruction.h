@@ -124,6 +124,7 @@ DEFINE_INSTR(suba);
 DEFINE_INSTR(subi);
 DEFINE_INSTR(subq);
 DEFINE_INSTR(subx);
+DEFINE_INSTR(tas);
 
 // Shit & rotate
 DEFINE_INSTR(asd);
