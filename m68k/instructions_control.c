@@ -188,20 +188,9 @@ Instruction* gen_nop(uint16_t opcode, M68k* m)
     return i;
 }
 
-int rte(Instruction* i)
+Instruction* gen_rtd(uint16_t opcode, M68k* m)
 {
-    i->context->status = m68k_read_w(i->context, i->context->address_registers[7]);
-    i->context->address_registers[7] += 2;
-    i->context->pc = m68k_read_l(i->context, i->context->address_registers[7]);
-    i->context->address_registers[7] += 4;
-
-    return 0;
-}
-
-Instruction* gen_rte(uint16_t opcode, M68k* m)
-{
-    Instruction* i = instruction_make(m, "RTE", rte);
-    i->base_cycles = 20;
+    Instruction* i = instruction_make(m, "RTD", not_implemented);
     return i;
 }
 
@@ -237,27 +226,5 @@ Instruction* gen_rts(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "RTS", rts);
     i->base_cycles = 16;
-    return i;
-}
-
-int trap(Instruction* i)
-{
-    // Push the current PC onto the stack
-    i->context->address_registers[7] -= 4;
-    m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
-
-    // Push the status register onto the stack
-    i->context->address_registers[7] -= 2;
-    m68k_write_w(i->context, i->context->address_registers[7], i->context->status);
-
-    i->context->pc = m68k_read_l(i->context, 0x80 + i->src->n * 4);
-
-    return 0;
-}
-
-Instruction* gen_trap(uint16_t opcode, M68k* m)
-{
-    Instruction* i = instruction_make(m, "TRAP", trap);
-    i->src = operand_make_value(FRAGMENT(opcode, 3, 0), i);
     return i;
 }

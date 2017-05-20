@@ -119,9 +119,12 @@
     <ClCompile Include="cycles.c" />
     <ClCompile Include="instruction.c" />
     <ClCompile Include="instructions_arithmetic.c" />
+    <ClCompile Include="instructions_bcd.c" />
     <ClCompile Include="instructions_bit.c" />
     <ClCompile Include="instructions_control.c" />
+    <ClCompile Include="instructions_exception.c" />
     <ClCompile Include="instructions_logic.c" />
+    <ClCompile Include="instructions_privileged.c" />
     <ClCompile Include="instructions_shift.c" />
     <ClCompile Include="instructions_transfer.c" />
     <ClCompile Include="m68k.c" />

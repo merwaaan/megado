@@ -78,20 +78,6 @@ Instruction* gen_andi(uint16_t opcode, M68k* m)
     return i;
 }
 
-int andi_sr(Instruction* i)
-{
-    i->context->status &= FETCH_EA_AND_GET(i->src);
-
-    return 0;
-}
-
-Instruction* gen_andi_sr(uint16_t opcode, M68k* m)
-{
-    Instruction* i = instruction_make(m, "ANDI SR", andi_sr);
-    i->src = operand_make_immediate_value(Word, i);
-    return i;
-}
-
 int andi_ccr(Instruction* i)
 {
     i->context->status = (i->context->status & 0xFFE0) | (i->context->status & FETCH_EA_AND_GET(i->src) & 0x1F);
@@ -143,20 +129,6 @@ Instruction* gen_eori(uint16_t opcode, M68k* m)
     return i;
 }
 
-int eori_sr(Instruction* i)
-{
-    i->context->status ^= FETCH_EA_AND_GET(i->src);
-
-    return 0;
-}
-
-Instruction* gen_eori_sr(uint16_t opcode, M68k* m)
-{
-    Instruction* i = instruction_make(m, "EORI SR", eori_sr);
-    i->src = operand_make_immediate_value(Word, i);
-    return i;
-} // TODO cycles
-
 int eori_ccr(Instruction* i)
 {
     i->context->status = (i->context->status & 0xFFE0) | (i->context->status ^ FETCH_EA_AND_GET(i->src)) & 0x1F;
@@ -207,20 +179,6 @@ Instruction* gen_ori(uint16_t opcode, M68k* m)
 
     return i;
 }
-
-int ori_sr(Instruction* i)
-{
-    i->context->status |= FETCH_EA_AND_GET(i->src);
-
-    return 0;
-}
-
-Instruction* gen_ori_sr(uint16_t opcode, M68k* m)
-{
-    Instruction* i = instruction_make(m, "ORI SR", ori_sr);
-    i->src = operand_make_immediate_value(Word, i);
-    return i;
-} // TODO cycles
 
 int ori_ccr(Instruction* i)
 {

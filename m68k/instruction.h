@@ -87,16 +87,13 @@ DEFINE_INSTR(btst_imm);
 DEFINE_INSTR(and);
 DEFINE_INSTR(andi);
 DEFINE_INSTR(andi_ccr);
-DEFINE_INSTR(andi_sr);
 DEFINE_INSTR(andi);
 DEFINE_INSTR(eor);
 DEFINE_INSTR(eori);
 DEFINE_INSTR(eori_ccr);
-DEFINE_INSTR(eori_sr);
 DEFINE_INSTR(or);
 DEFINE_INSTR(ori);
 DEFINE_INSTR(ori_ccr);
-DEFINE_INSTR(ori_sr);
 DEFINE_INSTR(not);
 DEFINE_INSTR(scc);
 DEFINE_INSTR(tst);
@@ -146,17 +143,10 @@ DEFINE_INSTR(movea);
 DEFINE_INSTR(movem);
 DEFINE_INSTR(moveq);
 DEFINE_INSTR(movep);
+DEFINE_INSTR(move_to_ccr);
 DEFINE_INSTR(pea);
 DEFINE_INSTR(trap);
 DEFINE_INSTR(unlk);
-
-// Privileged isntructions
-// TODO move to own file
-DEFINE_INSTR(move_from_ccr);
-DEFINE_INSTR(move_to_ccr);
-DEFINE_INSTR(move_from_sr);
-DEFINE_INSTR(move_to_sr);
-DEFINE_INSTR(move_usp);
 
 // Program control
 DEFINE_INSTR(bcc);
@@ -166,9 +156,31 @@ DEFINE_INSTR(dbcc);
 DEFINE_INSTR(jmp);
 DEFINE_INSTR(jsr);
 DEFINE_INSTR(nop);
-//DEFINE_INSTR(rtd);
+DEFINE_INSTR(rtd);
 DEFINE_INSTR(rtr);
-DEFINE_INSTR(rte);
 DEFINE_INSTR(rts);
+
+// Binary-coded decimals
+DEFINE_INSTR(abcd);
+DEFINE_INSTR(nbcd);
+DEFINE_INSTR(sbcd);
+
+// Exceptions
+DEFINE_INSTR(chk);
+DEFINE_INSTR(illegal);
+DEFINE_INSTR(trap);
+DEFINE_INSTR(trapv);
+
+// Privileged instructions
+DEFINE_INSTR(andi_sr);
+DEFINE_INSTR(eori_sr);
+DEFINE_INSTR(ori_sr);
+DEFINE_INSTR(move_from_sr);
+DEFINE_INSTR(move_to_sr);
+DEFINE_INSTR(move_usp);
+DEFINE_INSTR(reset);
+DEFINE_INSTR(rte);
+DEFINE_INSTR(stop);
+
 
 int not_implemented(Instruction* i);

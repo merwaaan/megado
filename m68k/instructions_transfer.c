@@ -240,34 +240,9 @@ Instruction* gen_movea(uint16_t opcode, M68k* m)
     return i;
 }
 
-int move_from_ccr(Instruction* i)
+Instruction* gen_movep(uint16_t opcode, M68k* m)
 {
-    // Only move the CCR segment of the status register
-    FETCH_EA_AND_SET(i->dst, i->context->status & 0x1F);
-
-    return 0;
-}
-
-Instruction* gen_move_from_ccr(uint16_t opcode, M68k* m)
-{
-    Instruction* i = instruction_make(m, "MOVE from CCR", move_from_ccr);
-    i->size = Word;
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
-    return i;
-}
-
-int move_from_sr(Instruction* i)
-{
-    FETCH_EA_AND_SET(i->dst, i->context->status);
-
-    return 0;
-}
-
-Instruction* gen_move_from_sr(uint16_t opcode, M68k* m)
-{
-    Instruction* i = instruction_make(m, "MOVE from SR", move_from_sr);
-    i->size = Word;
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    Instruction* i = instruction_make(m, "MOVEP", not_implemented);
     return i;
 }
 
@@ -284,51 +259,6 @@ Instruction* gen_move_to_ccr(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "MOVE to CCR", move_to_ccr);
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    return i;
-}
-
-int move_to_sr(Instruction* i)
-{
-    i->context->status = FETCH_EA_AND_GET(i->src);
-
-    return 0;
-}
-
-Instruction* gen_move_to_sr(uint16_t opcode, M68k* m)
-{
-    Instruction* i = instruction_make(m, "MOVE to SR", move_to_sr);
-    i->size = Word;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    return i;
-}
-
-int move_usp(Instruction* i)
-{
-    // Register -> user stack pointer
-    if (i->src != NULL)
-        i->context->usp = GET(i->src);
-    // User stack pointer -> register
-    else
-        SET(i->dst, i->context->usp);
-
-    return 0;
-}
-
-Instruction* gen_move_usp(uint16_t opcode, M68k* m)
-{
-    Instruction* i = instruction_make(m, "MOVE USP", move_usp);
-    i->size = Long;
-
-    Operand* reg = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
-
-    int direction = BIT(opcode, 3);
-    if (direction)
-        i->dst = reg;
-    else
-        i->src = reg;
-
-    i->base_cycles = 4;
-
     return i;
 }
 

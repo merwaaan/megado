@@ -33,6 +33,7 @@ uint16_t debug_palette[16] = {
     0x1084,
     0x490
 };
+// TODO: optim, directly store rgb values to reduce conversions
 
 // Display width values for register 0xC
 uint8_t display_width_values[] = { 32, 40 };
