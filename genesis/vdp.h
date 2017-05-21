@@ -41,7 +41,7 @@ typedef struct Vdp
 
     // Register $00
     bool hblank_enabled;
-    bool hv_counter_enabled;
+    bool hv_counter_latched;
 
     // Register $01
     bool display_enabled;
@@ -66,7 +66,7 @@ typedef struct Vdp
     uint8_t background_color_entry;
 
     // Register $0A
-    uint8_t hblank_counter; // TODO unclear
+    uint8_t hblank_line;
 
     // Register $0B
     uint8_t vertical_scrolling;
@@ -106,11 +106,16 @@ typedef struct Vdp
     bool dma_in_progress;
     bool hblank_in_progress;
     bool vblank_in_progress;
+    bool vblank_pending; // TODO not implemented, how long does this last?
 
     // HV counter components
-    uint16_t beam_position_h;
-    uint16_t beam_position_v;
+    uint16_t h_counter;
+    uint16_t v_counter;
 
+    // Current value of the H-blank counter
+    // (will be reloaded with the value stored in register 0xA)
+    uint8_t hblank_counter;
+    
     M68k* cpu;
 
     SDL_Window* window;

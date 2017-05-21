@@ -6,9 +6,9 @@
 #include "vdp.h"
 
 #ifdef DEBUG
-    #define LOG_VDP(...) printf(__VA_ARGS__)
+#define LOG_VDP(...) printf(__VA_ARGS__)
 #else
-    #define LOG_VDP(...)
+#define LOG_VDP(...)
 #endif
 
 void draw(Vdp* v);
@@ -261,10 +261,12 @@ void vdp_write_control(Vdp* v, uint16_t value)
         switch (reg)
         {
         case 0:
+            // TODO bit 5
             v->hblank_enabled = BIT(reg_value, 4);
-            v->hv_counter_enabled = !BIT(reg_value, 1);
+            v->hv_counter_latched = !BIT(reg_value, 1);
+            // Bit 0 tells the VDP if the display is enabled or not. The difference with bit 6 of register 1 is unclear.
 
-            LOG_VDP("\t\tH-blank enabled %d, HV-counter enabled %d\n", v->hblank_enabled, v->hv_counter_enabled);
+            LOG_VDP("\t\tH-blank enabled %d, HV-counter latched %d\n", v->hblank_enabled, v->hv_counter_latched);
             return;
 
         case 1:
@@ -308,9 +310,9 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 0xA:
-            v->hblank_counter = reg_value;
+            v->hblank_line = reg_value;
 
-            LOG_VDP("\t\tH-blank counter %04x\n", v->hblank_counter);
+            LOG_VDP("\t\tH-blank counter %04x\n", v->hblank_line);
             return;
 
         case 0xB:
@@ -493,7 +495,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
 uint16_t vdp_get_hv_counter(Vdp* v)
 {
-    return (v->beam_position_v << 8 & 0xFF00) | (v->beam_position_h >> 1 & 0xFF);
+    return (v->v_counter << 8 & 0xFF00) | (v->h_counter >> 1 & 0xFF);
 }
 
 void draw_pattern(Vdp* v, int id, uint16_t* palette, int x, int y)
@@ -671,7 +673,7 @@ bool vdp_get_plane_pixel_color(Vdp* v, uint8_t* nametable, int x, int y, uint16_
 
 void vdp_draw_scanline(Vdp* v, int line)
 {
-    if (v->display_enabled)
+    if (v->display_enabled && v->v_counter < 224)
     {
         uint16_t background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
 
@@ -710,19 +712,49 @@ void vdp_draw_scanline(Vdp* v, int line)
         }
     }
 
-    //
+    /*
+     * Handle horizontal interrupts
+     *
+     * - A line interrupt counter is decremented on each scanline
+     * - An interrupt occurs if the counter reached 0 and horizontal
+     *   interrupts are enabled
+     * - The counter is reset to the value stored in register 0xA when
+     *   an interrupt occurs OR on line 0 OR on lines >224
+     */
 
-    ++v->beam_position_v;
+     // Reload the counter
+    if (v->v_counter == 0 || v->v_counter >= 225)
+        v->hblank_counter = v->hblank_line;
 
-    if (v->beam_position_v % 20 == 0 && v->hblank_enabled)
-        m68k_request_interrupt(v->cpu, HBLANK_IRQ);
-
-    if (v->beam_position_v > 320)
+    // Trigger an interrupt when the counter reaches 0
+    if (v->hblank_counter <= 0)
     {
-        v->beam_position_v = 0;
+        if (v->hblank_enabled)
+            m68k_request_interrupt(v->cpu, HBLANK_IRQ);
 
-        if (v->vblank_enabled)
-            m68k_request_interrupt(v->cpu, VBLANK_IRQ);
+        v->hblank_counter = v->hblank_line;
+    }
+
+    --v->hblank_counter;
+
+    /*
+     * Handle vertical interrupts
+     */
+
+    ++v->v_counter;
+
+    // V-blank occurs on line 224
+    if (v->v_counter == 224 && v->vblank_enabled)
+    {         
+        v->vblank_in_progress = true;
+        
+        m68k_request_interrupt(v->cpu, VBLANK_IRQ);
+    }
+    // V-blank ends on line 262
+    else if (v->v_counter == 262) 
+    {
+        v->vblank_in_progress = false;
+        v->v_counter = 0;
 
         // TODO tmp to debug faster
         vdp_draw_debug(v);
