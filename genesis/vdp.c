@@ -47,7 +47,7 @@ Vdp* vdp_make(M68k* cpu)
     v->cpu = cpu;
     v->vram = calloc(0x10000, sizeof(uint8_t));
     v->cram = calloc(64, sizeof(uint16_t));
-    v->vsram = calloc(40, sizeof(uint16_t));
+    v->vsram = calloc(64, sizeof(uint16_t));
     v->pending_command = false;
 
     // Initialize SDL
@@ -145,10 +145,9 @@ void vdp_write_data(Vdp* v, uint16_t value)
 
     case 5: // VSRAM write
 
-        LOG_VDP("\tWrite %02x to VSRAM @ %02x\n", value, v->access_address >> 1);
+        LOG_VDP("\tWrite %04x to VSRAM @ %02x\n", value, v->access_address >> 1);
 
-        //assert((v->access_address >> 1) < 0x28);
-        v->vsram[v->access_address >> 1 & 0x28] = value;
+        v->vsram[v->access_address >> 1 & 0x3F] = value;
         v->access_address += v->auto_increment;
         break;
 
@@ -316,10 +315,10 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 0xB:
-            v->vertical_scrolling = BIT(reg_value, 2);
-            v->horizontal_scrolling = FRAGMENT(reg_value, 1, 0);
+            v->vertical_scrolling_mode = BIT(reg_value, 2);
+            v->horizontal_scrolling_mode = FRAGMENT(reg_value, 1, 0);
 
-            LOG_VDP("\t\tVertical scrolling %d, Horizontal scrolling %d\n", v->vertical_scrolling, v->horizontal_scrolling);
+            LOG_VDP("\t\tVertical scrolling %d, Horizontal scrolling %d\n", v->vertical_scrolling_mode, v->horizontal_scrolling_mode);
             return;
 
         case 0xC:
@@ -541,6 +540,10 @@ void draw_plane(Vdp* v, int x, int y, uint8_t* nametable)
 
             draw_pattern(v, pattern, palette, x + px * 8, y + py * 8);
         }
+
+    SDL_Rect plane_area = { x, y, v->horizontal_plane_size * 8, v->vertical_plane_size * 8 };
+    SDL_SetRenderDrawColor(v->renderer, 0, 255, 0, 255);
+    SDL_RenderDrawRect(v->renderer, &plane_area);
 }
 
 void vdp_draw_debug(Vdp* v)
@@ -635,9 +638,30 @@ void vdp_draw_plane_scanline(Vdp* v, uint8_t* nametable, int line, int x, int y)
     }
 }
 
-bool vdp_get_plane_pixel_color(Vdp* v, uint8_t* nametable, int x, int y, uint16_t* color, bool* priority)
+bool vdp_get_plane_pixel_color(Vdp* v, Planes plane, int x, int y, uint16_t* color, bool* priority)
 {
+    // Handle scrolling
+
+    int16_t horizontal_scrolling = 0, vertical_scrolling = 0;
+
+    if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Screen)
+        horizontal_scrolling = 0; // TODO
+    else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Row)
+        horizontal_scrolling = 0; // TODO
+    else if(v->horizontal_scrolling_mode == HorizontalScrollingMode_Line)
+        horizontal_scrolling = 0; // TODO
+
+    if (v->vertical_scrolling_mode == VerticalScrollingMode_Screen)
+        vertical_scrolling = v->vsram[plane == Plane_A ? 0 : 1];
+    else if (v->vertical_scrolling_mode == VerticalScrollingMode_TwoColumns)
+        vertical_scrolling += 0; // TODO
+
+    x += horizontal_scrolling;
+    y += vertical_scrolling;
+
     // Get the pattern at the specified pixel coordinates
+    
+    uint8_t* nametable = v->vram + (plane == Plane_A ? v->plane_a_nametable : v->plane_b_nametable);
 
     uint16_t pattern_offset = (y / 8 * v->horizontal_plane_size + x / 8) * 2; // * 2 because one nametable entry is two bytes
     uint16_t pattern_data = (nametable[pattern_offset] << 8) | nametable[pattern_offset + 1];
@@ -651,7 +675,6 @@ bool vdp_get_plane_pixel_color(Vdp* v, uint8_t* nametable, int x, int y, uint16_
     bool horizontal_flip = BIT(pattern_data, 11);
     *priority = BIT(pattern_data, 15);
 
-    // TODO handle scrolling
     uint8_t pattern_y = vertical_flip ? 7 - y % 8 : y % 8;
     uint8_t pattern_x = horizontal_flip ? 7 - x % 8 : x % 8;
 
@@ -686,8 +709,10 @@ void vdp_draw_scanline(Vdp* v, int line)
             uint16_t plane_a_color, plane_b_color, sprites_color;
             bool plane_a_priority, plane_b_priority, sprites_priority;
 
-            bool plane_a_drawn = vdp_get_plane_pixel_color(v, v->vram + v->plane_a_nametable, pixel, line, &plane_a_color, &plane_a_priority);
-            bool plane_b_drawn = vdp_get_plane_pixel_color(v, v->vram + v->plane_b_nametable, pixel, line, &plane_b_color, &plane_b_priority);
+            bool plane_a_drawn = vdp_get_plane_pixel_color(v, Plane_A, pixel, line, &plane_a_color, &plane_a_priority);
+            bool plane_b_drawn = vdp_get_plane_pixel_color(v, Plane_B, pixel, line, &plane_b_color, &plane_b_priority);
+            // TODO window plane
+            // TODO sprites
 
             // Use the color from the plane with the highest priority
 
@@ -704,7 +729,6 @@ void vdp_draw_scanline(Vdp* v, int line)
             else
                 pixel_color = background_color;
 
-            // Draw
             // TODO direct to bitmap
             SDL_SetRenderDrawColor(v->renderer, RED_8(pixel_color), GREEN_8(pixel_color), BLUE_8(pixel_color), 255);
             SDL_Rect draw_area = { 900 + pixel, line, 500, 1 };
@@ -745,13 +769,13 @@ void vdp_draw_scanline(Vdp* v, int line)
 
     // V-blank occurs on line 224
     if (v->v_counter == 224 && v->vblank_enabled)
-    {         
+    {
         v->vblank_in_progress = true;
-        
+
         m68k_request_interrupt(v->cpu, VBLANK_IRQ);
     }
     // V-blank ends on line 262
-    else if (v->v_counter == 262) 
+    else if (v->v_counter == 262)
     {
         v->vblank_in_progress = false;
         v->v_counter = 0;

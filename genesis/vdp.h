@@ -19,6 +19,27 @@
 #define GREEN_8(c) COLOR_8(GREEN(c))
 #define BLUE_8(c) COLOR_8(BLUE(c))
 
+typedef enum
+{
+    Plane_A,
+    Plane_B,
+    Plane_Window
+} Planes;
+
+typedef enum
+{
+    HorizontalScrollingMode_Screen,
+    HorizontalScrollingMode_Invalid,
+    HorizontalScrollingMode_Row,
+    HorizontalScrollingMode_Line
+} HorizontalScrollingModes;
+
+typedef enum
+{
+    VerticalScrollingMode_Screen,
+    VerticalScrollingMode_TwoColumns
+} VerticalScrollingModes;
+
 typedef struct Vdp
 {
     uint8_t* vram;
@@ -69,8 +90,8 @@ typedef struct Vdp
     uint8_t hblank_line;
 
     // Register $0B
-    uint8_t vertical_scrolling;
-    uint8_t horizontal_scrolling;
+    VerticalScrollingModes vertical_scrolling_mode;
+    HorizontalScrollingModes horizontal_scrolling_mode;
 
     // Register $0C
     int display_width;
@@ -133,7 +154,6 @@ void vdp_write_data(Vdp*, uint16_t value); // TODO 8bit writes OK but only 16bit
 
 uint16_t vdp_read_control(Vdp*);
 void vdp_write_control(Vdp*, uint16_t value);
-
 
 uint16_t vdp_get_hv_counter(Vdp*); // Get the current value of the HV counter
 
