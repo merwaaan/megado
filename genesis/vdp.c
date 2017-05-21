@@ -642,23 +642,18 @@ bool vdp_get_plane_pixel_color(Vdp* v, Planes plane, int x, int y, uint16_t* col
 {
     // Handle scrolling
 
-    int16_t horizontal_scrolling = 0, vertical_scrolling = 0;
-
     if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Screen)
-        horizontal_scrolling = 0; // TODO
+        x += 0; // TODO
     else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Row)
-        horizontal_scrolling = 0; // TODO
+        x += 0; // TODO
     else if(v->horizontal_scrolling_mode == HorizontalScrollingMode_Line)
-        horizontal_scrolling = 0; // TODO
+        x += 0; // TODO
 
     if (v->vertical_scrolling_mode == VerticalScrollingMode_Screen)
-        vertical_scrolling = v->vsram[plane == Plane_A ? 0 : 1];
+        y += v->vsram[plane == Plane_A ? 0 : 1];
     else if (v->vertical_scrolling_mode == VerticalScrollingMode_TwoColumns)
-        vertical_scrolling += 0; // TODO
-
-    x += horizontal_scrolling;
-    y += vertical_scrolling;
-
+        y += v->vsram[x / 16 + (plane == Plane_A ? 0 : 1)]; // TODO use x before or after horizontal scrolling?!
+        
     // Get the pattern at the specified pixel coordinates
     
     uint8_t* nametable = v->vram + (plane == Plane_A ? v->plane_a_nametable : v->plane_b_nametable);
