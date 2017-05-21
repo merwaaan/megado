@@ -99,7 +99,7 @@ typedef struct Vdp
     int interlace_mode;
 
     // Register $0D
-    int horizontal_scrolltable;
+    uint32_t horizontal_scrolltable;
 
     // Register $0F
     int auto_increment;

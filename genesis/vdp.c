@@ -330,7 +330,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 0xD:
-            v->horizontal_scrolltable = FRAGMENT(reg_value, 5, 0);
+            v->horizontal_scrolltable = FRAGMENT(reg_value, 5, 0) * 0x400;
 
             LOG_VDP("\t\tHorizontal scrolltable %d\n", v->horizontal_scrolltable);
             return;
@@ -641,13 +641,14 @@ void vdp_draw_plane_scanline(Vdp* v, uint8_t* nametable, int line, int x, int y)
 bool vdp_get_plane_pixel_color(Vdp* v, Planes plane, int x, int y, uint16_t* color, bool* priority)
 {
     // Handle scrolling
+    // TODO should the scrolling values be masked on 10/11 bits?
 
     if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Screen)
-        x += 0; // TODO
+        x += ((uint16_t*) (v->vram + v->horizontal_scrolltable))[plane == Plane_A ? 0 : 1];
     else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Row)
-        x += 0; // TODO
+        x += ((uint16_t*)(v->vram + v->horizontal_scrolltable))[y / 8 * 16 + (plane == Plane_A ? 0 : 1)]; // TODO use y before or after vertical scrolling?!
     else if(v->horizontal_scrolling_mode == HorizontalScrollingMode_Line)
-        x += 0; // TODO
+        x += ((uint16_t*)(v->vram + v->horizontal_scrolltable))[y * 2 + (plane == Plane_A ? 0 : 1)]; // TODO use y before or after vertical scrolling?!
 
     if (v->vertical_scrolling_mode == VerticalScrollingMode_Screen)
         y += v->vsram[plane == Plane_A ? 0 : 1];
