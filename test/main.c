@@ -11,7 +11,6 @@
 #include <arpa/inet.h>
 #endif
 
-
 void check_alignment(Genesis* g)
 {
     printf("m68k: %p (%zu)\n", g->m68k, sizeof(g->m68k));

@@ -8,6 +8,8 @@
 #include "m68k.h"
 #include "operands.h"
 
+#undef DEBUG
+
 #ifdef DEBUG
 #define LOG_M68K(...) printf(__VA_ARGS__)
 #else
@@ -143,10 +145,10 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
     return cycles;
 }
 
-// TODO Aladdin, ok until 1e5834
+// TODO Aladdin, ok up to 1aa3f8
 // TODO Sonic@37E, D5 is wrong
 
-uint32_t breakpoint = 0x242;
+uint32_t breakpoint = 0x12d56;
 bool breakpoint_triggered = true;
 
 uint8_t m68k_step(M68k* m)

@@ -690,11 +690,32 @@ bool vdp_get_plane_pixel_color(Vdp* v, Planes plane, int x, int y, uint16_t* col
     return true;
 }
 
+typedef struct {
+    uint16_t colors[300]; // TODO how many?
+    bool priorities[300];
+} ScanlineData;
+
+ScanlineData sprites_line;
+ScanlineData plane_a_line;
+ScanlineData plane_b_line;
+ScanlineData plane_w_line;
+
+void vdp_get_sprites_scanline(Vdp* v, int line, ScanlineData* sprites_line)
+{
+    uint8_t* attribute_table = v->vram + v->sprites_attributetable;
+
+    sprites_line->colors[];
+}
+
 void vdp_draw_scanline(Vdp* v, int line)
 {
     if (v->display_enabled && v->v_counter < 224)
     {
         uint16_t background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
+
+        // Get pixel & priority data for the sprites 
+        // TODO do this for the planes too
+        vdp_get_sprites_scanline(v, line, &sprites_line);
 
         // Draw the scanline, pixel by pixel
         uint16_t screen_width = v->display_width * 8;
@@ -708,7 +729,6 @@ void vdp_draw_scanline(Vdp* v, int line)
             bool plane_a_drawn = vdp_get_plane_pixel_color(v, Plane_A, pixel, line, &plane_a_color, &plane_a_priority);
             bool plane_b_drawn = vdp_get_plane_pixel_color(v, Plane_B, pixel, line, &plane_b_color, &plane_b_priority);
             // TODO window plane
-            // TODO sprites
 
             // Use the color from the plane with the highest priority
 
