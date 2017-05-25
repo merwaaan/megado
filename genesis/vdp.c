@@ -583,9 +583,9 @@ void vdp_draw_debug(Vdp* v)
         draw_pattern(v, pattern, debug_palette, 8 * (pattern % columns), 50 + 8 * (pattern / columns));
 
     // Draw the planes
-    draw_plane(v, 300, 0, v->vram + v->plane_a_nametable);
-    draw_plane(v, 300, 400, v->vram + v->plane_b_nametable);
-    draw_plane(v, 300, 800, v->vram + v->window_nametable);
+    //draw_plane(v, 300, 0, v->vram + v->plane_a_nametable);
+    //draw_plane(v, 300, 400, v->vram + v->plane_b_nametable);
+    //draw_plane(v, 300, 800, v->vram + v->window_nametable);
 }
 
 void vdp_draw_pattern_scanline(Vdp* v, uint16_t pattern_index, uint8_t line, uint16_t* palette, bool horizontal_flip, bool vertical_flip, int x, int y)
@@ -749,19 +749,25 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
 
         // Render sprites that appear on the scanline
 
-        uint8_t total_width = width * 8;
         uint8_t total_height = height * 8;
 
-        if (y >= scanline && y < scanline + total_height && x > -total_width) // TODO on horiz right bound too
+        if (scanline >= y && scanline < y + total_height)
         {
-            uint8_t sprite_y = y - scanline; // TODO handle flipping
+            uint8_t sprite_y = scanline - y; // TODO handle flipping
 
-            for (uint8_t sprite_x = x < 0 ? -x : 0; sprite_x < total_width; ++sprite_x)
+            uint8_t total_width = width * 8;
+
+            for (uint8_t sprite_x = 0; sprite_x < total_width; ++sprite_x)
             {
-                uint16_t scanline_x = x + sprite_x;
+                int16_t scanline_x = x + sprite_x;
+
+                if (scanline_x < 0) // TODO right bound
+                    continue;
+
+                uint16_t column_offset = sprite_x / 8 * height * 32;
 
                 // TODO group pixel pairs
-                uint16_t pixel_offset = pattern_index * 32 + sprite_y * 4 + sprite_x / 2;
+                uint16_t pixel_offset = pattern_index * 32 + column_offset + sprite_y * 4 + sprite_x % 8 / 2;
                 uint8_t color_indexes = v->vram[pixel_offset];
                 uint8_t color_index = sprite_x % 2 == 0 ? (color_indexes & 0xF0) >> 4 : color_indexes & 0x0F;
 
