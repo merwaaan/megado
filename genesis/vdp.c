@@ -5,6 +5,8 @@
 
 #include "vdp.h"
 
+#undef DEBUG
+
 #ifdef DEBUG
 #define LOG_VDP(...) printf(__VA_ARGS__)
 #else
@@ -638,74 +640,93 @@ void vdp_draw_plane_scanline(Vdp* v, uint8_t* nametable, int line, int x, int y)
     }
 }
 
-bool vdp_get_plane_pixel_color(Vdp* v, Planes plane, int x, int y, uint16_t* color, bool* priority)
-{
-    // Handle scrolling
-    // TODO should the scrolling values be masked on 10/11 bits?
-
-    if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Screen)
-        x += ((uint16_t*) (v->vram + v->horizontal_scrolltable))[plane == Plane_A ? 0 : 1];
-    else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Row)
-        x += ((uint16_t*)(v->vram + v->horizontal_scrolltable))[y / 8 * 16 + (plane == Plane_A ? 0 : 1)]; // TODO use y before or after vertical scrolling?!
-    else if(v->horizontal_scrolling_mode == HorizontalScrollingMode_Line)
-        x += ((uint16_t*)(v->vram + v->horizontal_scrolltable))[y * 2 + (plane == Plane_A ? 0 : 1)]; // TODO use y before or after vertical scrolling?!
-
-    if (v->vertical_scrolling_mode == VerticalScrollingMode_Screen)
-        y += v->vsram[plane == Plane_A ? 0 : 1];
-    else if (v->vertical_scrolling_mode == VerticalScrollingMode_TwoColumns)
-        y += v->vsram[x / 16 + (plane == Plane_A ? 0 : 1)]; // TODO use x before or after horizontal scrolling?!
-        
-    // Get the pattern at the specified pixel coordinates
-    
-    uint8_t* nametable = v->vram + (plane == Plane_A ? v->plane_a_nametable : v->plane_b_nametable);
-
-    uint16_t pattern_offset = (y / 8 * v->horizontal_plane_size + x / 8) * 2; // * 2 because one nametable entry is two bytes
-    uint16_t pattern_data = (nametable[pattern_offset] << 8) | nametable[pattern_offset + 1];
-
-    // Extract the pattern attributes
-    // http://md.squee.co/VDP#Nametables
-
-    uint16_t pattern_id = FRAGMENT(pattern_data, 10, 0);
-    uint8_t palette_index = FRAGMENT(pattern_data, 14, 13);
-    bool vertical_flip = BIT(pattern_data, 12);
-    bool horizontal_flip = BIT(pattern_data, 11);
-    *priority = BIT(pattern_data, 15);
-
-    uint8_t pattern_y = vertical_flip ? 7 - y % 8 : y % 8;
-    uint8_t pattern_x = horizontal_flip ? 7 - x % 8 : x % 8;
-
-    // Get the pixel of the pattern at the specified position
-
-    uint16_t pixel_offset = pattern_id * 32 + pattern_y * 4 + pattern_x / 2; // / 2 because one byte encodes two pixels
-
-    uint8_t color_indexes = v->vram[pixel_offset];
-    uint8_t color_index = pattern_x % 2 == 0 ? (color_indexes & 0xF0) >> 4 : color_indexes & 0x0F;
-
-    // If the color is 0, this means transparent and nothing needs to be drawn
-    if (color_index == 0)
-        return false;
-
-    *color = v->cram[palette_index * 16 + color_index];
-
-    return true;
-}
-
 typedef struct {
-    uint16_t colors[300]; // TODO how many?
+    bool drawn[300]; // TODO how many?
+    uint16_t colors[300];
     bool priorities[300];
 } ScanlineData;
 
-ScanlineData sprites_line;
-ScanlineData plane_a_line;
-ScanlineData plane_b_line;
-ScanlineData plane_w_line;
+ScanlineData sprites_scanline;
+ScanlineData plane_a_scanline;
+ScanlineData plane_b_scanline;
+ScanlineData plane_w_scanline;
 
-void vdp_get_sprites_scanline(Vdp* v, int line, ScanlineData* sprites_line)
+void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* data)
+{
+    uint8_t* name_table = v->vram + (plane == Plane_A ? v->plane_a_nametable : v->plane_b_nametable);
+    // TODO window
+
+    // Handle horizontal scrolling
+    // TODO should the scrolling values be masked on 10/11 bits?
+
+    uint16_t horizontal_scroll;
+
+    if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Screen)
+        horizontal_scroll = ((uint16_t*)(v->vram + v->horizontal_scrolltable))[plane == Plane_A ? 0 : 1];
+    else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Row)
+        horizontal_scroll = ((uint16_t*)(v->vram + v->horizontal_scrolltable))[scanline / 8 * 16 + (plane == Plane_A ? 0 : 1)]; // TODO use y before or after vertical scrolling?!
+    else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Line)
+        horizontal_scroll = ((uint16_t*)(v->vram + v->horizontal_scrolltable))[scanline * 2 + (plane == Plane_A ? 0 : 1)]; // TODO use y before or after vertical scrolling?!
+
+    uint16_t screen_width = v->display_width * 8;
+    for (uint16_t pixel = 0; pixel < screen_width; ++pixel)
+    {
+        // Handle vertical scrolling
+
+        uint16_t vertical_scroll;
+
+        if (v->vertical_scrolling_mode == VerticalScrollingMode_Screen)
+            vertical_scroll = v->vsram[plane == Plane_A ? 0 : 1];
+        else if (v->vertical_scrolling_mode == VerticalScrollingMode_TwoColumns)
+            vertical_scroll = v->vsram[pixel / 16 + (plane == Plane_A ? 0 : 1)]; // TODO use x before or after horizontal scrolling?!
+
+        uint16_t x = pixel + horizontal_scroll;
+        uint16_t y = scanline + vertical_scroll;
+
+        // Get the pattern at the specified pixel coordinates
+        uint16_t pattern_offset = (y / 8 * v->horizontal_plane_size + x / 8) * 2; // * 2 because one nametable entry is two bytes
+        uint16_t pattern_data = (name_table[pattern_offset] << 8) | name_table[pattern_offset + 1];
+
+        // Extract the pattern attributes
+        // http://md.squee.co/VDP#Nametables
+        // TODO do this once per pattern, not once per pixel!!
+
+        uint16_t pattern_id = FRAGMENT(pattern_data, 10, 0);
+        uint8_t palette_index = FRAGMENT(pattern_data, 14, 13);
+        bool vertical_flip = BIT(pattern_data, 12);
+        bool horizontal_flip = BIT(pattern_data, 11);
+        data->priorities[pixel] = BIT(pattern_data, 15);
+
+        uint8_t pattern_y = vertical_flip ? 7 - y % 8 : y % 8;
+        uint8_t pattern_x = horizontal_flip ? 7 - x % 8 : x % 8;
+
+        // Get the pixel of the pattern at the specified position
+
+        uint16_t pixel_offset = pattern_id * 32 + pattern_y * 4 + pattern_x / 2; // / 2 because one byte encodes two pixels
+
+        uint8_t color_indexes = v->vram[pixel_offset];
+        uint8_t color_index = pattern_x % 2 == 0 ? (color_indexes & 0xF0) >> 4 : color_indexes & 0x0F;
+
+        // Zero means transparent
+        if (color_index == 0)
+        {
+            data->drawn[pixel] = false;
+            continue;
+        }
+
+        data->colors[pixel] = v->cram[palette_index * 16 + color_index];
+        data->drawn[pixel] = true;
+    }
+}
+
+/*void vdp_get_sprites_scanline(Vdp* v, int line, ScanlineData* data)
 {
     uint8_t* attribute_table = v->vram + v->sprites_attributetable;
 
-    sprites_line->colors[];
-}
+    data->priorities[];
+    data->colors[];
+    data->drawn[];
+}*/
 
 void vdp_draw_scanline(Vdp* v, int line)
 {
@@ -713,35 +734,29 @@ void vdp_draw_scanline(Vdp* v, int line)
     {
         uint16_t background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
 
-        // Get pixel & priority data for the sprites 
-        // TODO do this for the planes too
-        vdp_get_sprites_scanline(v, line, &sprites_line);
+        // Get pixel & priority data for each layer
+        vdp_get_plane_scanline(v, Plane_A, line, &plane_a_scanline);
+        vdp_get_plane_scanline(v, Plane_B, line, &plane_b_scanline);
+        // TODO vdp_get_plane_scanline(v, Plane_W, line, &plane_w_scanline);
+        //vdp_get_sprites_scanline(v, line, &plane_a_scanline);
 
-        // Draw the scanline, pixel by pixel
+        // Combine the layers
         uint16_t screen_width = v->display_width * 8;
         for (uint16_t pixel = 0; pixel < screen_width; ++pixel)
         {
-            // Get the pixel values for each plane
-
-            uint16_t plane_a_color, plane_b_color, sprites_color;
-            bool plane_a_priority, plane_b_priority, sprites_priority;
-
-            bool plane_a_drawn = vdp_get_plane_pixel_color(v, Plane_A, pixel, line, &plane_a_color, &plane_a_priority);
-            bool plane_b_drawn = vdp_get_plane_pixel_color(v, Plane_B, pixel, line, &plane_b_color, &plane_b_priority);
-            // TODO window plane
-
             // Use the color from the plane with the highest priority
+            // TODO more details
 
             uint16_t pixel_color;
 
-            if (plane_a_drawn && plane_a_priority)
-                pixel_color = plane_a_color;
-            else if (plane_b_drawn && plane_b_priority)
-                pixel_color = plane_b_color;
-            else if (plane_a_drawn)
-                pixel_color = plane_a_color;
-            else if (plane_b_drawn)
-                pixel_color = plane_b_color;
+            if (plane_a_scanline.drawn[pixel] && plane_a_scanline.priorities[pixel])
+                pixel_color = plane_a_scanline.colors[pixel];
+            else if (plane_b_scanline.drawn[pixel] && plane_b_scanline.priorities[pixel])
+                pixel_color = plane_b_scanline.colors[pixel];
+            else if (plane_a_scanline.drawn[pixel])
+                pixel_color = plane_a_scanline.colors[pixel];
+            else if (plane_b_scanline.drawn[pixel])
+                pixel_color = plane_b_scanline.colors[pixel];
             else
                 pixel_color = background_color;
 
