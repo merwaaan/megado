@@ -60,6 +60,7 @@ Vdp* vdp_make(M68k* cpu)
     else
     {
         SDL_CreateWindowAndRenderer(1500, 1000, SDL_WINDOW_OPENGL, &v->window, &v->renderer);
+        SDL_SetWindowPosition(v->window, 0, 0);
     }
 
     for (int i = 0; i < 64; ++i)
@@ -298,7 +299,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 5:
-            v->sprites_attribute_table = FRAGMENT(reg_value, 6, 0);
+            v->sprites_attribute_table = FRAGMENT(reg_value, 6, 0) * 0x200;
 
             LOG_VDP("\t\tSprites attribute table %04x\n", v->sprites_attribute_table);
             return;
@@ -587,13 +588,13 @@ void vdp_draw_debug(Vdp* v)
     draw_plane(v, 300, 800, v->vram + v->window_nametable);
 }
 
-void vdp_draw_pattern_scanline(Vdp* v, uint16_t pattern_id, uint8_t line, uint16_t* palette, bool horizontal_flip, bool vertical_flip, int x, int y)
+void vdp_draw_pattern_scanline(Vdp* v, uint16_t pattern_index, uint8_t line, uint16_t* palette, bool horizontal_flip, bool vertical_flip, int x, int y)
 {
     // TODO flip
     // TODO render: directly write to bitmap?
     // TODO directly pass pattern pointer
 
-    uint16_t pattern_offset = pattern_id * 32 + line * 4;
+    uint16_t pattern_offset = pattern_index * 32 + line * 4;
 
     for (int px = 0; px < 4; ++px)
     {
@@ -691,7 +692,7 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
         // http://md.squee.co/VDP#Nametables
         // TODO do this once per pattern, not once per pixel!!
 
-        uint16_t pattern_id = FRAGMENT(pattern_data, 10, 0);
+        uint16_t pattern_index = FRAGMENT(pattern_data, 10, 0);
         uint8_t palette_index = FRAGMENT(pattern_data, 14, 13);
         bool vertical_flip = BIT(pattern_data, 12);
         bool horizontal_flip = BIT(pattern_data, 11);
@@ -702,7 +703,7 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
 
         // Get the pixel of the pattern at the specified position
 
-        uint16_t pixel_offset = pattern_id * 32 + pattern_y * 4 + pattern_x / 2; // / 2 because one byte encodes two pixels
+        uint16_t pixel_offset = pattern_index * 32 + pattern_y * 4 + pattern_x / 2; // / 2 because one byte encodes two pixels
 
         uint8_t color_indexes = v->vram[pixel_offset];
         uint8_t color_index = pattern_x % 2 == 0 ? (color_indexes & 0xF0) >> 4 : color_indexes & 0x0F;
@@ -731,13 +732,15 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
         // Extract the sprite attributes
         // http://md.squee.co/VDP#Sprite_Attribute_Table
 
-        uint16_t x = (attributes[6] & 1) << 8 | attributes[7];
-        uint16_t y = (attributes[0] & 3) << 8 | attributes[1];
-        uint8_t width = FRAGMENT(attributes[2], 3, 2);
-        uint8_t height = FRAGMENT(attributes[2], 1, 0);
+        int16_t x = ((attributes[6] & 1) << 8 | attributes[7]) - 128; // Coordinates in screen-space
+        int16_t y = ((attributes[0] & 3) << 8 | attributes[1]) - 128;
 
-        uint16_t pattern = (attributes[3] & 5) << 8 | attributes[4];
-        uint8_t palette = FRAGMENT(attributes[4], 6, 5);
+        uint8_t width = FRAGMENT(attributes[2], 3, 2) + 1;
+        uint8_t height = FRAGMENT(attributes[2], 1, 0) + 1;
+
+        uint16_t pattern_index = (attributes[4] & 7) << 8 | attributes[5];
+        uint8_t palette_index = FRAGMENT(attributes[4], 6, 5);
+
         bool vertical_flip = BIT(attributes[4], 4);
         bool horizontal_flip = BIT(attributes[4], 3);
         bool priority = BIT(attributes[4], 7);
@@ -745,13 +748,33 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
         uint8_t link = attributes[3] & 0x7F;
 
         // Render sprites that appear on the scanline
-        if (y >= scanline && y < scanline + 8) // TODO handle sizes here
-        { 
-            for (int pixel = 0; pixel < 8; ++pixel)
+
+        uint8_t total_width = width * 8;
+        uint8_t total_height = height * 8;
+
+        if (y >= scanline && y < scanline + total_height && x > -total_width) // TODO on horiz right bound too
+        {
+            uint8_t sprite_y = y - scanline; // TODO handle flipping
+
+            for (uint8_t sprite_x = x < 0 ? -x : 0; sprite_x < total_width; ++sprite_x)
             {
-                data->drawn[x + pixel] = true;
-                data->colors[x + pixel] = 0;
-                data->priorities[x + pixel] = priority;
+                uint16_t scanline_x = x + sprite_x;
+
+                // TODO group pixel pairs
+                uint16_t pixel_offset = pattern_index * 32 + sprite_y * 4 + sprite_x / 2;
+                uint8_t color_indexes = v->vram[pixel_offset];
+                uint8_t color_index = sprite_x % 2 == 0 ? (color_indexes & 0xF0) >> 4 : color_indexes & 0x0F;
+
+                // Zero means transparent
+                if (color_index == 0)
+                {
+                    data->drawn[scanline_x] = false;
+                    continue;
+                }
+
+                data->drawn[scanline_x] = true;
+                data->colors[scanline_x] = v->cram[palette_index * 16 + color_index];
+                data->priorities[scanline_x] = priority;
             }
         }
 
@@ -775,7 +798,7 @@ void vdp_draw_scanline(Vdp* v, int line)
         vdp_get_plane_scanline(v, Plane_A, line, &plane_a_scanline);
         vdp_get_plane_scanline(v, Plane_B, line, &plane_b_scanline);
         // TODO vdp_get_plane_scanline(v, Plane_W, line, &plane_w_scanline);
-        //vdp_get_sprites_scanline(v, line, &plane_a_scanline);
+        vdp_get_sprites_scanline(v, line, &plane_a_scanline);
 
         // Combine the layers
         uint16_t screen_width = v->display_width * 8;
