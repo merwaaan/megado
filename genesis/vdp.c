@@ -298,9 +298,9 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 5:
-            v->sprites_attributetable = FRAGMENT(reg_value, 6, 0);
+            v->sprites_attribute_table = FRAGMENT(reg_value, 6, 0);
 
-            LOG_VDP("\t\tSprites attribute table %04x\n", v->sprites_attributetable);
+            LOG_VDP("\t\tSprites attribute table %04x\n", v->sprites_attribute_table);
             return;
 
         case 7:
@@ -646,10 +646,10 @@ typedef struct {
     bool priorities[300];
 } ScanlineData;
 
-ScanlineData sprites_scanline;
 ScanlineData plane_a_scanline;
 ScanlineData plane_b_scanline;
 ScanlineData plane_w_scanline;
+ScanlineData sprites_scanline;
 
 void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* data)
 {
@@ -719,14 +719,51 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
     }
 }
 
-/*void vdp_get_sprites_scanline(Vdp* v, int line, ScanlineData* data)
+void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
 {
-    uint8_t* attribute_table = v->vram + v->sprites_attributetable;
+    uint8_t* attribute_table = v->vram + v->sprites_attribute_table;
 
-    data->priorities[];
-    data->colors[];
-    data->drawn[];
-}*/
+    uint8_t sprite = 0;
+    do
+    {
+        uint8_t* attributes = attribute_table + sprite * 8;
+
+        // Extract the sprite attributes
+        // http://md.squee.co/VDP#Sprite_Attribute_Table
+
+        uint16_t x = (attributes[6] & 1) << 8 | attributes[7];
+        uint16_t y = (attributes[0] & 3) << 8 | attributes[1];
+        uint8_t width = FRAGMENT(attributes[2], 3, 2);
+        uint8_t height = FRAGMENT(attributes[2], 1, 0);
+
+        uint16_t pattern = (attributes[3] & 5) << 8 | attributes[4];
+        uint8_t palette = FRAGMENT(attributes[4], 6, 5);
+        bool vertical_flip = BIT(attributes[4], 4);
+        bool horizontal_flip = BIT(attributes[4], 3);
+        bool priority = BIT(attributes[4], 7);
+
+        uint8_t link = attributes[3] & 0x7F;
+
+        // Render sprites that appear on the scanline
+        if (y >= scanline && y < scanline + 8) // TODO handle sizes here
+        { 
+            for (int pixel = 0; pixel < 8; ++pixel)
+            {
+                data->drawn[x + pixel] = true;
+                data->colors[x + pixel] = 0;
+                data->priorities[x + pixel] = priority;
+            }
+        }
+
+        // Move on to the next sprite
+        sprite = link;
+
+        // TODO sizes
+        // TODO priority between sprites? (or link-order dependent?)
+        // TODO Sprite at x=0 mask low priority sprites or something
+    } while (sprite != 0);
+    // TODO sprite count limit
+}
 
 void vdp_draw_scanline(Vdp* v, int line)
 {
@@ -749,10 +786,15 @@ void vdp_draw_scanline(Vdp* v, int line)
 
             uint16_t pixel_color;
 
-            if (plane_a_scanline.drawn[pixel] && plane_a_scanline.priorities[pixel])
+            // meh, could do better?
+            if (sprites_scanline.drawn[pixel] && sprites_scanline.priorities[pixel])
+                pixel_color = sprites_scanline.colors[pixel];
+            else if (plane_a_scanline.drawn[pixel] && plane_a_scanline.priorities[pixel])
                 pixel_color = plane_a_scanline.colors[pixel];
             else if (plane_b_scanline.drawn[pixel] && plane_b_scanline.priorities[pixel])
                 pixel_color = plane_b_scanline.colors[pixel];
+            else if (sprites_scanline.drawn[pixel])
+                pixel_color = sprites_scanline.colors[pixel];
             else if (plane_a_scanline.drawn[pixel])
                 pixel_color = plane_a_scanline.colors[pixel];
             else if (plane_b_scanline.drawn[pixel])

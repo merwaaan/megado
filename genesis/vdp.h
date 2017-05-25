@@ -80,7 +80,7 @@ typedef struct Vdp
     uint32_t plane_b_nametable;
 
     // Register $05
-    uint32_t sprites_attributetable;
+    uint32_t sprites_attribute_table;
 
     // Register $07
     uint8_t background_color_palette;
