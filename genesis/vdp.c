@@ -37,10 +37,10 @@ uint16_t debug_palette[16] = {
 };
 // TODO: optim, directly store rgb values to reduce conversions
 
-// Display width values for register 0xC
+// Display width values (register 0xC)
 uint8_t display_width_values[] = { 32, 40 };
 
-// Plane size values for register 0x10
+// Plane size values (register 0x10)
 uint8_t plane_size_values[] = { 32, 64, 0, 128 };
 
 Vdp* vdp_make(M68k* cpu)
@@ -833,7 +833,7 @@ void vdp_draw_scanline(Vdp* v, int line)
 
             // TODO direct to bitmap
             SDL_SetRenderDrawColor(v->renderer, RED_8(pixel_color), GREEN_8(pixel_color), BLUE_8(pixel_color), 255);
-            SDL_Rect draw_area = { 900 + pixel, line, 500, 1 };
+            SDL_Rect draw_area = { 900 + pixel, line, 1, 1 };
             SDL_RenderFillRect(v->renderer, &draw_area);
         }
     }
