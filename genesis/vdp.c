@@ -28,13 +28,10 @@ Vdp* vdp_make(M68k* cpu)
     v->pending_command = false;
 
     v->vram = calloc(0x10000, sizeof(uint8_t));
-    v->cram = calloc(64, sizeof(uint16_t));
     v->vsram = calloc(64, sizeof(uint16_t));
-    v->buffer = calloc(BUFFER_LENGTH, sizeof(uint8_t));
+    v->cram = calloc(64, sizeof(Color));
 
-    // TODO why?
-    for (int i = 0; i < 64; ++i)
-        v->cram[i] = 0xFFFF;
+    v->buffer = calloc(BUFFER_LENGTH, sizeof(uint8_t));
 
     return v;
 }
@@ -45,8 +42,8 @@ void vdp_free(Vdp* v)
         return;
 
     free(v->vram);
-    free(v->cram);
     free(v->vsram);
+    free(v->cram);
     free(v->buffer);
     free(v);
 }
@@ -69,7 +66,7 @@ uint16_t vdp_read_data(Vdp* v)
 
         LOG_VDP("Reading CRAM @ %02x\n", v->access_address >> 1);
 
-        value = v->cram[v->access_address >> 1 & 0x3F];
+        value = COLOR_STRUCT_TO_11(v->cram[v->access_address >> 1 & 0x3F]);
         break;
 
     case 4: // VSRAM read
@@ -108,8 +105,9 @@ void vdp_write_data(Vdp* v, uint16_t value)
     case 3: // CRAM write
 
         LOG_VDP("\tWrite %02x to CRAM @ %02x\n", value, v->access_address >> 1);
-
-        v->cram[v->access_address >> 1 & 0x3F] = value;
+        
+        Color color = COLOR_11_TO_STRUCT(value);
+        v->cram[v->access_address >> 1 & 0x3F] = color;
         v->access_address += v->auto_increment;
         break;
 
@@ -167,7 +165,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
             LOG_VDP("\tDMA Fill to CRAM @ %04x, value %04x, length %04x, auto increment %04x\n", v->access_address >> 1, value, v->dma_length, v->auto_increment);
 
             do {
-                v->cram[v->access_address >> 1 & 0x3F] = value;
+                v->cram[v->access_address >> 1 & 0x3F] = COLOR_11_TO_STRUCT(value);
                 v->access_address += v->auto_increment;
 
                 ++v->dma_source_address_lo;
@@ -424,7 +422,9 @@ void vdp_write_control(Vdp* v, uint16_t value)
                             /*if (v->access_address > 0x7F)
                             break;*/
 
-                            v->cram[v->access_address >> 1 & 0x3F] = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
+                            uint16_t value = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
+                            Color color = COLOR_11_TO_STRUCT(value); 
+                            v->cram[v->access_address >> 1 & 0x3F] = color;
 
                             ++v->dma_source_address_lo;
                             v->access_address += v->auto_increment;
@@ -467,28 +467,28 @@ uint16_t vdp_get_hv_counter(Vdp* v)
     return (v->v_counter << 8 & 0xFF00) | (v->h_counter >> 1 & 0xFF);
 }
 
-void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, uint16_t* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y)
+void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, Color* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y)
 {
     uint16_t pattern_offset = pattern_index * 32;
 
     for (uint8_t pixel_pair = 0; pixel_pair < 32; ++pixel_pair)
-    {        
+    {
         uint32_t pixel_offset = ((y + pixel_pair / 4) * buffer_width + x + pixel_pair % 4 * 2) * 3;
 
         // 1 byte holds the color data of 2 pixels
         uint8_t color_indexes = v->vram[pattern_offset + pixel_pair];
-      
+
         uint8_t color_index = (color_indexes & 0xF0) >> 4;
-        uint16_t color = palette[color_index];
-        buffer[pixel_offset] = RED_8(color);
-        buffer[pixel_offset + 1] = GREEN_8(color);
-        buffer[pixel_offset + 2] = BLUE_8(color);
+        Color color = palette[color_index];
+        buffer[pixel_offset] = color.r;
+        buffer[pixel_offset + 1] = color.g;
+        buffer[pixel_offset + 2] = color.b;
 
         color_index = color_indexes & 0x0F;
         color = palette[color_index];
-        buffer[pixel_offset + 3] = RED_8(color);
-        buffer[pixel_offset + 4] = GREEN_8(color);
-        buffer[pixel_offset + 5] = BLUE_8(color);
+        buffer[pixel_offset + 3] = color.r;
+        buffer[pixel_offset + 4] = color.g;
+        buffer[pixel_offset + 5] = color.b;
     }
 }
 
@@ -508,7 +508,7 @@ void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width
             uint16_t pattern_offset = (py * v->horizontal_plane_size + px) * 2;
             uint16_t data = (plane_offset[pattern_offset] << 8) | plane_offset[pattern_offset + 1]; // TODO as 16b
 
-            uint16_t* palette = v->cram + FRAGMENT(data, 14, 13) * 16;
+            Color* palette = v->cram + FRAGMENT(data, 14, 13) * 16;
             bool vertical_flip = BIT(data, 12);
             bool horizontal_flip = BIT(data, 11);
             uint16_t pattern = FRAGMENT(data, 10, 0);
@@ -520,7 +520,7 @@ void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width
 // TODO clean this up
 typedef struct {
     bool drawn[300]; // TODO how many?
-    uint16_t colors[300];
+    Color colors[300];
     bool priorities[300];
 } ScanlineData;
 
@@ -675,7 +675,7 @@ void vdp_draw_scanline(Vdp* v, int scanline)
 {
     if (v->display_enabled && v->v_counter < 224)
     {
-        uint16_t background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
+        Color background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
 
         // Get pixel & priority data for each layer
         vdp_get_plane_scanline(v, Plane_A, scanline, &plane_a_scanline);
@@ -690,7 +690,7 @@ void vdp_draw_scanline(Vdp* v, int scanline)
             // Use the color from the plane with the highest priority
             // TODO more details
 
-            uint16_t pixel_color;
+            Color pixel_color;
 
             // meh, could do better?
             if (sprites_scanline.drawn[pixel] && sprites_scanline.priorities[pixel])
@@ -711,9 +711,9 @@ void vdp_draw_scanline(Vdp* v, int scanline)
             // TODO put pixel func
             // TODO as uint32?
             uint32_t pixel_offset = (scanline * BUFFER_WIDTH + pixel) * 3;
-            v->buffer[pixel_offset] = RED_8(pixel_color);
-            v->buffer[pixel_offset + 1] = GREEN_8(pixel_color);
-            v->buffer[pixel_offset + 2] = BLUE_8(pixel_color);
+            v->buffer[pixel_offset] = pixel_color.r;
+            v->buffer[pixel_offset + 1] = pixel_color.g;
+            v->buffer[pixel_offset + 2] = pixel_color.b;
 
             // TODO direct to bitmap
             /*SDL_SetRenderDrawColor(v->renderer, RED_8(pixel_color), GREEN_8(pixel_color), BLUE_8(pixel_color), 255);

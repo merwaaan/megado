@@ -42,28 +42,27 @@ void renderer_free(Renderer* r)
 #define PATTERNS_COUNT 2048
 #define PATTERNS_COLUMNS 32
 
+#define GREYSCALE(g) { g, g, g }
 
 // Black & white debug palette
-uint16_t debug_palette[16] = {
-    0,
-    0x222,
-    0x444,
-    0x666,
-    0x888,
-    0xaaa,
-    0xccc,
-    0xeee,
-    // Cannot represent more than 8 greyscale values with 3 bits per components
-    0x10,
-    0x100,
-    0x1000,
-    0x110,
-    0x1010,
-    0x1100,
-    0x1084,
-    0x490
+Color debug_palette[16] = {
+    GREYSCALE(0),
+    GREYSCALE(17),
+    GREYSCALE(34),
+    GREYSCALE(45),
+    GREYSCALE(68),
+    GREYSCALE(85),
+    GREYSCALE(106),
+    GREYSCALE(119),
+    GREYSCALE(136),
+    GREYSCALE(153),
+    GREYSCALE(170),
+    GREYSCALE(187),
+    GREYSCALE(204),
+    GREYSCALE(221),
+    GREYSCALE(238),
+    GREYSCALE(255)
 };
-// TODO: optim, directly store rgb values to reduce conversions
 
 void renderer_render(Renderer* r)
 {
@@ -83,8 +82,8 @@ void renderer_render(Renderer* r)
                 cell.x = col * PALETTE_ENTRY_WIDTH;
                 cell.y = row * PALETTE_ENTRY_WIDTH;
 
-                uint16_t color = r->vdp->cram[row * 16 + col];
-                SDL_SetRenderDrawColor(r->palette_window->renderer, RED_8(color), GREEN_8(color), BLUE_8(color), 255);
+                Color color = r->vdp->cram[row * 16 + col];
+                SDL_SetRenderDrawColor(r->palette_window->renderer, color.r, color.g, color.b, 255);
                 SDL_RenderFillRect(r->palette_window->renderer, &cell);
             }
 
@@ -164,7 +163,7 @@ void renderer_toggle_planes_window(Renderer* r, bool enable)
     r->planes_window = toggle_window(r->planes_window, enable, 64 * 8, 64 * 8, "Planes");
 }
 
-char* plane_names[] = {"aa", "bb", "cc"};
+char* plane_names[] = { "aa", "bb", "cc" };
 
 void renderer_cycle_plane(Renderer* r)
 {

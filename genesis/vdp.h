@@ -7,16 +7,19 @@
 #define HBLANK_IRQ 4
 #define VBLANK_IRQ 6
 
-// Extract color components from a palette word
-#define RED(c) FRAGMENT((c), 3, 1)
-#define GREEN(c) FRAGMENT((c), 7, 5)
-#define BLUE(c) FRAGMENT((c), 11, 9)
+// Extract color components from a 11-bit color word
+#define RED_COMPONENT_11(c) FRAGMENT((c), 3, 1)
+#define GREEN_COMPONENT_11(c) FRAGMENT((c), 7, 5)
+#define BLUE_COMPONENT_11(c) FRAGMENT((c), 11, 9)
 
-// Convert 3-bit components to 8-bit
-#define COLOR_8(c) (c) * 32
-#define RED_8(c) COLOR_8(RED(c))
-#define GREEN_8(c) COLOR_8(GREEN(c))
-#define BLUE_8(c) COLOR_8(BLUE(c))
+// Convert 3-bit color components to 8-bit
+#define COLOR_COMPONENT_3_TO_8(c) (c) * 32
+
+// Convert a 11-bit color word to a color struct
+#define COLOR_11_TO_STRUCT(c) (Color) { COLOR_COMPONENT_3_TO_8(RED_COMPONENT_11(c)), COLOR_COMPONENT_3_TO_8(GREEN_COMPONENT_11(c)), COLOR_COMPONENT_3_TO_8(BLUE_COMPONENT_11(c)) }
+
+// Convert a color struct to a 11-bit color word
+#define COLOR_STRUCT_TO_11(c) ((c.r / 32) << 1 | (c.g / 32) << 5 | (c.b / 32) << 9)
 
 // The screen buffer has the same dimensions as the maximal resolution
 #define BUFFER_WIDTH 320
@@ -46,11 +49,20 @@ typedef enum
     VerticalScrollingMode_TwoColumns
 } VerticalScrollingModes;
 
+typedef struct
+{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+} Color;
+
 typedef struct Vdp
 {
     uint8_t* vram;
-    uint16_t* cram;
     uint16_t* vsram;
+
+    // We directly store the CRAM data as decoded 8-bit colors.
+    Color* cram;
 
     // If set, a first command word has been written.
     // We're waiting for the second half.
@@ -111,8 +123,8 @@ typedef struct Vdp
     int auto_increment;
 
     // Register $10
-    int vertical_plane_size;
-    int horizontal_plane_size;
+    uint8_t vertical_plane_size;
+    uint8_t horizontal_plane_size;
 
     // Register $11
     bool window_plane_horizontal_direction;
@@ -142,7 +154,7 @@ typedef struct Vdp
     // Current value of the H-blank counter
     // (will be reloaded with the value stored in register 0xA)
     uint8_t hblank_counter;
-    
+
     struct M68k* cpu;
 
     uint8_t* buffer;
@@ -163,5 +175,5 @@ void vdp_write_control(Vdp*, uint16_t value);
 uint16_t vdp_get_hv_counter(Vdp*); // Get the current value of the HV counter
 
 void vdp_draw_scanline(Vdp*, int scanline);
-void vdp_draw_pattern(Vdp*, uint16_t pattern_index, uint16_t* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y);
+void vdp_draw_pattern(Vdp*, uint16_t pattern_index, Color* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y);
 void vdp_draw_plane(Vdp*, Planes plane, uint8_t* buffer, uint32_t buffer_width);
