@@ -1,10 +1,12 @@
 #include <m68k/m68k.h>
 #include <m68k/instruction.h>
+#include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "genesis.h"
 #include "joypad.h"
+#include "renderer.h"
 #include "vdp.h"
 
 Genesis* genesis_make()
@@ -14,6 +16,7 @@ Genesis* genesis_make()
     g->m68k = m68k_make();
     g->vdp = vdp_make(g->m68k);
     g->joypad = joypad_make();
+    g->renderer = renderer_make(g->vdp);
 
     // Store a pointer to the Genesis instance in the M68k
     // In this way, the various modules can be accessed from M68k-centric I/O functions (see m68k_io.c)
@@ -81,12 +84,12 @@ SDL_Event event;
 
 bool genesis_run_frame(Genesis* g)
 {
-  // Handle keyboard input
-  SDL_PollEvent(&event);
-  switch (event.type)
+    // Handle keyboard input
+    SDL_PollEvent(&event);
+    switch (event.type)
     {
     case SDL_KEYDOWN:
-      switch (event.key.keysym.scancode)
+        switch (event.key.keysym.scancode)
         {
         case SDL_SCANCODE_LEFT: joypad_press(g->joypad, Left); break;
         case SDL_SCANCODE_RIGHT: joypad_press(g->joypad, Right); break;
@@ -97,11 +100,16 @@ bool genesis_run_frame(Genesis* g)
         case SDL_SCANCODE_W: joypad_press(g->joypad, ButtonB); break;
         case SDL_SCANCODE_E: joypad_press(g->joypad, ButtonC); break;
         }
-      break;
+        break;
     case SDL_KEYUP:
-      switch (event.key.keysym.scancode)
+        switch (event.key.keysym.scancode)
         {
         case SDL_SCANCODE_ESCAPE: return false;
+        case SDL_SCANCODE_F1: renderer_toggle_palette_window(g->renderer, g->renderer->palette_window == NULL); break;
+        case SDL_SCANCODE_F2: renderer_toggle_patterns_window(g->renderer, g->renderer->patterns_window == NULL); break;
+        case SDL_SCANCODE_F3: renderer_toggle_planes_window(g->renderer, g->renderer->planes_window == NULL); break;
+        case SDL_SCANCODE_TAB: if (g->renderer->planes_window != NULL) renderer_cycle_plane(g->renderer); break;
+
         case SDL_SCANCODE_LEFT: joypad_release(g->joypad, Left); break;
         case SDL_SCANCODE_RIGHT: joypad_release(g->joypad, Right); break;
         case SDL_SCANCODE_UP: joypad_release(g->joypad, Up); break;
@@ -111,7 +119,7 @@ bool genesis_run_frame(Genesis* g)
         case SDL_SCANCODE_W: joypad_release(g->joypad, ButtonB); break;
         case SDL_SCANCODE_E: joypad_release(g->joypad, ButtonC); break;
         }
-      break;
+        break;
 
     case SDL_QUIT: return false;
     }
@@ -128,6 +136,8 @@ bool genesis_run_frame(Genesis* g)
         // Draw the scanline
         vdp_draw_scanline(g->vdp, line);
     }
+
+    renderer_render(g->renderer);
 
     return true;
 }

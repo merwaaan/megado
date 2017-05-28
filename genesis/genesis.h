@@ -3,9 +3,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-struct M68k;
-struct Vdp;
 struct DecodedInstruction;
+struct Joypad;
+struct M68k;
+struct Renderer;
+struct Vdp;
 
 typedef enum {
     Japan,
@@ -15,9 +17,12 @@ typedef enum {
 
 typedef struct {
     uint8_t* memory;
+    
     struct M68k* m68k;
     struct Vdp* vdp;
     struct Joypad* joypad;
+
+    struct Renderer* renderer;
 
     Region region;
 } Genesis;

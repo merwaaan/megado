@@ -15,28 +15,6 @@
 
 void draw(Vdp* v);
 
-// Black & white debug palette
-uint16_t debug_palette[16] = {
-    0,
-    0x222,
-    0x444,
-    0x666,
-    0x888,
-    0xaaa,
-    0xccc,
-    0xeee,
-    // Cannot represent more than 8 greyscale values with 3 bits per components
-    0x10,
-    0x100,
-    0x1000,
-    0x110,
-    0x1010,
-    0x1100,
-    0x1084,
-    0x490
-};
-// TODO: optim, directly store rgb values to reduce conversions
-
 // Display width values (register 0xC)
 uint8_t display_width_values[] = { 32, 40 };
 
@@ -47,22 +25,14 @@ Vdp* vdp_make(M68k* cpu)
 {
     Vdp* v = calloc(1, sizeof(Vdp));
     v->cpu = cpu;
+    v->pending_command = false;
+
     v->vram = calloc(0x10000, sizeof(uint8_t));
     v->cram = calloc(64, sizeof(uint16_t));
     v->vsram = calloc(64, sizeof(uint16_t));
-    v->pending_command = false;
+    v->buffer = calloc(BUFFER_LENGTH, sizeof(uint8_t));
 
-    // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO) != 0)
-    {
-        printf("An error occurred while initializing SDL: %s", SDL_GetError());
-    }
-    else
-    {
-        SDL_CreateWindowAndRenderer(1500, 1000, SDL_WINDOW_OPENGL, &v->window, &v->renderer);
-        SDL_SetWindowPosition(v->window, 0, 0);
-    }
-
+    // TODO why?
     for (int i = 0; i < 64; ++i)
         v->cram[i] = 0xFFFF;
 
@@ -74,13 +44,10 @@ void vdp_free(Vdp* v)
     if (v == NULL)
         return;
 
-    SDL_DestroyWindow(v->window);
-    SDL_DestroyRenderer(v->renderer);
-    SDL_Quit();
-
     free(v->vram);
     free(v->cram);
     free(v->vsram);
+    free(v->buffer);
     free(v);
 }
 
@@ -500,147 +467,57 @@ uint16_t vdp_get_hv_counter(Vdp* v)
     return (v->v_counter << 8 & 0xFF00) | (v->h_counter >> 1 & 0xFF);
 }
 
-void draw_pattern(Vdp* v, int id, uint16_t* palette, int x, int y)
+void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, uint16_t* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y)
 {
-    uint16_t offset = id * 32;
-    //LOG_VDP("drawing pattern %d at %d %d\n", id, x, y);
-    for (int py = 0; py < 8; ++py)
-        for (int px = 0; px < 4; ++px)
-        {
-            // 1 byte = 2 pixels
-            uint8_t color_indexes = v->vram[offset + py * 4 + px];
+    uint16_t pattern_offset = pattern_index * 32;
 
-            uint8_t color_index = (color_indexes & 0xF0) >> 4;
-            if (color_index > 0) {
-                uint16_t color = palette[color_index];
-                SDL_SetRenderDrawColor(v->renderer, RED_8(color), GREEN_8(color), BLUE_8(color), 255);
-                SDL_RenderDrawPoint(v->renderer, x + px * 2, y + py);
-            }
-            //printf("drawing pixels %d %d (%d) / %d %d (%d)\n", x + px * 2, y + py, color_index, x + px * 2 + 1, y + py, color_indexes & 0x0F);
+    for (uint8_t pixel_pair = 0; pixel_pair < 32; ++pixel_pair)
+    {        
+        uint32_t pixel_offset = ((y + pixel_pair / 4) * buffer_width + x + pixel_pair % 4 * 2) * 3;
 
-            color_index = color_indexes & 0x0F;
-            if (color_index > 0) {
-                uint16_t color = palette[color_index];
-                SDL_SetRenderDrawColor(v->renderer, RED_8(color), GREEN_8(color), BLUE_8(color), 255);
-                SDL_RenderDrawPoint(v->renderer, x + px * 2 + 1, y + py);
-            }
-        }
+        // 1 byte holds the color data of 2 pixels
+        uint8_t color_indexes = v->vram[pattern_offset + pixel_pair];
+      
+        uint8_t color_index = (color_indexes & 0xF0) >> 4;
+        uint16_t color = palette[color_index];
+        buffer[pixel_offset] = RED_8(color);
+        buffer[pixel_offset + 1] = GREEN_8(color);
+        buffer[pixel_offset + 2] = BLUE_8(color);
+
+        color_index = color_indexes & 0x0F;
+        color = palette[color_index];
+        buffer[pixel_offset + 3] = RED_8(color);
+        buffer[pixel_offset + 4] = GREEN_8(color);
+        buffer[pixel_offset + 5] = BLUE_8(color);
+    }
 }
 
-void draw_plane(Vdp* v, int x, int y, uint8_t* nametable)
+void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width)
 {
-    for (int py = 0; py < v->vertical_plane_size; ++py)
+    uint8_t* plane_offset = v->vram;
+    switch (plane)
+    {
+    case Plane_A: plane_offset += v->plane_a_nametable; break;
+    case Plane_B: plane_offset += v->plane_b_nametable; break;
+    case Plane_Window: plane_offset += v->window_nametable; break;
+    }
+
+    for (int py = 0; py < v->horizontal_plane_size; ++py)
         for (int px = 0; px < v->horizontal_plane_size; ++px)
         {
-            uint16_t offset = py * v->horizontal_plane_size * 2 + px * 2;
-            uint16_t data = (nametable[offset] << 8) | nametable[offset + 1];
+            uint16_t pattern_offset = (py * v->horizontal_plane_size + px) * 2;
+            uint16_t data = (plane_offset[pattern_offset] << 8) | plane_offset[pattern_offset + 1]; // TODO as 16b
 
-            bool priority = BIT(data, 15);
             uint16_t* palette = v->cram + FRAGMENT(data, 14, 13) * 16;
             bool vertical_flip = BIT(data, 12);
             bool horizontal_flip = BIT(data, 11);
             uint16_t pattern = FRAGMENT(data, 10, 0);
 
-            draw_pattern(v, pattern, palette, x + px * 8, y + py * 8);
+            vdp_draw_pattern(v, pattern, palette, buffer, buffer_width, px * 8, py * 8);
         }
-
-    SDL_Rect plane_area = { x, y, v->horizontal_plane_size * 8, v->vertical_plane_size * 8 };
-    SDL_SetRenderDrawColor(v->renderer, 0, 255, 0, 255);
-    SDL_RenderDrawRect(v->renderer, &plane_area);
 }
 
-void vdp_draw_debug(Vdp* v)
-{
-    if (v->renderer == NULL)
-        return;
-
-    //SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
-    //SDL_RenderClear(v->renderer);
-    SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
-    SDL_Rect debug_area = { 0, 0, 900, 900 };
-    SDL_RenderFillRect(v->renderer, &debug_area);
-
-    // Draw the color palette
-    SDL_Rect cell = { 0, 0, 10, 10 };
-    for (int row = 0; row < 4; ++row)
-    {
-        for (int col = 0; col < 16; ++col)
-        {
-            uint16_t color = v->cram[row * 16 + col];
-            SDL_SetRenderDrawColor(v->renderer, RED_8(color), GREEN_8(color), BLUE_8(color), 255);
-            SDL_RenderFillRect(v->renderer, &cell);
-
-            cell.x += 10;
-        }
-
-        cell.x = 0;
-        cell.y += 10;
-    }
-
-    // Draw patterns
-    int columns = 30;
-    for (int pattern = 0; pattern < 0x7FF; ++pattern)
-        draw_pattern(v, pattern, debug_palette, 8 * (pattern % columns), 50 + 8 * (pattern / columns));
-
-    // Draw the planes
-    //draw_plane(v, 300, 0, v->vram + v->plane_a_nametable);
-    //draw_plane(v, 300, 400, v->vram + v->plane_b_nametable);
-    //draw_plane(v, 300, 800, v->vram + v->window_nametable);
-}
-
-void vdp_draw_pattern_scanline(Vdp* v, uint16_t pattern_index, uint8_t line, uint16_t* palette, bool horizontal_flip, bool vertical_flip, int x, int y)
-{
-    // TODO flip
-    // TODO render: directly write to bitmap?
-    // TODO directly pass pattern pointer
-
-    uint16_t pattern_offset = pattern_index * 32 + line * 4;
-
-    for (int px = 0; px < 4; ++px)
-    {
-        // 1 byte = 2 pixels
-        uint8_t color_indexes = v->vram[pattern_offset + px];
-
-        uint8_t color_index = (color_indexes & 0xF0) >> 4;
-        if (color_index > 0) {
-            uint16_t color = palette[color_index];
-            SDL_SetRenderDrawColor(v->renderer, RED_8(color), GREEN_8(color), BLUE_8(color), 255);
-            SDL_RenderDrawPoint(v->renderer, x + px * 2, y);
-        }
-
-        color_index = color_indexes & 0x0F;
-        if (color_index > 0) {
-            uint16_t color = palette[color_index];
-            SDL_SetRenderDrawColor(v->renderer, RED_8(color), GREEN_8(color), BLUE_8(color), 255);
-            SDL_RenderDrawPoint(v->renderer, x + px * 2 + 1, y);
-        }
-    }
-}
-
-void vdp_draw_plane_scanline(Vdp* v, uint8_t* nametable, int line, int x, int y)
-{
-    // TODO scrolling
-
-    uint16_t line_offset = (line / 8) * v->horizontal_plane_size * 2; // 1 nametable entry = 2 bytes
-
-    for (int pattern_x = 0; pattern_x < v->horizontal_plane_size; ++pattern_x)
-    {
-        uint16_t pattern_offset = line_offset + pattern_x * 2;
-        uint16_t pattern_data = (nametable[pattern_offset] << 8) | nametable[pattern_offset + 1];
-
-        // Extract the pattern info - http://md.squee.co/VDP#Nametables
-        bool priority = BIT(pattern_data, 15);
-        uint16_t* palette = v->cram + FRAGMENT(pattern_data, 14, 13) * 16;
-        bool vertical_flip = BIT(pattern_data, 12);
-        bool horizontal_flip = BIT(pattern_data, 11);
-        uint16_t id = FRAGMENT(pattern_data, 10, 0);
-
-        uint16_t pattern_line = line % 8;
-
-        vdp_draw_pattern_scanline(v, id, pattern_line, palette, horizontal_flip, vertical_flip, x + pattern_x * 8, y);
-    }
-}
-
+// TODO clean this up
 typedef struct {
     bool drawn[300]; // TODO how many?
     uint16_t colors[300];
@@ -794,17 +671,17 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
     // TODO sprite count limit
 }
 
-void vdp_draw_scanline(Vdp* v, int line)
+void vdp_draw_scanline(Vdp* v, int scanline)
 {
     if (v->display_enabled && v->v_counter < 224)
     {
         uint16_t background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
 
         // Get pixel & priority data for each layer
-        vdp_get_plane_scanline(v, Plane_A, line, &plane_a_scanline);
-        vdp_get_plane_scanline(v, Plane_B, line, &plane_b_scanline);
+        vdp_get_plane_scanline(v, Plane_A, scanline, &plane_a_scanline);
+        vdp_get_plane_scanline(v, Plane_B, scanline, &plane_b_scanline);
         // TODO vdp_get_plane_scanline(v, Plane_W, line, &plane_w_scanline);
-        vdp_get_sprites_scanline(v, line, &plane_a_scanline);
+        vdp_get_sprites_scanline(v, scanline, &plane_a_scanline);
 
         // Combine the layers
         uint16_t screen_width = v->display_width * 8;
@@ -831,10 +708,17 @@ void vdp_draw_scanline(Vdp* v, int line)
             else
                 pixel_color = background_color;
 
+            // TODO put pixel func
+            // TODO as uint32?
+            uint32_t pixel_offset = (scanline * BUFFER_WIDTH + pixel) * 3;
+            v->buffer[pixel_offset] = RED_8(pixel_color);
+            v->buffer[pixel_offset + 1] = GREEN_8(pixel_color);
+            v->buffer[pixel_offset + 2] = BLUE_8(pixel_color);
+
             // TODO direct to bitmap
-            SDL_SetRenderDrawColor(v->renderer, RED_8(pixel_color), GREEN_8(pixel_color), BLUE_8(pixel_color), 255);
+            /*SDL_SetRenderDrawColor(v->renderer, RED_8(pixel_color), GREEN_8(pixel_color), BLUE_8(pixel_color), 255);
             SDL_Rect draw_area = { 900 + pixel, line, 1, 1 };
-            SDL_RenderFillRect(v->renderer, &draw_area);
+            SDL_RenderFillRect(v->renderer, &draw_area);*/
         }
     }
 
@@ -883,8 +767,6 @@ void vdp_draw_scanline(Vdp* v, int line)
         v->v_counter = 0;
 
         // TODO tmp to debug faster
-        vdp_draw_debug(v);
-
-        SDL_RenderPresent(v->renderer);
+        //vdp_draw_debug(v);
     }
 }

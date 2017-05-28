@@ -1,7 +1,6 @@
 #pragma once
 
 #include <m68k/bit_utils.h>
-#include <SDL.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -18,6 +17,13 @@
 #define RED_8(c) COLOR_8(RED(c))
 #define GREEN_8(c) COLOR_8(GREEN(c))
 #define BLUE_8(c) COLOR_8(BLUE(c))
+
+// The screen buffer has the same dimensions as the maximal resolution
+#define BUFFER_WIDTH 320
+#define BUFFER_HEIGHT 240
+#define BUFFER_LENGTH (BUFFER_WIDTH * BUFFER_HEIGHT * 3)
+
+struct M68k;
 
 typedef enum
 {
@@ -137,13 +143,12 @@ typedef struct Vdp
     // (will be reloaded with the value stored in register 0xA)
     uint8_t hblank_counter;
     
-    M68k* cpu;
+    struct M68k* cpu;
 
-    SDL_Window* window;
-    SDL_Renderer* renderer;
+    uint8_t* buffer;
 } Vdp;
 
-Vdp* vdp_make(M68k* cpu);
+Vdp* vdp_make(struct M68k* cpu);
 void vdp_free(Vdp*);
 
 uint16_t vdp_read_data(Vdp* v);
@@ -157,5 +162,6 @@ void vdp_write_control(Vdp*, uint16_t value);
 
 uint16_t vdp_get_hv_counter(Vdp*); // Get the current value of the HV counter
 
-void vdp_draw_debug(Vdp*);
-void vdp_draw_scanline(Vdp*, int line);
+void vdp_draw_scanline(Vdp*, int scanline);
+void vdp_draw_pattern(Vdp*, uint16_t pattern_index, uint16_t* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y);
+void vdp_draw_plane(Vdp*, Planes plane, uint8_t* buffer, uint32_t buffer_width);
