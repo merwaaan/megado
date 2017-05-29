@@ -70,7 +70,7 @@ void genesis_load_rom_file(Genesis* g, char* path)
 
     fclose(file);
 
-    // Display the ROM info stored in the header
+    // Display info from the ROM header
     printf("----------------\n");
     print_header_info("", g->memory + 0x100, 16);
     print_header_info("", g->memory + 0x110, 16);
@@ -79,6 +79,19 @@ void genesis_load_rom_file(Genesis* g, char* path)
     print_header_info("[Serial number]", g->memory + 0x180, 8);
     print_header_info("[Country]", g->memory + 0x1F0, 8);
     printf("----------------\n");
+
+    // Set the system region depending on country code of the game
+    uint8_t* country_codes = g->memory + 0x1F0;
+    switch (country_codes[0])
+    {
+    case 'E': g->region = Region_Europe; break;
+    case 'J': g->region = Region_Japan; break;
+    case 'U': g->region = Region_USA; break;
+    default:
+        printf("Invalid country code, using default (Japan)");
+        g->region = Region_Japan;
+    }
+    // TODO it seems possible to have multiple country codes, how to handle that?
 }
 
 void genesis_load_rom_data(Genesis* g, uint8_t* data)
