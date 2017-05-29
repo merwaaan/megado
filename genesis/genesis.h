@@ -10,10 +10,10 @@ struct Renderer;
 struct Vdp;
 
 typedef enum {
-    Japan,
-    Europe,
-    USA
-} Region;
+    Region_Japan,
+    Region_Europe,
+    Region_USA
+} Regions;
 
 typedef struct {
     uint8_t* memory;
@@ -24,7 +24,7 @@ typedef struct {
 
     struct Renderer* renderer;
 
-    Region region;
+    Regions region;
 } Genesis;
 
 Genesis* genesis_make();

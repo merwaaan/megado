@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "genesis.h"
 #include "joypad.h"
@@ -22,7 +23,7 @@ Genesis* genesis_make()
     // In this way, the various modules can be accessed from M68k-centric I/O functions (see m68k_io.c)
     g->m68k->user_data = g;
 
-    g->region = USA;
+    g->region = Region_Europe;
 
     return g;
 }
@@ -40,8 +41,20 @@ void genesis_free(Genesis* g)
     free(g);
 }
 
+void print_header_info(char* label, uint8_t* data, uint8_t length)
+{
+    char* string = calloc(length + 1, sizeof(char));
+    strncpy(string, data, length);
+
+    printf("%-48s %s\n", string, label);
+
+    free(string);
+}
+
 void genesis_load_rom_file(Genesis* g, char* path)
 {
+    printf("Opening %s...\n", path);
+
     FILE* file = fopen(path, "rb");
     if (!file)
     {
@@ -49,13 +62,23 @@ void genesis_load_rom_file(Genesis* g, char* path)
         exit(1);
     }
 
+    // Load the ROM into memory
     fseek(file, 0, SEEK_END);
     int file_length = ftell(file);
     fseek(file, 0, SEEK_SET);
-
     fread(g->memory, sizeof(uint8_t), file_length, file);
 
     fclose(file);
+
+    // Display the ROM info stored in the header
+    printf("----------------\n");
+    print_header_info("", g->memory + 0x100, 16);
+    print_header_info("", g->memory + 0x110, 16);
+    print_header_info("[Domestic title]", g->memory + 0x120, 48);
+    print_header_info("[International title]", g->memory + 0x150, 48);
+    print_header_info("[Serial number]", g->memory + 0x180, 8);
+    print_header_info("[Country]", g->memory + 0x1F0, 8);
+    printf("----------------\n");
 }
 
 void genesis_load_rom_data(Genesis* g, uint8_t* data)
@@ -126,7 +149,7 @@ bool genesis_run_frame(Genesis* g)
 
     // The number of scanlines depends on the region
     // http://forums.sonicretro.org/index.php?showtopic=5615
-    uint16_t lines = g->region == Europe ? 312 : 262;
+    uint16_t lines = g->region == Region_Europe ? 312 : 262;
 
     for (uint16_t line = 0; line < lines; ++line)
     {
