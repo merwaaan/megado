@@ -541,7 +541,7 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
     if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Screen)
         horizontal_scroll_offset += plane == Plane_A ? 0 : 2;
     else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Row)
-        horizontal_scroll_offset += scanline / 8 * 16 + (plane == Plane_A ? 0 : 2); // TODO use y before or after vertical scrolling?!
+        horizontal_scroll_offset += scanline / 8 * 32 + (plane == Plane_A ? 0 : 2); // TODO use y before or after vertical scrolling?!
     else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Line)
         horizontal_scroll_offset += scanline * 4 + (plane == Plane_A ? 0 : 2); // TODO use y before or after vertical scrolling?!
 
