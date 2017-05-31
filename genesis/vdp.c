@@ -552,13 +552,13 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
     {
         // Handle vertical scrolling
 
-        uint16_t vertical_scroll;
+        uint16_t vertical_scroll = 0;
 
         if (v->vertical_scrolling_mode == VerticalScrollingMode_Screen)
-            vertical_scroll = v->vsram[plane == Plane_A ? 0 : 2];
-        /*else if (v->vertical_scrolling_mode == VerticalScrollingMode_TwoColumns)
-            vertical_scroll_offset = v->vsram[pixel / 16 + (plane == Plane_A ? 0 : 1)] & 0x3FF; // TODO use x before or after horizontal scrolling?!
-*/
+            vertical_scroll = v->vsram[plane == Plane_A ? 0 : 1];
+        else if (v->vertical_scrolling_mode == VerticalScrollingMode_TwoColumns)
+            vertical_scroll = v->vsram[pixel / 16 * 2 + (plane == Plane_A ? 0 : 1)] & 0x3FF; // TODO use x before or after horizontal scrolling?!
+
         uint16_t x = (uint16_t)(pixel - horizontal_scroll) % (v->horizontal_plane_size * 8);
         uint16_t y = (uint16_t)(scanline + vertical_scroll) % (v->vertical_plane_size * 8);
 
@@ -637,7 +637,7 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
 
             for (uint8_t sprite_x = 0; sprite_x < total_width; ++sprite_x)
             {
-                int16_t scanline_x = x + sprite_x;
+                int16_t scanline_x = x + (horizontal_flip ? total_width - sprite_x - 1: sprite_x);
 
                 if (scanline_x < 0) // TODO right bound
                     continue;
