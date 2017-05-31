@@ -1,9 +1,15 @@
 #pragma once
 
+// References
+// https://emu-docs.org/Genesis/gen-hw.txt (Section 3.2)
+// https://wiki.megadrive.org/index.php?title=Reading_MD3_Joypad
+
 typedef enum
 {
-    Up = 0x101, // Up and Down can be read in both parts
-    Down = 0x202,
+    // The enum value corresponds to the mask for each input
+    // in the multiplexed word that holds the controller's state
+    Up = 0x101, 
+    Down = 0x202, // Up and Down can be read in both parts
     Left = 0x4,
     Right = 0x8,
     ButtonB = 0x10,
@@ -13,9 +19,9 @@ typedef enum
 } JoypadButton;
 
 typedef struct Joypad {
-
-    // Word containing all the buttons states.
-    // Depending on bit 6, the high or low byte will be read.
+    // The low byte contains the first half of the controller's state (Up, Down, Left, Right, B, C).
+    // The high byte contains the second half of the controller's state (Up, Down, A, Start).
+    // Depending on bit 6, the high or low byte will be returned when reading the controller's port.
     uint16_t buttons;
 } Joypad;
 
