@@ -18,7 +18,7 @@ Renderer* renderer_make(Vdp* vdp)
     r->vdp = vdp;
 
     r->main_window = toggle_window(r->main_window, true, 320, 240, "Main window");
-
+    r->selected_plane = Plane_A;
     return r;
 }
 

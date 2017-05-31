@@ -23,7 +23,7 @@
 
 // The screen buffer has the same dimensions as the maximal resolution
 #define BUFFER_WIDTH 320
-#define BUFFER_HEIGHT 240
+#define BUFFER_HEIGHT 400 // TODO use appropriate value (prev 240 but now higher to support PAL res)
 #define BUFFER_LENGTH (BUFFER_WIDTH * BUFFER_HEIGHT * 3)
 
 struct M68k;

@@ -506,7 +506,7 @@ void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width
         for (int px = 0; px < v->horizontal_plane_size; ++px)
         {
             uint16_t pattern_offset = (py * v->horizontal_plane_size + px) * 2;
-            uint16_t data = (plane_offset[pattern_offset] << 8) | plane_offset[pattern_offset + 1]; // TODO as 16b
+            uint16_t data = (plane_offset[pattern_offset] << 8) | plane_offset[pattern_offset + 1];
 
             Color* palette = v->cram + FRAGMENT(data, 14, 13) * 16;
             bool vertical_flip = BIT(data, 12);
@@ -519,9 +519,9 @@ void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width
 
 // TODO clean this up
 typedef struct {
-    bool drawn[300]; // TODO how many?
-    Color colors[300];
-    bool priorities[300];
+    bool drawn[312]; // TODO how many?
+    Color colors[312];
+    bool priorities[312];
 } ScanlineData;
 
 ScanlineData plane_a_scanline;
@@ -535,16 +535,17 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
     // TODO window
 
     // Handle horizontal scrolling
-    // TODO should the scrolling values be masked on 10/11 bits?
 
-    uint16_t horizontal_scroll;
+    uint8_t* horizontal_scroll_offset = v->vram + v->horizontal_scrolltable;
 
     if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Screen)
-        horizontal_scroll = ((uint16_t*)(v->vram + v->horizontal_scrolltable))[plane == Plane_A ? 0 : 1];
+        horizontal_scroll_offset += plane == Plane_A ? 0 : 2;
     else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Row)
-        horizontal_scroll = ((uint16_t*)(v->vram + v->horizontal_scrolltable))[scanline / 8 * 16 + (plane == Plane_A ? 0 : 1)]; // TODO use y before or after vertical scrolling?!
+        horizontal_scroll_offset += scanline / 8 * 16 + (plane == Plane_A ? 0 : 2); // TODO use y before or after vertical scrolling?!
     else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Line)
-        horizontal_scroll = ((uint16_t*)(v->vram + v->horizontal_scrolltable))[scanline * 2 + (plane == Plane_A ? 0 : 1)]; // TODO use y before or after vertical scrolling?!
+        horizontal_scroll_offset += scanline * 4 + (plane == Plane_A ? 0 : 2); // TODO use y before or after vertical scrolling?!
+
+    uint16_t horizontal_scroll = (horizontal_scroll_offset[0] << 8 | horizontal_scroll_offset[1]) & 0x3FF;
 
     uint16_t screen_width = v->display_width * 8;
     for (uint16_t pixel = 0; pixel < screen_width; ++pixel)
@@ -554,12 +555,12 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
         uint16_t vertical_scroll;
 
         if (v->vertical_scrolling_mode == VerticalScrollingMode_Screen)
-            vertical_scroll = v->vsram[plane == Plane_A ? 0 : 1];
-        else if (v->vertical_scrolling_mode == VerticalScrollingMode_TwoColumns)
-            vertical_scroll = v->vsram[pixel / 16 + (plane == Plane_A ? 0 : 1)]; // TODO use x before or after horizontal scrolling?!
-
-        uint16_t x = pixel + horizontal_scroll;
-        uint16_t y = scanline + vertical_scroll;
+            vertical_scroll = v->vsram[plane == Plane_A ? 0 : 2];
+        /*else if (v->vertical_scrolling_mode == VerticalScrollingMode_TwoColumns)
+            vertical_scroll_offset = v->vsram[pixel / 16 + (plane == Plane_A ? 0 : 1)] & 0x3FF; // TODO use x before or after horizontal scrolling?!
+*/
+        uint16_t x = (uint16_t)(pixel - horizontal_scroll) % (v->horizontal_plane_size * 8);
+        uint16_t y = (uint16_t)(scanline + vertical_scroll) % (v->vertical_plane_size * 8);
 
         // Get the pattern at the specified pixel coordinates
         uint16_t pattern_offset = (y / 8 * v->horizontal_plane_size + x / 8) * 2; // * 2 because one nametable entry is two bytes
@@ -673,7 +674,7 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
 
 void vdp_draw_scanline(Vdp* v, int scanline)
 {
-    if (v->display_enabled && v->v_counter < 224)
+    if (v->display_enabled && v->v_counter < 224) // TODO PAL
     {
         Color background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
 
@@ -733,7 +734,7 @@ void vdp_draw_scanline(Vdp* v, int scanline)
      */
 
      // Reload the counter
-    if (v->v_counter == 0 || v->v_counter >= 225)
+    if (v->v_counter == 0 || v->v_counter >= 225)// TODO PAL
         v->hblank_counter = v->hblank_line;
 
     // Trigger an interrupt when the counter reaches 0
@@ -754,14 +755,14 @@ void vdp_draw_scanline(Vdp* v, int scanline)
     ++v->v_counter;
 
     // V-blank occurs on line 224
-    if (v->v_counter == 224 && v->vblank_enabled)
+    if (v->v_counter == 224 && v->vblank_enabled)// TODO PAL
     {
         v->vblank_in_progress = true;
 
         m68k_request_interrupt(v->cpu, VBLANK_IRQ);
     }
     // V-blank ends on line 262
-    else if (v->v_counter == 262)
+    else if (v->v_counter == 262)// TODO PAL
     {
         v->vblank_in_progress = false;
         v->v_counter = 0;
