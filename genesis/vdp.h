@@ -28,7 +28,7 @@
 
 struct M68k;
 
-typedef enum
+typedef enum Planes
 {
     Plane_A,
     Plane_B,

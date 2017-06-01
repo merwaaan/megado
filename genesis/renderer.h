@@ -2,9 +2,7 @@
 
 #include <SDL.h>
 #include <stdbool.h>
-
-struct Vdp;
-enum Planes;
+#include "vdp.h"
 
 typedef struct
 {

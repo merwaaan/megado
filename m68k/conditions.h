@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include "m68k.h"
 
 typedef bool(*ConditionFunc)(struct M68k*);
 
