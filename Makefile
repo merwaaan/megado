@@ -29,20 +29,20 @@ debug: CFLAGS += $(DEBUG_FLAGS)
 debug: $(DEBUG_DIR) $(DEBUG_DIR)/genesis
 
 $(RELEASE_DIR)/genesis: test/main.c $(RELEASE_OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) $(LIBS) -o $@ $^
+	$(CC) $^ $(CFLAGS) $(INCLUDES) $(LIBS) -o $@
 
 $(DEBUG_DIR)/genesis: test/main.c $(DEBUG_OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) $(LIBS) -o $@ $^
+	$(CC) $^ $(CFLAGS) $(INCLUDES) $(LIBS) -o $@
 
 # Needed so the next rule finds the C files
 # see https://stackoverflow.com/q/231229
 VPATH = $(MODULES)
 
 $(RELEASE_DIR)/%.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CC) $< -c $(CFLAGS) $(INCLUDES) -o $@
 
 $(DEBUG_DIR)/%.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CC) $< -c $(CFLAGS) $(INCLUDES) -o $@
 
 $(RELEASE_DIR):
 	mkdir -p $@
