@@ -197,7 +197,7 @@ Instruction* gen_rtd(uint16_t opcode, M68k* m)
 int rtr(Instruction* i)
 {
     uint8_t ccr = m68k_read_w(i->context, i->context->address_registers[7]);
-    i->context->status = i->context->status & 0xFFE0 | ccr & 0x1F;
+    i->context->status = (i->context->status & 0xFFE0) | (ccr & 0x1F);
 
     uint32_t pc = m68k_read_l(i->context, i->context->address_registers[7] + 2);
     i->context->pc = pc;

@@ -131,7 +131,7 @@ Instruction* gen_eori(uint16_t opcode, M68k* m)
 
 int eori_ccr(Instruction* i)
 {
-    i->context->status = (i->context->status & 0xFFE0) | (i->context->status ^ FETCH_EA_AND_GET(i->src)) & 0x1F;
+    i->context->status = (i->context->status & 0xFFE0) | ((i->context->status ^ FETCH_EA_AND_GET(i->src)) & 0x1F);
 
     return 0;
 }
@@ -182,7 +182,7 @@ Instruction* gen_ori(uint16_t opcode, M68k* m)
 
 int ori_ccr(Instruction* i)
 {
-    i->context->status = (i->context->status & 0xFFE0) | (i->context->status | FETCH_EA_AND_GET(i->src)) & 0x1F;
+    i->context->status = (i->context->status & 0xFFE0) | ((i->context->status | FETCH_EA_AND_GET(i->src)) & 0x1F);
 
     return 0;
 }

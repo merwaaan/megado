@@ -277,7 +277,7 @@ void m68k_handle_interrupt(M68k* m)
     m68k_write_w(m, m->address_registers[7], m->status);
 
     // Update the interrupt mask
-    m->status = m->status & 0xF8FF | m->pending_interrupt << 8;
+    m->status = (m->status & 0xF8FF) | m->pending_interrupt << 8;
 
     m->pc = m68k_read_l(m, IRQ_VECTOR_OFFSET + m->pending_interrupt * 4);
 

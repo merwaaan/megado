@@ -144,8 +144,8 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
             // If the generated instruction is invalid, try the following opcodes
             if (instr == NULL ||
                 instr->size == InvalidSize ||
-                instr->src != NULL && instr->src->type == Unsupported ||
-                instr->dst != NULL && instr->dst->type == Unsupported)
+                (instr->src != NULL && instr->src->type == Unsupported) ||
+                (instr->dst != NULL && instr->dst->type == Unsupported))
             {
                 free(instr);
                 continue;

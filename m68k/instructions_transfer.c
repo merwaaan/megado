@@ -249,7 +249,7 @@ Instruction* gen_movep(uint16_t opcode, M68k* m)
 int move_to_ccr(Instruction* i)
 {
     // Only update the CCR segment of the status register
-    i->context->status = i->context->status & 0xFFE0 | FETCH_EA_AND_GET(i->src) & 0x1F;
+    i->context->status = (i->context->status & 0xFFE0) | (FETCH_EA_AND_GET(i->src) & 0x1F);
 
     return 0;
 }
