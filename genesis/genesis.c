@@ -15,6 +15,7 @@ Genesis* genesis_make()
     Genesis* g = calloc(1, sizeof(Genesis));
     g->memory = calloc(0x1000000, sizeof(uint8_t));
     g->m68k = m68k_make();
+    g->z80 = z80_make();
     g->vdp = vdp_make(g->m68k);
     g->joypad = joypad_make();
     g->renderer = renderer_make(g->vdp);
@@ -34,6 +35,7 @@ void genesis_free(Genesis* g)
         return;
 
     m68k_free(g->m68k);
+    z80_free(g->z80);
     vdp_free(g->vdp);
     joypad_free(g->joypad);
 
@@ -114,6 +116,7 @@ void genesis_initialize(Genesis* g)
     // http://md.squee.co/Howto:Initialise_a_Mega_Drive
 
     m68k_initialize(g->m68k);
+    z80_initialize(g->z80);
 }
 
 SDL_Event event;
@@ -168,6 +171,7 @@ bool genesis_run_frame(Genesis* g)
     {
         // Execute one scanline worth of instructions
         m68k_run_cycles(g->m68k, 488); // TODO not sure about that value
+        z80_run_cycles(g->z80, 488);
 
         // Draw the scanline
         vdp_draw_scanline(g->vdp, line);

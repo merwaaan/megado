@@ -7,8 +7,6 @@
 
 #define GENESIS(m) ((Genesis*) (m)->user_data)
 
-bool z80_stopped;
-
 uint8_t m68k_read_b(M68k* m, uint32_t address)
 {
     address &= 0xFFFFFF; // 24-bit address bus
@@ -17,6 +15,14 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
     {
 
         // https://wiki.megadrive.org/index.php?title=IO_Registers
+
+      // YM2612
+    case 0xA04000:
+    case 0xA04001:
+    case 0xA04002:
+    case 0xA04003:
+      // Fake it for now: always return non-busy and timer overflowed.
+        return 0x7;
 
     case 0xA10000: // Version port
     case 0xA10001:
@@ -31,9 +37,13 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
         return joypad_read(GENESIS(m)->joypad);
         break;
 
-            // TODO temp, stub z80
     case 0xA11100:
-        return !z80_stopped;
+      // If the Z80 is reset, or if it is running (meaning the 68000 does not
+      // have the bus) it will also return 1
+      if (GENESIS(m)->z80->running || !GENESIS(m)->z80->reset) {
+        return 1;
+      }
+      return GENESIS(m)->z80->bus_ack;
 
     case 0xA11200:
         return 0;
@@ -87,13 +97,14 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     if (address == 0xA10002 || address == 0xA10003)
         joypad_write(GENESIS(m)->joypad, value);
 
-    // Stubbed z80 control
-    else if (address == 0xA11100)
-    {
-        if (value == 0)
-            z80_stopped = false;
-        else /*(value == 0x100) TODO must be exactly 0x100? */
-            z80_stopped = true;
+    // BUSREQ
+    else if (address == 0xA11100) {
+      GENESIS(m)->z80->bus_req = value;
+    }
+
+    // RESET
+    else if (address == 0xA11200) {
+      GENESIS(m)->z80->reset = value;
     }
 
     // " Writing to the VDP control or data ports is interpreted as a 16-bit

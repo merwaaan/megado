@@ -1,6 +1,7 @@
 Bugs
 
 - Columns: the sega boot animation only appears in Release builds (Visual Studio specific)
+           (no SEGA logo with clang either in release and debug)
 
 Games that seem to wait for the Z80:
 

@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "z80.h"
+
 struct DecodedInstruction;
 struct Joypad;
 struct M68k;
@@ -17,8 +19,9 @@ typedef enum {
 
 typedef struct {
     uint8_t* memory;
-    
+
     struct M68k* m68k;
+    struct Z80* z80;
     struct Vdp* vdp;
     struct Joypad* joypad;
 
