@@ -5,24 +5,27 @@ BUILD_DIR := build
 INCLUDES := -I./ `sdl2-config --cflags`
 LIBS := `sdl2-config --libs`
 
-SRC := $(wildcard mk68k/*.c,genesis/*.c)
+MODULES := m68k genesis
 
-.PHONY: all
-all: subdirs main
+# There can be only one main, and that is test/main.c
+SRC := $(filter-out m68k/main.c,$(foreach sdir,$(MODULES),$(wildcard $(sdir)/*.c)))
+# Strip the module folder, and put all objects directly into the build dir
+OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(notdir $(SRC)))
 
 .PHONY: main
 main: $(BUILD_DIR)/genesis
 
-$(BUILD_DIR)/genesis: test/main.c $(BUILD_DIR)/*.o
-	$(CC) $(CFLAGS) $(INCLUDES) $(LIBS) -o $(BUILD_DIR)/genesis test/main.c $(BUILD_DIR)/*.o
+$(BUILD_DIR)/genesis: test/main.c $(OBJS)
+	$(CC) $(CFLAGS) $(INCLUDES) $(LIBS) -o $@ $^
 
-.PHONY: subdirs
-subdirs:
-	make -C m68k
-	make -C genesis
+# Needed so the next rule finds the C files
+# see https://stackoverflow.com/q/231229
+VPATH = $(MODULES)
+
+$(BUILD_DIR)/%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 .PHONY: clean
 clean:
-	make -C m68k clean
-	make -C genesis clean
+	rm --force $(OBJS)
 	rm --force $(BUILD_DIR)/genesis
