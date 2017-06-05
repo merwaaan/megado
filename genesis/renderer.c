@@ -193,6 +193,8 @@ void init_ui_rendering(Renderer* r)
 {
     struct ImGuiIO* io = igGetIO();
 
+    igPushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+    
     // Setup the font texture
 
     int width, height;
@@ -324,26 +326,40 @@ void build_ui(Renderer* r)
         igColumns(2, NULL, true);
 
         for (int i = 0; i < 8; ++i)
-            igText("D%d %08X", i, r->genesis->m68k->data_registers[i]);
+            igText("D%d: %08X", i, r->genesis->m68k->data_registers[i]);
 
         igNextColumn();
 
         for (int i = 0; i < 8; ++i)
-            igText("A%d %08X", i, r->genesis->m68k->address_registers[i]);
+            igText("A%d: %08X", i, r->genesis->m68k->address_registers[i]);
 
         igColumns(1, NULL, false);
-        igText("Status %08X", r->genesis->m68k->status);
+        igSeparator();
+
+        igText("Status: %04X", r->genesis->m68k->status);
+
+#define STATUS_BIT(label, bit) igText(label); igCheckbox("", & bit); igNextColumn()
 
         bool extended = EXTENDED(r->genesis->m68k);
         bool negative = NEGATIVE(r->genesis->m68k);
         bool zero = ZERO(r->genesis->m68k);
         bool overflow = OVERFLOW(r->genesis->m68k);
         bool carry = CARRY(r->genesis->m68k);
-        igCheckbox("X", &extended); igSameLine(0, 0);
-        igCheckbox("N", &negative); igSameLine(0, 0);
-        igCheckbox("Z", &zero); igSameLine(0, 0);
-        igCheckbox("V", &overflow); igSameLine(0, 0);
-        igCheckbox("C", &carry); igSameLine(0, 0);
+
+        igPushStyleColor(ImGuiCol_CheckMark, (struct ImVec4) { 1.0f, 0.07f, 0.57f, 1.0f });
+        igColumns(5, NULL, false);
+        STATUS_BIT("X", extended);
+        STATUS_BIT("N", negative);
+        STATUS_BIT("Z", zero);
+        STATUS_BIT("V", overflow);
+        STATUS_BIT("C", carry);
+        igPopStyleColor(1);
+
+        igColumns(1, NULL, false);
+        igSeparator();
+
+        igText("PC:     %08X", r->genesis->m68k->pc);
+        igText("Cycles: %08X", r->genesis->m68k->cycles);
 
         igEnd();
     }
@@ -351,8 +367,9 @@ void build_ui(Renderer* r)
     // VDP palettes
     if (r->show_vdp_palettes)
     {
-        igSetNextWindowSize((struct ImVec2) { 16 * PALETTE_ENTRY_WIDTH + 50, 4 * PALETTE_ENTRY_WIDTH + 50 }, 0); // TODO it seems that the title bar and padding are counted in the height...
-        igBegin("VDP palettes", &r->show_vdp_palettes, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_ShowBorders);
+        igSetNextWindowSize((struct ImVec2) { 16 * PALETTE_ENTRY_WIDTH, 5 * PALETTE_ENTRY_WIDTH }, 0); // TODO it seems that the title bar is counted in the height...
+        igPushStyleVarVec(ImGuiStyleVar_WindowPadding, (struct ImVec2) { 0, 0 });
+        igBegin("VDP palettes", &r->show_vdp_palettes, ImGuiWindowFlags_NoResize);
 
         struct ImDrawList* draw_list = igGetWindowDrawList();
 
@@ -374,6 +391,7 @@ void build_ui(Renderer* r)
             }
 
         igEnd();
+        igPopStyleVar(ImGuiStyleVar_WindowPadding);
     }
 
     bool a = true;
