@@ -539,6 +539,13 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     igGetIO()->MouseWheel += (float)yoffset;
 }
 
+void drop_callback(GLFWwindow* window, int path_count, const char** paths)
+{
+    Renderer* r = (Renderer*)glfwGetWindowUserPointer(window);
+    genesis_load_rom_file(r->genesis, paths[0]);
+    genesis_initialize(r->genesis);
+}
+
 Renderer* renderer_make(Genesis* genesis)
 {
     printf("Initializing GLFW (%s)...\n", glfwGetVersionString());
@@ -565,6 +572,7 @@ Renderer* renderer_make(Genesis* genesis)
     glfwSetCursorPosCallback(window, mouse_move_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetDropCallback(window, drop_callback);
 
     glfwMakeContextCurrent(window);
 
