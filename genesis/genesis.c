@@ -1,6 +1,6 @@
+#include <GLFW/glfw3.h>
 #include <m68k/m68k.h>
 #include <m68k/instruction.h>
-#include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,13 +17,11 @@ Genesis* genesis_make()
     g->m68k = m68k_make();
     g->vdp = vdp_make(g->m68k);
     g->joypad = joypad_make();
-    g->renderer = renderer_make(g->vdp);
+    g->renderer = renderer_make(g);
 
-    // Store a pointer to the Genesis instance in the M68k
-    // In this way, the various modules can be accessed from M68k-centric I/O functions (see m68k_io.c)
+    // Store a pointer to the Genesis instance in the M68k.
+    // In this way, the various modules can be accessed from M68k-centric I/O functions (see m68k_io.c).
     g->m68k->user_data = g;
-
-    g->region = Region_Europe;
 
     return g;
 }
@@ -116,50 +114,8 @@ void genesis_initialize(Genesis* g)
     m68k_initialize(g->m68k);
 }
 
-SDL_Event event;
-
 bool genesis_run_frame(Genesis* g)
 {
-    // Handle keyboard input
-    SDL_PollEvent(&event);
-    switch (event.type)
-    {
-    case SDL_KEYDOWN:
-        switch (event.key.keysym.scancode)
-        {
-        case SDL_SCANCODE_LEFT: joypad_press(g->joypad, Left); break;
-        case SDL_SCANCODE_RIGHT: joypad_press(g->joypad, Right); break;
-        case SDL_SCANCODE_UP: joypad_press(g->joypad, Up); break;
-        case SDL_SCANCODE_DOWN: joypad_press(g->joypad, Down); break;
-        case SDL_SCANCODE_RETURN: joypad_press(g->joypad, Start); break;
-        case SDL_SCANCODE_Q: joypad_press(g->joypad, ButtonA); break;
-        case SDL_SCANCODE_W: joypad_press(g->joypad, ButtonB); break;
-        case SDL_SCANCODE_E: joypad_press(g->joypad, ButtonC); break;
-        }
-        break;
-    case SDL_KEYUP:
-        switch (event.key.keysym.scancode)
-        {
-        case SDL_SCANCODE_ESCAPE: return false;
-        case SDL_SCANCODE_F1: renderer_toggle_palette_window(g->renderer, g->renderer->palette_window == NULL); break;
-        case SDL_SCANCODE_F2: renderer_toggle_patterns_window(g->renderer, g->renderer->patterns_window == NULL); break;
-        case SDL_SCANCODE_F3: renderer_toggle_planes_window(g->renderer, g->renderer->planes_window == NULL); break;
-        case SDL_SCANCODE_TAB: if (g->renderer->planes_window != NULL) renderer_cycle_plane(g->renderer); break;
-
-        case SDL_SCANCODE_LEFT: joypad_release(g->joypad, Left); break;
-        case SDL_SCANCODE_RIGHT: joypad_release(g->joypad, Right); break;
-        case SDL_SCANCODE_UP: joypad_release(g->joypad, Up); break;
-        case SDL_SCANCODE_DOWN: joypad_release(g->joypad, Down); break;
-        case SDL_SCANCODE_RETURN: joypad_release(g->joypad, Start); break;
-        case SDL_SCANCODE_Q: joypad_release(g->joypad, ButtonA); break;
-        case SDL_SCANCODE_W: joypad_release(g->joypad, ButtonB); break;
-        case SDL_SCANCODE_E: joypad_release(g->joypad, ButtonC); break;
-        }
-        break;
-
-    case SDL_QUIT: return false;
-    }
-
     // The number of scanlines depends on the region
     // http://forums.sonicretro.org/index.php?showtopic=5615
     uint16_t lines = g->region == Region_Europe ? 312 : 262;
