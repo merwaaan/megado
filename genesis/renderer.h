@@ -15,6 +15,8 @@ typedef struct Renderer
     bool show_vdp_palettes;
     bool show_vdp_patterns;
 
+    bool show_cpu_disassembly;
+
     bool show_vdp_planes;
     enum Planes selected_plane;
     uint8_t* plane_buffer;

@@ -46,9 +46,9 @@ typedef struct Instruction {
     };
 } Instruction;
 
-// TODO just make it a char*?
 typedef struct DecodedInstruction {
     char* mnemonics;
+    uint8_t length;
 } DecodedInstruction;
 
 Instruction* instruction_make(struct M68k* context, char* name, InstructionFunc func);

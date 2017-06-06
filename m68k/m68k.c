@@ -77,7 +77,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     Instruction* instr = m->opcode_table[opcode];
     if (instr == NULL)
     {
-        // TODO restore pc
+        m->pc = initial_pc;
         LOG_M68K("Opcode %#06X cannot be found in the opcode table\n", opcode);
 
         return NULL;
@@ -85,6 +85,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 
     DecodedInstruction* decoded = calloc(1, sizeof(DecodedInstruction));
     decoded->mnemonics = calloc(100, sizeof(char));
+    decoded->length = 2;
 
     int pos = sprintf(decoded->mnemonics, "%s", instr->name);
 
@@ -106,13 +107,19 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     pos += sprintf(decoded->mnemonics + pos, "%s ", size_symbol);
 
     if (instr->src != NULL)
+    {
         pos += operand_tostring(instr->src, decoded->mnemonics + pos);
+        decoded->length += operand_length(instr->src);
+    }
 
     if (instr->src != NULL && instr->dst != NULL)
         pos += sprintf(decoded->mnemonics + pos, ", ");
 
     if (instr->dst != NULL)
+    {
         pos += operand_tostring(instr->dst, decoded->mnemonics + pos);
+        decoded->length += operand_length(instr->dst);
+    }
 
     decoded->mnemonics[pos] = '\0';
 
@@ -187,7 +194,7 @@ uint8_t m68k_step(M68k* m)
     m68k_handle_interrupt(m);
 
     return cycles;
-}
+    }
 
 uint32_t m68k_read(M68k* m, Size size, uint32_t address)
 {
