@@ -18,6 +18,7 @@ Genesis* genesis_make()
     g->vdp = vdp_make(g->m68k);
     g->joypad = joypad_make();
     g->renderer = renderer_make(g);
+    g->status = Status_NoGameLoaded;
 
     // Store a pointer to the Genesis instance in the M68k.
     // In this way, the various modules can be accessed from M68k-centric I/O functions (see m68k_io.c).
@@ -39,7 +40,7 @@ void genesis_free(Genesis* g)
     free(g);
 }
 
-void print_header_info(char* label, uint8_t* data, uint8_t length)
+static void print_header_info(char* label, uint8_t* data, uint8_t length)
 {
     char* string = calloc(length + 1, sizeof(char));
     strncpy(string, data, length);
@@ -90,11 +91,8 @@ void genesis_load_rom_file(Genesis* g, const char* path)
         g->region = Region_Japan;
     }
     // TODO it seems possible to have multiple country codes, how to handle that?
-}
 
-void genesis_load_rom_data(Genesis* g, uint8_t* data)
-{
-    // TODO
+    g->status = Status_Running;
 }
 
 struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc)
@@ -112,9 +110,23 @@ void genesis_initialize(Genesis* g)
     // http://md.squee.co/Howto:Initialise_a_Mega_Drive
 
     m68k_initialize(g->m68k);
+    // TODO should we reset the VDP?
 }
 
-bool genesis_run_frame(Genesis* g)
+void genesis_update(Genesis* g)
+{
+    if (g->status == Status_Running)
+        genesis_frame(g);
+
+    renderer_render(g->renderer);
+}
+
+void genesis_step(Genesis* g)
+{
+    m68k_step(g->m68k);
+}
+
+void genesis_frame(Genesis* g)
 {
     // The number of scanlines depends on the region
     // http://forums.sonicretro.org/index.php?showtopic=5615
@@ -128,11 +140,4 @@ bool genesis_run_frame(Genesis* g)
         // Draw the scanline
         vdp_draw_scanline(g->vdp, line);
     }
-
-    renderer_render(g->renderer);
-
-    return true;
 }
-
-uint8_t* genesis_memory(Genesis* g) { return g->memory; }
-M68k* genesis_m68k(Genesis* g) { return g->m68k; }

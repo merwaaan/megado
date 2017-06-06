@@ -13,7 +13,7 @@
 #include "renderer.h"
 #include "vdp.h"
 
-#define DISASSEMBLY_LENGTH 30
+#define DISASSEMBLY_LENGTH 20
 
 #define PALETTE_ENTRY_WIDTH 16
 #define PATTERNS_COUNT 2048
@@ -279,6 +279,23 @@ static void build_ui(Renderer* r)
 
     if (igBeginMainMenuBar())
     {
+        if (igBeginMenu("Game", true))
+        {
+            if (igMenuItem("Reset", NULL, false, true))
+                genesis_initialize(r->genesis);
+
+            if (igMenuItem(r->genesis->status == Status_Running ? "Pause" : "Resume", "P", false, r->genesis->status != Status_NoGameLoaded))
+                r->genesis->status = r->genesis->status == Status_Pause ? Status_Running : Status_Pause;
+
+            if (igMenuItem("Step", "Space", false, r->genesis->status == Status_Pause))
+                genesis_step(r->genesis);
+
+            if (r->genesis->status)
+
+                igSeparator();
+            igEndMenu();
+        }
+
         if (igBeginMenu("CPU", true))
         {
             igMenuItemPtr("Registers", NULL, &r->show_cpu_registers, true);
@@ -460,11 +477,11 @@ static void build_ui(Renderer* r)
         igBegin("VDP planes", &r->show_vdp_planes, ImGuiWindowFlags_NoResize);
 
         igColumns(3, NULL, false);
-        igRadioButton("Plane A", &r->selected_plane, Plane_A);
+        igRadioButton("Plane A", (int*)&r->selected_plane, Plane_A);
         igNextColumn();
-        igRadioButton("Plane B", &r->selected_plane, Plane_B);
+        igRadioButton("Plane B", (int*)&r->selected_plane, Plane_B);
         igNextColumn();
-        igRadioButton("Window", &r->selected_plane, Plane_Window); igColumns(1, NULL, false);
+        igRadioButton("Window", (int*)&r->selected_plane, Plane_Window); igColumns(1, NULL, false);
 
         // Update the plane texture with the selected plane
 
@@ -479,7 +496,7 @@ static void build_ui(Renderer* r)
     }
 
     bool a = true;
-    //igShowTestWindow(&a);
+    igShowTestWindow(&a);
 }
 
 static void render_ui(Renderer* r)
@@ -556,6 +573,7 @@ static void render_ui(Renderer* r)
     glDisable(GL_SCISSOR_TEST);
 }
 
+// TODO move this to genesis (via callback)
 static void handle_inputs(Renderer* r, int key, int action)
 {
     switch (action)
