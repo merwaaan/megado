@@ -12,6 +12,12 @@ struct Renderer;
 struct Vdp;
 
 typedef enum {
+    Status_NoGameLoaded,
+    Status_Pause,
+    Status_Running
+} Status;
+
+typedef enum {
     Region_Japan,
     Region_Europe,
     Region_USA
@@ -27,6 +33,7 @@ typedef struct {
 
     struct Renderer* renderer;
 
+    Status status;
     Regions region;
 } Genesis;
 
@@ -34,16 +41,10 @@ Genesis* genesis_make();
 void genesis_free(Genesis*);
 
 void genesis_load_rom_file(Genesis* g, const char* path);
-void genesis_load_rom_data(Genesis* g, uint8_t* data);
+void genesis_initialize(Genesis* g); // TODO rename to reset?
 
 struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc);
 
-// Prepare the Genesis for execution
-void genesis_initialize(Genesis* g);
-
-bool genesis_run_frame(Genesis* g);
-
-// We have to use those to get pointers to different fields of the Genesis struct
-// TODO really necessary? Can't we just compute pointer offsets on the JS side?
-uint8_t* genesis_memory(Genesis*);
-struct M68k* genesis_m68k(Genesis*);
+void genesis_update(Genesis* g);
+void genesis_step(Genesis* g);
+void genesis_frame(Genesis* g);

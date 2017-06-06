@@ -61,7 +61,7 @@ void test_rom(Genesis* g, char* path)
 
     bool running = true;
     while (running)
-        running = genesis_run_frame(g);
+        genesis_update(g);
 }
 
 void instr_callback(M68k* m)
