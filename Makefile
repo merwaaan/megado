@@ -1,6 +1,7 @@
 # Configurables
 CC := clang
-CFLAGS := -Wall -Wextra -pedantic -std=c11
+# Disable unused parameter warning since not everything is implemented yet
+CFLAGS := -Wall -Wextra -pedantic -std=c11 -Wno-unused-parameter -Wno-unused-variable
 RELEASE_FLAGS := -O3
 DEBUG_FLAGS := -DDEBUG -g
 
