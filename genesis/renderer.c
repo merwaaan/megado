@@ -19,7 +19,7 @@
 #define GREYSCALE(g) { g, g, g }
 
 // Black & white debug palette
-Color debug_palette[16] = {
+static Color debug_palette[16] = {
     GREYSCALE(0),
     GREYSCALE(17),
     GREYSCALE(34),
@@ -38,7 +38,7 @@ Color debug_palette[16] = {
     GREYSCALE(255)
 };
 
-GLuint create_shader(GLenum shader_type, GLchar* source)
+static GLuint create_shader(GLenum shader_type, const GLchar* source)
 {
     GLuint shader = glCreateShader(shader_type);
     glShaderSource(shader, 1, &source, 0);
@@ -67,7 +67,7 @@ GLuint create_shader(GLenum shader_type, GLchar* source)
     return shader;
 }
 
-GLuint create_shader_program(GLchar* vertex_shader_source, GLchar* fragment_shader_source)
+static GLuint create_shader_program(const GLchar* vertex_shader_source, const GLchar* fragment_shader_source)
 {
     GLuint program = glCreateProgram();
     int vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_shader_source);
@@ -99,7 +99,7 @@ GLuint create_shader_program(GLchar* vertex_shader_source, GLchar* fragment_shad
     return program;
 }
 
-GLchar* game_vertex_shader_source =
+static const GLchar* game_vertex_shader_source =
 "#version 330\n"
 //"uniform mat4 ProjMtx;\n"
 "in vec3 vertex_position;\n"
@@ -112,7 +112,7 @@ GLchar* game_vertex_shader_source =
 "   gl_Position = vec4(vertex_position, 1.0);\n"
 "}\n";
 
-GLchar* game_fragment_shader_source =
+static const GLchar* game_fragment_shader_source =
 "#version 330\n"
 "uniform sampler2D sampler;\n"
 "in vec2 texcoord;\n"
@@ -122,7 +122,7 @@ GLchar* game_fragment_shader_source =
 "   color = vec4(texture(sampler, texcoord).rgb, 1.0);\n"
 "}\n";
 
-void init_genesis_rendering(Renderer* r)
+static void init_genesis_rendering(Renderer* r)
 {
     // The Genesis' video output will be displayed on a screen-aligned quad
     float quad_extent = BUFFER_WIDTH / 800.0f;
@@ -138,6 +138,13 @@ void init_genesis_rendering(Renderer* r)
         +quad_extent, -quad_extent,  0.0f, 1.0f, 1.0f,
         -quad_extent, -quad_extent,  0.0f, 0.0f, 1.0f
     };
+
+    glGenTextures(1, &r->game_texture);
+    glBindTexture(GL_TEXTURE_2D, r->game_texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Setup the shader and buffers
 
     r->game_shader = create_shader_program(game_vertex_shader_source, game_fragment_shader_source);
 
@@ -156,14 +163,9 @@ void init_genesis_rendering(Renderer* r)
     GLint shader_texcoord_loc = glGetAttribLocation(r->game_shader, "vertex_texcoord");
     glEnableVertexAttribArray(shader_texcoord_loc);
     glVertexAttribPointer(shader_texcoord_loc, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 3 * sizeof(float));
-
-    glGenTextures(1, &r->game_texture);
-    glBindTexture(GL_TEXTURE_2D, r->game_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-const GLchar* ui_vertex_shader_source =
+static const GLchar* ui_vertex_shader_source =
 "#version 330\n"
 "uniform mat4 ProjMtx;\n"
 "in vec2 Position;\n"
@@ -178,7 +180,7 @@ const GLchar* ui_vertex_shader_source =
 "   gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
 "}\n";
 
-const GLchar* ui_fragment_shader_source =
+static const GLchar* ui_fragment_shader_source =
 "#version 330\n"
 "uniform sampler2D Texture;\n"
 "in vec2 Frag_UV;\n"
@@ -189,12 +191,12 @@ const GLchar* ui_fragment_shader_source =
 "   Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
 "}\n";
 
-void init_ui_rendering(Renderer* r)
+static void init_ui_rendering(Renderer* r)
 {
     struct ImGuiIO* io = igGetIO();
 
     igPushStyleVar(ImGuiStyleVar_WindowRounding, 0);
-    
+
     // Setup the font texture
 
     int width, height;
@@ -210,6 +212,13 @@ void init_ui_rendering(Renderer* r)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
     ImFontAtlas_SetTexID(io->Fonts, ui_font_texture);
+
+    // Setup texture for the patterns and planes debug views
+
+    glGenTextures(1, &r->ui_patterns_texture);
+    glBindTexture(GL_TEXTURE_2D, r->ui_patterns_texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Setup the shaders and buffers
 
@@ -237,7 +246,7 @@ void init_ui_rendering(Renderer* r)
     glVertexAttribPointer(shader_color_loc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(struct ImDrawVert), (GLvoid*)(2 * sizeof(struct ImVec2)));
 }
 
-void render_genesis(Renderer* r)
+static void render_genesis(Renderer* r)
 {
     // Update the game texture with the Genesis' output
     glBindTexture(GL_TEXTURE_2D, r->game_texture);
@@ -249,7 +258,7 @@ void render_genesis(Renderer* r)
     glDrawArrays(GL_TRIANGLES, 3, 3);
 }
 
-void build_ui(Renderer* r)
+static void build_ui(Renderer* r)
 {
     bool dummy_flag = false;
 
@@ -257,57 +266,24 @@ void build_ui(Renderer* r)
     {
         if (igBeginMenu("CPU", true))
         {
-            if (igMenuItem("Registers", NULL, r->show_cpu_registers, true))
-                r->show_cpu_registers = !r->show_cpu_registers;
-
-            if (igMenuItem("Breakpoints", NULL, dummy_flag, false))
-            {
-            }
-
-            if (igMenuItem("Disassembly", NULL, dummy_flag, false))
-            {
-            }
-
+            igMenuItemPtr("Registers", NULL, &r->show_cpu_registers, true);
+            igMenuItemPtr("Disassembly", NULL, &r->show_cpu_registers, false);
+            igMenuItemPtr("Breakpoints", NULL, &dummy_flag, false);
             igSeparator();
-
-            if (igMenuItem("ROM", NULL, dummy_flag, false))
-            {
-            }
-
-            if (igMenuItem("RAM", NULL, dummy_flag, false))
-            {
-            }
-
+            igMenuItemPtr("ROM", NULL, &dummy_flag, false);
+            igMenuItemPtr("RAM", NULL, &dummy_flag, false);
             igEndMenu();
         }
 
         if (igBeginMenu("Video", true))
         {
-            if (igMenuItem("Palettes", NULL, r->show_vdp_palettes, true))
-                r->show_vdp_palettes = !r->show_vdp_palettes;
-
-            if (igMenuItem("Patterns", NULL, dummy_flag, false))
-            {
-            }
-
-            if (igMenuItem("Planes", NULL, dummy_flag, false))
-            {
-            }
-
+            igMenuItemPtr("Palettes", NULL, &r->show_vdp_palettes, true);
+            igMenuItemPtr("Patterns", NULL, &r->show_vdp_patterns, true);
+            igMenuItemPtr("Planes", NULL, &dummy_flag, false);
             igSeparator();
-
-            if (igMenuItem("VRAM", NULL, dummy_flag, false))
-            {
-            }
-
-            if (igMenuItem("VSRAM", NULL, dummy_flag, false))
-            {
-            }
-
-            if (igMenuItem("CRAM", NULL, dummy_flag, false))
-            {
-            }
-
+            igMenuItemPtr("VRAM", NULL, &dummy_flag, false);
+            igMenuItemPtr("VSRAM", NULL, &dummy_flag, false);
+            igMenuItemPtr("CRAM", NULL, &dummy_flag, false);
             igEndMenu();
         }
 
@@ -394,11 +370,47 @@ void build_ui(Renderer* r)
         igPopStyleVar(ImGuiStyleVar_WindowPadding);
     }
 
+    // VDP patterns
+    if (r->show_vdp_patterns)
+    {
+        uint16_t patterns_width = PATTERNS_COLUMNS * 8;
+        uint16_t patterns_height = PATTERNS_COUNT / PATTERNS_COLUMNS * 8;
+
+        igSetNextWindowSize((struct ImVec2) { patterns_width, patterns_height }, 0);
+        igPushStyleVarVec(ImGuiStyleVar_WindowPadding, (struct ImVec2) { 0, 0 });
+        igBegin("VDP patterns", &r->show_vdp_patterns, ImGuiWindowFlags_NoResize);
+
+        // Update the pattern texture with the VRAM contents
+
+        uint8_t patterns_buffer[PATTERNS_COUNT * 64 * 3]; // n patterns * 64 pixels * 3 color components
+
+        for (int pattern = 0; pattern < PATTERNS_COUNT; ++pattern)
+        {
+            int x = pattern % PATTERNS_COLUMNS * 8;
+            int y = pattern / PATTERNS_COLUMNS * 8;
+            vdp_draw_pattern(r->genesis->vdp, pattern, debug_palette, patterns_buffer, patterns_width, x, y);
+        }
+
+        glBindTexture(GL_TEXTURE_2D, r->ui_patterns_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, patterns_width, patterns_height, 0, GL_RGB, GL_UNSIGNED_BYTE, patterns_buffer);
+
+        // Draw the texture in the window
+
+        struct ImVec2 window_position;
+        igGetCursorScreenPos(&window_position);
+
+        struct ImDrawList* draw_list = igGetWindowDrawList();
+        ImDrawList_AddImage(draw_list, r->ui_patterns_texture, (struct ImVec2) { window_position.x, window_position.y }, (struct ImVec2) { window_position.x + patterns_width, window_position.y + patterns_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, 0xFFFFFFFF);
+
+        igEnd();
+        igPopStyleVar(ImGuiStyleVar_WindowPadding);
+    }
+
     bool a = true;
     igShowTestWindow(&a);
 }
 
-void render_ui(Renderer* r)
+static void render_ui(Renderer* r)
 {
     struct ImGuiIO* io = igGetIO();
 
@@ -472,7 +484,7 @@ void render_ui(Renderer* r)
     glDisable(GL_SCISSOR_TEST);
 }
 
-void handle_inputs(Renderer* r, int key, int action)
+static void handle_inputs(Renderer* r, int key, int action)
 {
     switch (action)
     {
@@ -505,7 +517,7 @@ void handle_inputs(Renderer* r, int key, int action)
     }
 }
 
-void keyboard_callback(GLFWwindow* window, int key, int scancode, int action, int modifiers)
+static void keyboard_callback(GLFWwindow* window, int key, int scancode, int action, int modifiers)
 {
     Renderer* r = (Renderer*)glfwGetWindowUserPointer(window);
     handle_inputs(r, key, modifiers);
@@ -529,17 +541,17 @@ static void mouse_move_callback(GLFWwindow* window, double x, double y)
     igGetIO()->MousePos = (struct ImVec2) { (float)x, (float)y };
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int modifiers)
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int modifiers)
 {
     igGetIO()->MouseDown[button] = action == GLFW_PRESS;
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     igGetIO()->MouseWheel += (float)yoffset;
 }
 
-void drop_callback(GLFWwindow* window, int path_count, const char** paths)
+static void drop_callback(GLFWwindow* window, int path_count, const char** paths)
 {
     Renderer* r = (Renderer*)glfwGetWindowUserPointer(window);
     genesis_load_rom_file(r->genesis, paths[0]);
@@ -596,7 +608,7 @@ Renderer* renderer_make(Genesis* genesis)
     // Store a pointer to the renderer in the window so that it can be accessed from callback functions
     glfwSetWindowUserPointer(r->window, r);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     init_ui_rendering(r);
     init_genesis_rendering(r);
 
@@ -625,25 +637,6 @@ void renderer_render(Renderer* r)
     glfwPollEvents();
 
     /*
-        // Draw the patterns
-        if (r->patterns_window != NULL)
-        {
-        uint8_t pattern_buffer[192]; // 64 pixels * 3 bits
-        SDL_Rect cell = { 0, 0, 8, 8 };
-
-        for (int pattern = 0; pattern < PATTERNS_COUNT; ++pattern)
-        {
-        vdp_draw_pattern(r->vdp, pattern, debug_palette, pattern_buffer, 8, 0, 0);
-
-        cell.x = pattern % PATTERNS_COLUMNS * 8;
-        cell.y = pattern / PATTERNS_COLUMNS * 8;
-        SDL_UpdateTexture(r->patterns_window->texture, &cell, pattern_buffer, 8 * 3 * sizeof(uint8_t));
-        }
-
-        SDL_RenderCopy(r->patterns_window->renderer, r->patterns_window->texture, NULL, NULL);
-        SDL_RenderPresent(r->patterns_window->renderer);
-        }
-
         // Draw the current plane
         if (r->planes_window != NULL)
         {
