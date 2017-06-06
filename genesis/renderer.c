@@ -2,6 +2,7 @@
 #include <cimgui/cimgui.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <m68k/instruction.h>
 #include <m68k/m68k.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +12,8 @@
 #include "joypad.h"
 #include "renderer.h"
 #include "vdp.h"
+
+#define DISASSEMBLY_LENGTH 30
 
 #define PALETTE_ENTRY_WIDTH 16
 #define PATTERNS_COUNT 2048
@@ -263,6 +266,13 @@ static void render_genesis(Renderer* r)
     glDrawArrays(GL_TRIANGLES, 3, 3);
 }
 
+static struct ImVec4 color_black = { 0.0f, 0.0f, 0.0f, 1.0f };
+static struct ImVec4 color_white = { 1.0f, 1.0f, 1.0f, 1.0f };
+static struct ImVec4 color_dimmed = { 0.5f, 0.5f, 0.5f, 1.0f };
+static struct ImVec4 color_accent = { 1.0f, 0.07f, 0.57f, 1.0f };
+static struct ImVec4 color_sucess = { 0.0f, 1.0f, 0.0f, 1.0f };
+static struct ImVec4 color_error = { 1.0f, 0.0f, 0.0f, 1.0f };
+
 static void build_ui(Renderer* r)
 {
     bool dummy_flag = false;
@@ -272,7 +282,7 @@ static void build_ui(Renderer* r)
         if (igBeginMenu("CPU", true))
         {
             igMenuItemPtr("Registers", NULL, &r->show_cpu_registers, true);
-            igMenuItemPtr("Disassembly", NULL, &r->show_cpu_registers, false);
+            igMenuItemPtr("Disassembly", NULL, &r->show_cpu_disassembly, true);
             igMenuItemPtr("Breakpoints", NULL, &dummy_flag, false);
             igSeparator();
             igMenuItemPtr("ROM", NULL, &dummy_flag, false);
@@ -327,7 +337,7 @@ static void build_ui(Renderer* r)
         bool overflow = OVERFLOW(r->genesis->m68k);
         bool carry = CARRY(r->genesis->m68k);
 
-        igPushStyleColor(ImGuiCol_CheckMark, (struct ImVec4) { 1.0f, 0.07f, 0.57f, 1.0f });
+        igPushStyleColor(ImGuiCol_CheckMark, color_accent);
         igColumns(5, NULL, false);
         STATUS_BIT("X", extended);
         STATUS_BIT("N", negative);
@@ -341,6 +351,43 @@ static void build_ui(Renderer* r)
 
         igText("PC:     %08X", r->genesis->m68k->pc);
         igText("Cycles: %08X", r->genesis->m68k->cycles);
+
+        igEnd();
+    }
+
+    // CPU Disassembly
+    if (r->show_cpu_disassembly)
+    {
+        igBegin("CPU Disassembly", &r->show_cpu_disassembly, 0);
+        igColumns(3, NULL, false);
+
+        igText("Address"); igNextColumn();
+        igText("Instruction"); igNextColumn();
+        igText("Opcode"); igNextColumn();
+        igSeparator();
+
+        uint32_t address = r->genesis->m68k->pc;
+        for (int i = 0; i < DISASSEMBLY_LENGTH; ++i)
+        {
+            DecodedInstruction* instr = m68k_decode(r->genesis->m68k, address);
+            if (instr == NULL)
+            {
+                igColumns(1, NULL, false);
+                igTextColored(color_error, "Cannot decode opcode at %06X", address);
+                break;
+            }
+
+            igTextColored(i == 0 ? color_accent : color_white, "%06X", address);
+            igNextColumn();
+            igTextColored(i == 0 ? color_accent : color_white, instr->mnemonics);
+            igNextColumn();
+            igTextColored(color_dimmed, "%04X", m68k_read_w(r->genesis->m68k, address));
+            igNextColumn();
+
+            address += instr->length;
+
+            free(instr);
+        }
 
         igEnd();
     }
@@ -381,7 +428,6 @@ static void build_ui(Renderer* r)
         uint16_t patterns_width = PATTERNS_COLUMNS * 8;
         uint16_t patterns_height = PATTERNS_COUNT / PATTERNS_COLUMNS * 8;
 
-        //igSetNextWindowSize((struct ImVec2) { patterns_width, patterns_height }, 0);
         igPushStyleVarVec(ImGuiStyleVar_WindowPadding, (struct ImVec2) { 0, 0 });
         igBegin("VDP patterns", &r->show_vdp_patterns, ImGuiWindowFlags_NoResize);
 
@@ -399,7 +445,7 @@ static void build_ui(Renderer* r)
         glBindTexture(GL_TEXTURE_2D, r->ui_patterns_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, patterns_width, patterns_height, 0, GL_RGB, GL_UNSIGNED_BYTE, patterns_buffer);
 
-        igImage(r->ui_patterns_texture, (struct ImVec2) { patterns_width, patterns_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, (struct ImVec4) { 1, 1, 1, 1 }, (struct ImVec4) { 0, 0, 0, 0 });
+        igImage(r->ui_patterns_texture, (struct ImVec2) { patterns_width, patterns_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_black);
 
         igEnd();
         igPopStyleVar(ImGuiStyleVar_WindowPadding);
@@ -411,7 +457,6 @@ static void build_ui(Renderer* r)
         uint16_t plane_width = 64 * 8;
         uint16_t plane_height = 64 * 8;
 
-        //igPushStyleVarVec(ImGuiStyleVar_WindowPadding, (struct ImVec2) { 0, 0 });
         igBegin("VDP planes", &r->show_vdp_planes, ImGuiWindowFlags_NoResize);
 
         igColumns(3, NULL, false);
@@ -419,7 +464,7 @@ static void build_ui(Renderer* r)
         igNextColumn();
         igRadioButton("Plane B", &r->selected_plane, Plane_B);
         igNextColumn();
-        igRadioButton("Window", &r->selected_plane, Plane_Window);igColumns(1, NULL, false);
+        igRadioButton("Window", &r->selected_plane, Plane_Window); igColumns(1, NULL, false);
 
         // Update the plane texture with the selected plane
 
@@ -428,14 +473,13 @@ static void build_ui(Renderer* r)
         glBindTexture(GL_TEXTURE_2D, r->ui_planes_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, plane_width, plane_height, 0, GL_RGB, GL_UNSIGNED_BYTE, r->plane_buffer);
 
-        igImage(r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, (struct ImVec4) { 1, 1, 1, 1 }, (struct ImVec4) { 1, 1, 1, 1 });
+        igImage(r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
 
         igEnd();
-        //igPopStyleVar(ImGuiStyleVar_WindowPadding);
     }
 
     bool a = true;
-    igShowTestWindow(&a);
+    //igShowTestWindow(&a);
 }
 
 static void render_ui(Renderer* r)
