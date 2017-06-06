@@ -220,6 +220,11 @@ static void init_ui_rendering(Renderer* r)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    glGenTextures(1, &r->ui_planes_texture);
+    glBindTexture(GL_TEXTURE_2D, r->ui_planes_texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     // Setup the shaders and buffers
 
     r->ui_shader = create_shader_program(ui_vertex_shader_source, ui_fragment_shader_source);
@@ -279,7 +284,7 @@ static void build_ui(Renderer* r)
         {
             igMenuItemPtr("Palettes", NULL, &r->show_vdp_palettes, true);
             igMenuItemPtr("Patterns", NULL, &r->show_vdp_patterns, true);
-            igMenuItemPtr("Planes", NULL, &dummy_flag, false);
+            igMenuItemPtr("Planes", NULL, &r->show_vdp_planes, true);
             igSeparator();
             igMenuItemPtr("VRAM", NULL, &dummy_flag, false);
             igMenuItemPtr("VSRAM", NULL, &dummy_flag, false);
@@ -376,7 +381,7 @@ static void build_ui(Renderer* r)
         uint16_t patterns_width = PATTERNS_COLUMNS * 8;
         uint16_t patterns_height = PATTERNS_COUNT / PATTERNS_COLUMNS * 8;
 
-        igSetNextWindowSize((struct ImVec2) { patterns_width, patterns_height }, 0);
+        //igSetNextWindowSize((struct ImVec2) { patterns_width, patterns_height }, 0);
         igPushStyleVarVec(ImGuiStyleVar_WindowPadding, (struct ImVec2) { 0, 0 });
         igBegin("VDP patterns", &r->show_vdp_patterns, ImGuiWindowFlags_NoResize);
 
@@ -394,16 +399,39 @@ static void build_ui(Renderer* r)
         glBindTexture(GL_TEXTURE_2D, r->ui_patterns_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, patterns_width, patterns_height, 0, GL_RGB, GL_UNSIGNED_BYTE, patterns_buffer);
 
-        // Draw the texture in the window
-
-        struct ImVec2 window_position;
-        igGetCursorScreenPos(&window_position);
-
-        struct ImDrawList* draw_list = igGetWindowDrawList();
-        ImDrawList_AddImage(draw_list, r->ui_patterns_texture, (struct ImVec2) { window_position.x, window_position.y }, (struct ImVec2) { window_position.x + patterns_width, window_position.y + patterns_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, 0xFFFFFFFF);
+        igImage(r->ui_patterns_texture, (struct ImVec2) { patterns_width, patterns_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, (struct ImVec4) { 1, 1, 1, 1 }, (struct ImVec4) { 0, 0, 0, 0 });
 
         igEnd();
         igPopStyleVar(ImGuiStyleVar_WindowPadding);
+    }
+
+    // VDP planes
+    if (r->show_vdp_planes)
+    {
+        uint16_t plane_width = 64 * 8;
+        uint16_t plane_height = 64 * 8;
+
+        //igPushStyleVarVec(ImGuiStyleVar_WindowPadding, (struct ImVec2) { 0, 0 });
+        igBegin("VDP planes", &r->show_vdp_planes, ImGuiWindowFlags_NoResize);
+
+        igColumns(3, NULL, false);
+        igRadioButton("Plane A", &r->selected_plane, Plane_A);
+        igNextColumn();
+        igRadioButton("Plane B", &r->selected_plane, Plane_B);
+        igNextColumn();
+        igRadioButton("Window", &r->selected_plane, Plane_Window);igColumns(1, NULL, false);
+
+        // Update the plane texture with the selected plane
+
+        vdp_draw_plane(r->genesis->vdp, r->selected_plane, r->plane_buffer, 512);
+
+        glBindTexture(GL_TEXTURE_2D, r->ui_planes_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, plane_width, plane_height, 0, GL_RGB, GL_UNSIGNED_BYTE, r->plane_buffer);
+
+        igImage(r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, (struct ImVec4) { 1, 1, 1, 1 }, (struct ImVec4) { 1, 1, 1, 1 });
+
+        igEnd();
+        //igPopStyleVar(ImGuiStyleVar_WindowPadding);
     }
 
     bool a = true;
@@ -604,6 +632,7 @@ Renderer* renderer_make(Genesis* genesis)
     Renderer* r = calloc(1, sizeof(Renderer));
     r->genesis = genesis;
     r->window = window;
+    r->plane_buffer = calloc(64 * 8 * 64 * 8 * 3, sizeof(uint8_t));
 
     // Store a pointer to the renderer in the window so that it can be accessed from callback functions
     glfwSetWindowUserPointer(r->window, r);
@@ -623,6 +652,7 @@ void renderer_free(Renderer* r)
     glfwDestroyWindow(r->window);
     glfwTerminate();
 
+    free(r->plane_buffer);
     free(r);
 }
 
@@ -635,17 +665,4 @@ void renderer_render(Renderer* r)
 
     glfwSwapBuffers(r->window);
     glfwPollEvents();
-
-    /*
-        // Draw the current plane
-        if (r->planes_window != NULL)
-        {
-        // TODO do this when the plane sizes change
-        //SDL_SetWindowSize(r->planes_window->window, r->vdp->horizontal_plane_size * 8, r->vdp->vertical_plane_size * 8);
-
-        uint8_t plane_buffer[64 * 8 * 64 * 8 * 3];
-
-        vdp_draw_plane(r->vdp, r->selected_plane, plane_buffer, 512);
-        SDL_UpdateTexture(r->planes_window->texture, NULL, plane_buffer, 64 * 8 * 3 * sizeof(uint8_t));
-*/
 }
