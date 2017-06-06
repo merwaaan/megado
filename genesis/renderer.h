@@ -12,6 +12,7 @@ typedef struct Renderer
 
     bool show_cpu_registers;
     bool show_vdp_palettes;
+    bool show_vdp_patterns;
 
     GLuint game_shader;
     GLuint game_texture;
@@ -19,6 +20,7 @@ typedef struct Renderer
     //static int g_AttribLocationProjMtx2 = 0;
 
     GLuint ui_shader;
+    GLuint ui_patterns_texture;
     GLuint ui_vertex_array_object, ui_vertex_buffer_object, ui_element_buffer_object;
     GLint ui_shader_texture_loc, ui_shader_projection_loc;
 

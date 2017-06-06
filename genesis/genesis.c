@@ -51,7 +51,7 @@ void print_header_info(char* label, uint8_t* data, uint8_t length)
     free(string);
 }
 
-void genesis_load_rom_file(Genesis* g, char* path)
+void genesis_load_rom_file(Genesis* g, const char* path)
 {
     printf("Opening %s...\n", path);
 
