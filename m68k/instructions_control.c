@@ -10,24 +10,14 @@
 
 int bcc(Instruction* i)
 {
-    // TODO refactor
-
-    uint32_t base_offset = i->context->instruction_register & 0xFF;
-    uint32_t offset = base_offset;
-
-    if (base_offset == 0)
-        offset = m68k_fetch(i->context);
-    else if (base_offset == 0xFF)
-        offset = m68k_fetch(i->context) << 16 | m68k_fetch(i->context);
+    int16_t offset = FETCH_EA_AND_GET(i->src);
 
     if (i->condition->func(i->context))
     {
-        if (base_offset == 0)
-            i->context->pc = i->context->instruction_address + 2 + (int16_t)offset;
-        else if (base_offset == 0xFF)
-            i->context->pc = i->context->instruction_address + 2 + (int32_t)offset;
-        else
+        if (i->size == Byte)
             i->context->pc = i->context->instruction_address + 2 + (int8_t)offset;
+        else
+            i->context->pc = i->context->instruction_address + 2 + (int16_t)offset;
 
         return 10;
     }
@@ -44,16 +34,19 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m)
     sprintf(name, "DB%s", condition->mnemonics);
 
     Instruction* i = instruction_make(m, name, bcc);
-
     i->condition = condition;
 
-    /*int displacement = FRAGMENT(opcode, 7, 0);
+    int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
+    {
+        i->size = Word;
         i->src = operand_make_branching_offset(i, Word);
-    else if (displacement == 0xFF)
-        i->src = operand_make_branching_offset(i, Long); // 68020+ only?
+    }
     else
-        i->src = operand_make_branching_offset(i, Byte);*/
+    {
+        i->size = Byte;
+        i->src = operand_make_branching_offset(i, Byte);
+    }
 
     return i;
 }
@@ -114,10 +107,10 @@ Instruction* gen_bsr(uint16_t opcode, M68k* m)
 
 int dbcc(Instruction* i)
 {
-    int16_t offset = m68k_fetch(i->context);
+    int16_t offset = FETCH_EA_AND_GET(i->dst);
     if (i->condition->func(i->context))
         return 12;
-    
+
     bool branch_taken = false;
 
     uint16_t reg = GET(i->src);
@@ -144,8 +137,7 @@ Instruction* gen_dbcc(uint16_t opcode, M68k* m)
     i->size = Word;
     i->condition = condition;
     i->src = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
-    // TODO add offset as operand
-    // i->dst = ;
+    i->dst = operand_make_branching_offset(i, Word);
     return i;
 }
 
