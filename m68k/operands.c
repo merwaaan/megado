@@ -176,7 +176,6 @@ int operand_get_cycles(Operand* o)
     return address_calculation_cycles[o->type][o->instruction->size == Long];
 }
 
-
 void noop(Operand* o, uint32_t value)
 {
 }
@@ -561,23 +560,28 @@ Operand* operand_make_value(int value, struct Instruction* instr)
 }
 
 /*
- * Branching offset (specific to control flow isntruction such as Bcc)
- * TODO can't I factor this?
+ * Branching offset, specific to control flow instruction such as Bcc
  */
+
+uint32_t branching_offset_ea(Operand* o)
+{
+    m68k_fetch(o->instruction->context);
+    return o->instruction->context->pc - 2;
+}
 
 uint32_t branching_offset_byte_get(Operand* o)
 {
     return o->instruction->context->instruction_register & 0xFF;
 }
 
-uint32_t branching_offset_word_get(Operand* o) // TODO
+uint32_t branching_offset_word_get(Operand* o)
 {
-    return m68k_read_w(o->instruction->context, o->instruction->context->instruction_register + 2);
+    return m68k_read_w(o->instruction->context, o->instruction->context->instruction_address + 2);
 }
 
 uint32_t branching_offset_long_get(Operand* o) // TODO
 {
-    return m68k_read_l(o->instruction->context, o->instruction->context->instruction_register + 2);
+    return m68k_read_l(o->instruction->context, o->instruction->context->instruction_address + 2);
 }
 
 Operand* operand_make_branching_offset(Instruction* instr, Size size)
@@ -591,12 +595,15 @@ Operand* operand_make_branching_offset(Instruction* instr, Size size)
     switch (size)
     {
     case Byte:
+        op->fetch_ea_func = noop; // The offset is in the low byte of the opcode, no need to advance the PC
         op->get_value_func = branching_offset_byte_get;
         break;
     case Word:
+        op->fetch_ea_func = branching_offset_ea;
         op->get_value_func = branching_offset_word_get;
         break;
-    case Long:
+    case Long: // TODO is this valid on a 68000?
+        op->fetch_ea_func = branching_offset_ea;
         op->get_value_func = branching_offset_long_get;
         break;
     }
