@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "instruction.h"
 #include "m68k.h"
@@ -13,9 +14,16 @@ Instruction* instruction_make(M68k* context, char* name, InstructionFunc func)
 {
     Instruction* i = calloc(1, sizeof(Instruction));
     i->context = context;
-    i->name = name;
     i->func = func;
     i->base_cycles = 0; // TODO
+
+    // Dynamically allocate memory for the instruction name
+    // and copy the name argument whatever its source in order
+    // to avoid discrepancies between string literals and
+    // dynamic strings.
+    i->name = calloc(10, sizeof(char));
+    strcpy(i->name, name);
+
     return i;
 }
 
@@ -24,6 +32,7 @@ void instruction_free(Instruction* instr)
     if (instr == NULL)
         return;
 
+    free(instr->name);
     free(instr->src);
     free(instr->dst);
     free(instr);

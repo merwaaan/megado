@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "bit_utils.h"
@@ -34,13 +35,17 @@ int bcc(Instruction* i)
     return i->size == Byte ? 8 : 12;
 }
 
-Instruction* gen_bcc(uint16_t opcode, M68k* m) // TODO factor with bra?
+Instruction* gen_bcc(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "BCC", bcc);
-    // TODO set name wrt condition
+    Condition* condition = condition_get(FRAGMENT(opcode, 11, 8));
 
-    i->condition = condition_get(FRAGMENT(opcode, 11, 8));
-    //sprintf(i->name, "B%s", i->condition->mnemonics);
+    // Format the instruction name depending on its internal condition
+    char name[5];
+    sprintf(name, "DB%s", condition->mnemonics);
+
+    Instruction* i = instruction_make(m, name, bcc);
+
+    i->condition = condition;
 
     /*int displacement = FRAGMENT(opcode, 7, 0);
     if (displacement == 0)
@@ -129,12 +134,18 @@ int dbcc(Instruction* i)
 
 Instruction* gen_dbcc(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "DBcc", dbcc);// TODO set name wrt condition
+    Condition* condition = condition_get(FRAGMENT(opcode, 11, 8));
+
+    // Format the instruction name depending on its internal condition
+    char name[5];
+    sprintf(name, "DB%s", condition->mnemonics);
+
+    Instruction* i = instruction_make(m, name, dbcc);
     i->size = Word;
-    i->condition = condition_get(FRAGMENT(opcode, 11, 8));
-    //sprintf(i->name, "B%s", i->condition->mnemonics);
+    i->condition = condition;
     i->src = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
     // TODO add offset as operand
+    // i->dst = ;
     return i;
 }
 
