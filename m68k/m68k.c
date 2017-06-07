@@ -152,16 +152,11 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
     return cycles;
 }
 
-// TODO Aladdin, ok up to 1aa3f8
-// TODO Sonic@37E, D5 is wrong
-
-uint32_t breakpoint = 0x12d56;
 bool breakpoint_triggered = true;
 
 uint8_t m68k_step(M68k* m)
 {
-    // Manual breakpoint!
-    if (m->pc == breakpoint)
+    if (m->pc == m->breakpoint)
         breakpoint_triggered = true;
 
     // Fetch the instruction
@@ -177,9 +172,9 @@ uint8_t m68k_step(M68k* m)
 
         return 0;
     }
-
+//#define DEBUG
 #ifdef DEBUG
-    DecodedInstruction* d = breakpoint_triggered ? m68k_decode(m, m->instruction_address) : NULL;
+    DecodedInstruction* d = breakpoint_triggered || true ? m68k_decode(m, m->instruction_address) : NULL;
     if (d != NULL)
         printf("%#06X   %s\n", m->pc - 2, d->mnemonics);
     decoded_instruction_free(d);

@@ -61,6 +61,9 @@ typedef struct M68k {
     // Callbacks
     CallbackFunc instruction_callback;
 
+    // The processor will stop when the PC reaches this address
+    uint32_t breakpoint;
+
     // Arbitrary user-defined data associated with this 68000 instance
     void* user_data;
 } M68k;

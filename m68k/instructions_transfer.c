@@ -126,8 +126,7 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
 
 int movem(Instruction* i)
 {
-    // TODO (refactor)
-    // incomplete version, this opcode is super confusing
+    // TODO mask as an operand
 
     uint16_t mask = m68k_fetch(i->context);
 

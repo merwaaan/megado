@@ -275,6 +275,8 @@ static struct ImVec4 color_error = { 1.0f, 0.0f, 0.0f, 1.0f };
 
 static void build_ui(Renderer* r)
 {
+    // TODO wrapp all the igBegin in if, otherwise collapsed windows still render
+
     bool dummy_flag = false;
 
     if (igBeginMainMenuBar())
@@ -290,9 +292,8 @@ static void build_ui(Renderer* r)
             if (igMenuItem("Step", "Space", false, r->genesis->status == Status_Pause))
                 genesis_step(r->genesis);
 
-            if (r->genesis->status)
-
-                igSeparator();
+            //igSeparator();
+            //igMenuItemPtr("Settings", NULL, &dummy_flag, false);
             igEndMenu();
         }
 
@@ -300,7 +301,6 @@ static void build_ui(Renderer* r)
         {
             igMenuItemPtr("Registers", NULL, &r->show_cpu_registers, true);
             igMenuItemPtr("Disassembly", NULL, &r->show_cpu_disassembly, true);
-            igMenuItemPtr("Breakpoints", NULL, &dummy_flag, false);
             igSeparator();
             igMenuItemPtr("ROM", NULL, &dummy_flag, false);
             igMenuItemPtr("RAM", NULL, &dummy_flag, false);
@@ -330,7 +330,7 @@ static void build_ui(Renderer* r)
     // CPU registers
     if (r->show_cpu_registers)
     {
-        igBegin("CPU registers", &r->show_cpu_registers, 0);
+        igBegin("CPU registers", &r->show_cpu_registers, ImGuiWindowFlags_NoResize);
         igColumns(2, NULL, true);
 
         for (int i = 0; i < 8; ++i)
@@ -371,34 +371,49 @@ static void build_ui(Renderer* r)
 
         igEnd();
     }
-
+    r->show_cpu_disassembly = true;
     // CPU Disassembly
-    if (r->show_cpu_disassembly)
+    if (r->show_cpu_disassembly && igBegin("CPU Disassembly", &r->show_cpu_disassembly, 0))
     {
-        igBegin("CPU Disassembly", &r->show_cpu_disassembly, 0);
         igColumns(3, NULL, false);
-
-        igText("Address"); igNextColumn();
-        igText("Instruction"); igNextColumn();
-        igText("Opcode"); igNextColumn();
+        igText("Address");
+        igNextColumn();
+        igSetColumnOffset(-1, 70);
+        igText("Instruction");
+        igNextColumn();
+        igText("Opcode");
+        igNextColumn();
         igSeparator();
 
         uint32_t address = r->genesis->m68k->pc;
         for (int i = 0; i < DISASSEMBLY_LENGTH; ++i)
         {
             DecodedInstruction* instr = m68k_decode(r->genesis->m68k, address);
+
+            // The memory may not contain valid opcodes, especially after branching instructions
             if (instr == NULL)
             {
                 igColumns(1, NULL, false);
-                igTextColored(color_error, "Cannot decode opcode at %06X", address);
+                igTextColored(color_dimmed, "Cannot decode opcode at %06X", address);
+
+                // Fill the disassembler with empty lines to keep the same height
+                for (int j = i + 1; j < DISASSEMBLY_LENGTH; ++j)
+                    igText("");
+
                 break;
             }
 
             igTextColored(i == 0 ? color_accent : color_white, "%06X", address);
             igNextColumn();
+
             igTextColored(i == 0 ? color_accent : color_white, instr->mnemonics);
             igNextColumn();
-            igTextColored(color_dimmed, "%04X", m68k_read_w(r->genesis->m68k, address));
+
+            for (int byte = 0; byte < instr->length; ++byte)
+            {
+                igTextColored(color_dimmed, "%02X ", m68k_read_b(r->genesis->m68k, address + byte));
+                igSameLine(0, 0);
+            }
             igNextColumn();
 
             address += instr->length;
@@ -406,8 +421,13 @@ static void build_ui(Renderer* r)
             free(instr);
         }
 
-        igEnd();
+        igColumns(1, NULL, false);
+        igSeparator();
+
+        igInputInt("Breakpoint", &r->genesis->m68k->breakpoint, 1, 2, ImGuiInputTextFlags_CharsHexadecimal);
+
     }
+    igEnd();
 
     // VDP palettes
     if (r->show_vdp_palettes)
@@ -607,7 +627,7 @@ static void handle_inputs(Renderer* r, int key, int action)
     }
 }
 
-static void keyboard_callback(GLFWwindow* window, int key, int scancode, int action, int modifiers)
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int modifiers)
 {
     Renderer* r = (Renderer*)glfwGetWindowUserPointer(window);
     handle_inputs(r, key, modifiers);
@@ -624,6 +644,12 @@ static void keyboard_callback(GLFWwindow* window, int key, int scancode, int act
     io->KeyShift = io->KeysDown[GLFW_KEY_LEFT_SHIFT] || io->KeysDown[GLFW_KEY_RIGHT_SHIFT];
     io->KeyAlt = io->KeysDown[GLFW_KEY_LEFT_ALT] || io->KeysDown[GLFW_KEY_RIGHT_ALT];
     io->KeySuper = io->KeysDown[GLFW_KEY_LEFT_SUPER] || io->KeysDown[GLFW_KEY_RIGHT_SUPER];
+}
+
+static void char_callback(GLFWwindow* window, unsigned int character)
+{
+    if (character > 0 && character < 0x10000)
+        ImGuiIO_AddInputCharacter(character);
 }
 
 static void mouse_move_callback(GLFWwindow* window, double x, double y)
@@ -663,14 +689,15 @@ Renderer* renderer_make(Genesis* genesis)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 800, "Megado", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1200, 800, "Megado", NULL, NULL);
     if (!window)
     {
         printf("An error occurred while creating a GLEW window");
         exit(1);
     }
 
-    glfwSetKeyCallback(window, keyboard_callback);
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetCharCallback(window, char_callback);
     glfwSetCursorPosCallback(window, mouse_move_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);

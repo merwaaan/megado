@@ -12,6 +12,7 @@ int bcc(Instruction* i)
 {
     int16_t offset = FETCH_EA_AND_GET(i->src);
 
+    // If the condition is true, jump from (instruction address + 2)
     if (i->condition->func(i->context))
     {
         i->context->pc = i->context->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
@@ -27,7 +28,7 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m)
 
     // Format the instruction name depending on its internal condition
     char name[5];
-    sprintf(name, "DB%s", condition->mnemonics);
+    sprintf(name, "B%s", condition->mnemonics);
 
     Instruction* i = instruction_make(m, name, bcc);
     i->condition = condition;
@@ -49,6 +50,7 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m)
 
 int bra(Instruction* i)
 {
+    // Jump from (instruction address + 2)
     int16_t offset = FETCH_EA_AND_GET(i->src);
     i->context->pc = i->context->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
 
@@ -112,18 +114,22 @@ Instruction* gen_bsr(uint16_t opcode, M68k* m)
 int dbcc(Instruction* i)
 {
     int16_t offset = FETCH_EA_AND_GET(i->dst);
+
+    // If the condition is true, no operation is performed
     if (i->condition->func(i->context))
         return 12;
 
     bool branch_taken = false;
 
+    // If the counter is still positive, jump from (instruction address + 2) 
     uint16_t reg = GET(i->src);
     if (reg > 0)
     {
-        i->context->pc = i->context->instruction_address + offset + 2;
+        i->context->pc = i->context->instruction_address + 2 + offset;
         branch_taken = true;
     }
 
+    // Decrement the counter
     SET(i->src, reg - 1);
 
     return branch_taken ? 10 : 14;
@@ -135,7 +141,7 @@ Instruction* gen_dbcc(uint16_t opcode, M68k* m)
 
     // Format the instruction name depending on its internal condition
     char name[5];
-    sprintf(name, "B%s", condition->mnemonics);
+    sprintf(name, "DB%s", condition->mnemonics);
 
     Instruction* i = instruction_make(m, name, dbcc);
     i->size = Word;
