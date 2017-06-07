@@ -14,11 +14,7 @@ int bcc(Instruction* i)
 
     if (i->condition->func(i->context))
     {
-        if (i->size == Byte)
-            i->context->pc = i->context->instruction_address + 2 + (int8_t)offset;
-        else
-            i->context->pc = i->context->instruction_address + 2 + (int16_t)offset;
-
+        i->context->pc = i->context->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
         return 10;
     }
 
@@ -53,13 +49,8 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m)
 
 int bra(Instruction* i)
 {
-    uint32_t offset = i->context->instruction_register & 0xFF;
-    if (offset == 0)
-        i->context->pc += (int16_t)m68k_fetch(i->context) - 2;
-    else if (offset == 0xFF)
-        i->context->pc += (int32_t)(m68k_fetch(i->context) << 16 | m68k_fetch(i->context)) - 4;
-    else
-        i->context->pc += (int8_t)offset;
+    int16_t offset = FETCH_EA_AND_GET(i->src);
+    i->context->pc = i->context->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
 
     return 0;
 }
@@ -68,22 +59,32 @@ Instruction* gen_bra(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "BRA", bra);
     i->base_cycles = 10;
+
+    int offset = FRAGMENT(opcode, 7, 0);
+    if (offset == 0)
+    {
+        i->size = Word;
+        i->src = operand_make_branching_offset(i, Word);
+    }
+    else
+    {
+        i->size = Byte;
+        i->src = operand_make_branching_offset(i, Byte);
+    }
+
     return i;
 }
 
 int bsr(Instruction* i)
 {
-    uint32_t offset = i->context->instruction_register & 0xFF;
+    int16_t offset = FETCH_EA_AND_GET(i->src);
 
+    // Push the address that follows the instruction on the stack
     i->context->address_registers[7] -= 4;
-    m68k_write_l(i->context, i->context->address_registers[7], i->context->pc + (offset == 0 ? 2 : 0) + (offset == 0xFF ? 4 : 0));
+    m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
 
-    if (offset == 0)
-        i->context->pc += (int16_t)m68k_fetch(i->context) - 2;
-    else if (offset == 0xFF)
-        i->context->pc += (int32_t)(m68k_fetch(i->context) << 16 | m68k_fetch(i->context)) - 4;
-    else
-        i->context->pc += (int8_t)offset;
+    // Jump from (instruction address + 2)
+    i->context->pc = i->context->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
 
     return 0;
 }
@@ -91,16 +92,19 @@ int bsr(Instruction* i)
 Instruction* gen_bsr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "BSR", bsr);
-
-    /*int displacement = FRAGMENT(opcode, 7, 0);
-    if (displacement == 0)
-        i->src = operand_make_branching_offset(i, Word);
-    else if (displacement == 0xFF)
-        i->src = operand_make_branching_offset(i, Long); // 68020+ only?
-    else
-        i->src = operand_make_branching_offset(i, Byte);*/
-
     i->base_cycles = 18;
+
+    int offset = FRAGMENT(opcode, 7, 0);
+    if (offset == 0)
+    {
+        i->size = Word;
+        i->src = operand_make_branching_offset(i, Word);
+    }
+    else
+    {
+        i->size = Byte;
+        i->src = operand_make_branching_offset(i, Byte);
+    }
 
     return i;
 }
@@ -131,7 +135,7 @@ Instruction* gen_dbcc(uint16_t opcode, M68k* m)
 
     // Format the instruction name depending on its internal condition
     char name[5];
-    sprintf(name, "DB%s", condition->mnemonics);
+    sprintf(name, "B%s", condition->mnemonics);
 
     Instruction* i = instruction_make(m, name, dbcc);
     i->size = Word;

@@ -89,7 +89,7 @@ int operand_tostring(Operand* operand, char* buffer)
     case AbsoluteLong:
         return sprintf(buffer, "($%010x).l", FETCH_EA(operand));
     case BranchingOffset:
-        return sprintf(buffer, "$%010x", FETCH_EA_AND_GET(operand) + 2);
+        return sprintf(buffer, "$%010x TODO show destination addr", FETCH_EA_AND_GET(operand) + 2);
     default:
         return 0;
     }
