@@ -68,7 +68,7 @@ int operand_tostring(Operand* operand, char* buffer)
     {
         int16_t displacement = m68k_fetch(operand->instruction->context);
         uint32_t target = operand->instruction->context->address_registers[operand->n] + displacement;
-        return sprintf(buffer, "(%010x,A%d) [%010x]", displacement, operand->n, target);
+        return sprintf(buffer, "(%0X,A%d) [%010x]", displacement, operand->n, target);
     }
     case AddressRegisterIndirectIndexed:
         return sprintf(buffer, "TODO %d(A%d, D%d)", operand->n, operand->n, operand->n);
@@ -76,20 +76,24 @@ int operand_tostring(Operand* operand, char* buffer)
     {
         int16_t displacement = m68k_fetch(operand->instruction->context);
         uint32_t target = operand->instruction->context->pc + displacement - 2;
-        return sprintf(buffer, "(%010x,PC) [%010x]", displacement, target);
+        return sprintf(buffer, "(%0X,PC) [%0X]", displacement, target);
     }
     case ProgramCounterIndexed:
         return sprintf(buffer, "TODO %d(PC, D%d)", operand->n, operand->n);
     case Immediate:
-        return sprintf(buffer, "#$%04x", FETCH_EA_AND_GET(operand));
+        return sprintf(buffer, "#$%0X", FETCH_EA_AND_GET(operand));
     case Value:
-        return sprintf(buffer, "#$%04x", operand->n);
+        return sprintf(buffer, "#$%0X", operand->n);
     case AbsoluteShort:
-        return sprintf(buffer, "($%06x).w", FETCH_EA(operand));
+        return sprintf(buffer, "($%0X).w", FETCH_EA(operand));
     case AbsoluteLong:
-        return sprintf(buffer, "($%010x).l", FETCH_EA(operand));
+        return sprintf(buffer, "($%0X).l", FETCH_EA(operand));
     case BranchingOffset:
-        return sprintf(buffer, "$%010x TODO show destination addr", FETCH_EA_AND_GET(operand) + 2);
+    {
+        int16_t offset = FETCH_EA_AND_GET(operand);
+        uint32_t target = operand->instruction->context->pc + offset;
+        return sprintf(buffer, "$%0X [%0X]", offset, target);
+    }
     default:
         return 0;
     }
@@ -365,14 +369,13 @@ Operand* operand_make_address_register_indirect_displacement(int n, struct Instr
 /*
 * Address indirect with index
 *
-* The data is located at the stored address + a displacement + the value of an index register (extensions)
+* The data is located at the stored address + a displacement + the value of an index register
 *
 * Extension word format: https://github.com/traviscross/libzrtp/blob/master/third_party/bnlib/lbn68000.c#L342
 */
 
 #define INDEX_REGISTER(extension) ((BIT((extension), 15) ? o->instruction->context->address_registers[FRAGMENT((extension), 14, 12)] : o->instruction->context->data_registers[FRAGMENT((extension), 14, 12)]))
 #define INDEX_LENGTH(extension) (BIT(extension, 11))
-#define INDEX_SCALE(extension) (FRAGMENT(extension, 10, 9)) // Not supported by the 68000
 #define INDEX_DISPLACEMENT(extension) (FRAGMENT(extension, 7, 0))
 
 uint32_t address_indirect_index_ea(Operand* o)
@@ -579,11 +582,6 @@ uint32_t branching_offset_word_get(Operand* o)
     return m68k_read_w(o->instruction->context, o->instruction->context->instruction_address + 2);
 }
 
-uint32_t branching_offset_long_get(Operand* o) // TODO
-{
-    return m68k_read_l(o->instruction->context, o->instruction->context->instruction_address + 2);
-}
-
 Operand* operand_make_branching_offset(Instruction* instr, Size size)
 {
     Operand* op = calloc(1, sizeof(Operand));
@@ -595,17 +593,16 @@ Operand* operand_make_branching_offset(Instruction* instr, Size size)
     switch (size)
     {
     case Byte:
-        op->fetch_ea_func = noop; // The offset is in the low byte of the opcode, no need to advance the PC
+        op->fetch_ea_func = fetch_no_ea; // The offset is in the low byte of the opcode, no need to advance the PC
         op->get_value_func = branching_offset_byte_get;
         break;
     case Word:
         op->fetch_ea_func = branching_offset_ea;
         op->get_value_func = branching_offset_word_get;
         break;
-    case Long: // TODO is this valid on a 68000?
-        op->fetch_ea_func = branching_offset_ea;
-        op->get_value_func = branching_offset_long_get;
-        break;
+    default: // The 68000 does not support long branching offsets
+        free(op);
+        return NULL;
     }
 
     return op;
@@ -629,10 +626,7 @@ int operand_length(Operand* operand)
             return 2;
         return 4;
     case BranchingOffset:
-        if (operand->get_value_func == branching_offset_word_get)
-            return 2;
-        else if (operand->get_value_func == branching_offset_long_get)
-            return 4;
+        return operand->instruction->size == Byte ? 0 : 2;
     default:
         return 0;
     }
