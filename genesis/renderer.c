@@ -273,6 +273,49 @@ static struct ImVec4 color_accent = { 1.0f, 0.07f, 0.57f, 1.0f };
 static struct ImVec4 color_sucess = { 0.0f, 1.0f, 0.0f, 1.0f };
 static struct ImVec4 color_error = { 1.0f, 0.0f, 0.0f, 1.0f };
 
+static void hex_viewer(bool* opened, uint8_t* data, uint32_t data_length, uint32_t* start_address, uint8_t columns, uint8_t rows)
+{
+    if (igBegin("RAM", opened, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        //igBeginChild("##scrolling", ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+
+        for (int i = 0; i < rows; ++i)
+        {
+            uint32_t start = *start_address + i * columns;
+            igText("%06X:  ", start);
+
+            for (int j = 0; j < columns; ++j)
+            {
+                igSameLine(0, 10);
+                igText("%02X", data[start + j]);
+            }
+        }
+
+        igSeparator();
+
+        igAlignFirstTextHeightToWidgets();
+        igText("Go to address");
+        igSameLine(0, 10);
+        if (igInputInt("##address", start_address, 16, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            /*int goto_addr;
+            if (sscanf(AddrInput, "%X", &goto_addr) == 1)
+            {
+            goto_addr -= base_display_addr;
+            if (goto_addr >= 0 && goto_addr < mem_size)
+            {
+            ImGui::BeginChild("##scrolling");
+            ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (goto_addr / Rows) * ImGui::GetTextLineHeight());
+            ImGui::EndChild();
+            DataEditingAddr = goto_addr;
+            DataEditingTakeFocus = true;
+            }
+            }*/
+        }
+    }
+    igEnd();
+}
+
 static void build_ui(Renderer* r)
 {
     // TODO wrapp all the igBegin in if, otherwise collapsed windows still render
@@ -302,8 +345,8 @@ static void build_ui(Renderer* r)
             igMenuItemPtr("Registers", NULL, &r->show_cpu_registers, true);
             igMenuItemPtr("Disassembly", NULL, &r->show_cpu_disassembly, true);
             igSeparator();
-            igMenuItemPtr("ROM", NULL, &dummy_flag, false);
-            igMenuItemPtr("RAM", NULL, &dummy_flag, false);
+            igMenuItemPtr("ROM", NULL, &r->show_rom, true);
+            igMenuItemPtr("RAM", NULL, &r->show_ram, true);
             igEndMenu();
         }
 
@@ -313,9 +356,9 @@ static void build_ui(Renderer* r)
             igMenuItemPtr("Patterns", NULL, &r->show_vdp_patterns, true);
             igMenuItemPtr("Planes", NULL, &r->show_vdp_planes, true);
             igSeparator();
-            igMenuItemPtr("VRAM", NULL, &dummy_flag, false);
-            igMenuItemPtr("VSRAM", NULL, &dummy_flag, false);
-            igMenuItemPtr("CRAM", NULL, &dummy_flag, false);
+            igMenuItemPtr("VRAM", NULL, &r->show_vram, &r->show_vram);
+            igMenuItemPtr("VSRAM", NULL, &r->show_vsram, &r->show_vsram);
+            igMenuItemPtr("CRAM", NULL, &r->show_cram, &r->show_cram);
             igEndMenu();
         }
 
@@ -371,10 +414,12 @@ static void build_ui(Renderer* r)
 
         igEnd();
     }
-    r->show_cpu_disassembly = true;
+
     // CPU Disassembly
-    if (r->show_cpu_disassembly && igBegin("CPU Disassembly", &r->show_cpu_disassembly, 0))
+    if (r->show_cpu_disassembly)
     {
+        igBegin("CPU Disassembly", &r->show_cpu_disassembly, 0);
+
         igColumns(3, NULL, false);
         igText("Address");
         igNextColumn();
@@ -425,9 +470,16 @@ static void build_ui(Renderer* r)
         igSeparator();
 
         igInputInt("Breakpoint", &r->genesis->m68k->breakpoint, 1, 2, ImGuiInputTextFlags_CharsHexadecimal);
-
+        igEnd();
     }
-    igEnd();
+
+    // ROM
+    if (r->show_rom)
+        hex_viewer(&r->show_rom, r->genesis->memory, 0x3FFFFF, &r->rom_start_address, 16, 10);
+
+    // RAM
+    if (r->show_ram)
+        hex_viewer(&r->show_ram, r->genesis->memory + 0xFF000, 0xFFFF, &r->ram_start_address, 16, 10);
 
     // VDP palettes
     if (r->show_vdp_palettes)
@@ -514,6 +566,18 @@ static void build_ui(Renderer* r)
 
         igEnd();
     }
+
+    // VRAM
+    if (r->show_vram)
+        hex_viewer(&r->show_vram, r->genesis->vdp->vram, 0x10000, &r->ram_start_address, 16, 10);
+
+    // VSRAM
+    if (r->show_vsram)
+        hex_viewer(&r->show_vsram, r->genesis->vdp->vram, 0x40, &r->ram_start_address, 16, 10);
+
+    // TODO CRAM
+    //if (r->show_vram)
+    //    hex_viewer(&r->show_cram, r->genesis->vdp->vram, 0x10000, &r->ram_start_address, 16, 10);
 
     bool a = true;
     igShowTestWindow(&a);
