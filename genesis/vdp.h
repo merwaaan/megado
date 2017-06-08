@@ -175,5 +175,5 @@ void vdp_write_control(Vdp*, uint16_t value);
 uint16_t vdp_get_hv_counter(Vdp*); // Get the current value of the HV counter
 
 void vdp_draw_scanline(Vdp*, int scanline);
-void vdp_draw_pattern(Vdp*, uint16_t pattern_index, Color* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y);
+void vdp_draw_pattern(Vdp*, uint16_t pattern_index, Color* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y, bool horizontal_flip, bool vertical_flip);
 void vdp_draw_plane(Vdp*, Planes plane, uint8_t* buffer, uint32_t buffer_width);

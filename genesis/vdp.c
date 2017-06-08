@@ -105,7 +105,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
     case 3: // CRAM write
 
         LOG_VDP("\tWrite %02x to CRAM @ %02x\n", value, v->access_address >> 1);
-        
+
         Color color = COLOR_11_TO_STRUCT(value);
         v->cram[v->access_address >> 1 & 0x3F] = color;
         v->access_address += v->auto_increment;
@@ -423,7 +423,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
                             break;*/
 
                             uint16_t value = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
-                            Color color = COLOR_11_TO_STRUCT(value); 
+                            Color color = COLOR_11_TO_STRUCT(value);
                             v->cram[v->access_address >> 1 & 0x3F] = color;
 
                             ++v->dma_source_address_lo;
@@ -469,28 +469,29 @@ uint16_t vdp_get_hv_counter(Vdp* v)
 
 static Color color_black = { 0, 0, 0 };
 
-void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, Color* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y)
+void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, Color* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y, bool horizontal_flip, bool vertical_flip)
 {
     uint16_t pattern_offset = pattern_index * 32;
 
-    for (uint8_t pixel_pair = 0; pixel_pair < 32; ++pixel_pair)
+    for (uint8_t py = 0; py < 8; ++py)
     {
-        uint32_t pixel_offset = ((y + pixel_pair / 4) * buffer_width + x + pixel_pair % 4 * 2) * 3;
+        for (uint8_t px = 0; px < 8; ++px)
+        {
+            // Handle flipping
+            uint8_t flipped_px = horizontal_flip ? 7 - px : px;
+            uint8_t flipped_py = vertical_flip ? 7 - py : py;
 
-        // 1 byte holds the color data of 2 pixels
-        uint8_t color_indexes = v->vram[pattern_offset + pixel_pair];
+            uint32_t destination_offset = ((y + flipped_py) * buffer_width + x + flipped_px) * 3;
 
-        uint8_t color_index = (color_indexes & 0xF0) >> 4;
-        Color color = color_index > 0 ? palette[color_index] : color_black;
-        buffer[pixel_offset] = color.r;
-        buffer[pixel_offset + 1] = color.g;
-        buffer[pixel_offset + 2] = color.b;
+            // 1 byte holds the color data of 2 pixels
+            uint8_t color_indexes = v->vram[pattern_offset + py * 4 + px / 2];
 
-        color_index = color_indexes & 0x0F;
-        color = color_index > 0 ? palette[color_index] : color_black;
-        buffer[pixel_offset + 3] = color.r;
-        buffer[pixel_offset + 4] = color.g;
-        buffer[pixel_offset + 5] = color.b;
+            uint8_t color_index = px % 2 == 0 ? (color_indexes & 0xF0) >> 4 : (color_indexes & 0x0F);
+            Color color = color_index > 0 ? palette[color_index] : color_black;
+            buffer[destination_offset] = color.r;
+            buffer[destination_offset + 1] = color.g;
+            buffer[destination_offset + 2] = color.b;
+        }
     }
 }
 
@@ -508,14 +509,14 @@ void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width
         for (int px = 0; px < v->horizontal_plane_size; ++px)
         {
             uint16_t pattern_offset = (py * v->horizontal_plane_size + px) * 2;
-            uint16_t data = (plane_offset[pattern_offset] << 8) | plane_offset[pattern_offset + 1];
+            uint16_t pattern_data = (plane_offset[pattern_offset] << 8) | plane_offset[pattern_offset + 1];
 
-            Color* palette = v->cram + FRAGMENT(data, 14, 13) * 16;
-            bool vertical_flip = BIT(data, 12);
-            bool horizontal_flip = BIT(data, 11);
-            uint16_t pattern = FRAGMENT(data, 10, 0);
+            Color* palette = v->cram + FRAGMENT(pattern_data, 14, 13) * 16;
+            bool vertical_flip = BIT(pattern_data, 12);
+            bool horizontal_flip = BIT(pattern_data, 11);
+            uint16_t pattern = FRAGMENT(pattern_data, 10, 0);
 
-            vdp_draw_pattern(v, pattern, palette, buffer, buffer_width, px * 8, py * 8);
+            vdp_draw_pattern(v, pattern, palette, buffer, buffer_width, px * 8, py * 8, horizontal_flip, vertical_flip);
         }
 }
 
@@ -639,7 +640,7 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
 
             for (uint8_t sprite_x = 0; sprite_x < total_width; ++sprite_x)
             {
-                int16_t scanline_x = x + (horizontal_flip ? total_width - sprite_x - 1: sprite_x);
+                int16_t scanline_x = x + (horizontal_flip ? total_width - sprite_x - 1 : sprite_x);
 
                 if (scanline_x < 0) // TODO right bound
                     continue;

@@ -544,7 +544,7 @@ static void build_ui(Renderer* r)
         {
             int x = pattern % PATTERNS_COLUMNS * 8;
             int y = pattern / PATTERNS_COLUMNS * 8;
-            vdp_draw_pattern(r->genesis->vdp, pattern, debug_palette, patterns_buffer, patterns_width, x, y);
+            vdp_draw_pattern(r->genesis->vdp, pattern, debug_palette, patterns_buffer, patterns_width, x, y, false, false);
         }
 
         glBindTexture(GL_TEXTURE_2D, r->ui_patterns_texture);
