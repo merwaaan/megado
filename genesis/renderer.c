@@ -14,6 +14,7 @@
 #include "vdp.h"
 
 #define DISASSEMBLY_LENGTH 20
+#define MEMORY_VIEWER_COLUMNS 16
 
 #define PALETTE_ENTRY_WIDTH 16
 #define PATTERNS_COUNT 2048
@@ -273,44 +274,59 @@ static struct ImVec4 color_accent = { 1.0f, 0.07f, 0.57f, 1.0f };
 static struct ImVec4 color_sucess = { 0.0f, 1.0f, 0.0f, 1.0f };
 static struct ImVec4 color_error = { 1.0f, 0.0f, 0.0f, 1.0f };
 
-static void hex_viewer(bool* opened, uint8_t* data, uint32_t data_length, uint32_t* start_address, uint8_t columns, uint8_t rows)
+static void memory_viewer(char* name, bool* opened, void* data, Size data_size, uint32_t data_length, uint32_t* target_address)
 {
-    if (igBegin("RAM", opened, ImGuiWindowFlags_AlwaysAutoResize))
+    //igSetNextWindowSize((struct ImVec2) { 0, 0 }, 0);
+    if (igBegin(name, opened, 0))
     {
-        //igBeginChild("##scrolling", ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+        igBeginChild("##memory", (const struct ImVec2) { 600, 300 }, false, 0); // TODO approximate sizing, not sure how to cleanly make the child fit
 
-        for (int i = 0; i < rows; ++i)
+        // We use a list clipper to browse the whole memory 
+        // while rendering only its visible section
+        struct ImGuiListClipper list_clipper;
+        ImGuiListClipper_Begin(&list_clipper, data_length / MEMORY_VIEWER_COLUMNS, igGetTextLineHeight());
+
+        int first_visible_row = ImGuiListClipper_GetDisplayStart(&list_clipper);
+        int last_visible_row = ImGuiListClipper_GetDisplayEnd(&list_clipper);
+
+        for (int row = first_visible_row; row < last_visible_row; ++row)
         {
-            uint32_t start = *start_address + i * columns;
-            igText("%06X:  ", start);
+            uint32_t row_address = row * MEMORY_VIEWER_COLUMNS;
+            igText("%06X:  ", row_address);
 
-            for (int j = 0; j < columns; ++j)
+            for (int column = 0; column < MEMORY_VIEWER_COLUMNS; ++column)
             {
-                igSameLine(0, 10);
-                igText("%02X", data[start + j]);
+                igSameLine(0, 0);
+
+                if (data_size == Byte)
+                    igText("%02X ", ((uint8_t*)data)[row_address + column]);
+                else
+                    igText("%04X ", ((uint16_t*)data)[row_address + column]);
             }
         }
 
-        igSeparator();
+        ImGuiListClipper_End(&list_clipper);
+        igEndChild();
 
-        igAlignFirstTextHeightToWidgets();
-        igText("Go to address");
-        igSameLine(0, 10);
-        if (igInputInt("##address", start_address, 16, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue))
+        if (target_address != NULL)
         {
-            /*int goto_addr;
-            if (sscanf(AddrInput, "%X", &goto_addr) == 1)
+            igSeparator();
+
+            igAlignFirstTextHeightToWidgets();
+            igText("Go to address");
+            igSameLine(0, 10);
+            if (igInputInt("##address", target_address, 16, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue))
             {
-            goto_addr -= base_display_addr;
-            if (goto_addr >= 0 && goto_addr < mem_size)
-            {
-            ImGui::BeginChild("##scrolling");
-            ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (goto_addr / Rows) * ImGui::GetTextLineHeight());
-            ImGui::EndChild();
-            DataEditingAddr = goto_addr;
-            DataEditingTakeFocus = true;
+                // Re-enter the context of the scrolling area
+                igBeginChild("##memory", (const struct ImVec2) { -1, -1 }, false, 0);
+
+                // Scroll to the appropriate row
+                struct ImVec2 cursor_start_position;
+                igGetCursorStartPos(&cursor_start_position);
+                igSetScrollFromPosY(cursor_start_position.y + (*target_address / MEMORY_VIEWER_COLUMNS) * igGetTextLineHeight(), 0);
+
+                igEndChild();
             }
-            }*/
         }
     }
     igEnd();
@@ -475,11 +491,11 @@ static void build_ui(Renderer* r)
 
     // ROM
     if (r->show_rom)
-        hex_viewer(&r->show_rom, r->genesis->memory, 0x3FFFFF, &r->rom_start_address, 16, 10);
+        memory_viewer("ROM", &r->show_rom, r->genesis->memory, Byte, 0x100000, &r->rom_target_address);
 
     // RAM
     if (r->show_ram)
-        hex_viewer(&r->show_ram, r->genesis->memory + 0xFF000, 0xFFFF, &r->ram_start_address, 16, 10);
+        memory_viewer("RAM", &r->show_ram, r->genesis->memory + 0xFF000, Byte, 0x10000, &r->ram_target_address);
 
     // VDP palettes
     if (r->show_vdp_palettes)
@@ -569,18 +585,26 @@ static void build_ui(Renderer* r)
 
     // VRAM
     if (r->show_vram)
-        hex_viewer(&r->show_vram, r->genesis->vdp->vram, 0x10000, &r->ram_start_address, 16, 10);
+        memory_viewer("VRAM", &r->show_vram, r->genesis->vdp->vram, Byte, 0x10000, NULL);
 
     // VSRAM
     if (r->show_vsram)
-        hex_viewer(&r->show_vsram, r->genesis->vdp->vram, 0x40, &r->ram_start_address, 16, 10);
+        memory_viewer("VSRAM", &r->show_vsram, r->genesis->vdp->vsram, Word, 0x40, NULL);
 
-    // TODO CRAM
-    //if (r->show_vram)
-    //    hex_viewer(&r->show_cram, r->genesis->vdp->vram, 0x10000, &r->ram_start_address, 16, 10);
+    // CRAM
+    if (r->show_cram)
+    {
+        // Because we do not store raw CRAM data in the VDP implementation, convert
+        // the decoded colors back to words for the debug view
+        uint16_t raw_cram[0x40];
+        for (int c = 0; c < 0x40; ++c)
+            raw_cram[c] = COLOR_STRUCT_TO_11(r->genesis->vdp->cram[c]);
+
+        memory_viewer("CRAM", &r->show_cram, raw_cram, Word, 0x40, NULL);
+    }
 
     bool a = true;
-    igShowTestWindow(&a);
+    //igShowTestWindow(&a);
 }
 
 static void render_ui(Renderer* r)

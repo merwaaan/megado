@@ -18,23 +18,20 @@ typedef struct Renderer
     bool show_cpu_disassembly;
 
     bool show_rom;
-    uint32_t rom_start_address;
+    uint32_t rom_target_address;
 
     bool show_ram;
-    uint32_t ram_start_address;
+    uint32_t ram_target_address;
 
     bool show_vdp_planes;
     enum Planes selected_plane;
     uint8_t* plane_buffer;
 
     bool show_vram;
-    uint32_t vram_start_address;
+    uint32_t vram_target_address;
 
     bool show_vsram;
-    uint32_t vsram_start_address;
-
     bool show_cram;
-    uint32_t cram_start_address;
 
     // Graphics resources for rendering the Genesis' output
     GLuint game_shader;
