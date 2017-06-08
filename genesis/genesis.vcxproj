@@ -131,12 +131,14 @@
     <ClCompile Include="m68k_io.c" />
     <ClCompile Include="renderer.c" />
     <ClCompile Include="vdp.c" />
+    <ClCompile Include="z80.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="genesis.h" />
     <ClInclude Include="joypad.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="vdp.h" />
+    <ClInclude Include="z80.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\m68k\m68k.vcxproj">
