@@ -8,8 +8,8 @@ DEBUG_FLAGS := -DDEBUG -g
 RELEASE_DIR := build/release
 DEBUG_DIR := build/debug
 
-INCLUDES := -I./ `sdl2-config --cflags`
-LIBS := `sdl2-config --libs`
+INCLUDES := -I./ -Ideps/cimgui/ -Ideps/glfw/include -Ideps/glew/include
+LIBS := -Ldeps/glew/build/lib -lGLEW -lGLU -lGL -Ldeps/cimgui/cimgui -l:cimgui.so -Ldeps/glfw/build/src -lglfw
 
 MODULES := m68k genesis
 
