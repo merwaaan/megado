@@ -4,9 +4,6 @@
 [submodule "deps/cimgui"]
 	path = deps/cimgui
 	url = https://github.com/merwaaan/cimgui.git
-[submodule "deps/gl3w"]
-	path = deps/gl3w
-	url = https://github.com/skaslev/gl3w.git
 [submodule "deps/glew"]
 	path = deps/glew
 	url = https://github.com/nigels-com/glew.git
