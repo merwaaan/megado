@@ -718,7 +718,7 @@ static void handle_inputs(Renderer* r, int key, int action)
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int modifiers)
 {
     Renderer* r = (Renderer*)glfwGetWindowUserPointer(window);
-    handle_inputs(r, key, modifiers);
+    handle_inputs(r, key, action);
 
     // Pass the event to the UI
 
