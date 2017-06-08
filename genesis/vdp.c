@@ -467,6 +467,8 @@ uint16_t vdp_get_hv_counter(Vdp* v)
     return (v->v_counter << 8 & 0xFF00) | (v->h_counter >> 1 & 0xFF);
 }
 
+static Color color_black = { 0, 0, 0 };
+
 void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, Color* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y)
 {
     uint16_t pattern_offset = pattern_index * 32;
@@ -479,13 +481,13 @@ void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, Color* palette, uint8_t* b
         uint8_t color_indexes = v->vram[pattern_offset + pixel_pair];
 
         uint8_t color_index = (color_indexes & 0xF0) >> 4;
-        Color color = palette[color_index];
+        Color color = color_index > 0 ? palette[color_index] : color_black;
         buffer[pixel_offset] = color.r;
         buffer[pixel_offset + 1] = color.g;
         buffer[pixel_offset + 2] = color.b;
 
         color_index = color_indexes & 0x0F;
-        color = palette[color_index];
+        color = color_index > 0 ? palette[color_index] : color_black;
         buffer[pixel_offset + 3] = color.r;
         buffer[pixel_offset + 4] = color.g;
         buffer[pixel_offset + 5] = color.b;
