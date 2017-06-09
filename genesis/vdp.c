@@ -634,7 +634,7 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
 
         if (scanline >= y && scanline < y + total_height)
         {
-            uint8_t sprite_y = scanline - y; // TODO handle flipping
+            uint8_t sprite_y = vertical_flip ? total_height - (scanline - y) - 1 : scanline - y;
 
             uint8_t total_width = width * 8;
 
