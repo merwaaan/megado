@@ -21,28 +21,12 @@ M68k* m68k_make()
     M68k* m68k = calloc(1, sizeof(M68k));
     m68k->pending_interrupt = -1;
 
-    // Generate every possible opcode
-
     m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
 
+    // Generate every possible opcode
     for (int opcode = 0; opcode < 0x10000; ++opcode)
-    {
-        if (opcode == 0x7200)
-        {
-            LOG_M68K("breakpoint\n");
-        }
-
-        Instruction* instr = instruction_generate(m68k, opcode);
-
-        if (!instruction_is_valid(instr, false, false))
-        {
-            instruction_free(instr);
-            continue;
-        }
-
-        m68k->opcode_table[opcode] = instr;
-    }
-
+        m68k->opcode_table[opcode] = instruction_generate(m68k, opcode);
+        
     return m68k;
 }
 

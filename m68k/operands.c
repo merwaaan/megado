@@ -38,7 +38,12 @@ Operand* operand_make(uint16_t pattern, Instruction* instr)
             return operand_make_immediate_value(instr->size, instr);
         }
     default:
-        return NULL;
+    {
+        Operand* op = calloc(1, sizeof(Operand));
+        op->instruction = instr;
+        op->type = Unsupported;
+        return op;
+    }
     }
 }
 

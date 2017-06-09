@@ -150,13 +150,10 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
             // Generate the instruction
             Instruction* instr = pattern_generate(all_patterns[i], opcode, context);
 
-            // If the generated instruction is invalid, try the following opcodes
-            if (instr == NULL ||
-                instr->size == InvalidSize ||
-                (instr->src != NULL && instr->src->type == Unsupported) ||
-                (instr->dst != NULL && instr->dst->type == Unsupported))
+            // If the generated instruction is invalid, continue looking for matches
+            if (!instruction_is_valid(instr, false, false))
             {
-                free(instr);
+                instruction_free(instr);
                 continue;
             }
 
@@ -166,15 +163,17 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
     return NULL;
 }
 
-bool instruction_is_valid(Instruction* instr, bool has_src, bool has_dst)
+bool instruction_is_valid(Instruction* instr, bool must_have_src, bool must_have_dst)
 {
     if (instr == NULL || instr->size == InvalidSize)
         return false;
 
-    if (has_src && (instr->src == NULL || instr->src->type == Unsupported))
+    if (instr->src != NULL && instr->src->type == Unsupported ||
+        instr->src == NULL && must_have_src)
         return false;
 
-    if (has_dst && (instr->dst == NULL || instr->dst->type == Unsupported))
+    if (instr->dst != NULL && instr->dst->type == Unsupported ||
+        instr->dst == NULL && must_have_dst)
         return false;
 
     return true;
