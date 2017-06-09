@@ -21,7 +21,7 @@ Instruction* instruction_make(M68k* context, char* name, InstructionFunc func)
     // and copy the name argument whatever its source in order
     // to avoid discrepancies between string literals and
     // dynamic strings.
-    i->name = calloc(10, sizeof(char));
+    i->name = calloc(20, sizeof(char));
     strcpy(i->name, name);
 
     return i;
