@@ -255,7 +255,7 @@ static void render_genesis(Renderer* r)
     float display_center_x = display_width / 2;
     float display_center_y = display_height / 2;
 
-    float quad_extent = 320.0f / 2;
+    float quad_extent = 320.0f / 2 * r->game_scale;
     // TODO handle height separately
     // TODO handle various resolutions
     float quad_vertices[] = {
@@ -394,6 +394,8 @@ static void build_ui(Renderer* r)
 
         if (igBeginMenu("Video", true))
         {
+            igSliderFloat("Scaling", &r->game_scale, 1.0f, 5.0f, "%f", 1.0f);
+            igSeparator();
             igMenuItemPtr("Palettes", NULL, &r->show_vdp_palettes, true);
             igMenuItemPtr("Patterns", NULL, &r->show_vdp_patterns, true);
             igMenuItemPtr("Planes", NULL, &r->show_vdp_planes, true);
@@ -630,7 +632,7 @@ static void build_ui(Renderer* r)
     }
 
     bool a = true;
-    //igShowTestWindow(&a);
+    igShowTestWindow(&a);
 }
 
 static void render_ui(Renderer* r)
@@ -836,6 +838,7 @@ Renderer* renderer_make(Genesis* genesis)
     Renderer* r = calloc(1, sizeof(Renderer));
     r->genesis = genesis;
     r->window = window;
+    r->game_scale = 1.0f;
     r->plane_buffer = calloc(64 * 8 * 64 * 8 * 3, sizeof(uint8_t));
 
     // Store a pointer to the renderer in the window so that it can be accessed from callback functions

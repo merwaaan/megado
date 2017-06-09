@@ -11,6 +11,8 @@ typedef struct Renderer
     Genesis* genesis;
 
     GLFWwindow* window;
+    
+    float game_scale; // Scaling factor for the Genesis video output
 
     bool show_cpu_registers;
     bool show_vdp_palettes;
