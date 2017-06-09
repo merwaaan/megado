@@ -791,6 +791,12 @@ static void drop_callback(GLFWwindow* window, int path_count, const char** paths
     genesis_initialize(r->genesis);
 }
 
+void window_close_callback(GLFWwindow* window)
+{
+    Renderer* r = (Renderer*)glfwGetWindowUserPointer(window);
+    r->genesis->status = Status_Quitting;
+}
+
 Renderer* renderer_make(Genesis* genesis)
 {
     printf("Initializing GLFW (%s)...\n", glfwGetVersionString());
@@ -819,6 +825,7 @@ Renderer* renderer_make(Genesis* genesis)
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetDropCallback(window, drop_callback);
+    glfwSetWindowCloseCallback(window, window_close_callback);
 
     glfwMakeContextCurrent(window);
 

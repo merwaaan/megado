@@ -14,7 +14,8 @@ struct Vdp;
 typedef enum {
     Status_NoGameLoaded,
     Status_Pause,
-    Status_Running
+    Status_Running,
+    Status_Quitting
 } Status;
 
 typedef enum {

@@ -59,8 +59,7 @@ void test_rom(Genesis* g, char* path)
     genesis_load_rom_file(g, path);
     genesis_initialize(g);
 
-    bool running = true;
-    while (running)
+    while (g->status != Status_Quitting)
         genesis_update(g);
 }
 
