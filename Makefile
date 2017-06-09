@@ -25,13 +25,15 @@ DEBUG_OBJS := $(patsubst %.c,$(DEBUG_DIR)/%.o,$(notdir $(SRC)))
 .PHONY: release
 release: CFLAGS += $(RELEASE_FLAGS)
 release: $(RELEASE_DIR) $(RELEASE_DIR)/genesis
-	@echo -e '#!/bin/sh\nenv LD_LIBRARY_PATH=deps/cimgui/cimgui:deps/glfw/build/src:deps/glew/build/lib $(RELEASE_DIR)/genesis "$$@"' > $(BUILD_DIR)/release.sh
+# Using printf because echo is unreliable
+# see https://stackoverflow.com/a/14121245
+	@printf '#!/bin/sh\nenv LD_LIBRARY_PATH=deps/cimgui/cimgui:deps/glfw/build/src:deps/glew/build/lib $(RELEASE_DIR)/genesis "$$@"' > $(BUILD_DIR)/release.sh
 	@chmod u+x $(BUILD_DIR)/release.sh
 
 .PHONY: debug
 debug: CFLAGS += $(DEBUG_FLAGS)
 debug: $(DEBUG_DIR) $(DEBUG_DIR)/genesis
-	@echo -e '#!/bin/sh\nenv LD_LIBRARY_PATH=deps/cimgui/cimgui:deps/glfw/build/src:deps/glew/build/lib $(DEBUG_DIR)/genesis "$$@"' > $(BUILD_DIR)/debug.sh
+	@printf '#!/bin/sh\nenv LD_LIBRARY_PATH=deps/cimgui/cimgui:deps/glfw/build/src:deps/glew/build/lib $(DEBUG_DIR)/genesis "$$@"' > $(BUILD_DIR)/debug.sh
 	@chmod u+x $(BUILD_DIR)/debug.sh
 
 $(RELEASE_DIR)/genesis: test/main.c $(RELEASE_OBJS)
