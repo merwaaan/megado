@@ -36,7 +36,8 @@ typedef struct Renderer
     // Graphics resources for rendering the Genesis' output
     GLuint game_shader;
     GLuint game_texture;
-    GLuint game_vertex_array_object;
+    GLuint game_vertex_array_object, game_vertex_buffer_object;
+    GLint game_shader_projection_loc;
 
     // Graphics resources for the user interface
     GLuint ui_shader;

@@ -105,15 +105,14 @@ static GLuint create_shader_program(const GLchar* vertex_shader_source, const GL
 
 static const GLchar* game_vertex_shader_source =
 "#version 330\n"
-//"uniform mat4 ProjMtx;\n"
+"uniform mat4 projection_matrix;\n"
 "in vec3 vertex_position;\n"
 "in vec2 vertex_texcoord;\n"
 "out vec2 texcoord;\n"
 "void main()\n"
 "{\n"
 "   texcoord = vertex_texcoord;\n"
-//"	gl_Position = ProjMtx * vec4(Position.xy,0,1);\n"
-"   gl_Position = vec4(vertex_position, 1.0);\n"
+"   gl_Position = projection_matrix * vec4(vertex_position, 1.0);\n"
 "}\n";
 
 static const GLchar* game_fragment_shader_source =
@@ -128,20 +127,6 @@ static const GLchar* game_fragment_shader_source =
 
 static void init_genesis_rendering(Renderer* r)
 {
-    // The Genesis' video output will be displayed on a screen-aligned quad
-    float quad_extent = BUFFER_WIDTH / 800.0f;
-    float quad_vertices[] = {
-        // Top-right triangle
-        // format: x, y, z, u, v
-        -quad_extent, +quad_extent,  0.0f, 0.0f, 0.0f,
-        +quad_extent, +quad_extent,  0.0f, 1.0f, 0.0f,
-        +quad_extent, -quad_extent,  0.0f, 1.0f, 1.0f,
-
-        // Bottom-let triangle
-        -quad_extent, +quad_extent,  0.0f, 0.0f, 0.0f,
-        +quad_extent, -quad_extent,  0.0f, 1.0f, 1.0f,
-        -quad_extent, -quad_extent,  0.0f, 0.0f, 1.0f
-    };
 
     glGenTextures(1, &r->game_texture);
     glBindTexture(GL_TEXTURE_2D, r->game_texture);
@@ -152,10 +137,10 @@ static void init_genesis_rendering(Renderer* r)
 
     r->game_shader = create_shader_program(game_vertex_shader_source, game_fragment_shader_source);
 
-    GLuint vertex_buffer_object;
-    glGenBuffers(1, &vertex_buffer_object);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object);
-    glBufferData(GL_ARRAY_BUFFER, 6 * 5 * sizeof(float), quad_vertices, GL_STATIC_DRAW);
+    r->game_shader_projection_loc = glGetUniformLocation(r->game_shader, "projection_matrix");
+
+    glGenBuffers(1, &r->game_vertex_buffer_object);
+    glBindBuffer(GL_ARRAY_BUFFER, r->game_vertex_buffer_object);
 
     glGenVertexArrays(1, &r->game_vertex_array_object);
     glBindVertexArray(r->game_vertex_array_object);
@@ -261,7 +246,48 @@ static void render_genesis(Renderer* r)
     glBindTexture(GL_TEXTURE_2D, r->game_texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, BUFFER_WIDTH, BUFFER_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, r->genesis->vdp->buffer);
 
+    // The Genesis' video output will be displayed on the following screen-aligned quad
+
+    int display_width, display_height;
+    glfwGetWindowSize(r->window, &display_width, &display_height);
+    glViewport(0, 0, display_width, display_height);
+
+    float display_center_x = display_width / 2;
+    float display_center_y = display_height / 2;
+
+    float quad_extent = 320.0f / 2;
+    // TODO handle height separately
+    // TODO handle various resolutions
+    float quad_vertices[] = {
+        // Top-right triangle
+        // format: x, y, z, u, v
+        display_center_x - quad_extent, display_center_y - quad_extent,  0.0f, 0.0f, 0.0f,
+        display_center_x + quad_extent, display_center_y - quad_extent,  0.0f, 1.0f, 0.0f,
+        display_center_x + quad_extent, display_center_y + quad_extent,  0.0f, 1.0f, 1.0f,
+
+        // Bottom-let triangle
+        display_center_x - quad_extent, display_center_y - quad_extent,  0.0f, 0.0f, 0.0f,
+        display_center_x + quad_extent, display_center_y + quad_extent,  0.0f, 1.0f, 1.0f,
+        display_center_x - quad_extent, display_center_y + quad_extent,  0.0f, 0.0f, 1.0f
+    };
+
+    glBindBuffer(GL_ARRAY_BUFFER, r->game_vertex_buffer_object);
+    glBufferData(GL_ARRAY_BUFFER, 30 * sizeof(float), quad_vertices, GL_DYNAMIC_DRAW);
+
+    // Update the projection matrix depending on the window size
+
+    const GLfloat ortho_projection[4][4] =
+    {
+        { 2.0f / display_width, 0.0f,                   0.0f, 0.0f },
+        { 0.0f,                 2.0f / -display_height, 0.0f, 0.0f },
+        { 0.0f,                 0.0f,                   -1.0f, 0.0f },
+        { -1.0f,                1.0f,                   0.0f, 1.0f },
+    };
+
     glUseProgram(r->game_shader);
+    glUniformMatrix4fv(r->game_shader_projection_loc, 1, GL_FALSE, &ortho_projection[0][0]);
+
+    // Draw the quad
     glBindVertexArray(r->game_vertex_array_object);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glDrawArrays(GL_TRIANGLES, 3, 3);
@@ -634,16 +660,17 @@ static void render_ui(Renderer* r)
 
     glUseProgram(r->ui_shader);
 
+    // Update the projection matrix depending on the window size
     int fb_width = (int)(io->DisplaySize.x * io->DisplayFramebufferScale.x);
     int fb_height = (int)(io->DisplaySize.y * io->DisplayFramebufferScale.y);
     glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
 
-    const float ortho_projection[4][4] =
+    const GLfloat ortho_projection[4][4] =
     {
-        { 2.0f / io->DisplaySize.x, 0.0f,                   0.0f, 0.0f },
-        { 0.0f,                  2.0f / -io->DisplaySize.y, 0.0f, 0.0f },
-        { 0.0f,                  0.0f,                  -1.0f, 0.0f },
-        { -1.0f,                  1.0f,                   0.0f, 1.0f },
+        { 2.0f / io->DisplaySize.x, 0.0f,                      0.0f, 0.0f },
+        { 0.0f,                     2.0f / -io->DisplaySize.y, 0.0f, 0.0f },
+        { 0.0f,                     0.0f,                     -1.0f, 0.0f },
+        { -1.0f,                    1.0f,                      0.0f, 1.0f },
     };
 
     glUniformMatrix4fv(r->ui_shader_projection_loc, 1, GL_FALSE, &ortho_projection[0][0]);
@@ -815,6 +842,7 @@ Renderer* renderer_make(Genesis* genesis)
     glfwSetWindowUserPointer(r->window, r);
 
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+
     init_ui_rendering(r);
     init_genesis_rendering(r);
 
