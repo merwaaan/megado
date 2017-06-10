@@ -197,7 +197,6 @@ static void init_ui_rendering(Renderer* r)
     glBindTexture(GL_TEXTURE_2D, ui_font_texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
     ImFontAtlas_SetTexID(io->Fonts, ui_font_texture);
@@ -250,6 +249,7 @@ static void render_genesis(Renderer* r)
     glBindTexture(GL_TEXTURE_2D, r->game_texture);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, BUFFER_WIDTH); // Whatever the current width of the output, be sure to consider the buffer full width (in low resolution mode, the rightmost pixels will be skipped)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, output_width, output_height, 0, GL_RGB, GL_UNSIGNED_BYTE, r->genesis->vdp->output_buffer);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
     // The Genesis' video output will be displayed on the following screen-aligned quad
 
