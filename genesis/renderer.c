@@ -127,11 +127,10 @@ static const GLchar* game_fragment_shader_source =
 
 static void init_genesis_rendering(Renderer* r)
 {
-
     glGenTextures(1, &r->game_texture);
     glBindTexture(GL_TEXTURE_2D, r->game_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // Setup the shader and buffers
 
@@ -205,13 +204,18 @@ static void init_ui_rendering(Renderer* r)
 
     glGenTextures(1, &r->ui_patterns_texture);
     glBindTexture(GL_TEXTURE_2D, r->ui_patterns_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glGenTextures(1, &r->ui_magnified_pattern_texture);
+    glBindTexture(GL_TEXTURE_2D, r->ui_magnified_pattern_texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glGenTextures(1, &r->ui_planes_texture);
     glBindTexture(GL_TEXTURE_2D, r->ui_planes_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // Setup the shaders and buffers
 
@@ -598,6 +602,30 @@ static void build_ui(Renderer* r)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, patterns_width, patterns_height, 0, GL_RGB, GL_UNSIGNED_BYTE, patterns_buffer);
 
         igImage(r->ui_patterns_texture, (struct ImVec2) { patterns_width, patterns_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_black);
+
+        // If a pattern is hovered, show a tooltip with a magnified view
+        if (igIsItemHovered())
+        {
+            struct ImVec2 mouse, window, content;
+            igGetMousePos(&mouse);
+            igGetWindowPos(&window);
+            igGetCursorStartPos(&content);
+
+            uint16_t pattern_x = mouse.x - (window.x + content.x);
+            uint16_t pattern_y = mouse.y - (window.y + content.y);
+            uint16_t pattern_index = pattern_y / 8 * PATTERNS_COLUMNS + pattern_x / 8;
+
+            uint8_t magnified_pattern_buffer[64 * 3];
+            vdp_draw_pattern(r->genesis->vdp, pattern_index, debug_palette, magnified_pattern_buffer, 8, 0, 0, false, false);
+
+            glBindTexture(GL_TEXTURE_2D, r->ui_magnified_pattern_texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 8, 8, 0, GL_RGB, GL_UNSIGNED_BYTE, magnified_pattern_buffer);
+
+            igBeginTooltip();
+            igText("Pattern #%d", pattern_index);
+            igImage(r->ui_magnified_pattern_texture, (struct ImVec2) { 128, 128 }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
+            igEndTooltip();
+        }
 
         igEnd();
         igPopStyleVar(ImGuiStyleVar_WindowPadding);
