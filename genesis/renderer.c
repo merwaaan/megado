@@ -363,6 +363,20 @@ static void memory_viewer(char* name, bool* opened, void* data, Size data_size, 
     igEnd();
 }
 
+static void toggle_pause(Renderer* r)
+{
+    if (r->genesis->status == Status_Running)
+        r->genesis->status = Status_Pause;
+    else if (r->genesis->status == Status_Pause)
+        r->genesis->status = Status_Running;
+}
+
+static void step(Renderer* r)
+{
+    if (r->genesis->status == Status_Pause)
+        genesis_step(r->genesis);
+}
+
 static void build_ui(Renderer* r)
 {
     // TODO wrapp all the igBegin in if, otherwise collapsed windows still render
@@ -377,10 +391,10 @@ static void build_ui(Renderer* r)
                 genesis_initialize(r->genesis);
 
             if (igMenuItem(r->genesis->status == Status_Running ? "Pause" : "Resume", "P", false, r->genesis->status != Status_NoGameLoaded))
-                r->genesis->status = r->genesis->status == Status_Pause ? Status_Running : Status_Pause;
+                toggle_pause(r);
 
             if (igMenuItem("Step", "Space", false, r->genesis->status == Status_Pause))
-                genesis_step(r->genesis);
+                step(r);
 
             //igSeparator();
             //igMenuItemPtr("Settings", NULL, &dummy_flag, false);
@@ -744,9 +758,13 @@ static void handle_inputs(Renderer* r, int key, int action)
         case GLFW_KEY_Q: joypad_release(r->genesis->joypad, ButtonA); break;
         case GLFW_KEY_W: joypad_release(r->genesis->joypad, ButtonB); break;
         case GLFW_KEY_E: joypad_release(r->genesis->joypad, ButtonC); break;
+
+        case GLFW_KEY_P: toggle_pause(r); break;
+        case GLFW_KEY_SPACE: step(r); break;
         }
         break;
     }
+
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int modifiers)
