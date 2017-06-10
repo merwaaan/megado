@@ -243,8 +243,13 @@ static void init_ui_rendering(Renderer* r)
 static void render_genesis(Renderer* r)
 {
     // Update the game texture with the Genesis' output
+
+    uint16_t output_width, output_height;
+    vdp_get_resolution(r->genesis->vdp, &output_width, &output_height);
+
     glBindTexture(GL_TEXTURE_2D, r->game_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, BUFFER_WIDTH, BUFFER_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, r->genesis->vdp->buffer);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, BUFFER_WIDTH); // Whatever the current width of the output, be sure to consider the buffer full width (in low resolution mode, the rightmost pixels will be skipped)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, output_width, output_height, 0, GL_RGB, GL_UNSIGNED_BYTE, r->genesis->vdp->output_buffer);
 
     // The Genesis' video output will be displayed on the following screen-aligned quad
 
@@ -255,20 +260,20 @@ static void render_genesis(Renderer* r)
     float display_center_x = display_width / 2;
     float display_center_y = display_height / 2;
 
-    float quad_extent = 320.0f / 2 * r->game_scale;
-    // TODO handle height separately
-    // TODO handle various resolutions
+    float output_half_width = output_width / 2 * r->game_scale;
+    float output_half_height = output_height / 2 * r->game_scale;
+
     float quad_vertices[] = {
         // Top-right triangle
         // format: x, y, z, u, v
-        display_center_x - quad_extent, display_center_y - quad_extent,  0.0f, 0.0f, 0.0f,
-        display_center_x + quad_extent, display_center_y - quad_extent,  0.0f, 1.0f, 0.0f,
-        display_center_x + quad_extent, display_center_y + quad_extent,  0.0f, 1.0f, 1.0f,
+        display_center_x - output_half_width, display_center_y - output_half_height,  0.0f, 0.0f, 0.0f,
+        display_center_x + output_half_width, display_center_y - output_half_height,  0.0f, 1.0f, 0.0f,
+        display_center_x + output_half_width, display_center_y + output_half_height,  0.0f, 1.0f, 1.0f,
 
         // Bottom-let triangle
-        display_center_x - quad_extent, display_center_y - quad_extent,  0.0f, 0.0f, 0.0f,
-        display_center_x + quad_extent, display_center_y + quad_extent,  0.0f, 1.0f, 1.0f,
-        display_center_x - quad_extent, display_center_y + quad_extent,  0.0f, 0.0f, 1.0f
+        display_center_x - output_half_width, display_center_y - output_half_height,  0.0f, 0.0f, 0.0f,
+        display_center_x + output_half_width, display_center_y + output_half_height,  0.0f, 1.0f, 1.0f,
+        display_center_x - output_half_width, display_center_y + output_half_height,  0.0f, 0.0f, 1.0f
     };
 
     glBindBuffer(GL_ARRAY_BUFFER, r->game_vertex_buffer_object);
@@ -632,7 +637,7 @@ static void build_ui(Renderer* r)
     }
 
     bool a = true;
-    igShowTestWindow(&a);
+    //igShowTestWindow(&a);
 }
 
 static void render_ui(Renderer* r)

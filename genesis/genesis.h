@@ -24,7 +24,7 @@ typedef enum {
     Region_USA
 } Regions;
 
-typedef struct {
+typedef struct Genesis {
     uint8_t* memory;
 
     struct M68k* m68k;

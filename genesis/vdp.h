@@ -23,10 +23,10 @@
 
 // The screen buffer has the same dimensions as the maximal resolution
 #define BUFFER_WIDTH 320
-#define BUFFER_HEIGHT 400 // TODO use appropriate value (prev 240 but now higher to support PAL res)
-#define BUFFER_LENGTH (BUFFER_WIDTH * BUFFER_HEIGHT * 3)
+#define BUFFER_HEIGHT 240
+#define BUFFER_SIZE (BUFFER_WIDTH * BUFFER_HEIGHT * 3)
 
-struct M68k;
+struct Genesis;
 
 typedef enum Planes
 {
@@ -58,6 +58,8 @@ typedef struct
 
 typedef struct Vdp
 {
+    struct Genesis* genesis;
+
     uint8_t* vram;
     uint16_t* vsram;
 
@@ -86,7 +88,7 @@ typedef struct Vdp
     bool display_enabled;
     bool vblank_enabled;
     bool dma_enabled;
-    bool display_mode;
+    uint8_t display_height;
 
     // Register $02
     uint32_t plane_a_nametable;
@@ -112,7 +114,7 @@ typedef struct Vdp
     HorizontalScrollingModes horizontal_scrolling_mode;
 
     // Register $0C
-    int display_width;
+    uint8_t display_width;
     bool shadow_highlight_enabled;
     int interlace_mode;
 
@@ -155,12 +157,11 @@ typedef struct Vdp
     // (will be reloaded with the value stored in register 0xA)
     uint8_t hblank_counter;
 
-    struct M68k* cpu;
-
-    uint8_t* buffer;
+    // Video output
+    uint8_t* output_buffer;
 } Vdp;
 
-Vdp* vdp_make(struct M68k* cpu);
+Vdp* vdp_make(struct Genesis* cpu);
 void vdp_free(Vdp*);
 
 uint16_t vdp_read_data(Vdp* v);
@@ -173,6 +174,7 @@ uint16_t vdp_read_control(Vdp*);
 void vdp_write_control(Vdp*, uint16_t value);
 
 uint16_t vdp_get_hv_counter(Vdp*); // Get the current value of the HV counter
+void vdp_get_resolution(Vdp*, uint16_t* width, uint16_t* height);
 
 void vdp_draw_scanline(Vdp*, int scanline);
 void vdp_draw_pattern(Vdp*, uint16_t pattern_index, Color* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y, bool horizontal_flip, bool vertical_flip);

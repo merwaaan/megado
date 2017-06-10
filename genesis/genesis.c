@@ -16,7 +16,7 @@ Genesis* genesis_make()
     g->memory = calloc(0x1000000, sizeof(uint8_t));
     g->m68k = m68k_make();
     g->z80 = z80_make();
-    g->vdp = vdp_make(g->m68k);
+    g->vdp = vdp_make(g);
     g->joypad = joypad_make();
     g->renderer = renderer_make(g);
     g->status = Status_NoGameLoaded;
@@ -133,7 +133,7 @@ void genesis_frame(Genesis* g)
 {
     // The number of scanlines depends on the region
     // http://forums.sonicretro.org/index.php?showtopic=5615
-    uint16_t lines = g->region == Region_Europe ? 312 : 262;
+    uint16_t lines = g->region == Region_Europe ? 312 : 262; // TODO not sure about these values
 
     for (uint16_t line = 0; line < lines; ++line)
     {

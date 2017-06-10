@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "genesis.h"
 #include "vdp.h"
 
 #undef DEBUG
@@ -13,25 +14,27 @@
 #define LOG_VDP(...)
 #endif
 
-void draw(Vdp* v);
-
-// Display width values (register 0xC)
-uint8_t display_width_values[] = { 32, 40 };
+// Display size values (register 0x1 and 0xC)
+static uint8_t display_height_values[] = { 28, 30 };
+static uint8_t display_width_values[] = { 32, 40 };
 
 // Plane size values (register 0x10)
-uint8_t plane_size_values[] = { 32, 64, 0, 128 };
+static uint8_t plane_size_values[] = { 32, 64, 0, 128 };
 
-Vdp* vdp_make(M68k* cpu)
+Vdp* vdp_make(Genesis* genesis)
 {
     Vdp* v = calloc(1, sizeof(Vdp));
-    v->cpu = cpu;
-    v->pending_command = false;
+    v->genesis = genesis;
 
     v->vram = calloc(0x10000, sizeof(uint8_t));
     v->vsram = calloc(64, sizeof(uint16_t));
     v->cram = calloc(64, sizeof(Color));
 
-    v->buffer = calloc(BUFFER_LENGTH, sizeof(uint8_t));
+    v->output_buffer = calloc(BUFFER_SIZE, sizeof(uint8_t));
+
+    v->pending_command = false;
+    v->display_width = display_width_values[0];
+    v->display_height = display_height_values[0];
 
     return v;
 }
@@ -44,7 +47,7 @@ void vdp_free(Vdp* v)
     free(v->vram);
     free(v->vsram);
     free(v->cram);
-    free(v->buffer);
+    free(v->output_buffer);
     free(v);
 }
 
@@ -208,7 +211,7 @@ uint16_t vdp_read_control(Vdp* v)
         v->vblank_in_progress << 3 | // Vertical blanking
         v->hblank_in_progress << 2 | // Horizontal blanking
         v->dma_in_progress << 1 | // DMA transfer currently executing
-        true;        // NTSC (0) / PAL (1)
+        (v->genesis->region == Region_Europe); // NTSC (0) / PAL (1)
 }
 
 void vdp_write_control(Vdp* v, uint16_t value)
@@ -240,9 +243,9 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->display_enabled = BIT(reg_value, 6);
             v->vblank_enabled = BIT(reg_value, 5);
             v->dma_enabled = BIT(reg_value, 4);
-            v->display_mode = BIT(reg_value, 3);
+            v->display_height = display_height_values[BIT(reg_value, 3)];
 
-            LOG_VDP("\t\tDisplay enabled %d, V-blank enabled %d, DMA enabled %d, Display mode %d\n", v->display_enabled, v->vblank_enabled, v->dma_enabled, v->display_mode);
+            LOG_VDP("\t\tDisplay enabled %d, V-blank enabled %d, DMA enabled %d, Display mode %d\n", v->display_enabled, v->vblank_enabled, v->dma_enabled, v->display_height);
             return;
 
         case 2:
@@ -294,7 +297,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->shadow_highlight_enabled = BIT(reg_value, 3);
             v->interlace_mode = FRAGMENT(reg_value, 2, 1);
 
-            LOG_VDP("\t\tDisplay width %d, Shadow/Highlight enabled %d, Interlace mode  %d\n", v->display_mode, v->shadow_highlight_enabled, v->interlace_mode);
+            LOG_VDP("\t\tDisplay width %d, Shadow/Highlight enabled %d, Interlace mode  %d\n", v->display_height, v->shadow_highlight_enabled, v->interlace_mode);
             return;
 
         case 0xD:
@@ -402,7 +405,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
                         LOG_VDP("\tDMA transfer from %08x to VRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do {
-                            uint16_t value = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
+                            uint16_t value = m68k_read_w(v->genesis->m68k, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
                             v->vram[v->access_address] = BYTE_HI(value);
                             v->vram[v->access_address ^ 1] = BYTE_LO(value);
 
@@ -422,7 +425,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
                             /*if (v->access_address > 0x7F)
                             break;*/
 
-                            uint16_t value = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
+                            uint16_t value = m68k_read_w(v->genesis->m68k, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
                             Color color = COLOR_11_TO_STRUCT(value);
                             v->cram[v->access_address >> 1 & 0x3F] = color;
 
@@ -436,7 +439,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
                         LOG_VDP("\tDMA transfer from %04x to VSRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do {
-                            v->vsram[v->access_address >> 1 & 0x3F] = m68k_read_w(v->cpu, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
+                            v->vsram[v->access_address >> 1 & 0x3F] = m68k_read_w(v->genesis->m68k, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
 
                             ++v->dma_source_address_lo;
                             v->access_address += v->auto_increment;
@@ -465,6 +468,16 @@ void vdp_write_control(Vdp* v, uint16_t value)
 uint16_t vdp_get_hv_counter(Vdp* v)
 {
     return (v->v_counter << 8 & 0xFF00) | (v->h_counter >> 1 & 0xFF);
+}
+
+void vdp_get_resolution(Vdp* v, uint16_t* width, uint16_t* height)
+{
+    // The size of the display can be:
+    //   - horizontally, 32 or 40 cell modes
+    //   - vertically, 28 or 30 (restricted to PAL) cell modes
+
+    *width = v->display_width * 8;
+    *height = v->genesis->region == Region_Europe ? v->display_height * 8 : 28 * 8;
 }
 
 static Color color_black = { 0, 0, 0 };
@@ -520,17 +533,16 @@ void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width
         }
 }
 
-// TODO clean this up
 typedef struct {
-    bool drawn[312]; // TODO how many?
-    Color colors[312];
-    bool priorities[312];
+    bool drawn[BUFFER_WIDTH];
+    Color colors[BUFFER_WIDTH];
+    bool priorities[BUFFER_WIDTH];
 } ScanlineData;
 
-ScanlineData plane_a_scanline;
-ScanlineData plane_b_scanline;
-ScanlineData plane_w_scanline;
-ScanlineData sprites_scanline;
+static ScanlineData plane_a_scanline;
+static ScanlineData plane_b_scanline;
+static ScanlineData plane_w_scanline;
+static ScanlineData sprites_scanline;
 
 void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* data)
 {
@@ -668,7 +680,6 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
         // Move on to the next sprite
         sprite = link;
 
-        // TODO sizes
         // TODO priority between sprites? (or link-order dependent?)
         // TODO Sprite at x=0 mask low priority sprites or something
     } while (sprite != 0);
@@ -677,7 +688,10 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
 
 void vdp_draw_scanline(Vdp* v, int scanline)
 {
-    if (v->display_enabled && v->v_counter < 224) // TODO PAL
+    uint16_t output_width, output_height;
+    vdp_get_resolution(v, &output_width, &output_height);
+
+    if (v->display_enabled && scanline < output_height)
     {
         Color background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
 
@@ -712,17 +726,10 @@ void vdp_draw_scanline(Vdp* v, int scanline)
             else
                 pixel_color = background_color;
 
-            // TODO put pixel func
-            // TODO as uint32?
             uint32_t pixel_offset = (scanline * BUFFER_WIDTH + pixel) * 3;
-            v->buffer[pixel_offset] = pixel_color.r;
-            v->buffer[pixel_offset + 1] = pixel_color.g;
-            v->buffer[pixel_offset + 2] = pixel_color.b;
-
-            // TODO direct to bitmap
-            /*SDL_SetRenderDrawColor(v->renderer, RED_8(pixel_color), GREEN_8(pixel_color), BLUE_8(pixel_color), 255);
-            SDL_Rect draw_area = { 900 + pixel, line, 1, 1 };
-            SDL_RenderFillRect(v->renderer, &draw_area);*/
+            v->output_buffer[pixel_offset] = pixel_color.r;
+            v->output_buffer[pixel_offset + 1] = pixel_color.g;
+            v->output_buffer[pixel_offset + 2] = pixel_color.b;
         }
     }
 
@@ -737,14 +744,14 @@ void vdp_draw_scanline(Vdp* v, int scanline)
      */
 
      // Reload the counter
-    if (v->v_counter == 0 || v->v_counter >= 225)// TODO PAL
+    if (scanline == 0 || scanline >= 225)// TODO PAL
         v->hblank_counter = v->hblank_line;
 
     // Trigger an interrupt when the counter reaches 0
     if (v->hblank_counter <= 0)
     {
         if (v->hblank_enabled)
-            m68k_request_interrupt(v->cpu, HBLANK_IRQ);
+            m68k_request_interrupt(v->genesis->m68k, HBLANK_IRQ);
 
         v->hblank_counter = v->hblank_line;
     }
@@ -755,22 +762,18 @@ void vdp_draw_scanline(Vdp* v, int scanline)
      * Handle vertical interrupts
      */
 
-    ++v->v_counter;
+    v->v_counter = scanline;
 
     // V-blank occurs on line 224
-    if (v->v_counter == 224 && v->vblank_enabled)// TODO PAL
+    if (scanline == 224 && v->vblank_enabled)// TODO PAL
     {
         v->vblank_in_progress = true;
 
-        m68k_request_interrupt(v->cpu, VBLANK_IRQ);
+        m68k_request_interrupt(v->genesis->m68k, VBLANK_IRQ);
     }
     // V-blank ends on line 262
-    else if (v->v_counter == 262)// TODO PAL
+    else if (scanline == 262)// TODO PAL
     {
         v->vblank_in_progress = false;
-        v->v_counter = 0;
-
-        // TODO tmp to debug faster
-        //vdp_draw_debug(v);
     }
 }
