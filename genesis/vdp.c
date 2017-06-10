@@ -546,8 +546,11 @@ static ScanlineData sprites_scanline;
 
 void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* data)
 {
-    uint8_t* name_table = v->vram + (plane == Plane_A ? v->plane_a_nametable : v->plane_b_nametable);
-    // TODO window
+    uint8_t* name_table = v->vram + (plane == Plane_A ? v->plane_a_nametable : v->plane_b_nametable); // TODO window
+
+    // Clear the scanline
+    for (uint16_t i = 0; i < BUFFER_WIDTH; ++i)
+        data->drawn[i] = false;
 
     // Handle horizontal scrolling
 
@@ -617,6 +620,10 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
 {
     uint8_t* attribute_table = v->vram + v->sprites_attribute_table;
 
+    // Clear the scanline
+    for (uint16_t i = 0; i < BUFFER_WIDTH; ++i)
+        data->drawn[i] = false;
+
     uint8_t sprite = 0;
     do
     {
@@ -657,9 +664,12 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
                 if (scanline_x < 0) // TODO right bound
                     continue;
 
+                // Sprites are drawn front-to-back so don't draw over previous sprites
+                if (data->drawn[scanline_x])
+                    continue;
+
                 uint16_t column_offset = sprite_x / 8 * height * 32;
 
-                // TODO group pixel pairs
                 uint16_t pixel_offset = pattern_index * 32 + column_offset + sprite_y * 4 + sprite_x % 8 / 2;
                 uint8_t color_indexes = v->vram[pixel_offset];
                 uint8_t color_index = sprite_x % 2 == 0 ? (color_indexes & 0xF0) >> 4 : color_indexes & 0x0F;
@@ -695,11 +705,11 @@ void vdp_draw_scanline(Vdp* v, int scanline)
     {
         Color background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
 
-        // Get pixel & priority data for each layer
+        // Get color & priority data for each layer
         vdp_get_plane_scanline(v, Plane_A, scanline, &plane_a_scanline);
         vdp_get_plane_scanline(v, Plane_B, scanline, &plane_b_scanline);
         // TODO vdp_get_plane_scanline(v, Plane_W, line, &plane_w_scanline);
-        vdp_get_sprites_scanline(v, scanline, &plane_a_scanline);
+        vdp_get_sprites_scanline(v, scanline, &sprites_scanline);
 
         // Combine the layers
         uint16_t screen_width = v->display_width * 8;
