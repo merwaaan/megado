@@ -5,7 +5,9 @@
 
 Joypad* joypad_make()
 {
-    return calloc(1, sizeof(Joypad));
+    Joypad* j = calloc(1, sizeof(Joypad));
+    j->buttons = 0x333F; // No buttons pressed
+    return j;
 }
 
 void joypad_free(Joypad* joypad)
@@ -27,10 +29,10 @@ void joypad_write(Joypad* joypad, uint8_t value)
 
 void joypad_press(Joypad* joypad, JoypadButton button)
 {
-    joypad->buttons |= button;
+    joypad->buttons &= ~button;
 }
 
 void joypad_release(Joypad* joypad, JoypadButton button)
 {
-    joypad->buttons &= ~button;
+    joypad->buttons |= button;
 }
