@@ -480,6 +480,25 @@ void vdp_get_resolution(Vdp* v, uint16_t* width, uint16_t* height)
     *height = v->genesis->region == Region_Europe ? v->display_height * 8 : 28 * 8;
 }
 
+void vdp_get_plane_cell_data(Vdp* v, Planes plane, uint16_t cell_index, uint16_t* pattern_index, uint16_t* palette, bool* priority, bool* horizontal_flip, bool* vertical_flip)
+{
+    uint8_t* plane_offset = v->vram;
+    switch (plane)
+    {
+    case Plane_A: plane_offset += v->plane_a_nametable; break;
+    case Plane_B: plane_offset += v->plane_b_nametable; break;
+    case Plane_Window: plane_offset += v->window_nametable; break;
+    }
+
+    uint16_t pattern_data = (plane_offset[cell_index * 2] << 8) | plane_offset[cell_index * 2 + 1];
+
+    *priority = BIT(pattern_data, 15);
+    *palette = FRAGMENT(pattern_data, 14, 13);
+    *vertical_flip = BIT(pattern_data, 12);
+    *horizontal_flip = BIT(pattern_data, 11);
+    *pattern_index = FRAGMENT(pattern_data, 10, 0);
+}
+
 static Color color_black = { 0, 0, 0 };
 
 void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, Color* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y, bool horizontal_flip, bool vertical_flip)

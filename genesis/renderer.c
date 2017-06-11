@@ -19,6 +19,7 @@
 #define PALETTE_ENTRY_WIDTH 16
 #define PATTERNS_COUNT 2048
 #define PATTERNS_COLUMNS 32
+#define PATTERN_MAGNIFICATION_FACTOR 16
 
 #define GREYSCALE(g) { g, g, g }
 
@@ -381,6 +382,16 @@ static void step(Renderer* r)
         genesis_step(r->genesis);
 }
 
+static struct ImVec2 get_cursor_in_current_window()
+{
+    struct ImVec2 mouse, window, content;
+    igGetMousePos(&mouse);
+    igGetWindowPos(&window);
+    igGetCursorStartPos(&content);
+
+    return (struct ImVec2) { mouse.x - (window.x + content.x), mouse.y - (window.y + content.y) };
+}
+
 static void build_ui(Renderer* r)
 {
     // TODO wrapp all the igBegin in if, otherwise collapsed windows still render
@@ -606,14 +617,8 @@ static void build_ui(Renderer* r)
         // If a pattern is hovered, show a tooltip with a magnified view
         if (igIsItemHovered())
         {
-            struct ImVec2 mouse, window, content;
-            igGetMousePos(&mouse);
-            igGetWindowPos(&window);
-            igGetCursorStartPos(&content);
-
-            uint16_t pattern_x = mouse.x - (window.x + content.x);
-            uint16_t pattern_y = mouse.y - (window.y + content.y);
-            uint16_t pattern_index = pattern_y / 8 * PATTERNS_COLUMNS + pattern_x / 8;
+            struct ImVec2 pattern_pos = get_cursor_in_current_window();
+            uint16_t pattern_index = (int)pattern_pos.y / 8 * PATTERNS_COLUMNS + (int)pattern_pos.x / 8;
 
             uint8_t magnified_pattern_buffer[64 * 3];
             vdp_draw_pattern(r->genesis->vdp, pattern_index, debug_palette, magnified_pattern_buffer, 8, 0, 0, false, false);
@@ -623,7 +628,7 @@ static void build_ui(Renderer* r)
 
             igBeginTooltip();
             igText("Pattern #%d", pattern_index);
-            igImage(r->ui_magnified_pattern_texture, (struct ImVec2) { 128, 128 }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
+            igImage(r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
             igEndTooltip();
         }
 
@@ -637,14 +642,8 @@ static void build_ui(Renderer* r)
         uint16_t plane_width = 64 * 8;
         uint16_t plane_height = 64 * 8;
 
+        igPushStyleVarVec(ImGuiStyleVar_WindowPadding, (struct ImVec2) { 0, 0 });
         igBegin("VDP planes", &r->show_vdp_planes, ImGuiWindowFlags_NoResize);
-
-        igColumns(3, NULL, false);
-        igRadioButton("Plane A", (int*)&r->selected_plane, Plane_A);
-        igNextColumn();
-        igRadioButton("Plane B", (int*)&r->selected_plane, Plane_B);
-        igNextColumn();
-        igRadioButton("Window", (int*)&r->selected_plane, Plane_Window); igColumns(1, NULL, false);
 
         // Update the plane texture with the selected plane
 
@@ -653,9 +652,58 @@ static void build_ui(Renderer* r)
         glBindTexture(GL_TEXTURE_2D, r->ui_planes_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, plane_width, plane_height, 0, GL_RGB, GL_UNSIGNED_BYTE, r->plane_buffer);
 
-        igImage(r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
+        igImage(r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_black);
+        
+        // If a cell is hovered, show a tooltip with details
+        if (igIsItemHovered())
+        {
+            // Get the data of the hovered cell
+
+            struct ImVec2 cell_pos = get_cursor_in_current_window();
+            uint16_t cell_index = (int)cell_pos.y / 8 * r->genesis->vdp->horizontal_plane_size + (int)cell_pos.x / 8;
+
+            uint16_t pattern_index, palette_index;
+            bool priority, horizontal_flip, vertical_flip;
+            vdp_get_plane_cell_data(r->genesis->vdp, r->selected_plane, cell_index, &pattern_index, &palette_index, &priority, &horizontal_flip, &vertical_flip);
+            
+            // Draw a magnified version of the pattern
+
+            Color* palette = r->genesis->vdp->cram + palette_index * 16;
+
+            uint8_t magnified_pattern_buffer[64 * 3];
+            vdp_draw_pattern(r->genesis->vdp, pattern_index, palette, magnified_pattern_buffer, 8, 0, 0, horizontal_flip, vertical_flip);
+            
+            glBindTexture(GL_TEXTURE_2D, r->ui_magnified_pattern_texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 8, 8, 0, GL_RGB, GL_UNSIGNED_BYTE, magnified_pattern_buffer);
+
+            igBeginTooltip();
+            igText("Pattern #%d", pattern_index);
+
+            igText("%-18s", "Horizontal flip: ");
+            igSameLine(0, 0);
+            igTextColored(horizontal_flip ? color_accent : color_dimmed, horizontal_flip ? "on" : "off");
+            
+            igText("%-18s", "Vertical flip: ");
+            igSameLine(0, 0);
+            igTextColored(vertical_flip ? color_accent : color_dimmed, vertical_flip ? "on" : "off");
+            
+            igText("%-18s", "Priority: ");
+            igSameLine(0, 0);
+            igTextColored(priority ? color_accent : color_dimmed, priority ? "on" : "off");
+            
+            igImage(r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
+            igEndTooltip();
+        }
+
+        igColumns(3, NULL, false);
+        igRadioButton("Plane A", (int*)&r->selected_plane, Plane_A);
+        igNextColumn();
+        igRadioButton("Plane B", (int*)&r->selected_plane, Plane_B);
+        igNextColumn();
+        igRadioButton("Window", (int*)&r->selected_plane, Plane_Window); igColumns(1, NULL, false);
 
         igEnd();
+        igPopStyleVar(ImGuiStyleVar_WindowPadding);
     }
 
     // VRAM
