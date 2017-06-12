@@ -336,7 +336,7 @@ Instruction* gen_ext(uint16_t opcode, M68k* m)
 
 int mul(Instruction* i)
 {
-    SET(i->dst, FETCH_EA_AND_GET(i->src) * GET(i->dst));
+    i->context->data_registers[i->dst->n] = FETCH_EA_AND_GET(i->src) * i->context->data_registers[i->dst->n];
 
     uint32_t result = GET(i->dst);
     CARRY_SET(i->context, false);
@@ -350,7 +350,7 @@ int mul(Instruction* i)
 Instruction* gen_muls(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "MULS", mul);
-    i->size = Long;
+    i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     
@@ -363,7 +363,7 @@ Instruction* gen_muls(uint16_t opcode, M68k* m)
 Instruction* gen_mulu(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "MULU", mul);
-    i->size = Long;
+    i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
 
