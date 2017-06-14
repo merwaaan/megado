@@ -226,8 +226,18 @@ void vdp_write_control(Vdp* v, uint16_t value)
         uint8_t reg = FRAGMENT(value, 12, 8);
         uint8_t reg_value = WORD_LO(value);
 
-        LOG_VDP("\tregister %02x, value %02x\n", reg, reg_value);
+        if (reg > 0x17)
+        {
+            LOG_VDP("\t\tUnhandled register %02X\n", reg);
+            return;
+        }
 
+        LOG_VDP("\tRegister %02X, value %02X\n", reg, reg_value);
+
+        // Store the raw value
+        v->register_raw_values[reg] = reg_value;
+
+        // Update the internal state of the VDP
         switch (reg)
         {
         case 0:
@@ -256,7 +266,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
         case 3:
             v->window_nametable = (reg_value & 0x3E) * 0x400;
-
+            // TODO WD11 is ignored if the display resolution is 320px wide (H40), which limits the Window nametable address to multiples of $1000
             LOG_VDP("\t\tWindow nametable %04x\n", v->window_nametable);
             return;
 
@@ -363,11 +373,8 @@ void vdp_write_control(Vdp* v, uint16_t value)
             LOG_VDP("\t\tDMA source address high %02x (%08x), DMA type %04x\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo, v->dma_type);
             return;
 
-        case 6:
-        case 8:
-        case 9:
-        case 0xE:
-            LOG_VDP("\t\tUnhandled register\n");
+        default:
+            LOG_VDP("\t\tUnhandled register %02X\n", reg);
             return;
         }
     }
@@ -537,10 +544,13 @@ void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width
     case Plane_Window: plane_offset += v->window_nametable; break;
     }
 
-    for (int py = 0; py < v->horizontal_plane_size; ++py)
-        for (int px = 0; px < v->horizontal_plane_size; ++px)
+    uint16_t plane_width = plane == Plane_Window ? (v->display_width == 32 ? 32 : 64) : v->horizontal_plane_size;
+    uint16_t plane_height = plane == Plane_Window ? 32 : v->vertical_plane_size;
+
+    for (int py = 0; py < plane_height; ++py)
+        for (int px = 0; px < plane_width; ++px)
         {
-            uint16_t pattern_offset = (py * v->horizontal_plane_size + px) * 2;
+            uint16_t pattern_offset = (py * plane_width + px) * 2;
             uint16_t pattern_data = (plane_offset[pattern_offset] << 8) | plane_offset[pattern_offset + 1];
 
             Color* palette = v->cram + FRAGMENT(pattern_data, 14, 13) * 16;
@@ -565,43 +575,84 @@ static ScanlineData sprites_scanline;
 
 void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* data)
 {
-    uint8_t* name_table = v->vram + (plane == Plane_A ? v->plane_a_nametable : v->plane_b_nametable); // TODO window
+    // Exit early if we are rendering the window plane but it is not visible on that scanline.
+    //
+    // This can occur due to the following circumstances:
+    // - The window plane is disabled (reg 0x11 is 0 && reg 0x12 is 0)
+    // - The window plane is visible from the first line to the offset (direction is 0) but the scanline is below
+    // - The window plane is visible from the offset to the last line (direction is 1) but the scanline is above
+    // 
+    // https://emudocs.org/Genesis/Graphics/genvdp.txt
+    // http://gendev.spritesmind.net/forum/viewtopic.php?f=2&t=2492&p=30175#p30183
 
-    // Clear the scanline
-    for (uint16_t i = 0; i < BUFFER_WIDTH; ++i)
-        data->drawn[i] = false;
+    if (plane == Plane_Window && (
+        v->register_raw_values[0x11] == 0 && v->register_raw_values[0x12] == 0 || // The window is disabled
+        (scanline >= v->window_plane_vertical_offset * 8) ^ v->window_plane_vertical_direction)) // The window is not visible on that line
+    {
+        for (uint16_t i = 0; i < BUFFER_WIDTH; ++i)
+            data->drawn[i] = false;
+        return;
+    }
+
+    uint8_t* plane_offset = v->vram;
+    switch (plane)
+    {
+    case Plane_A: plane_offset += v->plane_a_nametable; break;
+    case Plane_B: plane_offset += v->plane_b_nametable; break;
+    case Plane_Window: plane_offset += v->window_nametable; break;
+    }
 
     // Handle horizontal scrolling
 
-    uint8_t* horizontal_scroll_offset = v->vram + v->horizontal_scrolltable;
+    uint16_t horizontal_scroll = 0;
 
-    if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Screen)
-        horizontal_scroll_offset += plane == Plane_A ? 0 : 2;
-    else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Row)
-        horizontal_scroll_offset += scanline / 8 * 32 + (plane == Plane_A ? 0 : 2); // TODO use y before or after vertical scrolling?!
-    else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Line)
-        horizontal_scroll_offset += scanline * 4 + (plane == Plane_A ? 0 : 2); // TODO use y before or after vertical scrolling?!
+    if (plane != Plane_Window)
+    {
+        uint8_t* horizontal_scroll_offset = v->vram + v->horizontal_scrolltable;
 
-    uint16_t horizontal_scroll = (horizontal_scroll_offset[0] << 8 | horizontal_scroll_offset[1]) & 0x3FF;
+        if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Screen)
+            horizontal_scroll_offset += plane == Plane_A ? 0 : 2;
+        else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Row)
+            horizontal_scroll_offset += scanline / 8 * 32 + (plane == Plane_A ? 0 : 2); // TODO use y before or after vertical scrolling?!
+        else if (v->horizontal_scrolling_mode == HorizontalScrollingMode_Line)
+            horizontal_scroll_offset += scanline * 4 + (plane == Plane_A ? 0 : 2); // TODO use y before or after vertical scrolling?!
+
+        horizontal_scroll = (horizontal_scroll_offset[0] << 8 | horizontal_scroll_offset[1]) & 0x3FF;
+    }
+
+    // The size of planes A and B is defined by register 0x10.
+    //
+    // For the window plane:
+    // - in H32 mode, it is 32 cells wide.
+    // - in H40 mode, it is 64 cells wide.
+    // - it seems to always be 32 cells high.
+    // TODO any doc to confirm that?
+    uint8_t plane_width = plane == Plane_Window ? (v->display_width == 32 ? 32 : 64) : v->horizontal_plane_size;
+    uint8_t plane_height = plane == Plane_Window ? 32 : v->vertical_plane_size;
 
     uint16_t screen_width = v->display_width * 8;
     for (uint16_t pixel = 0; pixel < screen_width; ++pixel)
     {
+        // TODO horizontal windowing
+
         // Handle vertical scrolling
 
         uint16_t vertical_scroll = 0;
 
-        if (v->vertical_scrolling_mode == VerticalScrollingMode_Screen)
-            vertical_scroll = v->vsram[plane == Plane_A ? 0 : 1];
-        else if (v->vertical_scrolling_mode == VerticalScrollingMode_TwoColumns)
-            vertical_scroll = v->vsram[pixel / 16 * 2 + (plane == Plane_A ? 0 : 1)] & 0x3FF; // TODO use x before or after horizontal scrolling?!
+        if (plane != Plane_Window)
+        {
+            if (v->vertical_scrolling_mode == VerticalScrollingMode_Screen)
+                vertical_scroll = v->vsram[plane == Plane_A ? 0 : 1];
+            else if (v->vertical_scrolling_mode == VerticalScrollingMode_TwoColumns)
+                vertical_scroll = v->vsram[pixel / 16 * 2 + (plane == Plane_A ? 0 : 1)] & 0x3FF; // TODO use x before or after horizontal scrolling?!
+        }
 
-        uint16_t x = (uint16_t)(pixel - horizontal_scroll) % (v->horizontal_plane_size * 8);
-        uint16_t y = (uint16_t)(scanline + vertical_scroll) % (v->vertical_plane_size * 8);
+        uint16_t x = (uint16_t)(pixel - horizontal_scroll) % (plane_width * 8);
+        uint16_t y = (uint16_t)(scanline + vertical_scroll) % (plane_height * 8);
 
         // Get the pattern at the specified pixel coordinates
-        uint16_t pattern_offset = (y / 8 * v->horizontal_plane_size + x / 8) * 2; // * 2 because one nametable entry is two bytes
-        uint16_t pattern_data = (name_table[pattern_offset] << 8) | name_table[pattern_offset + 1];
+        uint16_t pattern_offset = (y / 8 * plane_width + x / 8) * 2; // * 2 because one nametable entry is two bytes
+        uint16_t pattern_data = (plane_offset[pattern_offset] << 8) | plane_offset[pattern_offset + 1];
 
         // Extract the pattern attributes
         // http://md.squee.co/VDP#Nametables
@@ -644,6 +695,7 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
         data->drawn[i] = false;
 
     uint8_t sprite = 0;
+    uint8_t sprite_counter = 0;
     do
     {
         uint8_t* attributes = attribute_table + sprite * 8;
@@ -706,13 +758,18 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
             }
         }
 
+        ++sprite_counter;
+
         // Move on to the next sprite
         sprite = link;
 
-        // TODO priority between sprites? (or link-order dependent?)
-        // TODO Sprite at x=0 mask low priority sprites or something
-    } while (sprite != 0);
-    // TODO sprite count limit
+        // TODO Sprite masking https://emudocs.org/Genesis/Graphics/genvdp.txt
+
+    } while (
+        // 0 means the end of the linked list
+        sprite != 0 /*&&
+        // At most 16 / 20 sprites can be displayed by line
+        true || (v->display_width == 32 && sprite_counter <= 16 || v->display_width == 40 && sprite_counter <= 20) disabled for now */);
 }
 
 void vdp_draw_scanline(Vdp* v, int scanline)
@@ -727,32 +784,35 @@ void vdp_draw_scanline(Vdp* v, int scanline)
         // Get color & priority data for each layer
         vdp_get_plane_scanline(v, Plane_A, scanline, &plane_a_scanline);
         vdp_get_plane_scanline(v, Plane_B, scanline, &plane_b_scanline);
-        // TODO vdp_get_plane_scanline(v, Plane_W, line, &plane_w_scanline);
+        vdp_get_plane_scanline(v, Plane_Window, scanline, &plane_w_scanline);
         vdp_get_sprites_scanline(v, scanline, &sprites_scanline);
 
         // Combine the layers
         uint16_t screen_width = v->display_width * 8;
         for (uint16_t pixel = 0; pixel < screen_width; ++pixel)
         {
-            // Use the color from the plane with the highest priority
+            // Use the color from the layer with the highest priority
             // TODO more details
 
             Color pixel_color;
 
-            // meh, could do better?
-            if (sprites_scanline.drawn[pixel] && sprites_scanline.priorities[pixel])
+            if (plane_w_scanline.drawn[pixel] && plane_w_scanline.priorities[pixel]) // Window *
+                pixel_color = plane_w_scanline.colors[pixel];
+            else if (sprites_scanline.drawn[pixel] && sprites_scanline.priorities[pixel]) // Sprites *
                 pixel_color = sprites_scanline.colors[pixel];
-            else if (plane_a_scanline.drawn[pixel] && plane_a_scanline.priorities[pixel])
+            else if (plane_a_scanline.drawn[pixel] && plane_a_scanline.priorities[pixel]) // A *
                 pixel_color = plane_a_scanline.colors[pixel];
-            else if (plane_b_scanline.drawn[pixel] && plane_b_scanline.priorities[pixel])
+            else if (plane_b_scanline.drawn[pixel] && plane_b_scanline.priorities[pixel]) // B *
                 pixel_color = plane_b_scanline.colors[pixel];
-            else if (sprites_scanline.drawn[pixel])
+            else if (plane_w_scanline.drawn[pixel]) // Window
+                pixel_color = plane_w_scanline.colors[pixel];
+            else if (sprites_scanline.drawn[pixel]) // Sprites
                 pixel_color = sprites_scanline.colors[pixel];
-            else if (plane_a_scanline.drawn[pixel])
+            else if (plane_a_scanline.drawn[pixel]) // A
                 pixel_color = plane_a_scanline.colors[pixel];
-            else if (plane_b_scanline.drawn[pixel])
+            else if (plane_b_scanline.drawn[pixel]) // B
                 pixel_color = plane_b_scanline.colors[pixel];
-            else
+            else // Background
                 pixel_color = background_color;
 
             uint32_t pixel_offset = (scanline * BUFFER_WIDTH + pixel) * 3;
@@ -801,7 +861,7 @@ void vdp_draw_scanline(Vdp* v, int scanline)
         m68k_request_interrupt(v->genesis->m68k, VBLANK_IRQ);
     }
     // V-blank ends on line 262
-    else if (scanline == 262)// TODO PAL
+    else if (scanline == 261)// TODO PAL
     {
         v->vblank_in_progress = false;
     }

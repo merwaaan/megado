@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <m68k/instruction.h>
 #include <m68k/m68k.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -309,6 +310,7 @@ static struct ImVec4 color_dimmed = { 0.5f, 0.5f, 0.5f, 1.0f };
 static struct ImVec4 color_accent = { 1.0f, 0.07f, 0.57f, 1.0f };
 static struct ImVec4 color_sucess = { 0.0f, 1.0f, 0.0f, 1.0f };
 static struct ImVec4 color_error = { 1.0f, 0.0f, 0.0f, 1.0f };
+static struct ImVec4 color_title = { 0, 0.68, 0.71, 1 };
 
 static void memory_viewer(char* name, bool* opened, void* data, Size data_size, uint32_t data_length, uint32_t* target_address)
 {
@@ -392,6 +394,17 @@ static struct ImVec2 get_cursor_in_current_window()
     return (struct ImVec2) { mouse.x - (window.x + content.x), mouse.y - (window.y + content.y) };
 }
 
+static void text_on_off(bool state, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    igTextV(format, args);
+    va_end(args);
+
+    igSameLine(0, 5);
+    igTextColored(state ? color_accent : color_dimmed, state ? "on" : "off");
+}
+
 static void build_ui(Renderer* r)
 {
     // TODO wrapp all the igBegin in if, otherwise collapsed windows still render
@@ -430,6 +443,7 @@ static void build_ui(Renderer* r)
         {
             igSliderFloat("Scaling", &r->game_scale, 1.0f, 5.0f, "%f", 1.0f);
             igSeparator();
+            igMenuItemPtr("Registers", NULL, &r->show_vdp_registers, true);
             igMenuItemPtr("Palettes", NULL, &r->show_vdp_palettes, true);
             igMenuItemPtr("Patterns", NULL, &r->show_vdp_patterns, true);
             igMenuItemPtr("Planes", NULL, &r->show_vdp_planes, true);
@@ -559,6 +573,111 @@ static void build_ui(Renderer* r)
     if (r->show_ram)
         memory_viewer("RAM", &r->show_ram, r->genesis->memory + 0xFF000, Byte, 0x10000, &r->ram_target_address);
 
+    // VDP registers
+    if (r->show_vdp_registers)
+    {
+        igBegin("VDP registers", &r->show_vdp_registers, 0);
+        igColumns(3, NULL, false);
+
+        Vdp* v = r->genesis->vdp;
+
+#define REGISTER_SECTION(reg) igTextColored(color_title, "Register %0X [%02X]", reg, v->register_raw_values[reg])
+
+        igBeginChild("column1", (struct ImVec2) { 0, 0 }, false, 0);
+
+        REGISTER_SECTION(0);
+        igBullet(); text_on_off(v->hblank_enabled, "H-blank enabled:");
+        igBullet(); text_on_off(v->hv_counter_latched, "HV-counter latched:");
+        igSeparator();
+
+        REGISTER_SECTION(1);
+        igBullet(); text_on_off(v->display_enabled, "Display enabled:");
+        igBullet(); text_on_off(v->vblank_enabled, "V-blank enabled:");
+        igBullet(); text_on_off(v->dma_enabled, "DMA enabled:");
+        igBullet(); igText("Display height: %0X", v->display_height);
+        igSeparator();
+
+        REGISTER_SECTION(2);
+        igBullet(); igText("Plane A location: %0X", v->plane_a_nametable);
+        igSeparator();
+
+        REGISTER_SECTION(3);
+        igBullet(); igText("Window location: %0X", v->window_nametable);
+        igSeparator();
+
+        REGISTER_SECTION(4);
+        igBullet(); igText("Plane B location: %0X", v->plane_b_nametable);
+        igSeparator();
+
+        REGISTER_SECTION(5);
+        igBullet(); igText("Sprite table location: %0X", v->sprites_attribute_table);
+
+        igEndChild();
+        igNextColumn();
+        igBeginChild("column2", (struct ImVec2) { 0, 0 }, false, 0);
+
+        REGISTER_SECTION(7);
+        igBullet(); igText("Background palette: %0X", v->background_color_palette);
+        igBullet(); igText("Background color: %0X", v->background_color_entry);
+        igSeparator();
+
+        REGISTER_SECTION(0xA);
+        igBullet(); igText("H-blank counter: %0X", v->hblank_line);
+        igSeparator();
+
+        REGISTER_SECTION(0xB);
+        char* vertical_scrolling_mode_names[] = { "Screen", "two columns" };
+        igBullet(); igText("Vertical scrolling: %s", vertical_scrolling_mode_names[v->vertical_scrolling_mode]);
+        char* horizontal_scrolling_mode_names[] = { "Screen", "Invalid", "Row", "Line" };
+        igBullet(); igText("Horizontal scrolling: %s", horizontal_scrolling_mode_names[v->horizontal_scrolling_mode]);
+        
+        REGISTER_SECTION(0xC);
+        igBullet(); igText("Display width: %0X", v->display_width);
+        igBullet(); text_on_off(v->shadow_highlight_enabled, "Shadow/Highlight:");
+        igBullet(); igText("Interlace mode: %0X", v->interlace_mode);
+        igSeparator();
+
+        REGISTER_SECTION(0xD);
+        igBullet(); igText("Horizontal scroll table: %0X", v->horizontal_scrolltable);
+        igSeparator();
+
+        REGISTER_SECTION(0xF);
+        igBullet(); igText("Auto-increment: %0X", v->auto_increment);
+
+        igEndChild();
+        igNextColumn();
+        igBeginChild("column3", (struct ImVec2) { 0, 0 }, false, 0);
+
+        REGISTER_SECTION(0x10);
+        igBullet(); igText("Plane height: %0X", v->vertical_plane_size);
+        igBullet(); igText("Plane width: %0X", v->horizontal_plane_size);
+        igSeparator();
+
+        REGISTER_SECTION(0x11);
+        igBullet(); igText("Window horizontal direction: %s", v->window_plane_horizontal_direction ? "left" : "right");
+        igBullet(); igText("Window horizontal position: %0X", v->window_plane_horizontal_offset);
+        igSeparator();
+
+        REGISTER_SECTION(0x12);
+        igBullet(); igText("Window vertical direction: %s", v->window_plane_vertical_direction ? "up" : "down");
+        igBullet(); igText("Window vertical position: %0X", v->window_plane_vertical_offset);
+        igSeparator();
+
+        REGISTER_SECTION(0x13);
+        REGISTER_SECTION(0x14);
+        igBullet(); igText("DMA length: %0X", v->dma_length);
+        igSeparator();
+
+        REGISTER_SECTION(0x15);
+        REGISTER_SECTION(0x16);
+        REGISTER_SECTION(0x17);
+        igBullet(); igText("DMA source: %0X", v->dma_source_address_hi << 16 | v->dma_source_address_lo);
+
+        igEndChild();
+        igColumns(1, NULL, false);
+        igEnd();
+    }
+
     // VDP palettes
     if (r->show_vdp_palettes)
     {
@@ -647,13 +766,14 @@ static void build_ui(Renderer* r)
 
         // Update the plane texture with the selected plane
 
+        memset(r->plane_buffer, 0, 64 * 8 * 64 * 8 * 3 * sizeof(uint8_t));
         vdp_draw_plane(r->genesis->vdp, r->selected_plane, r->plane_buffer, 512);
 
         glBindTexture(GL_TEXTURE_2D, r->ui_planes_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, plane_width, plane_height, 0, GL_RGB, GL_UNSIGNED_BYTE, r->plane_buffer);
 
         igImage(r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_black);
-        
+
         // If a cell is hovered, show a tooltip with details
         if (igIsItemHovered())
         {
@@ -665,32 +785,33 @@ static void build_ui(Renderer* r)
             uint16_t pattern_index, palette_index;
             bool priority, horizontal_flip, vertical_flip;
             vdp_get_plane_cell_data(r->genesis->vdp, r->selected_plane, cell_index, &pattern_index, &palette_index, &priority, &horizontal_flip, &vertical_flip);
-            
+
             // Draw a magnified version of the pattern
 
             Color* palette = r->genesis->vdp->cram + palette_index * 16;
 
             uint8_t magnified_pattern_buffer[64 * 3];
             vdp_draw_pattern(r->genesis->vdp, pattern_index, palette, magnified_pattern_buffer, 8, 0, 0, horizontal_flip, vertical_flip);
-            
+
             glBindTexture(GL_TEXTURE_2D, r->ui_magnified_pattern_texture);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 8, 8, 0, GL_RGB, GL_UNSIGNED_BYTE, magnified_pattern_buffer);
 
             igBeginTooltip();
+            igText("Cell (%d, %d)", (int)cell_pos.x / 8, (int)cell_pos.y / 8);
             igText("Pattern #%d", pattern_index);
 
             igText("%-18s", "Horizontal flip: ");
             igSameLine(0, 0);
             igTextColored(horizontal_flip ? color_accent : color_dimmed, horizontal_flip ? "on" : "off");
-            
+
             igText("%-18s", "Vertical flip: ");
             igSameLine(0, 0);
             igTextColored(vertical_flip ? color_accent : color_dimmed, vertical_flip ? "on" : "off");
-            
+
             igText("%-18s", "Priority: ");
             igSameLine(0, 0);
             igTextColored(priority ? color_accent : color_dimmed, priority ? "on" : "off");
-            
+
             igImage(r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
             igEndTooltip();
         }

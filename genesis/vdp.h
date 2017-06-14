@@ -79,7 +79,6 @@ typedef struct Vdp
     bool pending_dma_fill;
 
     // http://md.squee.co/VDP#VDP_Registers
-
     // Register $00
     bool hblank_enabled;
     bool hv_counter_latched;
@@ -125,15 +124,15 @@ typedef struct Vdp
     int auto_increment;
 
     // Register $10
-    uint8_t vertical_plane_size;
+    uint8_t vertical_plane_size; // TODO rename...
     uint8_t horizontal_plane_size;
 
     // Register $11
-    bool window_plane_horizontal_direction;
+    bool window_plane_horizontal_direction; // false: left, true: right
     int window_plane_horizontal_offset;
 
     // Register $12
-    bool window_plane_vertical_direction;
+    bool window_plane_vertical_direction; // false: up, true: down
     int window_plane_vertical_offset;
 
     // Register $13 - $14
@@ -143,6 +142,12 @@ typedef struct Vdp
     uint16_t dma_source_address_lo;
     uint8_t dma_source_address_hi;
     int dma_type;
+
+    // In practice, we extract the internal state changes from
+    // each write to the VDP's registers because they are more 
+    // often used internally than overwritten by the program.
+    // Still, keeping the raw values is handy for debugging purposes.
+    uint8_t register_raw_values[0x18];
 
     bool dma_in_progress;
     bool hblank_in_progress;

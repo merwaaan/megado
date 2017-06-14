@@ -15,9 +15,10 @@ typedef struct Renderer
     float game_scale; // Scaling factor for the Genesis video output
 
     bool show_cpu_registers;
+    bool show_cpu_disassembly;
+    bool show_vdp_registers;
     bool show_vdp_palettes;
     bool show_vdp_patterns;
-    bool show_cpu_disassembly;
 
     bool show_rom;
     uint32_t rom_target_address;
