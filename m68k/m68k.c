@@ -8,8 +8,6 @@
 #include "m68k.h"
 #include "operands.h"
 
-#undef DEBUG
-
 #ifdef DEBUG
 #define LOG_M68K(...) printf(__VA_ARGS__)
 #else
@@ -156,7 +154,7 @@ uint8_t m68k_step(M68k* m)
 
         return 0;
     }
-//#define DEBUG
+
 #ifdef DEBUG
     DecodedInstruction* d = breakpoint_triggered || true ? m68k_decode(m, m->instruction_address) : NULL;
     if (d != NULL)

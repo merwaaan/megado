@@ -6,8 +6,6 @@
 #include "genesis.h"
 #include "vdp.h"
 
-#undef DEBUG
-
 #ifdef DEBUG
 #define LOG_VDP(...) printf(__VA_ARGS__)
 #else
@@ -218,7 +216,7 @@ uint16_t vdp_read_control(Vdp* v)
 
 void vdp_write_control(Vdp* v, uint16_t value)
 {
-    LOG_VDP("[%0x] control write: %02x\n", v->cpu->instruction_address, value);
+    LOG_VDP("[%0x] control write: %02x\n", v->genesis->m68k->instruction_address, value);
 
     // TODO see https://sourceforge.net/p/dgen/dgen/ci/master/tree/vdp.cpp for cancelling commands
 

@@ -15,12 +15,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "musashi_make", "deps\musash
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug (log)|x64 = Debug (log)|x64
+		Debug (log)|x86 = Debug (log)|x86
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}.Debug (log)|x64.ActiveCfg = Debug (log)|x64
+		{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}.Debug (log)|x64.Build.0 = Debug (log)|x64
+		{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}.Debug (log)|x86.ActiveCfg = Debug (log)|Win32
+		{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}.Debug (log)|x86.Build.0 = Debug (log)|Win32
 		{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}.Debug|x64.ActiveCfg = Debug|x64
 		{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}.Debug|x64.Build.0 = Debug|x64
 		{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}.Debug|x86.ActiveCfg = Debug|Win32
@@ -29,6 +35,10 @@ Global
 		{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}.Release|x64.Build.0 = Release|x64
 		{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}.Release|x86.ActiveCfg = Release|Win32
 		{B5D8C48A-7F4D-4DC1-B55D-8BCA00ED4F90}.Release|x86.Build.0 = Release|Win32
+		{0E836FA8-0A56-4982-91DE-5D571D8239C6}.Debug (log)|x64.ActiveCfg = Debug (log)|x64
+		{0E836FA8-0A56-4982-91DE-5D571D8239C6}.Debug (log)|x64.Build.0 = Debug (log)|x64
+		{0E836FA8-0A56-4982-91DE-5D571D8239C6}.Debug (log)|x86.ActiveCfg = Debug (log)|Win32
+		{0E836FA8-0A56-4982-91DE-5D571D8239C6}.Debug (log)|x86.Build.0 = Debug (log)|Win32
 		{0E836FA8-0A56-4982-91DE-5D571D8239C6}.Debug|x64.ActiveCfg = Debug|x64
 		{0E836FA8-0A56-4982-91DE-5D571D8239C6}.Debug|x64.Build.0 = Debug|x64
 		{0E836FA8-0A56-4982-91DE-5D571D8239C6}.Debug|x86.ActiveCfg = Debug|Win32
@@ -37,6 +47,10 @@ Global
 		{0E836FA8-0A56-4982-91DE-5D571D8239C6}.Release|x64.Build.0 = Release|x64
 		{0E836FA8-0A56-4982-91DE-5D571D8239C6}.Release|x86.ActiveCfg = Release|Win32
 		{0E836FA8-0A56-4982-91DE-5D571D8239C6}.Release|x86.Build.0 = Release|Win32
+		{92C9C451-5A4F-4D05-86F4-76F37E3B106C}.Debug (log)|x64.ActiveCfg = Debug (log)|x64
+		{92C9C451-5A4F-4D05-86F4-76F37E3B106C}.Debug (log)|x64.Build.0 = Debug (log)|x64
+		{92C9C451-5A4F-4D05-86F4-76F37E3B106C}.Debug (log)|x86.ActiveCfg = Debug (log)|Win32
+		{92C9C451-5A4F-4D05-86F4-76F37E3B106C}.Debug (log)|x86.Build.0 = Debug (log)|Win32
 		{92C9C451-5A4F-4D05-86F4-76F37E3B106C}.Debug|x64.ActiveCfg = Debug|x64
 		{92C9C451-5A4F-4D05-86F4-76F37E3B106C}.Debug|x64.Build.0 = Debug|x64
 		{92C9C451-5A4F-4D05-86F4-76F37E3B106C}.Debug|x86.ActiveCfg = Debug|Win32
@@ -45,6 +59,10 @@ Global
 		{92C9C451-5A4F-4D05-86F4-76F37E3B106C}.Release|x64.Build.0 = Release|x64
 		{92C9C451-5A4F-4D05-86F4-76F37E3B106C}.Release|x86.ActiveCfg = Release|Win32
 		{92C9C451-5A4F-4D05-86F4-76F37E3B106C}.Release|x86.Build.0 = Release|Win32
+		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Debug (log)|x64.ActiveCfg = Debug (log)|x64
+		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Debug (log)|x64.Build.0 = Debug (log)|x64
+		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Debug (log)|x86.ActiveCfg = Debug (log)|Win32
+		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Debug (log)|x86.Build.0 = Debug (log)|Win32
 		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Debug|x64.ActiveCfg = Debug|x64
 		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Debug|x64.Build.0 = Debug|x64
 		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Debug|x86.ActiveCfg = Debug|Win32
@@ -53,6 +71,8 @@ Global
 		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Release|x64.Build.0 = Release|x64
 		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Release|x86.ActiveCfg = Release|Win32
 		{72121CF3-C003-43BD-B506-13DD898D4F8A}.Release|x86.Build.0 = Release|Win32
+		{5433B13F-17E1-48A4-B0C9-EB7546EA711F}.Debug (log)|x64.ActiveCfg = Debug|x64
+		{5433B13F-17E1-48A4-B0C9-EB7546EA711F}.Debug (log)|x86.ActiveCfg = Debug|Win32
 		{5433B13F-17E1-48A4-B0C9-EB7546EA711F}.Debug|x64.ActiveCfg = Debug|x64
 		{5433B13F-17E1-48A4-B0C9-EB7546EA711F}.Debug|x64.Build.0 = Debug|x64
 		{5433B13F-17E1-48A4-B0C9-EB7546EA711F}.Debug|x86.ActiveCfg = Debug|Win32

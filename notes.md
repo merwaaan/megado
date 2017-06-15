@@ -10,6 +10,9 @@
 
 - Shadowrun: the games becomes completely glitched once the in-game menu is opened.
 
+- The Simpsons - Bart's Nightmare: the planes take an invalid size (64*128). This occurs on
+the menu screen and then in-game, which leads to a buffer overflow.
+
 # Games that seem to wait for the Z80:
 
 - Daffy Duck in Hollywood @1D7BC8
