@@ -11,18 +11,15 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
 {
     address &= 0xFFFFFF; // 24-bit address bus
 
+    // Z80 address space
+    if (address >= 0xA00000 && address < 0xA10000) {
+      return z80_read(GENESIS(m)->z80, address & 0xFFFF);
+    }
+
     switch (address)
     {
 
         // https://wiki.megadrive.org/index.php?title=IO_Registers
-
-      // YM2612
-    case 0xA04000:
-    case 0xA04001:
-    case 0xA04002:
-    case 0xA04003:
-      // Fake it for now: always return non-busy and timer overflowed.
-        return 0x7;
 
     case 0xA10000: // Version port
     case 0xA10001:
@@ -38,15 +35,11 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
         break;
 
     case 0xA11100:
-      // If the Z80 is reset, or if it is running (meaning the 68000 does not
-      // have the bus) it will also return 1
-      if (GENESIS(m)->z80->running || !GENESIS(m)->z80->reset) {
-        return 1;
-      }
-      return GENESIS(m)->z80->bus_ack;
+      // The 68000 has the bus if the Z80 is not running (0: has the bus)
+      return z80_bus_ack(GENESIS(m)->z80);
 
     case 0xA11200:
-        return 0;
+      return 0;
 
     case 0xC00000: // VDP data port
     case 0xC00002:
@@ -94,17 +87,23 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     if (address <= 0x3FFFFF)
         return;
 
-    if (address == 0xA10002 || address == 0xA10003)
+    // Z80 address space
+    if (address > 0xA00000 && address < 0xA10000) {
+      z80_write(GENESIS(m)->z80, address & 0xFFFF, value);
+    }
+
+    else if (address == 0xA10002 || address == 0xA10003) {
         joypad_write(GENESIS(m)->joypad, value);
+    }
 
     // BUSREQ
     else if (address == 0xA11100) {
-      GENESIS(m)->z80->bus_req = value;
+      z80_bus_req(GENESIS(m)->z80, value);
     }
 
     // RESET
     else if (address == 0xA11200) {
-      GENESIS(m)->z80->reset = value;
+      z80_reset(GENESIS(m)->z80, value);
     }
 
     // " Writing to the VDP control or data ports is interpreted as a 16-bit
@@ -131,6 +130,14 @@ void m68k_write_w(M68k* m, uint32_t address, uint16_t value)
 
     switch (address)
     {
+    case 0xA11100:
+      z80_bus_req(GENESIS(m)->z80, value >> 8);
+      break;
+
+    case 0xA11200:
+      z80_reset(GENESIS(m)->z80, value >> 8);
+      break;
+
     case 0xC00000: // VDP data port
     case 0xC00002:
         vdp_write_data(GENESIS(m)->vdp, value);

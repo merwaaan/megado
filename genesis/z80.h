@@ -1,17 +1,25 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define Z80_RAM_LENGTH 0x2000
+
+struct Z80;
+
+typedef uint8_t(*z80_op)(struct Z80*);
+
 typedef struct Z80 {
   uint32_t left_cycles;
 
   uint16_t pc;
 
-  bool running; // Whether the Z80 is executing instructions
+  bool running;                 // Whether the Z80 is executing instructions
+  bool resetting;               // Whether the Z80 is being reset
 
-  bool bus_req; // 0: request bus, 1: release bus
-  bool bus_ack; // 0: bus is free, 1: Z80 is using the bus
-  bool reset;   // 0: reset the Z80, 1: let the Z80 run
+  uint8_t ram[Z80_RAM_LENGTH];
+
+  z80_op opcode_table[0x100];
 } Z80;
+
 
 Z80* z80_make();
 void z80_free(Z80*);
@@ -21,5 +29,9 @@ void z80_initialize(Z80*);
 uint8_t z80_step(Z80*);
 void z80_run_cycles(Z80*, int);
 
-uint8_t z80_busreq_r(Z80*);
-void z80_busreq_w(Z80*, uint8_t);
+void z80_bus_req(Z80*, uint8_t);
+uint8_t z80_bus_ack(Z80*);
+void z80_reset(Z80*, uint8_t);
+
+uint8_t z80_read(Z80*, uint16_t);
+void z80_write(Z80 *, uint16_t, uint8_t);

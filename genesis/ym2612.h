@@ -17,9 +17,9 @@ typedef struct YM2612
 
     uint8_t dac_value;
     bool dac_enabled;
-} Ym2612;
+} YM2612;
 
-float[] lfo_frequencies = {
+static float lfo_frequencies[] = {
     3.98,
     5.56,
     6.02,
@@ -30,6 +30,8 @@ float[] lfo_frequencies = {
     72.2
 };
 
-Ym2612* ym2612_make();
-void ym2612_free(Ym2612*);
+YM2612* ym2612_make();
+void ym2612_free(YM2612*);
 
+uint8_t ym2612_read(YM2612*, uint32_t address);
+void ym2612_write(YM2612*, uint32_t address, uint8_t value);

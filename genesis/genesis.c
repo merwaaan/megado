@@ -139,7 +139,7 @@ void genesis_frame(Genesis* g)
     {
         // Execute one scanline worth of instructions
         m68k_run_cycles(g->m68k, 488); // TODO not sure about that value
-        z80_run_cycles(g->z80, 488);
+        z80_run_cycles(g->z80, 244); // Z80 runs at half the frequency of M68
 
         // Draw the scanline
         vdp_draw_scanline(g->vdp, line);
