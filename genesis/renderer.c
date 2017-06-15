@@ -586,13 +586,13 @@ static void build_ui(Renderer* r)
         igBeginChild("column1", (struct ImVec2) { 0, 0 }, false, 0);
 
         REGISTER_SECTION(0);
-        igBullet(); text_on_off(v->hblank_enabled, "H-blank enabled:");
+        igBullet(); text_on_off(v->hblank_interrupt_enabled, "H-blank interrupt:");
         igBullet(); text_on_off(v->hv_counter_latched, "HV-counter latched:");
         igSeparator();
 
         REGISTER_SECTION(1);
         igBullet(); text_on_off(v->display_enabled, "Display enabled:");
-        igBullet(); text_on_off(v->vblank_enabled, "V-blank enabled:");
+        igBullet(); text_on_off(v->vblank_interrupt_enabled, "V-blank interrupt:");
         igBullet(); text_on_off(v->dma_enabled, "DMA enabled:");
         igBullet(); igText("Display height: %0X", v->display_height);
         igSeparator();
@@ -649,8 +649,8 @@ static void build_ui(Renderer* r)
         igBeginChild("column3", (struct ImVec2) { 0, 0 }, false, 0);
 
         REGISTER_SECTION(0x10);
-        igBullet(); igText("Plane height: %0X", v->vertical_plane_size);
-        igBullet(); igText("Plane width: %0X", v->horizontal_plane_size);
+        igBullet(); igText("Plane height: %0X", v->plane_width);
+        igBullet(); igText("Plane width: %0X", v->plane_height);
         igSeparator();
 
         REGISTER_SECTION(0x11);
@@ -780,7 +780,7 @@ static void build_ui(Renderer* r)
             // Get the data of the hovered cell
 
             struct ImVec2 cell_pos = get_cursor_in_current_window();
-            uint16_t cell_index = (int)cell_pos.y / 8 * r->genesis->vdp->horizontal_plane_size + (int)cell_pos.x / 8;
+            uint16_t cell_index = (int)cell_pos.y / 8 * r->genesis->vdp->plane_height + (int)cell_pos.x / 8;
 
             uint16_t pattern_index, palette_index;
             bool priority, horizontal_flip, vertical_flip;

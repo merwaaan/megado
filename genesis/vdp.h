@@ -80,12 +80,12 @@ typedef struct Vdp
 
     // http://md.squee.co/VDP#VDP_Registers
     // Register $00
-    bool hblank_enabled;
+    bool hblank_interrupt_enabled;
     bool hv_counter_latched;
 
     // Register $01
     bool display_enabled;
-    bool vblank_enabled;
+    bool vblank_interrupt_enabled;
     bool dma_enabled;
     uint8_t display_height;
 
@@ -124,8 +124,8 @@ typedef struct Vdp
     int auto_increment;
 
     // Register $10
-    uint8_t vertical_plane_size; // TODO rename...
-    uint8_t horizontal_plane_size;
+    uint8_t plane_width;
+    uint8_t plane_height;
 
     // Register $11
     bool window_plane_horizontal_direction; // false: left, true: right

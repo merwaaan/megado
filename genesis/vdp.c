@@ -33,8 +33,8 @@ Vdp* vdp_make(Genesis* genesis)
     v->pending_command = false;
     v->display_width = display_width_values[0];
     v->display_height = display_height_values[0];
-    v->vertical_plane_size = plane_size_values[0];
-    v->horizontal_plane_size = plane_size_values[0];
+    v->plane_width = plane_size_values[0];
+    v->plane_height = plane_size_values[0];
 
     return v;
 }
@@ -242,20 +242,20 @@ void vdp_write_control(Vdp* v, uint16_t value)
         {
         case 0:
             // TODO bit 5
-            v->hblank_enabled = BIT(reg_value, 4);
+            v->hblank_interrupt_enabled = BIT(reg_value, 4);
             v->hv_counter_latched = !BIT(reg_value, 1);
             // Bit 0 tells the VDP if the display is enabled or not. The difference with bit 6 of register 1 is unclear.
 
-            LOG_VDP("\t\tH-blank enabled %d, HV-counter latched %d\n", v->hblank_enabled, v->hv_counter_latched);
+            LOG_VDP("\t\tH-blank interrupt %d, HV-counter latched %d\n", v->hblank_interrupt_enabled, v->hv_counter_latched);
             return;
 
         case 1:
             v->display_enabled = BIT(reg_value, 6);
-            v->vblank_enabled = BIT(reg_value, 5);
+            v->vblank_interrupt_enabled = BIT(reg_value, 5);
             v->dma_enabled = BIT(reg_value, 4);
             v->display_height = display_height_values[BIT(reg_value, 3)];
 
-            LOG_VDP("\t\tDisplay enabled %d, V-blank enabled %d, DMA enabled %d, Display mode %d\n", v->display_enabled, v->vblank_enabled, v->dma_enabled, v->display_height);
+            LOG_VDP("\t\tDisplay enabled %d, V-blank interrupt %d, DMA enabled %d, Display mode %d\n", v->display_enabled, v->vblank_interrupt_enabled, v->dma_enabled, v->display_height);
             return;
 
         case 2:
@@ -323,10 +323,10 @@ void vdp_write_control(Vdp* v, uint16_t value)
             return;
 
         case 0x10:
-            v->vertical_plane_size = plane_size_values[FRAGMENT(reg_value, 5, 4)];
-            v->horizontal_plane_size = plane_size_values[FRAGMENT(reg_value, 1, 0)];
+            v->plane_width = plane_size_values[FRAGMENT(reg_value, 5, 4)];
+            v->plane_height = plane_size_values[FRAGMENT(reg_value, 1, 0)];
 
-            LOG_VDP("\t\tVertical plane size %d, Horizontal plane size %d\n", v->vertical_plane_size, v->horizontal_plane_size);
+            LOG_VDP("\t\tVertical plane size %d, Horizontal plane size %d\n", v->plane_width, v->plane_height);
             return;
 
         case 0x11:
@@ -544,8 +544,8 @@ void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width
     case Plane_Window: plane_offset += v->window_nametable; break;
     }
 
-    uint16_t plane_width = plane == Plane_Window ? (v->display_width == 32 ? 32 : 64) : v->horizontal_plane_size;
-    uint16_t plane_height = plane == Plane_Window ? 32 : v->vertical_plane_size;
+    uint16_t plane_width = plane == Plane_Window ? (v->display_width == 32 ? 32 : 64) : v->plane_height;
+    uint16_t plane_height = plane == Plane_Window ? 32 : v->plane_width;
 
     for (int py = 0; py < plane_height; ++py)
         for (int px = 0; px < plane_width; ++px)
@@ -627,8 +627,8 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
     // - in H40 mode, it is 64 cells wide.
     // - it seems to always be 32 cells high.
     // TODO any doc to confirm that?
-    uint8_t plane_width = plane == Plane_Window ? (v->display_width == 32 ? 32 : 64) : v->horizontal_plane_size;
-    uint8_t plane_height = plane == Plane_Window ? 32 : v->vertical_plane_size;
+    uint8_t plane_width = plane == Plane_Window ? (v->display_width == 32 ? 32 : 64) : v->plane_height;
+    uint8_t plane_height = plane == Plane_Window ? 32 : v->plane_width;
 
     uint16_t screen_width = v->display_width * 8;
     for (uint16_t pixel = 0; pixel < screen_width; ++pixel)
@@ -839,7 +839,7 @@ void vdp_draw_scanline(Vdp* v, int scanline)
     // Trigger an interrupt when the counter reaches 0
     if (v->hblank_counter <= 0)
     {
-        if (v->hblank_enabled)
+        if (v->hblank_interrupt_enabled)
             m68k_request_interrupt(v->genesis->m68k, HBLANK_IRQ);
 
         v->hblank_counter = v->hblank_line;
@@ -858,7 +858,7 @@ void vdp_draw_scanline(Vdp* v, int scanline)
     {
         v->vblank_in_progress = true;
 
-        if (v->vblank_enabled)
+        if (v->vblank_interrupt_enabled)
             m68k_request_interrupt(v->genesis->m68k, VBLANK_IRQ);
     }
     // V-blank ends on line 262
