@@ -35,6 +35,8 @@ Vdp* vdp_make(Genesis* genesis)
     v->pending_command = false;
     v->display_width = display_width_values[0];
     v->display_height = display_height_values[0];
+    v->vertical_plane_size = plane_size_values[0];
+    v->horizontal_plane_size = plane_size_values[0];
 
     return v;
 }
@@ -854,11 +856,12 @@ void vdp_draw_scanline(Vdp* v, int scanline)
     v->v_counter = scanline;
 
     // V-blank occurs on line 224
-    if (scanline == 224 && v->vblank_enabled)// TODO PAL
+    if (scanline == 224)// TODO PAL
     {
         v->vblank_in_progress = true;
 
-        m68k_request_interrupt(v->genesis->m68k, VBLANK_IRQ);
+        if (v->vblank_enabled)
+            m68k_request_interrupt(v->genesis->m68k, VBLANK_IRQ);
     }
     // V-blank ends on line 262
     else if (scanline == 261)// TODO PAL
