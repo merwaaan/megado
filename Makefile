@@ -1,7 +1,8 @@
 # Configurables
 CC := clang
 # Disable unused parameter warning since not everything is implemented yet
-CFLAGS := -Wall -Wextra -pedantic -std=c11 -Wno-unused-parameter -Wno-unused-variable
+# format-pedantic warning is annoying; seems safe to me
+CFLAGS := -Wall -Wextra -pedantic -std=c11 -Wno-unused-parameter -Wno-unused-variable -Wno-format-pedantic
 RELEASE_FLAGS := -O3
 DEBUG_FLAGS := -DDEBUG -g
 

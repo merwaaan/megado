@@ -586,7 +586,7 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
     // http://gendev.spritesmind.net/forum/viewtopic.php?f=2&t=2492&p=30175#p30183
 
     if (plane == Plane_Window && (
-        v->register_raw_values[0x11] == 0 && v->register_raw_values[0x12] == 0 || // The window is disabled
+        v->register_raw_values[0x11] == (0 && v->register_raw_values[0x12] == 0) || // The window is disabled
         (scanline >= v->window_plane_vertical_offset * 8) ^ v->window_plane_vertical_direction)) // The window is not visible on that line
     {
         for (uint16_t i = 0; i < BUFFER_WIDTH; ++i)

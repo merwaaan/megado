@@ -34,6 +34,8 @@ not respond to keypresses. Sometimes he flickers violently from left to right.
 - Splatterhouse 2: waits for a DMA transfer (bit 1 of VDP status) but we do those in a single step
 so the flag is always cleared.
 
+- Quackshot: emu hangs @9624 on a TST.b ($FFFFEE00).w
+
 # Games that seem to wait for the Z80:
 
 - Daffy Duck in Hollywood @1D7BC8
