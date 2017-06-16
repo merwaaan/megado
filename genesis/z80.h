@@ -1,11 +1,9 @@
+#pragma once
+
 #include <stdbool.h>
 #include <stdint.h>
 
 #define Z80_RAM_LENGTH 0x2000
-
-struct Z80;
-
-typedef uint8_t(*z80_op)(struct Z80*);
 
 typedef struct Z80 {
   uint32_t left_cycles;
@@ -16,10 +14,7 @@ typedef struct Z80 {
   bool resetting;               // Whether the Z80 is being reset
 
   uint8_t ram[Z80_RAM_LENGTH];
-
-  z80_op opcode_table[0x100];
 } Z80;
-
 
 Z80* z80_make();
 void z80_free(Z80*);

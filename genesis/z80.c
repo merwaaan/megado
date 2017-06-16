@@ -26,20 +26,19 @@ void z80_initialize(Z80* z) {
   // otherwise.
   z->pc = 0;
   z->running = 0;
-
-  z->opcode_table[0] = &z80_nop;
 }
 
 uint8_t z80_step(Z80* z) {
   uint16_t opcode = z->ram[z->pc++];
 
-  z80_op op = z->opcode_table[opcode];
+  z80_op op = z80_op_table[opcode];
 
   if (op == NULL) {
     LOG_Z80("z80: Unknown opcode: %02x\n", opcode);
     return 4;
   } else {
     LOG_Z80("z80: %04x: %02x\n", z->pc, opcode);
+    // TODO: check this is a simple `call *rax` even with the static ops table
     return (*op)(z);
   }
 
@@ -130,6 +129,6 @@ void z80_write(Z80 *z, uint16_t address, uint8_t value) {
   }
 }
 
-uint8_t z80_nop(Z80 *z) {
+uint8_t z80_op_nop(Z80 *z) {
   return 4;
 }
