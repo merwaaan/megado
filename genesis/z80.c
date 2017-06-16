@@ -30,6 +30,7 @@ void z80_initialize(Z80* z) {
 
 uint8_t z80_step(Z80* z) {
   uint16_t opcode = z->ram[z->pc++];
+  z->pc = (z->pc + 1) % Z80_RAM_LENGTH;
 
   z80_op op = z80_op_table[opcode];
 
@@ -38,7 +39,6 @@ uint8_t z80_step(Z80* z) {
     return 4;
   } else {
     LOG_Z80("z80: %04x: %02x\n", z->pc, opcode);
-    // TODO: check this is a simple `call *rax` even with the static ops table
     return (*op)(z);
   }
 
