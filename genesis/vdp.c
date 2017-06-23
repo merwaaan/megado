@@ -56,7 +56,7 @@ uint16_t vdp_read_data(Vdp* v)
     v->pending_command = false;
 
     uint16_t value = 0;
-    switch (v->access_mode & 0xF) // TODO do it if DMA bit on? (& 7 / & 3f) 
+    switch (v->access_mode & 0xF) // TODO do it if DMA bit on? (& 7 / & 3f)
     {
     case 0: // VRAM read
 
@@ -94,7 +94,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
 
     v->pending_command = false;
 
-    switch (v->access_mode & 0xF) // TODO do it if DMA bit on? (& 7 / & 3f) 
+    switch (v->access_mode & 0xF) // TODO do it if DMA bit on? (& 7 / & 3f)
     {
     case 1: // VRAM write
 
@@ -581,7 +581,7 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
     // - The window plane is disabled (reg 0x11 is 0 && reg 0x12 is 0)
     // - The window plane is visible from the first line to the offset (direction is 0) but the scanline is below
     // - The window plane is visible from the offset to the last line (direction is 1) but the scanline is above
-    // 
+    //
     // https://emudocs.org/Genesis/Graphics/genvdp.txt
     // http://gendev.spritesmind.net/forum/viewtopic.php?f=2&t=2492&p=30175#p30183
 
@@ -765,11 +765,13 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
 
         // TODO Sprite masking https://emudocs.org/Genesis/Graphics/genvdp.txt
 
-    } while (
-        // 0 means the end of the linked list
-        sprite != 0 /*&&
-        // At most 16 / 20 sprites can be displayed by line
-        true || (v->display_width == 32 && sprite_counter <= 16 || v->display_width == 40 && sprite_counter <= 20) disabled for now */);
+    } while (sprite != 0 // 0 means the end of the linked list
+             && sprite_counter < 64 // exit the loop in case of bad linked lists
+             // At most 16 / 20 sprites can be displayed by line
+             // disabled for now
+             /* (v->display_width == 32 && sprite_counter <= 16 */
+             /*  || v->display_width == 40 && sprite_counter <= 20) */
+              );
 }
 
 void vdp_draw_scanline(Vdp* v, int scanline)
