@@ -6,14 +6,14 @@
 #define Z80_RAM_LENGTH 0x2000
 
 typedef struct Z80 {
-  int32_t left_cycles;
+    int32_t left_cycles;
 
-  uint16_t pc;
+    uint16_t pc;
 
-  bool running;                 // Whether the Z80 is executing instructions
-  bool resetting;               // Whether the Z80 is being reset
+    bool running;                 // Whether the Z80 is executing instructions
+    bool resetting;               // Whether the Z80 is being reset
 
-  uint8_t ram[Z80_RAM_LENGTH];
+    uint8_t ram[Z80_RAM_LENGTH];
 } Z80;
 
 Z80* z80_make();
