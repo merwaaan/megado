@@ -319,7 +319,7 @@ static void memory_viewer(char* name, bool* opened, void* data, Size data_size, 
     {
         igBeginChild("##memory", (const struct ImVec2) { 600, 300 }, false, 0); // TODO approximate sizing, not sure how to cleanly make the child fit
 
-        // We use a list clipper to browse the whole memory 
+        // We use a list clipper to browse the whole memory
         // while rendering only its visible section
         struct ImGuiListClipper list_clipper;
         ImGuiListClipper_Begin(&list_clipper, data_length / MEMORY_VIEWER_COLUMNS, igGetTextLineHeight());
@@ -465,7 +465,7 @@ static void build_ui(Renderer* r)
     // CPU registers
     if (r->show_cpu_registers)
     {
-        igBegin("CPU registers", &r->show_cpu_registers, ImGuiWindowFlags_NoResize);
+        igBegin("CPU registers", &r->show_cpu_registers, 0);
         igColumns(2, NULL, true);
 
         for (int i = 0; i < 8; ++i)
@@ -630,7 +630,7 @@ static void build_ui(Renderer* r)
         igBullet(); igText("Vertical scrolling: %s", vertical_scrolling_mode_names[v->vertical_scrolling_mode]);
         char* horizontal_scrolling_mode_names[] = { "Screen", "Invalid", "Row", "Line" };
         igBullet(); igText("Horizontal scrolling: %s", horizontal_scrolling_mode_names[v->horizontal_scrolling_mode]);
-        
+
         REGISTER_SECTION(0xC);
         igBullet(); igText("Display width: %0X", v->display_width);
         igBullet(); text_on_off(v->shadow_highlight_enabled, "Shadow/Highlight:");
