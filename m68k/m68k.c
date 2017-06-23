@@ -24,7 +24,7 @@ M68k* m68k_make()
     // Generate every possible opcode
     for (int opcode = 0; opcode < 0x10000; ++opcode)
         m68k->opcode_table[opcode] = instruction_generate(m68k, opcode);
-        
+
     return m68k;
 }
 
@@ -50,22 +50,25 @@ void m68k_initialize(M68k* m)
 
 DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 {
-    // Save the current PC, will be restored at the end
-    uint32_t initial_pc = m->pc;
+    // Save state that can be modified by instructions; will be restored on exit
+    uint32_t _pc = m->pc;
+    uint16_t _instruction_register = m->instruction_register;
+    uint32_t _instruction_address = m->instruction_address;
 
+    m->instruction_address = instr_address;
     m->pc = instr_address;
     uint16_t opcode = m68k_fetch(m);
+    m->instruction_register = opcode;
 
     Instruction* instr = m->opcode_table[opcode];
+    DecodedInstruction* decoded = NULL;
     if (instr == NULL)
     {
-        m->pc = initial_pc;
         LOG_M68K("Opcode %#06X cannot be found in the opcode table\n", opcode);
-
-        return NULL;
+        goto bail;
     }
 
-    DecodedInstruction* decoded = calloc(1, sizeof(DecodedInstruction));
+    decoded = calloc(1, sizeof(DecodedInstruction));
     decoded->mnemonics = calloc(100, sizeof(char));
     decoded->length = 2;
 
@@ -105,8 +108,11 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 
     decoded->mnemonics[pos] = '\0';
 
-    // Restore the initial PC
-    m->pc = initial_pc;
+bail:
+    // Restore overriden context state
+    m->pc = _pc;
+    m->instruction_register = _instruction_register;
+    m->instruction_address = _instruction_address;
 
     return decoded;
 }

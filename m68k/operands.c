@@ -96,7 +96,8 @@ int operand_tostring(Operand* operand, char* buffer)
     case BranchingOffset:
     {
         int16_t offset = FETCH_EA_AND_GET(operand);
-        uint32_t target = operand->instruction->context->pc + offset;
+        uint32_t target = operand->instruction->context->instruction_address + 2
+            + (operand->instruction->size == Byte ? (int8_t)offset : offset);
         return sprintf(buffer, "$%0X [%0X]", offset, target);
     }
     default:
