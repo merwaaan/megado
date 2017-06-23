@@ -143,5 +143,10 @@ void genesis_frame(Genesis* g)
 
         // Draw the scanline
         vdp_draw_scanline(g->vdp, line);
+
+        g->vdp->hblank_in_progress = true;
+        m68k_run_cycles(g->m68k, 84); // http://gendev.spritesmind.net/forum/viewtopic.php?t=94#p1105
+        z80_run_cycles(g->z80, 42); // Z80 runs at half the frequency of M68
+        g->vdp->hblank_in_progress = false;
     }
 }
