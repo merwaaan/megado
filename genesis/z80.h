@@ -6,7 +6,7 @@
 #define Z80_RAM_LENGTH 0x2000
 
 typedef struct Z80 {
-  uint32_t left_cycles;
+  int32_t left_cycles;
 
   uint16_t pc;
 

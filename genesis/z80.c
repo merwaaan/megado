@@ -39,7 +39,12 @@ uint8_t z80_step(Z80* z) {
     return 4;
   } else {
     LOG_Z80("z80: %04x: %02x\n", z->pc, opcode);
-    return (*op)(z);
+    uint8_t cycles = (*op)(z);
+    if (cycles == 0) {
+      LOG_Z80("z80: instruction took 0 cycles: %02x\n", opcode);
+      cycles = 4;
+    }
+    return cycles;
   }
 
 }
@@ -50,7 +55,7 @@ void z80_run_cycles(Z80* z, int cycles) {
   z->left_cycles += cycles;
 
   while (z->left_cycles > 0) {
-    z->left_cycles -= z80_step(z);
+    z->left_cycles -= (int32_t)z80_step(z);
   }
 }
 
