@@ -109,7 +109,7 @@ Instruction* gen_addq(uint16_t opcode, M68k* m)
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
-    
+
     if (instruction_is_valid(i, true, true))
         i->base_cycles = i->size == Long ?
         cycles_immediate_instruction(i, 8, 8, 12) :
@@ -258,26 +258,56 @@ Instruction* gen_cmpm(uint16_t opcode, M68k* m)
     return i;
 }
 
-int div_(Instruction* i)
+int divu(Instruction* i)
 {
     uint16_t a = FETCH_EA_AND_GET(i->src);
-    uint16_t b = i->context->data_registers[i->dst->n];
+    uint32_t b = i->context->data_registers[i->dst->n];
 
-    uint16_t quotient = b / a;
-    uint16_t remainder = b % a;
-    i->context->data_registers[i->dst->n] = remainder << 16 | quotient;
+    if (a == 0) {
+        // TODO: trap the divide by zero
+        // operands are unaffected, flags are undefined
+    }
+    else {
+        uint32_t quotient = b / a;
+        uint16_t remainder = b % a;
+        i->context->data_registers[i->dst->n] = remainder << 16 | (quotient & 0xFFFF);
 
-    CARRY_SET(i->context, false);
-    OVERFLOW_SET(i->context, false); // TODO
-    ZERO_SET(i->context, quotient == 0);
-    NEGATIVE_SET(i->context, BIT(quotient, 15));
+        CARRY_SET(i->context, false);
+        OVERFLOW_SET(i->context, (quotient & 0xFFFF0000) > 0);
+        ZERO_SET(i->context, quotient == 0);
+        NEGATIVE_SET(i->context, BIT(quotient, 15));
+    }
 
-    return 0;
+    return 144; // TODO: should add address calculation time
+}
+
+int divs(Instruction* i)
+{
+    // Same as DIVU, but assuming signed operands
+    int16_t a = FETCH_EA_AND_GET(i->src);
+    int32_t b = i->context->data_registers[i->dst->n];
+
+    if (a == 0) {
+        // TODO: trap the divide by zero
+        // operands are unaffected, flags are undefined
+    }
+    else {
+        int32_t quotient = b / a;
+        int16_t remainder = b % a;
+        i->context->data_registers[i->dst->n] = remainder << 16 | (quotient & 0xFFFF);
+
+        CARRY_SET(i->context, false);
+        OVERFLOW_SET(i->context, (quotient & 0xFFFF0000) > 0);
+        ZERO_SET(i->context, quotient == 0);
+        NEGATIVE_SET(i->context, BIT(quotient, 15));
+    }
+
+    return 162; // TODO: should add address calculation time
 }
 
 Instruction* gen_divs(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "DIVS", div_);
+    Instruction* i = instruction_make(m, "DIVS", divs);
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
@@ -290,7 +320,7 @@ Instruction* gen_divs(uint16_t opcode, M68k* m)
 
 Instruction* gen_divu(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "DIVU", div_);
+    Instruction* i = instruction_make(m, "DIVU", divu);
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
@@ -353,7 +383,7 @@ Instruction* gen_muls(uint16_t opcode, M68k* m)
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-    
+
     if (instruction_is_valid(i, true, true))
         i->base_cycles = cycles_standard_instruction(i, 0, 70, 0);
 
@@ -433,7 +463,7 @@ Instruction* gen_sub(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "SUB", sub);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    
+
     Operand* reg = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
     Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
 
