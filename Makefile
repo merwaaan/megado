@@ -13,12 +13,12 @@ DEBUG_DIR := $(BUILD_DIR)/debug
 INCLUDES := -I./ -Ideps/cimgui/ -Ideps/glfw/include -Ideps/glew/include
 LIBS := -Ldeps/glew/build/lib -lGLEW -lGLU -lGL -Ldeps/cimgui/cimgui -l:cimgui.so -Ldeps/glfw/build/src -lglfw
 
-MODULES := m68k megado
+MODULES := megado megado/m68k
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # There can be only one main, and that is test/main.c
-SRC := $(filter-out m68k/main.c,$(foreach sdir,$(MODULES),$(wildcard $(sdir)/*.c)))
+SRC := $(filter-out megado/m68k/main.c,$(foreach sdir,$(MODULES),$(wildcard $(sdir)/*.c)))
 # Strip the module folder, and put all objects directly into the build dir
 RELEASE_OBJS := $(patsubst %.c,$(RELEASE_DIR)/%.o,$(notdir $(SRC)))
 DEBUG_OBJS := $(patsubst %.c,$(DEBUG_DIR)/%.o,$(notdir $(SRC)))
