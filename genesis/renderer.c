@@ -304,13 +304,13 @@ static void render_genesis(Renderer* r)
     glDrawArrays(GL_TRIANGLES, 3, 3);
 }
 
-static struct ImVec4 color_black = { 0.0f, 0.0f, 0.0f, 1.0f };
-static struct ImVec4 color_white = { 1.0f, 1.0f, 1.0f, 1.0f };
-static struct ImVec4 color_dimmed = { 0.5f, 0.5f, 0.5f, 1.0f };
-static struct ImVec4 color_accent = { 1.0f, 0.07f, 0.57f, 1.0f };
-static struct ImVec4 color_sucess = { 0.0f, 1.0f, 0.0f, 1.0f };
-static struct ImVec4 color_error = { 1.0f, 0.0f, 0.0f, 1.0f };
-static struct ImVec4 color_title = { 0, 0.68, 0.71, 1 };
+static const struct ImVec4 color_black = { 0.0f, 0.0f, 0.0f, 1.0f };
+static const struct ImVec4 color_white = { 1.0f, 1.0f, 1.0f, 1.0f };
+static const struct ImVec4 color_dimmed = { 0.5f, 0.5f, 0.5f, 1.0f };
+static const struct ImVec4 color_accent = { 1.0f, 0.07f, 0.57f, 1.0f };
+static const struct ImVec4 color_sucess = { 0.0f, 1.0f, 0.0f, 1.0f };
+static const struct ImVec4 color_error = { 1.0f, 0.0f, 0.0f, 1.0f };
+static const struct ImVec4 color_title = { 0, 0.68, 0.71, 1 };
 
 static void memory_viewer(char* name, bool* opened, void* data, Size data_size, uint32_t data_length, uint32_t* target_address)
 {
@@ -508,14 +508,17 @@ static void build_ui(Renderer* r)
     }
 
     // CPU Disassembly
-    if (r->show_cpu_disassembly)
+    if (r->show_cpu_disassembly = true)
     {
         igBegin("CPU Disassembly", &r->show_cpu_disassembly, 0);
 
-        igColumns(3, NULL, false);
+        igColumns(4, NULL, false);
+        igSetColumnOffset(1, 20);
+        igSetColumnOffset(2, 100);
+
+        igNextColumn();
         igText("Address");
         igNextColumn();
-        igSetColumnOffset(-1, 70);
         igText("Instruction");
         igNextColumn();
         igText("Opcode");
@@ -540,10 +543,31 @@ static void build_ui(Renderer* r)
                 break;
             }
 
+            // Draw a bubble on lines with a breakpoint
+            if (m68k_get_breakpoint(r->genesis->m68k, address) != NULL)
+            {
+                struct ImDrawList* draw_list = igGetWindowDrawList();
+
+                struct ImVec2 window, cursor, bubble;
+                igGetWindowPos(&window);
+                igGetCursorPos(&cursor);
+                bubble = (struct ImVec2 ){window.x + cursor.x + 5, window.y + cursor.y + 7 };
+
+                ImDrawList_AddCircleFilled(draw_list, bubble, 4, igGetColorU32Vec(&color_accent), 32);
+            }
+            igNextColumn();
+
             igTextColored(i == 0 ? color_accent : color_white, "%06X", address);
             igNextColumn();
 
             igTextColored(i == 0 ? color_accent : color_white, instr->mnemonics);
+
+            // Toggle breakpoint when the instruction is clicked
+            // TODO would be nice to have a hover feedback
+            // TODO would be better to click the whole row but grouping seems to be interrupted by columns :(
+            if (igIsItemClicked(0))
+                m68k_toggle_breakpoint(r->genesis->m68k, address);
+
             igNextColumn();
 
             for (int byte = 0; byte < instr->length; ++byte)
@@ -554,14 +578,29 @@ static void build_ui(Renderer* r)
             igNextColumn();
 
             address += instr->length;
-
             free(instr);
         }
 
         igColumns(1, NULL, false);
         igSeparator();
 
-        igInputInt("Breakpoint", &r->genesis->m68k->breakpoint, 1, 2, ImGuiInputTextFlags_CharsHexadecimal);
+        igText("Breakpoints");
+
+        for (uint8_t i = 0; i < BREAKPOINTS_COUNT; ++i)
+        {
+            Breakpoint* b = &r->genesis->m68k->breakpoints[i];
+            
+            char name_buffer[100];
+
+            sprintf(name_buffer, "##be%d", i);
+            igCheckbox(name_buffer, &b->enabled);
+
+            igSameLine(0, 10);
+
+            sprintf(name_buffer, "##ba%d", i);
+            igInputInt(name_buffer, &b->address, 1, 2, ImGuiInputTextFlags_CharsHexadecimal);
+        }
+
         igEnd();
     }
 

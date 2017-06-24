@@ -19,9 +19,8 @@ M68k* m68k_make()
     M68k* m68k = calloc(1, sizeof(M68k));
     m68k->pending_interrupt = -1;
 
-    m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
-
     // Generate every possible opcode
+    m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
     for (int opcode = 0; opcode < 0x10000; ++opcode)
         m68k->opcode_table[opcode] = instruction_generate(m68k, opcode);
 
@@ -46,6 +45,10 @@ void m68k_initialize(M68k* m)
     m->pc = m68k_read_l(m, 4);
 
     m->prefetch_address = 0xFFFFFFFF; // Invalid value, will initiate the initial prefetch
+
+    // Reset breakpoints
+    for (uint8_t i = 0; i < BREAKPOINTS_COUNT; ++i)
+        m->breakpoints[i] = (Breakpoint) { false, 0 };
 }
 
 DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
@@ -140,12 +143,13 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
     return cycles;
 }
 
-bool breakpoint_triggered = true;
-
 uint8_t m68k_step(M68k* m)
 {
-    if (m->pc == m->breakpoint)
-        breakpoint_triggered = true;
+    // TODO
+    /*Breakpoint* breakpoint = m68k_get_breakpoint(m, m->pc);
+    if (breakpoint != NULL)
+        ...
+        */
 
     // Fetch the instruction
     m->instruction_address = m->pc;
@@ -157,12 +161,11 @@ uint8_t m68k_step(M68k* m)
     if (instr == NULL)
     {
         LOG_M68K("\tOpcode %#06X cannot be found in the opcode table\n", m->instruction_register);
-
         return 0;
     }
 
 #ifdef DEBUG
-    DecodedInstruction* d = breakpoint_triggered || true ? m68k_decode(m, m->instruction_address) : NULL;
+    DecodedInstruction* d = m68k_decode(m, m->instruction_address);
     if (d != NULL)
         printf("%#06X   %s\n", m->pc - 2, d->mnemonics);
     decoded_instruction_free(d);
@@ -274,11 +277,33 @@ void m68k_handle_interrupt(M68k* m)
     m->pending_interrupt = -1;
 }
 
-void reti(Instruction* i)
+void m68k_toggle_breakpoint(M68k* m, uint32_t address)
 {
-    i->context->status = m68k_read_l(i->context, i->context->address_registers[7]);
-    i->context->address_registers[7] += 4;
+    // Toggle existing breakpoints
+    for (int i = 0; i < BREAKPOINTS_COUNT; ++i)
+        if (m->breakpoints[i].address == address)
+        {
+            m->breakpoints[i].enabled = !m->breakpoints[i].enabled;
+            return;
+        }
 
-    i->context->pc = m68k_read_l(i->context, i->context->address_registers[7]);
-    i->context->address_registers[7] += 4;
+    // Otherwise, use the first free slot
+    for (int i = 0; i < BREAKPOINTS_COUNT; ++i)
+        if (!m->breakpoints[i].enabled)
+        {
+            m->breakpoints[i].enabled = true;
+            m->breakpoints[i].address = address;
+            return;
+        }
+
+    printf("Warning, no free slots for a new breakpoint at %0X", address); // TODO would be nice to output warnings/errors via the UI too
+}
+
+Breakpoint* m68k_get_breakpoint(M68k* m, uint32_t address)
+{
+    for (int i = 0; i < BREAKPOINTS_COUNT; ++i)
+        if (m->breakpoints[i].enabled && m->breakpoints[i].address == address)
+            return &m->breakpoints[i];
+
+    return NULL;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "bit_utils.h"
@@ -26,13 +27,23 @@
 #define STATUS_SUPERVISOR_MODE(context) BIT((context)->status, 13)
 #define STATUS_INTERRUPT_MASK(context) FRAGMENT((context)->status, 10, 8)
 
+#define BREAKPOINTS_COUNT 3
+
 struct Instruction;
 struct DecodedInstruction;
 struct M68k;
 
 typedef void(*CallbackFunc)(struct M68k*);
 
-typedef struct M68k {
+typedef struct Breakpoint
+{
+    bool enabled;
+    uint32_t address;
+    // TODO hit counter could be useful
+} Breakpoint;
+
+typedef struct M68k
+{
     uint32_t pc;
     uint16_t status;
     int32_t data_registers[8];
@@ -61,8 +72,8 @@ typedef struct M68k {
     // Callbacks
     CallbackFunc instruction_callback;
 
-    // The processor will stop when the PC reaches this address
-    uint32_t breakpoint;
+    // The processor will stop when the PC reaches one of those addresses
+    Breakpoint breakpoints[BREAKPOINTS_COUNT];
 
     // Arbitrary user-defined data associated with this 68000 instance
     void* user_data;
@@ -81,7 +92,6 @@ void m68k_free(M68k*);
 
 // Prepare the CPU for execution (stack pointer, program start, initial prefetch...)
 void m68k_initialize(M68k*);
-
 
 uint8_t m68k_step(M68k*); // Execute one instruction, return cycles taken
 uint32_t m68k_run_cycles(M68k*, int); // Execute n cycles worth of instructions, return cycles that were not consumed
@@ -108,6 +118,10 @@ void m68k_request_interrupt(M68k* m, uint8_t level);
 void m68k_handle_interrupt(M68k* m);
 
 struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
+
+// Breakpoint handling
+void m68k_toggle_breakpoint(M68k*, uint32_t address); // Add/Remove a breakpoint at the given address
+Breakpoint* m68k_get_breakpoint(M68k*, uint32_t address); // Return a possible active breakpoint at the given address
 
 // -----
 // The following I/O functions must be implemented
