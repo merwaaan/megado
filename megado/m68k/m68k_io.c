@@ -117,7 +117,7 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
         return;
 
     // Z80 address space
-    if (address > 0xA00000 && address < 0xA10000) {
+    if (address >= 0xA00000 && address < 0xA10000) {
       z80_write(m->genesis->z80, address & 0xFFFF, value);
     }
 
