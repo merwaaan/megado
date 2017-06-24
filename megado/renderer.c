@@ -106,11 +106,11 @@ static GLuint create_shader_program(const GLchar* vertex_shader_source, const GL
 }
 
 static const GLchar* game_vertex_shader_source =
-"#version 330\n"
+"#version 120\n"
 "uniform mat4 projection_matrix;\n"
-"in vec3 vertex_position;\n"
-"in vec2 vertex_texcoord;\n"
-"out vec2 texcoord;\n"
+"attribute vec3 vertex_position;\n"
+"attribute vec2 vertex_texcoord;\n"
+"varying vec2 texcoord;\n"
 "void main()\n"
 "{\n"
 "   texcoord = vertex_texcoord;\n"
@@ -118,13 +118,12 @@ static const GLchar* game_vertex_shader_source =
 "}\n";
 
 static const GLchar* game_fragment_shader_source =
-"#version 330\n"
+"#version 120\n"
 "uniform sampler2D sampler;\n"
-"in vec2 texcoord;\n"
-"out vec4 color;\n"
+"varying vec2 texcoord;\n"
 "void main()\n"
 "{\n"
-"   color = vec4(texture(sampler, texcoord).rgb, 1.0);\n"
+"   gl_FragColor = vec4(texture2D(sampler, texcoord).rgb, 1.0);\n"
 "}\n";
 
 static void init_genesis_rendering(Renderer* r)
@@ -156,13 +155,13 @@ static void init_genesis_rendering(Renderer* r)
 }
 
 static const GLchar* ui_vertex_shader_source =
-"#version 330\n"
+"#version 120\n"
 "uniform mat4 ProjMtx;\n"
-"in vec2 Position;\n"
-"in vec2 UV;\n"
-"in vec4 Color;\n"
-"out vec2 Frag_UV;\n"
-"out vec4 Frag_Color;\n"
+"attribute vec2 Position;\n"
+"attribute vec2 UV;\n"
+"attribute vec4 Color;\n"
+"varying vec2 Frag_UV;\n"
+"varying vec4 Frag_Color;\n"
 "void main()\n"
 "{\n"
 "   Frag_UV = UV;\n"
@@ -171,14 +170,13 @@ static const GLchar* ui_vertex_shader_source =
 "}\n";
 
 static const GLchar* ui_fragment_shader_source =
-"#version 330\n"
+"#version 120\n"
 "uniform sampler2D Texture;\n"
-"in vec2 Frag_UV;\n"
-"in vec4 Frag_Color;\n"
-"out vec4 Out_Color;\n"
+"varying vec2 Frag_UV;\n"
+"varying vec4 Frag_Color;\n"
 "void main()\n"
 "{\n"
-"   Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
+"   gl_FragColor = Frag_Color * texture2D( Texture, Frag_UV.st);\n"
 "}\n";
 
 static void gen_texture(GLuint* texture)
@@ -1115,9 +1113,8 @@ Renderer* renderer_make(Genesis* genesis)
         exit(1);
     }
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
     GLFWwindow* window = glfwCreateWindow(1200, 800, "Megado", NULL, NULL);
     if (!window)
