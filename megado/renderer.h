@@ -18,6 +18,9 @@ typedef struct Renderer
     bool show_vdp_palettes;
     bool show_vdp_patterns;
 
+    bool show_vdp_sprites;
+    uint8_t* sprites_buffer;
+
     bool show_rom;
     uint32_t rom_target_address;
 
@@ -42,7 +45,7 @@ typedef struct Renderer
 
     // Graphics resources for the user interface
     GLuint ui_shader;
-    GLuint ui_patterns_texture, ui_magnified_pattern_texture, ui_planes_texture;
+    GLuint ui_patterns_texture, ui_magnified_pattern_texture, ui_planes_texture, ui_sprites_texture;
     GLuint ui_vertex_array_object, ui_vertex_buffer_object, ui_element_buffer_object;
     GLint ui_shader_texture_loc, ui_shader_projection_loc;
 

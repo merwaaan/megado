@@ -513,7 +513,6 @@ void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, Color* palette, uint8_t* b
     uint16_t pattern_offset = pattern_index * 32;
 
     for (uint8_t py = 0; py < 8; ++py)
-    {
         for (uint8_t px = 0; px < 8; ++px)
         {
             // Handle flipping
@@ -526,12 +525,14 @@ void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, Color* palette, uint8_t* b
             uint8_t color_indexes = v->vram[pattern_offset + py * 4 + px / 2];
 
             uint8_t color_index = px % 2 == 0 ? (color_indexes & 0xF0) >> 4 : (color_indexes & 0x0F);
+            if (color_index == 0)
+                continue;
+
             Color color = color_index > 0 ? palette[color_index] : color_black;
             buffer[destination_offset] = color.r;
             buffer[destination_offset + 1] = color.g;
             buffer[destination_offset + 2] = color.b;
         }
-    }
 }
 
 void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width)
@@ -560,6 +561,83 @@ void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width
 
             vdp_draw_pattern(v, pattern, palette, buffer, buffer_width, px * 8, py * 8, horizontal_flip, vertical_flip);
         }
+}
+
+static void draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t* buffer, uint32_t buffer_width)
+{
+    // Top border
+    uint32_t destination = (y * buffer_width + x) * 3;
+    for (uint16_t px = x; px < x + w; ++px)
+    {
+        destination += 3;
+        buffer[destination] = 0xFF;
+        buffer[destination + 1] = 0xFF;
+        buffer[destination + 2] = 0xFF;
+    }
+
+    // Left & right borders
+    for (uint16_t py = y; py < y + h; ++py)
+    {
+        destination = (py * buffer_width + x) * 3;
+        buffer[destination] = 0xFF;
+        buffer[destination + 1] = 0xFF;
+        buffer[destination + 2] = 0xFF;
+        destination += w * 3;
+        buffer[destination] = 0xFF;
+        buffer[destination + 1] = 0xFF;
+        buffer[destination + 2] = 0xFF;
+    }
+
+    // Bottom borders
+    destination = ((y + h) * buffer_width + x) * 3;
+    for (uint16_t px = x; px < x + w; ++px)
+    {
+        destination += 3;
+        buffer[destination] = 0xFF;
+        buffer[destination + 1] = 0xFF;
+        buffer[destination + 2] = 0xFF;
+    }
+}
+
+void vdp_draw_sprites(Vdp* v, uint8_t* buffer, uint32_t buffer_width)
+{
+    uint8_t* attribute_table = v->vram + v->sprites_attribute_table;
+
+    uint8_t sprite = 0;
+    uint8_t sprite_counter = 0;
+    do
+    {
+        uint8_t* attributes = attribute_table + sprite * 8;
+
+        uint16_t x = ((attributes[6] & 1) << 8 | attributes[7]);
+        uint16_t y = ((attributes[0] & 3) << 8 | attributes[1]);
+        uint8_t width = FRAGMENT(attributes[2], 3, 2) + 1;
+        uint8_t height = FRAGMENT(attributes[2], 1, 0) + 1;
+        uint16_t pattern_index = (attributes[4] & 7) << 8 | attributes[5];
+        uint8_t palette_index = FRAGMENT(attributes[4], 6, 5);
+        bool vertical_flip = BIT(attributes[4], 4);
+        bool horizontal_flip = BIT(attributes[4], 3);
+        uint8_t link = attributes[3] & 0x7F;
+
+        for (uint8_t py = 0; py < height; ++py)
+            for (uint8_t px = 0; px < width; ++px)
+            {
+                uint16_t subpattern_index = pattern_index + px * height + py;
+                uint16_t subpattern_x = horizontal_flip ? x + (width - 1 - px) * 8 : x + px * 8;
+                uint16_t subpattern_y = vertical_flip ? y + (height - 1 - py) * 8 : y + py * 8;
+
+                vdp_draw_pattern(v, subpattern_index, &v->cram[palette_index * 16], buffer, buffer_width, subpattern_x, subpattern_y, horizontal_flip, vertical_flip);
+            }
+
+        // Draw a border around the sprite
+        draw_rect(x, y, width * 8, height * 8, buffer, buffer_width);
+
+        ++sprite_counter;
+
+        // Move on to the next sprite
+        sprite = link;
+
+    } while (sprite != 0 && sprite_counter < 64);
 }
 
 typedef struct {
@@ -703,8 +781,8 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
         // Extract the sprite attributes
         // http://md.squee.co/VDP#Sprite_Attribute_Table
 
-        int16_t x = ((attributes[6] & 1) << 8 | attributes[7]) - 128; // Coordinates in screen-space
-        int16_t y = ((attributes[0] & 3) << 8 | attributes[1]) - 128;
+        uint16_t x = ((attributes[6] & 1) << 8 | attributes[7]) - 128; // Coordinates in screen-space
+        uint16_t y = ((attributes[0] & 3) << 8 | attributes[1]) - 128;
 
         uint8_t width = FRAGMENT(attributes[2], 3, 2) + 1;
         uint8_t height = FRAGMENT(attributes[2], 1, 0) + 1;
@@ -766,12 +844,12 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
         // TODO Sprite masking https://emudocs.org/Genesis/Graphics/genvdp.txt
 
     } while (sprite != 0 // 0 means the end of the linked list
-             && sprite_counter < 64 // exit the loop in case of bad linked lists
-             // At most 16 / 20 sprites can be displayed by line
-             // disabled for now
-             /* (v->display_width == 32 && sprite_counter <= 16 */
-             /*  || v->display_width == 40 && sprite_counter <= 20) */
-              );
+        && sprite_counter < 64 // exit the loop in case of bad linked lists
+        // At most 16 / 20 sprites can be displayed by line
+        // disabled for now
+        /* (v->display_width == 32 && sprite_counter <= 16 */
+        /*  || v->display_width == 40 && sprite_counter <= 20) */
+        );
 }
 
 void vdp_draw_scanline(Vdp* v, int scanline)

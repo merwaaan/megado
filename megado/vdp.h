@@ -186,3 +186,4 @@ void vdp_get_plane_cell_data(Vdp* v, Planes plane, uint16_t cell_index, uint16_t
 void vdp_draw_scanline(Vdp*, int scanline);
 void vdp_draw_pattern(Vdp*, uint16_t pattern_index, Color* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y, bool horizontal_flip, bool vertical_flip);
 void vdp_draw_plane(Vdp*, Planes plane, uint8_t* buffer, uint32_t buffer_width);
+void vdp_draw_sprites(Vdp*, uint8_t* buffer, uint32_t buffer_width);

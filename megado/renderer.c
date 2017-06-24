@@ -181,6 +181,14 @@ static const GLchar* ui_fragment_shader_source =
 "   Out_Color = Frag_Color * texture( Texture, Frag_UV.st);\n"
 "}\n";
 
+static void gen_texture(GLuint* texture)
+{
+    glGenTextures(1, texture);
+    glBindTexture(GL_TEXTURE_2D, *texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+}
+
 static void init_ui_rendering(Renderer* r)
 {
     struct ImGuiIO* io = igGetIO();
@@ -203,21 +211,10 @@ static void init_ui_rendering(Renderer* r)
     ImFontAtlas_SetTexID(io->Fonts, (ImTextureID) ui_font_texture);
 
     // Setup texture for the patterns and planes debug views
-
-    glGenTextures(1, &r->ui_patterns_texture);
-    glBindTexture(GL_TEXTURE_2D, r->ui_patterns_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glGenTextures(1, &r->ui_magnified_pattern_texture);
-    glBindTexture(GL_TEXTURE_2D, r->ui_magnified_pattern_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glGenTextures(1, &r->ui_planes_texture);
-    glBindTexture(GL_TEXTURE_2D, r->ui_planes_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    gen_texture(&r->ui_patterns_texture);
+    gen_texture(&r->ui_magnified_pattern_texture);
+    gen_texture(&r->ui_planes_texture);
+    gen_texture(&r->ui_sprites_texture);
 
     // Setup the shaders and buffers
 
@@ -312,9 +309,12 @@ static const struct ImVec4 color_sucess = { 0.0f, 1.0f, 0.0f, 1.0f };
 static const struct ImVec4 color_error = { 1.0f, 0.0f, 0.0f, 1.0f };
 static const struct ImVec4 color_title = { 0.0f, 0.68f, 0.71f, 1.0f };
 
+static const struct ImVec2 vec_zero = { 0.0f, 0.0f };
+static const struct ImVec2 vec_one = { 1.0f, 1.0f };
+
 static void memory_viewer(char* name, bool* opened, void* data, Size data_size, uint32_t data_length, uint32_t* target_address)
 {
-    //igSetNextWindowSize((struct ImVec2) { 0, 0 }, 0);
+    //igSetNextWindowSize(vec_zero, 0);
     if (igBegin(name, opened, 0))
     {
         igBeginChild("##memory", (const struct ImVec2) { 600, 300 }, false, 0); // TODO approximate sizing, not sure how to cleanly make the child fit
@@ -384,7 +384,18 @@ static void step(Renderer* r)
         genesis_step(r->genesis);
 }
 
-static struct ImVec2 get_cursor_in_current_window()
+// Return the cursor's position in screen space
+static struct ImVec2 get_cursor()
+{
+    struct ImVec2 window, content;
+    igGetWindowPos(&window);
+    igGetCursorStartPos(&content);
+
+    return (struct ImVec2) { window.x + content.x, window.y + content.y };
+}
+
+// Return the mouse position in the current window's space
+static struct ImVec2 get_mouse_wrt_window()
 {
     struct ImVec2 mouse, window, content;
     igGetMousePos(&mouse);
@@ -447,6 +458,7 @@ static void build_ui(Renderer* r)
             igMenuItemPtr("Palettes", NULL, &r->show_vdp_palettes, true);
             igMenuItemPtr("Patterns", NULL, &r->show_vdp_patterns, true);
             igMenuItemPtr("Planes", NULL, &r->show_vdp_planes, true);
+            igMenuItemPtr("Sprites", NULL, &r->show_vdp_sprites, true);
             igSeparator();
             igMenuItemPtr("VRAM", NULL, &r->show_vram, &r->show_vram);
             igMenuItemPtr("VSRAM", NULL, &r->show_vsram, &r->show_vsram);
@@ -622,7 +634,7 @@ static void build_ui(Renderer* r)
 
 #define REGISTER_SECTION(reg) igTextColored(color_title, "Register %0X [%02X]", reg, v->register_raw_values[reg])
 
-        igBeginChild("column1", (struct ImVec2) { 0, 0 }, false, 0);
+        igBeginChild("column1", vec_zero, false, 0);
 
         REGISTER_SECTION(0);
         igBullet(); text_on_off(v->hblank_interrupt_enabled, "H-blank interrupt:");
@@ -653,7 +665,7 @@ static void build_ui(Renderer* r)
 
         igEndChild();
         igNextColumn();
-        igBeginChild("column2", (struct ImVec2) { 0, 0 }, false, 0);
+        igBeginChild("column2", vec_zero, false, 0);
 
         REGISTER_SECTION(7);
         igBullet(); igText("Background palette: %0X", v->background_color_palette);
@@ -685,7 +697,7 @@ static void build_ui(Renderer* r)
 
         igEndChild();
         igNextColumn();
-        igBeginChild("column3", (struct ImVec2) { 0, 0 }, false, 0);
+        igBeginChild("column3", vec_zero, false, 0);
 
         REGISTER_SECTION(0x10);
         igBullet(); igText("Plane height: %0X", v->plane_width);
@@ -721,7 +733,7 @@ static void build_ui(Renderer* r)
     if (r->show_vdp_palettes)
     {
         igSetNextWindowSize((struct ImVec2) { 16 * PALETTE_ENTRY_WIDTH, 5 * PALETTE_ENTRY_WIDTH }, 0); // TODO it seems that the title bar is counted in the height...
-        igPushStyleVarVec(ImGuiStyleVar_WindowPadding, (struct ImVec2) { 0, 0 });
+        igPushStyleVarVec(ImGuiStyleVar_WindowPadding, vec_zero);
         igBegin("VDP palettes", &r->show_vdp_palettes, ImGuiWindowFlags_NoResize);
 
         struct ImDrawList* draw_list = igGetWindowDrawList();
@@ -753,7 +765,7 @@ static void build_ui(Renderer* r)
         uint16_t patterns_width = PATTERNS_COLUMNS * 8;
         uint16_t patterns_height = PATTERNS_COUNT / PATTERNS_COLUMNS * 8;
 
-        igPushStyleVarVec(ImGuiStyleVar_WindowPadding, (struct ImVec2) { 0, 0 });
+        igPushStyleVarVec(ImGuiStyleVar_WindowPadding, vec_zero);
         igBegin("VDP patterns", &r->show_vdp_patterns, ImGuiWindowFlags_NoResize);
 
         // Update the pattern texture with the VRAM contents
@@ -770,12 +782,12 @@ static void build_ui(Renderer* r)
         glBindTexture(GL_TEXTURE_2D, r->ui_patterns_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, patterns_width, patterns_height, 0, GL_RGB, GL_UNSIGNED_BYTE, patterns_buffer);
 
-        igImage((ImTextureID)r->ui_patterns_texture, (struct ImVec2) { patterns_width, patterns_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_black);
+        igImage((ImTextureID)r->ui_patterns_texture, (struct ImVec2) { patterns_width, patterns_height }, vec_zero, vec_one, color_white, color_black);
 
         // If a pattern is hovered, show a tooltip with a magnified view
         if (igIsItemHovered())
         {
-            struct ImVec2 pattern_pos = get_cursor_in_current_window();
+            struct ImVec2 pattern_pos = get_mouse_wrt_window();
             uint16_t pattern_index = (int)pattern_pos.y / 8 * PATTERNS_COLUMNS + (int)pattern_pos.x / 8;
 
             uint8_t magnified_pattern_buffer[64 * 3];
@@ -786,7 +798,7 @@ static void build_ui(Renderer* r)
 
             igBeginTooltip();
             igText("Pattern #%d", pattern_index);
-            igImage((ImTextureID)r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
+            igImage((ImTextureID)r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, vec_zero, vec_one, color_white, color_white);
             igEndTooltip();
         }
 
@@ -800,7 +812,7 @@ static void build_ui(Renderer* r)
         uint16_t plane_width = 64 * 8;
         uint16_t plane_height = 64 * 8;
 
-        igPushStyleVarVec(ImGuiStyleVar_WindowPadding, (struct ImVec2) { 0, 0 });
+        igPushStyleVarVec(ImGuiStyleVar_WindowPadding, vec_zero);
         igBegin("VDP planes", &r->show_vdp_planes, ImGuiWindowFlags_NoResize);
 
         // Update the plane texture with the selected plane
@@ -811,14 +823,14 @@ static void build_ui(Renderer* r)
         glBindTexture(GL_TEXTURE_2D, r->ui_planes_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, plane_width, plane_height, 0, GL_RGB, GL_UNSIGNED_BYTE, r->plane_buffer);
 
-        igImage((ImTextureID)r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_black);
+        igImage((ImTextureID)r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, vec_zero, vec_one, color_white, color_black);
 
         // If a cell is hovered, show a tooltip with details
         if (igIsItemHovered())
         {
             // Get the data of the hovered cell
 
-            struct ImVec2 cell_pos = get_cursor_in_current_window();
+            struct ImVec2 cell_pos = get_mouse_wrt_window();
             uint16_t cell_index = (int)cell_pos.y / 8 * r->genesis->vdp->plane_height + (int)cell_pos.x / 8;
 
             uint16_t pattern_index, palette_index;
@@ -851,7 +863,7 @@ static void build_ui(Renderer* r)
             igSameLine(0, 0);
             igTextColored(priority ? color_accent : color_dimmed, priority ? "on" : "off");
 
-            igImage((ImTextureID)r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
+            igImage((ImTextureID)r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, vec_zero, vec_one, color_white, color_white);
             igEndTooltip();
         }
 
@@ -861,6 +873,36 @@ static void build_ui(Renderer* r)
         igRadioButton("Plane B", (int*)&r->selected_plane, Plane_B);
         igNextColumn();
         igRadioButton("Window", (int*)&r->selected_plane, Plane_Window); igColumns(1, NULL, false);
+
+        igEnd();
+        igPopStyleVar(ImGuiStyleVar_WindowPadding);
+    }
+
+    // VDP sprites
+    if (r->show_vdp_sprites)
+    {
+        igPushStyleVarVec(ImGuiStyleVar_WindowPadding, vec_zero);
+        igBegin("VDP sprites", &r->show_vdp_sprites, ImGuiWindowFlags_NoResize);
+
+        struct ImVec2 pos = get_cursor();
+
+        // Update the plane texture with the selected plane
+
+        memset(r->sprites_buffer, 0, 552 * 552 * 3 * sizeof(uint8_t));
+        vdp_draw_sprites(r->genesis->vdp, r->sprites_buffer, 552);
+
+        glBindTexture(GL_TEXTURE_2D, r->ui_sprites_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 552, 552, 0, GL_RGB, GL_UNSIGNED_BYTE, r->sprites_buffer);
+
+        igImage((ImTextureID)r->ui_sprites_texture, (struct ImVec2) { 552, 552 }, vec_zero, vec_one, color_white, color_black);
+
+        // Draw the screen border
+
+        struct ImVec2 a = { pos.x + 128, pos.y + 128 };
+        struct ImVec2 b = { a.x + r->genesis->vdp->display_width * 8, a.y + r->genesis->vdp->display_height * 8 };
+
+        struct ImDrawList* draw_list = igGetWindowDrawList();
+        ImDrawList_AddRect(draw_list, a, b, igGetColorU32Vec(&color_accent), 0, 0, 1);
 
         igEnd();
         igPopStyleVar(ImGuiStyleVar_WindowPadding);
@@ -1106,6 +1148,7 @@ Renderer* renderer_make(Genesis* genesis)
     r->window = window;
     r->game_scale = 1.0f;
     r->plane_buffer = calloc(64 * 8 * 64 * 8 * 3, sizeof(uint8_t));
+    r->sprites_buffer = calloc(552 * 552 * 3, sizeof(uint8_t));
 
     // Store a pointer to the renderer in the window so that it can be accessed from callback functions
     glfwSetWindowUserPointer(r->window, r);
@@ -1127,6 +1170,7 @@ void renderer_free(Renderer* r)
     glfwTerminate();
 
     free(r->plane_buffer);
+    free(r->sprites_buffer);
     free(r);
 }
 
