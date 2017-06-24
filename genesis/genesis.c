@@ -87,12 +87,16 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     {
     case 'E': g->region = Region_Europe; break;
     case 'J': g->region = Region_Japan; break;
-    case 'U': g->region = Region_USA; break;
+    case 'U':
+    case '4': // TODO sometimes 4 can be found as the region code in (U) roms, not sure about the validity of that
+        g->region = Region_USA; break;
+
     default:
         printf("Invalid country code, using default (Japan)");
         g->region = Region_Japan;
     }
     // TODO it seems possible to have multiple country codes, how to handle that?
+    // TODO found something interesting, try that: http://mode5.net/32x-DDK/Bulletins/Gen-tech/Tech31-01.gif
 
     g->status = Status_Running;
 }
