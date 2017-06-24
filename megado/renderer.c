@@ -1098,8 +1098,14 @@ void window_close_callback(GLFWwindow* window)
     r->genesis->status = Status_Quitting;
 }
 
+void error_callback(int error, const char* description) {
+    fprintf(stderr, "GLFW error %d: %s\n", error, description);
+}
+
 Renderer* renderer_make(Genesis* genesis)
 {
+    glfwSetErrorCallback(error_callback);
+
     printf("Initializing GLFW (%s)...\n", glfwGetVersionString());
 
     int glfw_success = glfwInit();
