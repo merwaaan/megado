@@ -31,6 +31,7 @@
 
 struct Instruction;
 struct DecodedInstruction;
+struct Genesis;
 struct M68k;
 
 typedef void(*CallbackFunc)(struct M68k*);
@@ -44,6 +45,8 @@ typedef struct Breakpoint
 
 typedef struct M68k
 {
+    struct Genesis* genesis;
+
     uint32_t pc;
     uint16_t status;
     int32_t data_registers[8];
@@ -74,9 +77,6 @@ typedef struct M68k
 
     // The processor will stop when the PC reaches one of those addresses
     Breakpoint breakpoints[BREAKPOINTS_COUNT];
-
-    // Arbitrary user-defined data associated with this 68000 instance
-    void* user_data;
 } M68k;
 
 typedef struct Instruction* (GenFunc)(uint16_t opcode, M68k* context);
@@ -87,7 +87,7 @@ typedef struct {
     GenFunc* generator;
 } Pattern;
 
-M68k* m68k_make();
+M68k* m68k_make(struct Genesis*);
 void m68k_free(M68k*);
 
 // Prepare the CPU for execution (stack pointer, program start, initial prefetch...)
@@ -95,9 +95,6 @@ void m68k_initialize(M68k*);
 
 uint8_t m68k_step(M68k*); // Execute one instruction, return cycles taken
 uint32_t m68k_run_cycles(M68k*, int); // Execute n cycles worth of instructions, return cycles that were not consumed
-
-uint32_t m68k_read(M68k*, Size size, uint32_t address);
-void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);
 
 // Return the word currently under the program counter
 // and make it advance.
@@ -124,17 +121,19 @@ void m68k_toggle_breakpoint(M68k*, uint32_t address); // Add/Remove a breakpoint
 Breakpoint* m68k_get_breakpoint(M68k*, uint32_t address); // Return a possible active breakpoint at the given address
 
 // -----
-// The following I/O functions must be implemented
+// I/O functions
 //
 // Note: While the 68000 handles 32-bit addresses, its address
 // bus is 24-bit. The I/O functions must take that into account
 // (eg. by masking the addresses by 0xFFFFFF).
 // -----
 
+uint32_t m68k_read(M68k*, Size size, uint32_t address);
 uint8_t m68k_read_b(M68k*, uint32_t address);
 uint16_t m68k_read_w(M68k*, uint32_t address);
 uint32_t m68k_read_l(M68k*, uint32_t address);
 
+void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);
 void m68k_write_b(M68k*, uint32_t address, uint8_t value);
 void m68k_write_w(M68k*, uint32_t address, uint16_t value);
 void m68k_write_l(M68k*, uint32_t address, uint32_t value);

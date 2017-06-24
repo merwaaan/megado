@@ -7,6 +7,7 @@
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
+#include "../genesis.h"
 
 #ifdef DEBUG
 #define LOG_M68K(...) printf(__VA_ARGS__)
@@ -14,9 +15,10 @@
 #define LOG_M68K(...)
 #endif
 
-M68k* m68k_make()
+M68k* m68k_make(Genesis* g)
 {
     M68k* m68k = calloc(1, sizeof(M68k));
+    m68k->genesis = g;
     m68k->pending_interrupt = -1;
 
     // Generate every possible opcode
@@ -180,37 +182,6 @@ uint8_t m68k_step(M68k* m)
     m68k_handle_interrupt(m);
 
     return cycles;
-    }
-
-uint32_t m68k_read(M68k* m, Size size, uint32_t address)
-{
-    switch (size)
-    {
-    case Byte:
-        return m68k_read_b(m, address);
-    case Word:
-        return m68k_read_w(m, address);
-    case Long:
-        return m68k_read_l(m, address);
-    default:
-        return 0xFF; // TODO error?
-    }
-}
-
-void m68k_write(M68k* m, Size size, uint32_t address, uint32_t value)
-{
-    switch (size)
-    {
-    case Byte:
-        m68k_write_b(m, address, value);
-        break;
-    case Word:
-        m68k_write_w(m, address, value);
-        break;
-    case Long:
-        m68k_write_l(m, address, value);
-        break;
-    }
 }
 
 uint16_t m68k_fetch(M68k* m)

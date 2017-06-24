@@ -1,11 +1,24 @@
 #include <stdio.h>
 
-#include "genesis.h"
-#include "joypad.h"
-#include "m68k/m68k.h"
-#include "vdp.h"
+#include "m68k.h"
+#include "../genesis.h"
+#include "../joypad.h"
+#include "../vdp.h"
 
-#define GENESIS(m) ((Genesis*) (m)->user_data)
+uint32_t m68k_read(M68k* m, Size size, uint32_t address)
+{
+    switch (size)
+    {
+    case Byte:
+        return m68k_read_b(m, address);
+    case Word:
+        return m68k_read_w(m, address);
+    case Long:
+        return m68k_read_l(m, address);
+    default:
+        return 0xFF; // TODO error?
+    }
+}
 
 uint8_t m68k_read_b(M68k* m, uint32_t address)
 {
@@ -13,7 +26,7 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
 
     // Z80 address space
     if (address >= 0xA00000 && address < 0xA10000) {
-      return z80_read(GENESIS(m)->z80, address & 0xFFFF);
+      return z80_read(m->genesis->z80, address & 0xFFFF);
     }
 
     switch (address)
@@ -24,44 +37,44 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
     case 0xA10000: // Version port
     case 0xA10001:
         return
-            (GENESIS(m)->region != Region_Japan) << 7 | // Domestic (0) / Export (1)
-            (GENESIS(m)->region == Region_Europe) << 6 | // NTSC (0) / PAL (1)
+            (m->genesis->region != Region_Japan) << 7 | // Domestic (0) / Export (1)
+            (m->genesis->region == Region_Europe) << 6 | // NTSC (0) / PAL (1)
             false << 5 | // Sega CD connected
             false; // Version
 
     case 0xA10002:
     case 0xA10003:
-        return joypad_read(GENESIS(m)->joypad);
+        return joypad_read(m->genesis->joypad);
         break;
 
     case 0xA11100:
       // The 68000 has the bus if the Z80 is not running (0: has the bus)
-      return z80_bus_ack(GENESIS(m)->z80);
+      return z80_bus_ack(m->genesis->z80);
 
     case 0xA11200:
       return 0;
 
     case 0xC00000: // VDP data port
     case 0xC00002:
-        return BYTE_HI(vdp_read_data(GENESIS(m)->vdp)); // TODO add direct read 16b read in m68k_read_w
+        return BYTE_HI(vdp_read_data(m->genesis->vdp)); // TODO add direct read 16b read in m68k_read_w
     case 0xC00001:
     case 0xC00003:
-        return BYTE_LO(vdp_read_data(GENESIS(m)->vdp));
+        return BYTE_LO(vdp_read_data(m->genesis->vdp));
 
     case 0xC00004: // VDP control port
     case 0xC00006:
-        return BYTE_HI(vdp_read_control(GENESIS(m)->vdp));
+        return BYTE_HI(vdp_read_control(m->genesis->vdp));
     case 0xC00005:
     case 0xC00007:
-        return BYTE_LO(vdp_read_control(GENESIS(m)->vdp));
+        return BYTE_LO(vdp_read_control(m->genesis->vdp));
 
     case 0xC00008:
-        return BYTE_HI(vdp_get_hv_counter(GENESIS(m)->vdp));
+        return BYTE_HI(vdp_get_hv_counter(m->genesis->vdp));
     case 0xC00009:
-        return BYTE_LO(vdp_get_hv_counter(GENESIS(m)->vdp));
+        return BYTE_LO(vdp_get_hv_counter(m->genesis->vdp));
 
     default:
-        return GENESIS(m)->memory[address];
+        return m->genesis->memory[address];
     }
 }
 
@@ -79,6 +92,22 @@ uint32_t m68k_read_l(M68k* m, uint32_t address)
         m68k_read_w(m, address + 2);
 }
 
+void m68k_write(M68k* m, Size size, uint32_t address, uint32_t value)
+{
+    switch (size)
+    {
+    case Byte:
+        m68k_write_b(m, address, value);
+        break;
+    case Word:
+        m68k_write_w(m, address, value);
+        break;
+    case Long:
+        m68k_write_l(m, address, value);
+        break;
+    }
+}
+
 void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
 {
     address &= 0xFFFFFF; // 24-bit address bus
@@ -89,21 +118,21 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
 
     // Z80 address space
     if (address > 0xA00000 && address < 0xA10000) {
-      z80_write(GENESIS(m)->z80, address & 0xFFFF, value);
+      z80_write(m->genesis->z80, address & 0xFFFF, value);
     }
 
     else if (address == 0xA10002 || address == 0xA10003) {
-        joypad_write(GENESIS(m)->joypad, value);
+        joypad_write(m->genesis->joypad, value);
     }
 
     // BUSREQ
     else if (address == 0xA11100) {
-      z80_bus_req(GENESIS(m)->z80, value);
+      z80_bus_req(m->genesis->z80, value);
     }
 
     // RESET
     else if (address == 0xA11200) {
-      z80_reset(GENESIS(m)->z80, value);
+      z80_reset(m->genesis->z80, value);
     }
 
     // " Writing to the VDP control or data ports is interpreted as a 16-bit
@@ -111,17 +140,17 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     // http://www.tmeeco.eu/BitShit/CMDHW.TXT
     else if (address == 0xC00000)
     {
-        vdp_write_data(GENESIS(m)->vdp, value & (value << 8));
+        vdp_write_data(m->genesis->vdp, value & (value << 8));
     }
     else if (address == 0xC00004)
     {
-        vdp_write_control(GENESIS(m)->vdp, value & (value << 8));
+        vdp_write_control(m->genesis->vdp, value & (value << 8));
     }
 
     else if (address > 0x82e0 && address < 0x82ff)
         printf("");
 
-    GENESIS(m)->memory[address & 0xFFFFFF] = value;
+    m->genesis->memory[address & 0xFFFFFF] = value;
 }
 
 void m68k_write_w(M68k* m, uint32_t address, uint16_t value)
@@ -131,21 +160,21 @@ void m68k_write_w(M68k* m, uint32_t address, uint16_t value)
     switch (address)
     {
     case 0xA11100:
-      z80_bus_req(GENESIS(m)->z80, value >> 8);
+      z80_bus_req(m->genesis->z80, value >> 8);
       break;
 
     case 0xA11200:
-      z80_reset(GENESIS(m)->z80, value >> 8);
+      z80_reset(m->genesis->z80, value >> 8);
       break;
 
     case 0xC00000: // VDP data port
     case 0xC00002:
-        vdp_write_data(GENESIS(m)->vdp, value);
+        vdp_write_data(m->genesis->vdp, value);
         break;
 
     case 0xC00004: // VDP control port
     case 0xC00006:
-        vdp_write_control(GENESIS(m)->vdp, value);
+        vdp_write_control(m->genesis->vdp, value);
         break;
 
     default:

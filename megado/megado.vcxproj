@@ -213,9 +213,9 @@
     <ClCompile Include="m68k\instructions_shift.c" />
     <ClCompile Include="m68k\instructions_transfer.c" />
     <ClCompile Include="m68k\m68k.c" />
+    <ClCompile Include="m68k\m68k_io.c" />
     <ClCompile Include="m68k\main.c" />
     <ClCompile Include="m68k\operands.c" />
-    <ClCompile Include="m68k_io.c" />
     <ClCompile Include="renderer.c" />
     <ClCompile Include="vdp.c" />
     <ClCompile Include="z80.c" />
