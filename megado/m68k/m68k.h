@@ -75,8 +75,9 @@ typedef struct M68k
     // Callbacks
     CallbackFunc instruction_callback;
 
-    // The processor will stop when the PC reaches one of those addresses
-    Breakpoint breakpoints[BREAKPOINTS_COUNT];
+    // Breakpoints
+    Breakpoint breakpoints[BREAKPOINTS_COUNT]; // The emulation will pause when the PC reaches one of those addresses
+    Breakpoint* active_breakpoint; // The breakpoint currently blocking the emulation
 } M68k;
 
 typedef struct Instruction* (GenFunc)(uint16_t opcode, M68k* context);
@@ -118,7 +119,7 @@ struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
 
 // Breakpoint handling
 void m68k_toggle_breakpoint(M68k*, uint32_t address); // Add/Remove a breakpoint at the given address
-Breakpoint* m68k_get_breakpoint(M68k*, uint32_t address); // Return a possible active breakpoint at the given address
+Breakpoint* m68k_get_breakpoint(M68k*, uint32_t address); // Return a possible enabled breakpoint at the given address
 
 // -----
 // I/O functions

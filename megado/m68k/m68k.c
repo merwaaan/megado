@@ -139,6 +139,10 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
         }
 
         cycles -= c;
+
+        // Exit early if the emulation has been paused
+        if (m->genesis->status != Status_Running)
+            break;
     }
 
     // TODO in practice, should only consume available cycles and return the remainder
@@ -147,11 +151,23 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
 
 uint8_t m68k_step(M68k* m)
 {
-    // TODO
-    /*Breakpoint* breakpoint = m68k_get_breakpoint(m, m->pc);
+    // Pause on breakpoints
+    // TODO only in DEBUG builds? check perf
+    Breakpoint* breakpoint = m68k_get_breakpoint(m, m->pc);
     if (breakpoint != NULL)
-        ...
-        */
+    {
+        // If the breakpoint has already been touched, do not pause again
+        if (breakpoint == m->active_breakpoint)
+        {
+            m->active_breakpoint = NULL;
+        }
+        else
+        {
+            m->active_breakpoint = breakpoint;
+            m->genesis->status = Status_Pause;
+            return 0;
+        }
+    }
 
     // Fetch the instruction
     m->instruction_address = m->pc;
