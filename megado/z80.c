@@ -84,11 +84,11 @@ void z80_bus_req(Z80 *z, uint8_t req) {
 uint8_t z80_bus_ack(Z80 *z) {
     // Can't write to the Z80 memory until it has stopped running
     if (z->running) {
-        return 1;
         LOG_Z80("z80: BUSACK BUSY\n");
+        return 1;
     } else {
-        return 0;
         LOG_Z80("z80: BUSACK FREE\n");
+        return 0;
     }
 }
 
