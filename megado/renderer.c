@@ -508,7 +508,7 @@ static void build_ui(Renderer* r)
     }
 
     // CPU Disassembly
-    if (r->show_cpu_disassembly = true)
+    if (r->show_cpu_disassembly)
     {
         igBegin("CPU Disassembly", &r->show_cpu_disassembly, 0);
 

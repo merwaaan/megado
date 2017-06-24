@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "m68k_test", "m68k_test\m68k_test.vcxproj", "{0E836FA8-0A56-4982-91DE-5D571D8239C6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "genesis", "genesis\genesis.vcxproj", "{92C9C451-5A4F-4D05-86F4-76F37E3B106C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "megado", "megado\megado.vcxproj", "{92C9C451-5A4F-4D05-86F4-76F37E3B106C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj", "{72121CF3-C003-43BD-B506-13DD898D4F8A}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -13,9 +13,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj",
 	EndProjectSection
 EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug (log)|x64 = Debug (log)|x64
 		Debug (log)|x86 = Debug (log)|x86

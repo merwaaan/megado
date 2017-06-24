@@ -1,6 +1,6 @@
-#include <genesis/genesis.h>
-#include <genesis/m68k/instruction.h>
-#include <genesis/m68k/m68k.h>
+#include <megado/genesis.h>
+#include <megado/m68k/instruction.h>
+#include <megado/m68k/m68k.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
