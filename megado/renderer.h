@@ -11,6 +11,7 @@ typedef struct Renderer
     GLFWwindow* window;
 
     float game_scale; // Scaling factor for the Genesis video output
+    bool vsync;
 
     bool show_cpu_registers;
     bool show_cpu_disassembly;

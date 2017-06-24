@@ -376,6 +376,11 @@ static void toggle_pause(Renderer* r)
         r->genesis->status = Status_Running;
 }
 
+static void toggle_vsync(Renderer* r) {
+    r->vsync = !r->vsync;
+    glfwSwapInterval(r->vsync ? 1 : 0);
+}
+
 static void step(Renderer* r)
 {
     if (r->genesis->status == Status_Pause)
@@ -450,7 +455,11 @@ static void build_ui(Renderer* r)
 
         if (igBeginMenu("Video", true))
         {
+
             igSliderFloat("Scaling", &r->game_scale, 1.0f, 5.0f, "%f", 1.0f);
+            if (igMenuItem("VSync", NULL, r->vsync, true)) {
+                toggle_vsync(r);
+            }
             igSeparator();
             igMenuItemPtr("Registers", NULL, &r->show_vdp_registers, true);
             igMenuItemPtr("Palettes", NULL, &r->show_vdp_palettes, true);
@@ -1150,6 +1159,7 @@ Renderer* renderer_make(Genesis* genesis)
     r->genesis = genesis;
     r->window = window;
     r->game_scale = 1.0f;
+    r->vsync = true;
     r->plane_buffer = calloc(64 * 8 * 64 * 8 * 3, sizeof(uint8_t));
     r->sprites_buffer = calloc(552 * 552 * 3, sizeof(uint8_t));
 
