@@ -1109,7 +1109,7 @@ Renderer* renderer_make(Genesis* genesis)
     int glfw_success = glfwInit();
     if (glfw_success != GLFW_TRUE)
     {
-        printf("An error occurred while initializing GLEW"); // TODO error message
+        printf("An error occurred while initializing GLFW");
         exit(1);
     }
 
@@ -1119,7 +1119,7 @@ Renderer* renderer_make(Genesis* genesis)
     GLFWwindow* window = glfwCreateWindow(1200, 800, "Megado", NULL, NULL);
     if (!window)
     {
-        printf("An error occurred while creating a GLEW window");
+        printf("An error occurred while creating a GLFW window");
         exit(1);
     }
 
