@@ -152,7 +152,7 @@ static void init_genesis_rendering(Renderer* r)
 
     GLint shader_texcoord_loc = glGetAttribLocation(r->game_shader, "vertex_texcoord");
     glEnableVertexAttribArray(shader_texcoord_loc);
-    glVertexAttribPointer(shader_texcoord_loc, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 3 * sizeof(float));
+    glVertexAttribPointer(shader_texcoord_loc, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (GLvoid*)(3 * sizeof(float)));
 }
 
 static const GLchar* ui_vertex_shader_source =
@@ -200,7 +200,7 @@ static void init_ui_rendering(Renderer* r)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-    ImFontAtlas_SetTexID(io->Fonts, ui_font_texture);
+    ImFontAtlas_SetTexID(io->Fonts, (ImTextureID) ui_font_texture);
 
     // Setup texture for the patterns and planes debug views
 
@@ -263,11 +263,11 @@ static void render_genesis(Renderer* r)
     glfwGetWindowSize(r->window, &display_width, &display_height);
     glViewport(0, 0, display_width, display_height);
 
-    float display_center_x = display_width / 2;
-    float display_center_y = display_height / 2;
+    float display_center_x = display_width / 2.0f;
+    float display_center_y = display_height / 2.0f;
 
-    float output_half_width = output_width / 2 * r->game_scale;
-    float output_half_height = output_height / 2 * r->game_scale;
+    float output_half_width = output_width / 2.0f * r->game_scale;
+    float output_half_height = output_height / 2.0f * r->game_scale;
 
     float quad_vertices[] = {
         // Top-right triangle
@@ -310,7 +310,7 @@ static const struct ImVec4 color_dimmed = { 0.5f, 0.5f, 0.5f, 1.0f };
 static const struct ImVec4 color_accent = { 1.0f, 0.07f, 0.57f, 1.0f };
 static const struct ImVec4 color_sucess = { 0.0f, 1.0f, 0.0f, 1.0f };
 static const struct ImVec4 color_error = { 1.0f, 0.0f, 0.0f, 1.0f };
-static const struct ImVec4 color_title = { 0, 0.68, 0.71, 1 };
+static const struct ImVec4 color_title = { 0.0f, 0.68f, 0.71f, 1.0f };
 
 static void memory_viewer(char* name, bool* opened, void* data, Size data_size, uint32_t data_length, uint32_t* target_address)
 {
@@ -551,7 +551,7 @@ static void build_ui(Renderer* r)
                 struct ImVec2 window, cursor, bubble;
                 igGetWindowPos(&window);
                 igGetCursorPos(&cursor);
-                bubble = (struct ImVec2 ){window.x + cursor.x + 5, window.y + cursor.y + 7 };
+                bubble = (struct ImVec2) { window.x + cursor.x + 5, window.y + cursor.y + 7 };
 
                 ImDrawList_AddCircleFilled(draw_list, bubble, 4, igGetColorU32Vec(&color_accent), 32);
             }
@@ -589,7 +589,7 @@ static void build_ui(Renderer* r)
         for (uint8_t i = 0; i < BREAKPOINTS_COUNT; ++i)
         {
             Breakpoint* b = &r->genesis->m68k->breakpoints[i];
-            
+
             char name_buffer[100];
 
             sprintf(name_buffer, "##be%d", i);
@@ -770,7 +770,7 @@ static void build_ui(Renderer* r)
         glBindTexture(GL_TEXTURE_2D, r->ui_patterns_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, patterns_width, patterns_height, 0, GL_RGB, GL_UNSIGNED_BYTE, patterns_buffer);
 
-        igImage(r->ui_patterns_texture, (struct ImVec2) { patterns_width, patterns_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_black);
+        igImage((ImTextureID)r->ui_patterns_texture, (struct ImVec2) { patterns_width, patterns_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_black);
 
         // If a pattern is hovered, show a tooltip with a magnified view
         if (igIsItemHovered())
@@ -786,7 +786,7 @@ static void build_ui(Renderer* r)
 
             igBeginTooltip();
             igText("Pattern #%d", pattern_index);
-            igImage(r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
+            igImage((ImTextureID)r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
             igEndTooltip();
         }
 
@@ -811,7 +811,7 @@ static void build_ui(Renderer* r)
         glBindTexture(GL_TEXTURE_2D, r->ui_planes_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, plane_width, plane_height, 0, GL_RGB, GL_UNSIGNED_BYTE, r->plane_buffer);
 
-        igImage(r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_black);
+        igImage((ImTextureID)r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_black);
 
         // If a cell is hovered, show a tooltip with details
         if (igIsItemHovered())
@@ -851,7 +851,7 @@ static void build_ui(Renderer* r)
             igSameLine(0, 0);
             igTextColored(priority ? color_accent : color_dimmed, priority ? "on" : "off");
 
-            igImage(r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
+            igImage((ImTextureID)r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, (struct ImVec2) { 0, 0 }, (struct ImVec2) { 1, 1 }, color_white, color_white);
             igEndTooltip();
         }
 
