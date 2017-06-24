@@ -41,7 +41,20 @@ so the flag is always cleared.
 
 - Sonic & Knuckles + Sonic 3: stuck in an infinite loop @C336
 
+- Donald in Maui Mallard: SEGA logo cut; in-game background is wonky, but Donald
+  sprite looks alright
+
+- Streets of Rage: no UI in-game; character seems to die randomly; time over
+  happens after a few seconds
+
+- Street Fighter II: crashes on an invalid opcode after executing unknown
+  opcodes; last good opcode seems to be around @83A8
+
+- Krusty: playable; but item sprite is garbled when in the holding slot
+
 # Games that seem to wait for the Z80:
 
 - Daffy Duck in Hollywood @1D7BC8
 - The Addam's Family @43C0E
+- Lost Vikings: waiting for $A01000 to equal zero @FD888 (eerily similar to Addam's Family)
+- Spirou: seems to be waiting for the Z80 to execute something
