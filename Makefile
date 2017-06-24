@@ -25,16 +25,10 @@ DEBUG_OBJS := $(patsubst %.c,$(DEBUG_DIR)/%.o,$(notdir $(SRC)))
 .PHONY: release
 release: CFLAGS += $(RELEASE_FLAGS)
 release: $(RELEASE_DIR) $(RELEASE_DIR)/megado
-# Using printf because echo is unreliable
-# see https://stackoverflow.com/a/14121245
-	@printf '#!/bin/sh\nenv LD_LIBRARY_PATH=deps/cimgui/cimgui:deps/glfw/build/src:deps/glew/build/lib $(RELEASE_DIR)/megado "$$@"' > $(BUILD_DIR)/release.sh
-	@chmod u+x $(BUILD_DIR)/release.sh
 
 .PHONY: debug
 debug: CFLAGS += $(DEBUG_FLAGS)
 debug: $(DEBUG_DIR) $(DEBUG_DIR)/megado
-	@printf '#!/bin/sh\nenv LD_LIBRARY_PATH=deps/cimgui/cimgui:deps/glfw/build/src:deps/glew/build/lib $(DEBUG_DIR)/megado "$$@"' > $(BUILD_DIR)/debug.sh
-	@chmod u+x $(BUILD_DIR)/debug.sh
 
 $(RELEASE_DIR)/megado: test/main.c $(RELEASE_OBJS)
 	$(CC) $^ $(CFLAGS) $(INCLUDES) $(LIBS) -o $@
