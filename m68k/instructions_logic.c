@@ -231,9 +231,15 @@ int scc(Instruction* i)
 
 Instruction* gen_scc(uint16_t opcode, M68k* m)
 {
-    Instruction* i = instruction_make(m, "Scc", scc);
+    Condition* condition = condition_get(FRAGMENT(opcode, 11, 8));
+
+    // Format the instruction name depending on its internal condition
+    char name[5];
+    sprintf(name, "S%s", condition->mnemonics);
+
+    Instruction* i = instruction_make(m, name, scc);
     i->size = Byte;
-    i->condition = condition_get(FRAGMENT(opcode, 11, 8));
+    i->condition = condition;
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     if (instruction_is_valid(i, false, true))
