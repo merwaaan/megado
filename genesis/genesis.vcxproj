@@ -176,6 +176,22 @@
   <ItemGroup>
     <ClCompile Include="genesis.c" />
     <ClCompile Include="joypad.c" />
+    <ClCompile Include="m68k\bit_utils.c" />
+    <ClCompile Include="m68k\conditions.c" />
+    <ClCompile Include="m68k\cycles.c" />
+    <ClCompile Include="m68k\instruction.c" />
+    <ClCompile Include="m68k\instructions_arithmetic.c" />
+    <ClCompile Include="m68k\instructions_bcd.c" />
+    <ClCompile Include="m68k\instructions_bit.c" />
+    <ClCompile Include="m68k\instructions_control.c" />
+    <ClCompile Include="m68k\instructions_exception.c" />
+    <ClCompile Include="m68k\instructions_logic.c" />
+    <ClCompile Include="m68k\instructions_privileged.c" />
+    <ClCompile Include="m68k\instructions_shift.c" />
+    <ClCompile Include="m68k\instructions_transfer.c" />
+    <ClCompile Include="m68k\m68k.c" />
+    <ClCompile Include="m68k\main.c" />
+    <ClCompile Include="m68k\operands.c" />
     <ClCompile Include="m68k_io.c" />
     <ClCompile Include="renderer.c" />
     <ClCompile Include="vdp.c" />
@@ -184,14 +200,15 @@
   <ItemGroup>
     <ClInclude Include="genesis.h" />
     <ClInclude Include="joypad.h" />
+    <ClInclude Include="m68k\bit_utils.h" />
+    <ClInclude Include="m68k\conditions.h" />
+    <ClInclude Include="m68k\cycles.h" />
+    <ClInclude Include="m68k\instruction.h" />
+    <ClInclude Include="m68k\m68k.h" />
+    <ClInclude Include="m68k\operands.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="vdp.h" />
     <ClInclude Include="z80.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\m68k\m68k.vcxproj">
-      <Project>{b5d8c48a-7f4d-4dc1-b55d-8bca00ed4f90}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,9 +1,9 @@
 #include <assert.h>
-#include <m68k/m68k.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "genesis.h"
+#include "m68k/m68k.h"
 #include "vdp.h"
 
 #ifdef DEBUG

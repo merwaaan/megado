@@ -1,12 +1,12 @@
 #include <GLFW/glfw3.h>
-#include <m68k/m68k.h>
-#include <m68k/instruction.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "genesis.h"
 #include "joypad.h"
+#include "m68k/m68k.h"
+#include "m68k/instruction.h"
 #include "renderer.h"
 #include "vdp.h"
 

@@ -2,8 +2,6 @@
 #include <cimgui/cimgui.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <m68k/instruction.h>
-#include <m68k/m68k.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +9,8 @@
 
 #include "genesis.h"
 #include "joypad.h"
+#include "m68k/instruction.h"
+#include "m68k/m68k.h"
 #include "renderer.h"
 #include "vdp.h"
 

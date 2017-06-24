@@ -1,8 +1,8 @@
-#include <m68k/m68k.h>
 #include <stdio.h>
 
 #include "genesis.h"
 #include "joypad.h"
+#include "m68k/m68k.h"
 #include "vdp.h"
 
 #define GENESIS(m) ((Genesis*) (m)->user_data)
