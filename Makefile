@@ -1,9 +1,8 @@
 # Configurables
 CC := clang
 # Disable unused parameter warning since not everything is implemented yet
-# format-pedantic warning is annoying; seems safe to me
-CFLAGS := -Wall -Wextra -pedantic -std=c11 -Wno-unused-parameter -Wno-unused-variable -Wno-format-pedantic
-RELEASE_FLAGS := -O3
+CFLAGS := -Wall -Wextra -std=c11 -Wno-unused-parameter -Wno-unused-variable
+RELEASE_FLAGS := -O3 -march=native
 DEBUG_FLAGS := -DDEBUG -g
 
 BUILD_DIR := build
