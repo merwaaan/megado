@@ -29,12 +29,14 @@ shift $((OPTIND-1))
 
 # Parse command
 case $1 in
-    debug) TARGET=debug
-           BIN=$DEBUG_BIN
-           ;;
-    release) TARGET=release
-             BIN=$RELEASE_BIN
-             ;;
+    debug)
+        TARGET=debug
+        BIN=$DEBUG_BIN
+        ;;
+    release)
+        TARGET=release
+        BIN=$RELEASE_BIN
+        ;;
     *)
         echo './run.sh [-g -j NUM] debug|release ROM'
         exit 0
@@ -42,4 +44,4 @@ case $1 in
 esac
 shift
 
-make -j $JOBS $BUILD_TARGET && env $ENV $MAYBE_GDB $BIN "$@"
+make -j $JOBS $TARGET && env $ENV $MAYBE_GDB $BIN "$@"
