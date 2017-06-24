@@ -20,7 +20,7 @@ the menu screen and then in-game, which leads to a buffer overflow.
 - Spiderman and Venom - Maximum Carnage: the palette is entirely white on the logo screens,
 entirely black in-game.
 
-- Spiderman and Venom - Separation Anxiety: Spiderman is not animated (the exact same bug 
+- Spiderman and Venom - Separation Anxiety: Spiderman is not animated (the exact same bug
 seem to occur on the boot screen of Maximum Carnage).
 
 - Spiderman vs The Kingpin:
@@ -34,7 +34,12 @@ not respond to keypresses. Sometimes he flickers violently from left to right.
 - Splatterhouse 2: waits for a DMA transfer (bit 1 of VDP status) but we do those in a single step
 so the flag is always cleared.
 
-- Quackshot: emu hangs @9624 on a TST.b ($FFFFEE00).w
+- Quackshot: can start game and play, but something is very wrong with the
+  display (interlace mode maybe?)
+
+- Landstalker: waits for $FF0F8B @B6E
+
+- Sonic & Knuckles + Sonic 3: stuck in an infinite loop @C336
 
 # Games that seem to wait for the Z80:
 
