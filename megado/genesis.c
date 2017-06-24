@@ -87,6 +87,10 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     case '4': // TODO sometimes 4 can be found as the region code in (U) roms, not sure about the validity of that
         g->region = Region_USA; break;
 
+    case 'A': // Maui Mallard has this country code and apparently it's for 'PAL
+              // and french SECAM'
+        g->region = Region_Europe; break;
+
     default:
         printf("Invalid country code, using default (Japan)");
         g->region = Region_Japan;
