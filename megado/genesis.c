@@ -14,13 +14,13 @@
 Genesis* genesis_make()
 {
     Genesis* g = calloc(1, sizeof(Genesis));
+    g->settings = settings_make();
     g->memory = calloc(0x1000000, sizeof(uint8_t));
     g->m68k = m68k_make(g);
     g->z80 = z80_make();
     g->vdp = vdp_make(g);
     g->joypad = joypad_make();
     g->renderer = renderer_make(g);
-    g->settings = settings_make();
     g->status = Status_NoGameLoaded;
 
     return g;

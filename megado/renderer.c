@@ -1159,6 +1159,9 @@ Renderer* renderer_make(Genesis* genesis)
     gl_version = (char*)glGetString(GL_VERSION);
     printf("OpenGL version: %s\n", gl_version);
 
+    // Set swap interval according to settings
+    glfwSwapInterval(genesis->settings->vsync ? 1 : 0);
+
     Renderer* r = calloc(1, sizeof(Renderer));
     r->genesis = genesis;
     r->window = window;
