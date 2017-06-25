@@ -10,7 +10,9 @@
 - Columns: the sega boot animation only appears in Release builds (Visual Studio specific)
            (no SEGA logo with clang either in release and debug).
 
-- Alex Kidd in the Enchanted Castle: Planes are empty during the intro and in-game.
+- Alex Kidd in the Enchanted Castle:
+  - Planes are empty during the intro and in-game.
+  - The sega logo's gradient is not animated
 
 - Shadowrun: the games becomes completely glitched once the in-game menu is opened.
 
@@ -35,7 +37,11 @@ not respond to keypresses. Sometimes he flickers violently from left to right.
 so the flag is always cleared.
 
 - Quackshot: can start game and play, but something is very wrong with the
-  display (interlace mode maybe?)
+  display. The VRAM is corrupted because of an invalid DMA transfer with
+  length 0 (spans the whole VRAM) and auto-increment 2 (explains the stripes).
+  Another DMA transfer occured a few cycles before and decremented the length
+  to zero. Possible that the program did not have enough time to setup the 
+  faulty DMA because of a timing issue?
 
 - Landstalker: waits for $FF0F8B @B6E
 
