@@ -59,6 +59,8 @@ void settings_save(Settings* s)
     const char* json_string = json_object_to_json_string_ext(json, JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_SPACED);
     fputs(json_string, file);
     fclose(file);
+
+    json_object_put(json);
 }
 
 #define JSON_GET_FLOAT(name) s-> ## name = (float) json_object_get_double(json_get(json, #name))
@@ -115,6 +117,8 @@ Settings* settings_load()
     JSON_GET_BOOL(show_rom);
     JSON_GET_BOOL(show_ram);
     JSON_GET_BOOL(show_vram);
+
+    json_object_put(json);
 
     return s;
 }
