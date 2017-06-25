@@ -23,8 +23,8 @@ void settings_free(Settings* s)
     free(s);
 }
 
-#define JSON_SET_FLOAT(name) json_object_object_add(json, #name, json_object_new_double((float)s-> ## name));
-#define JSON_SET_BOOL(name) json_object_object_add(json, #name, json_object_new_boolean(s-> ## name));
+#define JSON_SET_FLOAT(name) json_object_object_add(json, #name, json_object_new_double((float)s->name));
+#define JSON_SET_BOOL(name) json_object_object_add(json, #name, json_object_new_boolean(s->name));
 
 void settings_save(Settings* s)
 {
@@ -63,8 +63,8 @@ void settings_save(Settings* s)
     json_object_put(json);
 }
 
-#define JSON_GET_FLOAT(name) s-> ## name = (float) json_object_get_double(json_get(json, #name))
-#define JSON_GET_BOOL(name) s-> ## name = json_object_get_boolean(json_get(json, #name))
+#define JSON_GET_FLOAT(name) s->name = (float) json_object_get_double(json_get(json, #name))
+#define JSON_GET_BOOL(name) s->name = json_object_get_boolean(json_get(json, #name))
 
 json_object* json_get(json_object* json, const char* key)
 {
