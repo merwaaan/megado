@@ -7,8 +7,12 @@
 
 - Tiny Toon Adventures - Buster's Hidden Treasure: the palettes become greenish in-game.
 
-- Columns: the sega boot animation only appears in Release builds (Visual Studio specific)
-           (no SEGA logo with clang either in release and debug).
+- Columns:
+  - the sega boot animation only appears in Release builds (Visual Studio specific)
+    (no SEGA logo with clang either in release and debug).
+  - score overflows its box (looks like the most significant digit is a repeat
+    of the least-significant one, when it should be zero; the bogus digit is
+    written to the VDP @ 63AA)
 
 - Alex Kidd in the Enchanted Castle:
   - Planes are empty during the intro and in-game.
@@ -40,7 +44,7 @@ so the flag is always cleared.
   display. The VRAM is corrupted because of an invalid DMA transfer with
   length 0 (spans the whole VRAM) and auto-increment 2 (explains the stripes).
   Another DMA transfer occured a few cycles before and decremented the length
-  to zero. Possible that the program did not have enough time to setup the 
+  to zero. Possible that the program did not have enough time to setup the
   faulty DMA because of a timing issue?
 
 - Landstalker: waits for $FF0F8B @B6E
@@ -64,3 +68,10 @@ so the flag is always cleared.
 - The Addam's Family @43C0E
 - Lost Vikings: waiting for $A01000 to equal zero @FD888 (eerily similar to Addam's Family)
 - Spirou: seems to be waiting for the Z80 to execute something
+
+# Invalid generated instructions
+
+- 0x017C: BCHG with Immediate value as destination (fetch/get/set functions are
+  NULL, so segfault)
+- 0x01FC: BSET with Immediate value as destination
+- 0x19F1: MOV with Immediate value as destination
