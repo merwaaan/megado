@@ -9,6 +9,7 @@ struct DecodedInstruction;
 struct Joypad;
 struct M68k;
 struct Renderer;
+struct Settings;
 struct Vdp;
 
 typedef enum {
@@ -33,6 +34,7 @@ typedef struct Genesis {
     struct Joypad* joypad;
 
     struct Renderer* renderer;
+    struct Settings* settings;
 
     Status status;
     Regions region;

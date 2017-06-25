@@ -12,6 +12,7 @@
 #include "m68k/instruction.h"
 #include "m68k/m68k.h"
 #include "renderer.h"
+#include "settings.h"
 #include "vdp.h"
 
 #define DISASSEMBLY_LENGTH 20
@@ -261,8 +262,8 @@ static void render_genesis(Renderer* r)
     float display_center_x = display_width / 2.0f;
     float display_center_y = display_height / 2.0f;
 
-    float output_half_width = output_width / 2.0f * r->game_scale;
-    float output_half_height = output_height / 2.0f * r->game_scale;
+    float output_half_width = output_width / 2.0f * r->genesis->settings->video_scale;
+    float output_half_height = output_height / 2.0f * r->genesis->settings->video_scale;
 
     float quad_vertices[] = {
         // Top-right triangle
@@ -377,8 +378,8 @@ static void toggle_pause(Renderer* r)
 }
 
 static void toggle_vsync(Renderer* r) {
-    r->vsync = !r->vsync;
-    glfwSwapInterval(r->vsync ? 1 : 0);
+    r->genesis->settings->vsync = !r->genesis->settings->vsync;
+    glfwSwapInterval(r->genesis->settings->vsync ? 1 : 0);
 }
 
 static void step(Renderer* r)
@@ -421,6 +422,8 @@ static void text_on_off(bool state, const char* format, ...)
 
 static void build_ui(Renderer* r)
 {
+    Settings* settings = r->genesis->settings;
+
     // TODO wrapp all the igBegin in if, otherwise collapsed windows still render
 
     bool dummy_flag = false;
@@ -445,31 +448,31 @@ static void build_ui(Renderer* r)
 
         if (igBeginMenu("CPU", true))
         {
-            igMenuItemPtr("Registers", NULL, &r->show_cpu_registers, true);
-            igMenuItemPtr("Disassembly", NULL, &r->show_cpu_disassembly, true);
+            igMenuItemPtr("Registers", NULL, &settings->show_cpu_registers, true);
+            igMenuItemPtr("Disassembly", NULL, &settings->show_cpu_disassembly, true);
             igSeparator();
-            igMenuItemPtr("ROM", NULL, &r->show_rom, true);
-            igMenuItemPtr("RAM", NULL, &r->show_ram, true);
+            igMenuItemPtr("ROM", NULL, &settings->show_rom, true);
+            igMenuItemPtr("RAM", NULL, &settings->show_ram, true);
             igEndMenu();
         }
 
         if (igBeginMenu("Video", true))
         {
 
-            igSliderFloat("Scaling", &r->game_scale, 1.0f, 5.0f, "%f", 1.0f);
-            if (igMenuItem("VSync", NULL, r->vsync, true)) {
+            igSliderFloat("Scaling", &settings->video_scale, 1.0f, 5.0f, "%f", 1.0f);
+            if (igMenuItem("VSync", NULL, settings->vsync, true)) {
                 toggle_vsync(r);
             }
             igSeparator();
-            igMenuItemPtr("Registers", NULL, &r->show_vdp_registers, true);
-            igMenuItemPtr("Palettes", NULL, &r->show_vdp_palettes, true);
-            igMenuItemPtr("Patterns", NULL, &r->show_vdp_patterns, true);
-            igMenuItemPtr("Planes", NULL, &r->show_vdp_planes, true);
-            igMenuItemPtr("Sprites", NULL, &r->show_vdp_sprites, true);
+            igMenuItemPtr("Registers", NULL, &settings->show_vdp_registers, true);
+            igMenuItemPtr("Palettes", NULL, &settings->show_vdp_palettes, true);
+            igMenuItemPtr("Patterns", NULL, &settings->show_vdp_patterns, true);
+            igMenuItemPtr("Planes", NULL, &settings->show_vdp_planes, true);
+            igMenuItemPtr("Sprites", NULL, &settings->show_vdp_sprites, true);
             igSeparator();
-            igMenuItemPtr("VRAM", NULL, &r->show_vram, &r->show_vram);
-            igMenuItemPtr("VSRAM", NULL, &r->show_vsram, &r->show_vsram);
-            igMenuItemPtr("CRAM", NULL, &r->show_cram, &r->show_cram);
+            igMenuItemPtr("VRAM", NULL, &settings->show_vram, &settings->show_vram);
+            igMenuItemPtr("VSRAM", NULL, &settings->show_vsram, &settings->show_vsram);
+            igMenuItemPtr("CRAM", NULL, &settings->show_cram, &settings->show_cram);
             igEndMenu();
         }
 
@@ -482,9 +485,9 @@ static void build_ui(Renderer* r)
     }
 
     // CPU registers
-    if (r->show_cpu_registers)
+    if (settings->show_cpu_registers)
     {
-        igBegin("CPU registers", &r->show_cpu_registers, 0);
+        igBegin("CPU registers", &settings->show_cpu_registers, 0);
         igColumns(2, NULL, true);
 
         for (int i = 0; i < 8; ++i)
@@ -527,9 +530,9 @@ static void build_ui(Renderer* r)
     }
 
     // CPU Disassembly
-    if (r->show_cpu_disassembly)
+    if (settings->show_cpu_disassembly)
     {
-        igBegin("CPU Disassembly", &r->show_cpu_disassembly, 0);
+        igBegin("CPU Disassembly", &settings->show_cpu_disassembly, 0);
 
         igColumns(4, NULL, false);
         igSetColumnOffset(1, 20);
@@ -624,17 +627,17 @@ static void build_ui(Renderer* r)
     }
 
     // ROM
-    if (r->show_rom)
-        memory_viewer("ROM", &r->show_rom, r->genesis->memory, Byte, 0x100000, &r->rom_target_address);
+    if (settings->show_rom)
+        memory_viewer("ROM", &settings->show_rom, r->genesis->memory, Byte, 0x100000, &r->rom_target_address);
 
     // RAM
-    if (r->show_ram)
-        memory_viewer("RAM", &r->show_ram, r->genesis->memory + 0xFF000, Byte, 0x10000, &r->ram_target_address);
+    if (settings->show_ram)
+        memory_viewer("RAM", &settings->show_ram, r->genesis->memory + 0xFF000, Byte, 0x10000, &r->ram_target_address);
 
     // VDP registers
-    if (r->show_vdp_registers)
+    if (settings->show_vdp_registers)
     {
-        igBegin("VDP registers", &r->show_vdp_registers, 0);
+        igBegin("VDP registers", &settings->show_vdp_registers, 0);
         igColumns(3, NULL, false);
 
         Vdp* v = r->genesis->vdp;
@@ -737,11 +740,11 @@ static void build_ui(Renderer* r)
     }
 
     // VDP palettes
-    if (r->show_vdp_palettes)
+    if (settings->show_vdp_palettes)
     {
         igSetNextWindowSize((struct ImVec2) { 16 * PALETTE_ENTRY_WIDTH, 5 * PALETTE_ENTRY_WIDTH }, 0); // TODO it seems that the title bar is counted in the height...
         igPushStyleVarVec(ImGuiStyleVar_WindowPadding, vec_zero);
-        igBegin("VDP palettes", &r->show_vdp_palettes, ImGuiWindowFlags_NoResize);
+        igBegin("VDP palettes", &settings->show_vdp_palettes, ImGuiWindowFlags_NoResize);
 
         struct ImDrawList* draw_list = igGetWindowDrawList();
 
@@ -767,13 +770,13 @@ static void build_ui(Renderer* r)
     }
 
     // VDP patterns
-    if (r->show_vdp_patterns)
+    if (settings->show_vdp_patterns)
     {
         uint16_t patterns_width = PATTERNS_COLUMNS * 8;
         uint16_t patterns_height = PATTERNS_COUNT / PATTERNS_COLUMNS * 8;
 
         igPushStyleVarVec(ImGuiStyleVar_WindowPadding, vec_zero);
-        igBegin("VDP patterns", &r->show_vdp_patterns, ImGuiWindowFlags_NoResize);
+        igBegin("VDP patterns", &settings->show_vdp_patterns, ImGuiWindowFlags_NoResize);
 
         // Update the pattern texture with the VRAM contents
 
@@ -814,13 +817,13 @@ static void build_ui(Renderer* r)
     }
 
     // VDP planes
-    if (r->show_vdp_planes)
+    if (settings->show_vdp_planes)
     {
         uint16_t plane_width = 64 * 8;
         uint16_t plane_height = 64 * 8;
 
         igPushStyleVarVec(ImGuiStyleVar_WindowPadding, vec_zero);
-        igBegin("VDP planes", &r->show_vdp_planes, ImGuiWindowFlags_NoResize);
+        igBegin("VDP planes", &settings->show_vdp_planes, ImGuiWindowFlags_NoResize);
 
         // Update the plane texture with the selected plane
 
@@ -886,14 +889,14 @@ static void build_ui(Renderer* r)
     }
 
     // VDP sprites
-    if (r->show_vdp_sprites)
+    if (settings->show_vdp_sprites)
     {
         igPushStyleVarVec(ImGuiStyleVar_WindowPadding, vec_zero);
-        igBegin("VDP sprites", &r->show_vdp_sprites, ImGuiWindowFlags_NoResize);
+        igBegin("VDP sprites", &settings->show_vdp_sprites, ImGuiWindowFlags_NoResize);
 
         struct ImVec2 pos = get_cursor();
 
-        // Update the plane texture with the selected plane
+        // Update the sprite texture
 
         memset(r->sprites_buffer, 0, 552 * 552 * 3 * sizeof(uint8_t));
         vdp_draw_sprites(r->genesis->vdp, r->sprites_buffer, 552);
@@ -916,15 +919,15 @@ static void build_ui(Renderer* r)
     }
 
     // VRAM
-    if (r->show_vram)
-        memory_viewer("VRAM", &r->show_vram, r->genesis->vdp->vram, Byte, 0x10000, NULL);
+    if (settings->show_vram)
+        memory_viewer("VRAM", &settings->show_vram, r->genesis->vdp->vram, Byte, 0x10000, NULL);
 
     // VSRAM
-    if (r->show_vsram)
-        memory_viewer("VSRAM", &r->show_vsram, r->genesis->vdp->vsram, Word, 0x40, NULL);
+    if (settings->show_vsram)
+        memory_viewer("VSRAM", &settings->show_vsram, r->genesis->vdp->vsram, Word, 0x40, NULL);
 
     // CRAM
-    if (r->show_cram)
+    if (settings->show_cram)
     {
         // Because we do not store raw CRAM data in the VDP implementation, convert
         // the decoded colors back to words for the debug view
@@ -932,7 +935,7 @@ static void build_ui(Renderer* r)
         for (int c = 0; c < 0x40; ++c)
             raw_cram[c] = COLOR_STRUCT_TO_11(r->genesis->vdp->cram[c]);
 
-        memory_viewer("CRAM", &r->show_cram, raw_cram, Word, 0x40, NULL);
+        memory_viewer("CRAM", &settings->show_cram, raw_cram, Word, 0x40, NULL);
     }
 
     bool a = true;
@@ -1158,8 +1161,6 @@ Renderer* renderer_make(Genesis* genesis)
     Renderer* r = calloc(1, sizeof(Renderer));
     r->genesis = genesis;
     r->window = window;
-    r->game_scale = 1.0f;
-    r->vsync = true;
     r->plane_buffer = calloc(64 * 8 * 64 * 8 * 3, sizeof(uint8_t));
     r->sprites_buffer = calloc(552 * 552 * 3, sizeof(uint8_t));
 

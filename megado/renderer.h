@@ -10,33 +10,13 @@ typedef struct Renderer
 
     GLFWwindow* window;
 
-    float game_scale; // Scaling factor for the Genesis video output
-    bool vsync;
-
-    bool show_cpu_registers;
-    bool show_cpu_disassembly;
-    bool show_vdp_registers;
-    bool show_vdp_palettes;
-    bool show_vdp_patterns;
-
-    bool show_vdp_sprites;
-    uint8_t* sprites_buffer;
-
-    bool show_rom;
-    uint32_t rom_target_address;
-
-    bool show_ram;
-    uint32_t ram_target_address;
-
-    bool show_vdp_planes;
     enum Planes selected_plane;
     uint8_t* plane_buffer;
+    uint8_t* sprites_buffer;
 
-    bool show_vram;
+    uint32_t rom_target_address;
+    uint32_t ram_target_address;
     uint32_t vram_target_address;
-
-    bool show_vsram;
-    bool show_cram;
 
     // Graphics resources for rendering the Genesis' output
     GLuint game_shader;

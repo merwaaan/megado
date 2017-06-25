@@ -8,6 +8,7 @@
 #include "m68k/m68k.h"
 #include "m68k/instruction.h"
 #include "renderer.h"
+#include "settings.h"
 #include "vdp.h"
 
 Genesis* genesis_make()
@@ -19,6 +20,7 @@ Genesis* genesis_make()
     g->vdp = vdp_make(g);
     g->joypad = joypad_make();
     g->renderer = renderer_make(g);
+    g->settings = settings_make();
     g->status = Status_NoGameLoaded;
 
     return g;
@@ -29,10 +31,15 @@ void genesis_free(Genesis* g)
     if (g == NULL)
         return;
 
+    // Save the settings when quitting
+    // TODO not the best place to that, should rather be in quit() or deinit() or something
+    settings_save(g->settings);
+
     m68k_free(g->m68k);
     z80_free(g->z80);
     vdp_free(g->vdp);
     joypad_free(g->joypad);
+    settings_free(g->settings);
 
     free(g->memory);
     free(g);
