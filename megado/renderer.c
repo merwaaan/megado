@@ -1049,6 +1049,7 @@ static void handle_inputs(Renderer* r, int key, int action)
 
         case GLFW_KEY_P: toggle_pause(r); break;
         case GLFW_KEY_SPACE: step(r); break;
+        case GLFW_KEY_ESCAPE: r->genesis->status = Status_Quitting; break;
         }
         break;
     }
