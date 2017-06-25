@@ -9,8 +9,8 @@ BUILD_DIR := build
 RELEASE_DIR := $(BUILD_DIR)/release
 DEBUG_DIR := $(BUILD_DIR)/debug
 
-INCLUDES := -I./ -Ideps/cimgui/ -Ideps/glfw/include -Ideps/glew/include
-LIBS := -Ldeps/glew/build/lib -lGLEW -lGLU -lGL -Ldeps/cimgui/cimgui -l:cimgui.so -Ldeps/glfw/build/src -lglfw
+INCLUDES := -I./ -Ideps/cimgui/ -Ideps/glfw/include -Ideps/glew/include -Ideps/json-c/include/json-c
+LIBS := -Ldeps/glew/build/lib -lGLEW -lGLU -lGL -Ldeps/cimgui/cimgui -l:cimgui.so -Ldeps/glfw/build/src -lglfw -Ldeps/json-c/lib -ljson-c
 
 MODULES := megado megado/m68k
 

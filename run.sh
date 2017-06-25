@@ -8,7 +8,7 @@
 
 OPTIND=1 # Reset getopts (see https://stackoverflow.com/a/14203146)
 
-ENV='LD_LIBRARY_PATH=deps/cimgui/cimgui:deps/glfw/build/src:deps/glew/build/lib'
+ENV='LD_LIBRARY_PATH=deps/cimgui/cimgui:deps/glfw/build/src:deps/glew/build/lib:deps/json-c/lib'
 DEBUG_BIN='build/debug/megado'
 RELEASE_BIN='build/release/megado'
 
