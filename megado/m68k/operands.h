@@ -12,15 +12,15 @@ struct Instruction;
  */
 
 // Fetch and store the operand's effective address
-#define FETCH_EA(operand) (operand)->last_ea = (operand)->fetch_ea_func(operand) 
+#define FETCH_EA(operand) (operand)->last_ea = (operand)->fetch_ea_func(operand)
 
 // Get/Set the operand's value, the stored effective address will be used
-#define GET(operand) (operand)->get_value_func((operand)) 
+#define GET(operand) (operand)->get_value_func((operand))
 #define SET(operand, value) (operand)->set_value_func((operand), (value))
 
 // Fetch the operand's effective address and then get/set its value, in one call
-#define FETCH_EA_AND_GET(operand) ((operand)->last_ea = (operand)->fetch_ea_func(operand), (operand)->get_value_func((operand))) 
-#define FETCH_EA_AND_SET(operand, value) ((operand)->last_ea = (operand)->fetch_ea_func(operand), (operand)->set_value_func((operand), (value)))
+#define FETCH_EA_AND_GET(operand) (operand_fetch_ea_and_get(operand))
+#define FETCH_EA_AND_SET(operand, value) (operand_fetch_ea_and_set((operand), (value)))
 
 // Effective address resolution function
 //
@@ -111,3 +111,6 @@ int operand_get_cycles(Operand*);
 
 Operand* operand_make(uint16_t pattern, struct Instruction* instr);
 void operand_free(Operand* instr);
+
+uint32_t operand_fetch_ea_and_get(Operand*);
+void operand_fetch_ea_and_set(Operand*, uint32_t);

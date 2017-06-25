@@ -14,6 +14,7 @@ typedef int (InstructionFunc)(struct Instruction*);
 
 typedef struct Instruction {
     char* name;
+    uint16_t opcode;
 
     // The M68000 instance that the instruction is bound to
     struct M68k* context;

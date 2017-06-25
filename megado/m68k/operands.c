@@ -637,3 +637,31 @@ int operand_length(Operand* operand)
         return 0;
     }
 }
+
+#define FATAL(...) do { fprintf(stderr, "FATAL(in %s): ", __func__); fprintf(stderr, __VA_ARGS__); exit(1); } while (0)
+
+uint32_t operand_fetch_ea_and_get(Operand* operand) {
+    if (operand->fetch_ea_func == NULL) {
+        FATAL("fetch_ea_func is null (opcode: %04X, name: %s)\n",
+              operand->instruction->opcode, operand->instruction->name);
+    }
+    operand->last_ea = operand->fetch_ea_func(operand);
+    if (operand->get_value_func == NULL) {
+        FATAL("get_value_func is null (opcode: %04X, name: %s)\n",
+              operand->instruction->opcode, operand->instruction->name);
+    }
+    return operand->get_value_func(operand);
+}
+
+void operand_fetch_ea_and_set(Operand* operand, uint32_t value) {
+    if (operand->fetch_ea_func == NULL) {
+        FATAL("fetch_ea_func is null (opcode: %04X, name: %s)\n",
+              operand->instruction->opcode, operand->instruction->name);
+    }
+    operand->last_ea = operand->fetch_ea_func(operand);
+    if (operand->set_value_func == NULL) {
+        FATAL("set_value_func is null (opcode: %04X, name: %s)\n",
+              operand->instruction->opcode, operand->instruction->name);
+    }
+    operand->set_value_func(operand, value);
+}

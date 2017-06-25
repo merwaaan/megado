@@ -157,6 +157,7 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
                 continue;
             }
 
+            instr->opcode = opcode;
             return instr;
         }
 
