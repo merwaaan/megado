@@ -316,7 +316,7 @@ static void memory_viewer(char* name, bool* opened, void* data, Size data_size, 
     //igSetNextWindowSize(vec_zero, 0);
     if (igBegin(name, opened, 0))
     {
-        igBeginChild("##memory", (const struct ImVec2) { 600, 300 }, false, 0); // TODO approximate sizing, not sure how to cleanly make the child fit
+        igBeginChild("##memory", (const struct ImVec2) { 400, 300 }, false, 0); // TODO approximate sizing, not sure how to cleanly make the child fit
 
         // We use a list clipper to browse the whole memory
         // while rendering only its visible section
@@ -632,7 +632,7 @@ static void build_ui(Renderer* r)
 
     // RAM
     if (settings->show_ram)
-        memory_viewer("RAM", &settings->show_ram, r->genesis->memory + 0xFF000, Byte, 0x10000, &r->ram_target_address);
+        memory_viewer("RAM", &settings->show_ram, r->genesis->memory + 0xFF0000, Byte, 0x10000, &r->ram_target_address);
 
     // VDP registers
     if (settings->show_vdp_registers)
