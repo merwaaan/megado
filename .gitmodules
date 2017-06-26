@@ -1,6 +1,7 @@
 [submodule "deps/minunit"]
 	path = deps/minunit
 	url = https://github.com/siu/minunit.git
+	ignore = untracked
 [submodule "deps/cimgui"]
 	path = deps/cimgui
 	url = https://github.com/merwaaan/cimgui.git
@@ -8,9 +9,11 @@
 [submodule "deps/glew"]
 	path = deps/glew
 	url = https://github.com/nigels-com/glew.git
+	ignore = untracked
 [submodule "deps/glfw"]
 	path = deps/glfw
 	url = https://github.com/glfw/glfw.git
+	ignore = untracked
 [submodule "deps/json-c"]
 	path = deps/json-c
 	url = https://github.com/json-c/json-c.git
