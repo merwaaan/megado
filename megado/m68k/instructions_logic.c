@@ -196,10 +196,10 @@ Instruction* gen_ori_ccr(uint16_t opcode, M68k* m)
 
 int not(Instruction* i)
 {
-    FETCH_EA(i->dst);
-    SET(i->dst, ~GET(i->dst));
+    FETCH_EA(i->src);
+    SET(i->src, ~GET(i->src));
 
-    uint32_t result = GET(i->dst);
+    uint32_t result = GET(i->src);
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
     ZERO_SET(i->context, result == 0);
@@ -212,19 +212,19 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "NOT", not);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    if (instruction_is_valid(i, false, true))
+    /*if (instruction_is_valid(i, true, false))
         i->base_cycles = i->size == Long ?
             cycles_single_operand_instruction(i, 6, 12) :
-            cycles_single_operand_instruction(i, 4, 8);
+            cycles_single_operand_instruction(i, 4, 8);*/
 
     return i;
 }
 
 int scc(Instruction* i)
 {
-    FETCH_EA_AND_SET(i->dst, i->condition->func(i->context) ? 0xFF : 0);
+    FETCH_EA_AND_SET(i->src, i->condition->func(i->context) ? 0xFF : 0);
 
     return 0;
 }
@@ -240,19 +240,19 @@ Instruction* gen_scc(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, name, scc);
     i->size = Byte;
     i->condition = condition;
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    if (instruction_is_valid(i, false, true))
+    /*if (instruction_is_valid(i, true, false))
         i->base_cycles = i->size == Long ?
             cycles_single_operand_instruction(i, 6, 8) :
             cycles_single_operand_instruction(i, 4, 8);
-
+            */
     return i;
 }
 
 int tst(Instruction* i)
 {
-    uint32_t value = FETCH_EA_AND_GET(i->dst);
+    uint32_t value = FETCH_EA_AND_GET(i->src);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -266,9 +266,9 @@ Instruction* gen_tst(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "TST", tst);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    if (instruction_is_valid(i, true, false))
+    if (instruction_is_valid(i, false, true))
         i->base_cycles = i->size == Long ?
             cycles_single_operand_instruction(i, 4, 4) :
             cycles_single_operand_instruction(i, 4, 4);

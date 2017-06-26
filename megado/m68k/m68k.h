@@ -82,10 +82,27 @@ typedef struct M68k
 
 typedef struct Instruction* (GenFunc)(uint16_t opcode, M68k* context);
 
-typedef struct {
+// TODO move
+typedef struct Pattern {
+
+    // Unique bit pattern of the instruction.
+    //
+    // eg. ANDI's opcode is 0000 0010 SSMM MXXX
+    //     ANDI's pattern is $0200 (0000 0010 0000 0000)
     uint16_t pattern;
+
+    // Bits to check for the pattern (the fixed part of the opcode).
+    //
+    // eg. ANDI's mask is $FF00 (1111 1111 0000 0000)
     uint16_t mask;
+
+    // Function that returns an instance of the instruction
+    // setup with appropriate operands depending on the opcode.
     GenFunc* generator;
+
+    // Masks describing legal addressing modes for both operands.
+    uint16_t src_addressing_modes;
+    uint16_t dst_addressing_modes;
 } Pattern;
 
 M68k* m68k_make(struct Genesis*);

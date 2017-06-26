@@ -97,17 +97,9 @@ Instruction* gen_bsr(uint16_t opcode, M68k* m)
     i->base_cycles = 18;
 
     int offset = FRAGMENT(opcode, 7, 0);
-    if (offset == 0)
-    {
-        i->size = Word;
-        i->src = operand_make_branching_offset(i, Word);
-    }
-    else
-    {
-        i->size = Byte;
-        i->src = operand_make_branching_offset(i, Byte);
-    }
-
+    i->size = offset == 0 ? Word : Byte;
+    i->src = operand_make_branching_offset(i, i->size);
+    
     return i;
 }
 
@@ -167,9 +159,9 @@ Instruction* gen_jmp(uint16_t opcode, M68k* m)
 
 int jsr(Instruction* i)
 {
-    uint32_t ea = FETCH_EA(i->dst);
+    uint32_t ea = FETCH_EA(i->src);
 
-    if (i->dst->type == AbsoluteShort)
+    if (i->src->type == AbsoluteShort)
         ea = SIGN_EXTEND_W(ea);
 
     // Push the address following the instruction onto the stack
@@ -185,7 +177,8 @@ int jsr(Instruction* i)
 Instruction* gen_jsr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "JSR", jsr);
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->size = Long;
     return i;
 }
 

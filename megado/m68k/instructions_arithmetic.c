@@ -157,7 +157,7 @@ Instruction* gen_addx(uint16_t opcode, M68k* m)
 
 int clr(Instruction* i)
 {
-    FETCH_EA_AND_SET(i->dst, 0);
+    FETCH_EA_AND_SET(i->src, 0);
 
     CARRY_SET(i->context, false);
     OVERFLOW_SET(i->context, false);
@@ -171,7 +171,7 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "CLR", clr);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     if (instruction_is_valid(i, false, true))
         i->base_cycles = i->size == Long ?
@@ -405,10 +405,10 @@ Instruction* gen_mulu(uint16_t opcode, M68k* m)
 
 int neg(Instruction* i)
 {
-    uint32_t value = FETCH_EA_AND_GET(i->dst);
-    SET(i->dst, 0 - value);
+    uint32_t value = FETCH_EA_AND_GET(i->src);
+    SET(i->src, 0 - value);
 
-    uint32_t result = GET(i->dst);
+    uint32_t result = GET(i->src);
     CARRY_SET(i->context, CHECK_CARRY_SUB(0, value, i->size));
     OVERFLOW_SET(i->context, CHECK_OVERFLOW_SUB(0, value, i->size));
     ZERO_SET(i->context, result == 0);
@@ -422,7 +422,7 @@ Instruction* gen_neg(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "NEG", neg);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     if (instruction_is_valid(i, false, true))
         i->base_cycles = i->size == Long ?
