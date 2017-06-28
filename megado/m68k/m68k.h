@@ -34,8 +34,6 @@ struct DecodedInstruction;
 struct Genesis;
 struct M68k;
 
-typedef void(*CallbackFunc)(struct M68k*);
-
 typedef struct Breakpoint
 {
     bool enabled;
@@ -71,9 +69,6 @@ typedef struct M68k
     uint32_t instruction_address; // Instruction currently being decoded
 
     struct Instruction** opcode_table;
-
-    // Callbacks
-    CallbackFunc instruction_callback;
 
     // Breakpoints
     Breakpoint breakpoints[BREAKPOINTS_COUNT]; // The emulation will pause when the PC reaches one of those addresses

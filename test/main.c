@@ -73,9 +73,6 @@ void instr_callback(M68k* m)
 int main(int argc, char **argv)
 {
     Genesis* g = genesis_make();
-#ifdef DEBUG
-    g->m68k->instruction_callback = instr_callback;
-#endif
 
     //check_alignment(g);
     //check_endianness();
