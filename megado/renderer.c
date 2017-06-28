@@ -207,7 +207,7 @@ static void init_ui_rendering(Renderer* r)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-    ImFontAtlas_SetTexID(io->Fonts, (ImTextureID) ui_font_texture);
+    ImFontAtlas_SetTexID(io->Fonts, (ImTextureID)ui_font_texture);
 
     // Setup texture for the patterns and planes debug views
     gen_texture(&r->ui_patterns_texture);
@@ -304,7 +304,7 @@ static const struct ImVec4 color_black = { 0.0f, 0.0f, 0.0f, 1.0f };
 static const struct ImVec4 color_white = { 1.0f, 1.0f, 1.0f, 1.0f };
 static const struct ImVec4 color_dimmed = { 0.5f, 0.5f, 0.5f, 1.0f };
 static const struct ImVec4 color_accent = { 1.0f, 0.07f, 0.57f, 1.0f };
-static const struct ImVec4 color_sucess = { 0.0f, 1.0f, 0.0f, 1.0f };
+static const struct ImVec4 color_success = { 0.0f, 1.0f, 0.0f, 1.0f };
 static const struct ImVec4 color_error = { 1.0f, 0.0f, 0.0f, 1.0f };
 static const struct ImVec4 color_title = { 0.0f, 0.68f, 0.71f, 1.0f };
 
@@ -936,6 +936,18 @@ static void build_ui(Renderer* r)
             raw_cram[c] = COLOR_STRUCT_TO_11(r->genesis->vdp->cram[c]);
 
         memory_viewer("CRAM", &settings->show_cram, raw_cram, Word, 0x40, NULL);
+    }
+
+    // "Pause" bubble when the emulation is stopped
+    // TODO would be better to always keep this overlay on top of the other windows but I don't think it's currently possible
+    if (r->genesis->status == Status_Pause)
+    {
+        igSetNextWindowPos((struct ImVec2) { 10, 30 }, 0);
+        igPushStyleColor(ImGuiCol_WindowBg, (struct ImVec4) { 1.0f, 1.0f, 1.0f, 0.10f });
+        igBegin("Example: Fixed Overlay", &dummy_flag, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+        igTextColored(color_accent, "Paused");
+        igEnd();
+        igPopStyleColor(1);
     }
 
     bool a = true;
