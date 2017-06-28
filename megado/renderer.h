@@ -4,11 +4,15 @@
 #include <stdbool.h>
 #include "vdp.h"
 
+struct SnapshotMetadata;
+
 typedef struct Renderer
 {
     Genesis* genesis;
 
     GLFWwindow* window;
+
+    struct SnapshotMetadata* snapshots;
 
     enum Planes selected_plane;
     uint8_t* plane_buffer;

@@ -13,6 +13,7 @@
 #include "m68k/m68k.h"
 #include "renderer.h"
 #include "settings.h"
+#include "snapshot.h"
 #include "vdp.h"
 
 #define DISASSEMBLY_LENGTH 20
@@ -207,7 +208,7 @@ static void init_ui_rendering(Renderer* r)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-    ImFontAtlas_SetTexID(io->Fonts, (ImTextureID) ui_font_texture);
+    ImFontAtlas_SetTexID(io->Fonts, (ImTextureID)ui_font_texture);
 
     // Setup texture for the patterns and planes debug views
     gen_texture(&r->ui_patterns_texture);
@@ -432,6 +433,27 @@ static void build_ui(Renderer* r)
     {
         if (igBeginMenu("Game", true))
         {
+            if (igBeginMenu("Save slots", true))
+            {
+                for (uint8_t slot = 0; slot < SNAPSHOT_SLOTS; ++slot)
+                {
+                    igText("Slot %d:", slot);
+                    igSameLine(0, 5);
+
+                    if (true)
+                        igTextColored(color_dimmed, "empty");
+                    else
+                        igTextColored(color_accent, "%s", "date?");
+                    igSameLine(0, 10);
+
+                    igButton("save", (struct ImVec2) { 50, 20 });
+                    igSameLine(0, 3);
+                    igButton("load", (struct ImVec2) { 50, 20 });
+                }
+                igEndMenu();
+            }
+            igSeparator();
+
             if (igMenuItem("Reset", NULL, false, true))
                 genesis_initialize(r->genesis);
 
