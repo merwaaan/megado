@@ -50,6 +50,8 @@ void instruction_free(Instruction* instr)
 #define MODES_ALL         (MODES_DATA | MODES_ADDR | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC | MODES_IMM)
 #define MODES_NONE        0
 
+// TODO move from ccr?
+
 static Pattern all_patterns[] =
 {
     { 0x003C, 0xFFFF, &gen_ori_ccr, MODES_IMM, MODES_NONE },
@@ -64,16 +66,16 @@ static Pattern all_patterns[] =
     { 0x0A7C, 0xFFFF, &gen_eori_sr, MODES_IMM, MODES_NONE },
     { 0x0A00, 0xFF00, &gen_eori, MODES_IMM, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
     { 0x0C00, 0xFF00, &gen_cmpi, MODES_IMM, MODES_ALL & ~(MODES_ADDR | MODES_IMM) },
-    { 0x0800, 0xFFC0, &gen_btst_imm, MODES_IMM, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS }, // TODO subtlety with Dn/Long?
+    { 0x0800, 0xFFC0, &gen_btst_imm, MODES_IMM, MODES_ALL & ~(MODES_ADDR | MODES_IMM) }, // TODO subtlety with Dn/Long?
     { 0x0840, 0xFFC0, &gen_bchg_imm, MODES_IMM, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
     { 0x0880, 0xFFC0, &gen_bclr_imm, MODES_IMM, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
     { 0x08C0, 0xFFC0, &gen_bset_imm, MODES_IMM, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-    { 0x0100, 0xF1C0, &gen_btst, MODES_DATA, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
+    { 0x0100, 0xF1C0, &gen_btst, MODES_DATA, MODES_ALL & ~MODES_ADDR },
     { 0x0140, 0xF1C0, &gen_bchg, MODES_DATA, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
     { 0x0180, 0xF1C0, &gen_bclr, MODES_DATA, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
     { 0x01C0, 0xF1C0, &gen_bset, MODES_DATA, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-    { 0x0088, 0xF0B8, &gen_movep, MODE_MASK(AddressRegisterIndirectDisplacement), MODES_DATA },
-    { 0x0088, 0xF0B8, &gen_movep, MODES_DATA, MODE_MASK(AddressRegisterIndirectDisplacement) },
+    { 0x0108, 0xF1B8, &gen_movep, MODE_MASK(AddressRegisterIndirectDisplacement), MODES_DATA },
+    { 0x0188, 0xF1B8, &gen_movep, MODES_DATA, MODE_MASK(AddressRegisterIndirectDisplacement) },
     { 0x0040, 0xC1C0, &gen_movea, MODES_ALL, MODES_ADDR },
     { 0x0000, 0xC000, &gen_move, MODES_ALL, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
     { 0x40C0, 0xFFC0, &gen_move_from_sr, MODES_NONE, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
@@ -88,19 +90,19 @@ static Pattern all_patterns[] =
     { 0x4840, 0xFFF8, &gen_swap, MODES_DATA, MODES_NONE },
     { 0x4840, 0xFFC0, &gen_pea, MODE_MASK(AddressRegisterIndirect) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC },
     { 0x4AFC, 0xFFFF, &gen_illegal, MODES_NONE, MODES_NONE },
-    { 0x4E50, 0xFFF8, &gen_link, MODES_ADDR, MODE_MASK(Immediate) },
-    { 0x4E58, 0xFFF8, &gen_unlk, MODES_ADDR },
+    { 0x4E50, 0xFFF8, &gen_link, MODES_ADDR, MODES_IMM },
+    { 0x4E58, 0xFFF8, &gen_unlk, MODES_ADDR, MODES_NONE },
     { 0x4880, 0xFEB8, &gen_ext, MODES_DATA, MODES_NONE },
     { 0x4880, 0xFF80, &gen_movem, MODES_NONE, MODE_MASK(AddressRegisterIndirect) | MODE_MASK(AddressRegisterIndirectPreDec) | MODES_ADDR_OFFSET | MODES_ABS },
-    { 0x4C80, 0xFF80, &gen_movem, MODES_ALL & ~(MODES_DATA | MODES_ADDR | MODES_IMM), MODES_NONE },
+    { 0x4C80, 0xFF80, &gen_movem, MODE_MASK(AddressRegisterIndirect) | MODE_MASK(AddressRegisterIndirectPostInc) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC, MODES_NONE },
     { 0x4AC0, 0xFFC0, &gen_tas, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS, MODES_NONE },
     { 0x4A00, 0xFF00, &gen_tst, MODES_ALL & ~(MODES_ADDR | MODES_IMM), MODES_NONE },
     { 0x4E40, 0xFFF0, &gen_trap, MODE_MASK(Value), MODES_NONE },
-    { 0x4E60, 0xFFF8, &gen_move_usp, MODES_ADDR, MODES_NONE }, //
-    { 0x4E68, 0xFFF8, &gen_move_usp, MODES_NONE, MODES_ADDR }, //
+    { 0x4E60, 0xFFF8, &gen_move_usp, MODES_ADDR, MODES_NONE },
+    { 0x4E68, 0xFFF8, &gen_move_usp, MODES_NONE, MODES_ADDR },
     { 0x4E70, 0xFFFF, &gen_reset, MODES_NONE, MODES_NONE },
     { 0x4E71, 0xFFFF, &gen_nop, MODES_NONE, MODES_NONE },
-    { 0x4E72, 0xFFFF, &gen_stop, MODES_NONE, MODES_NONE }, //
+    { 0x4E72, 0xFFFF, &gen_stop, MODES_IMM, MODES_NONE },
     { 0x4E73, 0xFFFF, &gen_rte, MODES_NONE, MODES_NONE },
     { 0x4E75, 0xFFFF, &gen_rts, MODES_NONE, MODES_NONE },
     { 0x4E76, 0xFFFF, &gen_trapv, MODES_NONE, MODES_NONE },
@@ -145,10 +147,10 @@ static Pattern all_patterns[] =
     { 0xC140, 0xF1F8, &gen_exg, MODES_DATA, MODES_DATA },
     { 0xC148, 0xF1F8, &gen_exg, MODES_ADDR, MODES_ADDR },
     { 0xC188, 0xF1F8, &gen_exg, MODES_DATA, MODES_ADDR },
-    { 0xE0C0, 0xFEC0, &gen_asd_mem, MODES_NONE, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-    { 0xE2C0, 0xFEC0, &gen_lsd_mem, MODES_NONE, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-    { 0xE4C0, 0xFEC0, &gen_roxd_mem, MODES_NONE, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-    { 0xE6C0, 0xFEC0, &gen_rod_mem, MODES_NONE, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
+    { 0xE0C0, 0xFEC0, &gen_asd_mem, MODE_MASK(Value), MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
+    { 0xE2C0, 0xFEC0, &gen_lsd_mem, MODE_MASK(Value), MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
+    { 0xE4C0, 0xFEC0, &gen_roxd_mem, MODE_MASK(Value), MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
+    { 0xE6C0, 0xFEC0, &gen_rod_mem, MODE_MASK(Value), MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
     { 0xE000, 0xF020, &gen_asd, MODE_MASK(Value), MODES_DATA },
     { 0xE020, 0xF020, &gen_asd, MODES_DATA, MODES_DATA },
     { 0xE008, 0xF038, &gen_lsd, MODE_MASK(Value), MODES_DATA },
@@ -197,7 +199,7 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
     {
         if (PATTERN_MATCH(opcode, all_patterns[i]))
         {
-            if (opcode == 0x18b)
+            if (opcode == 0x4cdd)
                 printf("a");
 
             // Generate the instruction
