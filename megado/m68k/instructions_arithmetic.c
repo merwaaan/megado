@@ -42,8 +42,9 @@ Instruction* gen_add(uint16_t opcode, M68k* m)
         i->dst = ea;
     }
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = cycles_standard_instruction(i, 8, 4, 8);
+    i->base_cycles = i->size == Long ?
+        cycles_standard_instruction(i, 8, 4, 8) :
+        cycles_standard_instruction(i, 6, 6, 12); // TODO increased to eight?
 
     return i;
 }
@@ -66,6 +67,11 @@ Instruction* gen_adda(uint16_t opcode, M68k* m)
     i->size = BIT(opcode, 8) ? Long : Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
+
+    i->base_cycles = i->size == Long ?
+        cycles_standard_instruction(i, 8, 4, 8) :
+        cycles_standard_instruction(i, 6, 6, 12); // TODO increased to eight?
+
     return i;
 }
 
@@ -76,8 +82,7 @@ Instruction* gen_addi(uint16_t opcode, M68k* m)
     i->src = operand_make_immediate_value(i->size, i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
+    i->base_cycles = i->size == Long ?
         cycles_immediate_instruction(i, 16, 0, 20) :
         cycles_immediate_instruction(i, 8, 0, 12);
 
@@ -110,10 +115,9 @@ Instruction* gen_addq(uint16_t opcode, M68k* m)
     i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
+    i->base_cycles = i->size == Long ?
         cycles_immediate_instruction(i, 8, 8, 12) :
-        cycles_immediate_instruction(i, 4, 8, 8);
+        cycles_immediate_instruction(i, 4, 4, 8);
 
     return i;
 }
@@ -173,10 +177,9 @@ Instruction* gen_clr(uint16_t opcode, M68k* m)
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    if (instruction_is_valid(i, false, true))
-        i->base_cycles = i->size == Long ?
-            cycles_single_operand_instruction(i, 6, 12) :
-            cycles_single_operand_instruction(i, 4, 8);
+    i->base_cycles = i->size == Long ?
+        cycles_single_operand_instruction(i, 6, 12) :
+        cycles_single_operand_instruction(i, 4, 8);
 
     return i;
 }
@@ -201,10 +204,9 @@ Instruction* gen_cmp(uint16_t opcode, M68k* m)
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
-            cycles_standard_instruction(i, 6, 4, 0) :
-            cycles_standard_instruction(i, 6, 6, 0);
+    i->base_cycles = i->size == Long ?
+        cycles_standard_instruction(i, 6, 6, 0) :
+        cycles_standard_instruction(i, 6, 4, 0);
 
     return i;
 }
@@ -231,6 +233,11 @@ Instruction* gen_cmpa(uint16_t opcode, M68k* m)
     i->size = BIT(opcode, 8) ? Long : Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
+
+    i->base_cycles = i->size == Long ?
+        cycles_standard_instruction(i, 6, 6, 0) :
+        cycles_standard_instruction(i, 6, 4, 0);
+
     return i;
 }
 
@@ -241,8 +248,7 @@ Instruction* gen_cmpi(uint16_t opcode, M68k* m)
     i->src = operand_make_immediate_value(i->size, i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
+    i->base_cycles = i->size == Long ?
         cycles_immediate_instruction(i, 14, 0, 12) :
         cycles_immediate_instruction(i, 8, 0, 8);
 
@@ -311,10 +317,7 @@ Instruction* gen_divs(uint16_t opcode, M68k* m)
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = cycles_standard_instruction(i, 0, 158, 0);
-
+    i->base_cycles = cycles_standard_instruction(i, 0, 158, 0);
     return i;
 }
 
@@ -324,10 +327,7 @@ Instruction* gen_divu(uint16_t opcode, M68k* m)
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = cycles_standard_instruction(i, 0, 140, 0);
-
+    i->base_cycles = cycles_standard_instruction(i, 0, 140, 0);
     return i;
 }
 
@@ -383,10 +383,7 @@ Instruction* gen_muls(uint16_t opcode, M68k* m)
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = cycles_standard_instruction(i, 0, 70, 0);
-
+    i->base_cycles = cycles_standard_instruction(i, 0, 70, 0);
     return i;
 }
 
@@ -396,10 +393,7 @@ Instruction* gen_mulu(uint16_t opcode, M68k* m)
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = cycles_standard_instruction(i, 0, 70, 0);
-
+    i->base_cycles = cycles_standard_instruction(i, 0, 70, 0);
     return i;
 }
 
@@ -424,10 +418,9 @@ Instruction* gen_neg(uint16_t opcode, M68k* m)
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    if (instruction_is_valid(i, false, true))
-        i->base_cycles = i->size == Long ?
-            cycles_single_operand_instruction(i, 6, 12) :
-            cycles_single_operand_instruction(i, 4, 8);
+    i->base_cycles = i->size == Long ?
+        cycles_single_operand_instruction(i, 6, 12) :
+        cycles_single_operand_instruction(i, 4, 8);
 
     return i;
 }
@@ -436,11 +429,10 @@ Instruction* gen_negx(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "NEGX", not_implemented);
 
-    if (instruction_is_valid(i, false, true))
-        i->base_cycles = i->size == Long ?
-            cycles_single_operand_instruction(i, 6, 12) :
-            cycles_single_operand_instruction(i, 4, 8);
-
+    /*i->base_cycles = i->size == Long ?
+        cycles_single_operand_instruction(i, 6, 12) :
+        cycles_single_operand_instruction(i, 4, 8);
+        */
     return i;
 }
 
@@ -479,10 +471,9 @@ Instruction* gen_sub(uint16_t opcode, M68k* m)
         i->dst = ea;
     }
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
-            cycles_standard_instruction(i, 8, 4, 8) :
-            cycles_standard_instruction(i, 6, 6, 12);
+    i->base_cycles = i->size == Long ?
+        cycles_standard_instruction(i, 8, 4, 8) :
+        cycles_standard_instruction(i, 6, 6, 12); // TODO increase to eight?!
 
     return i;
 }
@@ -515,8 +506,7 @@ Instruction* gen_subi(uint16_t opcode, M68k* m)
     i->src = operand_make_immediate_value(i->size, i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
+    i->base_cycles = i->size == Long ?
         cycles_immediate_instruction(i, 16, 0, 20) :
         cycles_immediate_instruction(i, 8, 0, 12);
 
@@ -549,8 +539,7 @@ Instruction* gen_subq(uint16_t opcode, M68k* m)
     i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
+    i->base_cycles = i->size == Long ?
         cycles_immediate_instruction(i, 8, 8, 12) :
         cycles_immediate_instruction(i, 4, 8, 8);
 
@@ -580,5 +569,6 @@ Instruction* gen_tas(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "TAS", tas);
     i->size = Byte;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->base_cycles = cycles_single_operand_instruction(i, 4, 14);
     return i;
 }

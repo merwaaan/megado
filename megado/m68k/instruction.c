@@ -220,17 +220,14 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
     return NULL;
 }
 
-bool instruction_is_valid(Instruction* instr, bool must_have_src, bool must_have_dst)
+bool instruction_has_operands(Instruction* instr, bool src, bool dst)
 {
-    if (instr == NULL || instr->size == InvalidSize)
-        return false;
-
     if (instr->src != NULL && instr->src->type == Unsupported ||
-        instr->src == NULL && must_have_src)
+        instr->src == NULL && src)
         return false;
 
     if (instr->dst != NULL && instr->dst->type == Unsupported ||
-        instr->dst == NULL && must_have_dst)
+        instr->dst == NULL && dst)
         return false;
 
     return true;

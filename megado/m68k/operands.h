@@ -52,7 +52,7 @@ typedef enum
     ProgramCounterIndexed,
     Immediate,
 
-    Value,
+    Value, // TODO unclear, rename to Quick?
     BranchingOffset,
 
     Unsupported

@@ -61,6 +61,7 @@ Instruction* gen_abcd(uint16_t opcode, M68k* m)
 Instruction* gen_nbcd(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "NBCD", not_implemented);
+    //i->base_cycles = cycles_single_operand_instruction(i, 6, 8);
     return i;
 }
 

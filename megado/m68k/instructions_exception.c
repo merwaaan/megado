@@ -42,5 +42,6 @@ Instruction* gen_trap(uint16_t opcode, M68k* m)
 Instruction* gen_trapv(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "TRAPV", not_implemented);
+    i->base_cycles = 4;
     return i;
 }

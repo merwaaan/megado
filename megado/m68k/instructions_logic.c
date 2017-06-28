@@ -58,10 +58,9 @@ Instruction* gen_and(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_boolean_instruction(opcode, m, "AND", and);
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
-            cycles_standard_instruction(i, 0, 4, 8) :
-            cycles_standard_instruction(i, 0, 6, 12);
+    i->base_cycles = i->size == Long ?
+        cycles_standard_instruction(i, 0, 6, 12) :
+        cycles_standard_instruction(i, 0, 4, 8); // TODO increased to eight?!
 
     return i;
 }
@@ -70,10 +69,9 @@ Instruction* gen_andi(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_boolean_instruction_immediate(opcode, m, "ANDI", and);
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
-            cycles_immediate_instruction(i, 16, 0, 20) :
-            cycles_immediate_instruction(i, 8, 0, 12);
+    i->base_cycles = i->size == Long ?
+        cycles_immediate_instruction(i, 14, 0, 20) :
+        cycles_immediate_instruction(i, 8, 0, 12);
 
     return i;
 }
@@ -89,6 +87,7 @@ Instruction* gen_andi_ccr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "ANDI CCR", andi_ccr);
     i->src = operand_make_immediate_value(Byte, i);
+    i->base_cycles = 20;
     return i;
 }
 
@@ -109,10 +108,9 @@ Instruction* gen_eor(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_boolean_instruction(opcode, m, "EOR", eor);
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
-            cycles_standard_instruction(i, 0, 4, 8) :
-            cycles_standard_instruction(i, 0, 8, 12);
+    i->base_cycles = i->size == Long ?
+        cycles_standard_instruction(i, 0, 8, 12) :
+        cycles_standard_instruction(i, 0, 4, 6);
 
     return i;
 }
@@ -121,8 +119,7 @@ Instruction* gen_eori(uint16_t opcode, M68k* m)
 {
     Instruction* i = gen_boolean_instruction_immediate(opcode, m, "EORI", eor);
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
+    i->base_cycles = i->size == Long ?
         cycles_immediate_instruction(i, 16, 0, 20) :
         cycles_immediate_instruction(i, 8, 0, 12);
 
@@ -140,8 +137,9 @@ Instruction* gen_eori_ccr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "EORI CCR", eori_ccr);
     i->src = operand_make_immediate_value(Byte, i);
+    i->base_cycles = 20;
     return i;
-} // TODO cycles
+}
 
 int or (Instruction* i)
 {
@@ -158,24 +156,22 @@ int or (Instruction* i)
 
 Instruction* gen_or(uint16_t opcode, M68k* m)
 {
-    Instruction* i = gen_boolean_instruction(opcode, m, "OR", or);
+    Instruction* i = gen_boolean_instruction(opcode, m, "OR", or );
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
-            cycles_standard_instruction(i, 0, 4, 8) :
-            cycles_standard_instruction(i, 0, 6, 12);
-    
+    i->base_cycles = i->size == Long ?
+        cycles_standard_instruction(i, 0, 6, 12) :
+        cycles_standard_instruction(i, 0, 4, 8); // TODO increase to eight?!
+
     return i;
 }
 
 Instruction* gen_ori(uint16_t opcode, M68k* m)
 {
-    Instruction* i = gen_boolean_instruction_immediate(opcode, m, "ORI", or);
+    Instruction* i = gen_boolean_instruction_immediate(opcode, m, "ORI", or );
 
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = i->size == Long ?
-            cycles_immediate_instruction(i, 16, 0, 20) :
-            cycles_immediate_instruction(i, 8, 0, 12);
+    i->base_cycles = i->size == Long ?
+        cycles_immediate_instruction(i, 16, 0, 20) :
+        cycles_immediate_instruction(i, 8, 0, 12);
 
     return i;
 }
@@ -191,8 +187,9 @@ Instruction* gen_ori_ccr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "ORI CCR", ori_ccr);
     i->src = operand_make_immediate_value(Byte, i);
+    i->base_cycles = 20;
     return i;
-} // TODO cycles
+}
 
 int not(Instruction* i)
 {
@@ -214,10 +211,9 @@ Instruction* gen_not(uint16_t opcode, M68k* m)
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    /*if (instruction_is_valid(i, true, false))
-        i->base_cycles = i->size == Long ?
-            cycles_single_operand_instruction(i, 6, 12) :
-            cycles_single_operand_instruction(i, 4, 8);*/
+    i->base_cycles = i->size == Long ?
+        cycles_single_operand_instruction(i, 6, 12) :
+        cycles_single_operand_instruction(i, 4, 8);
 
     return i;
 }
@@ -242,11 +238,10 @@ Instruction* gen_scc(uint16_t opcode, M68k* m)
     i->condition = condition;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    /*if (instruction_is_valid(i, true, false))
-        i->base_cycles = i->size == Long ?
-            cycles_single_operand_instruction(i, 6, 8) :
-            cycles_single_operand_instruction(i, 4, 8);
-            */
+    i->base_cycles = i->size == Long ?
+        cycles_single_operand_instruction(i, 6, 8) :
+        cycles_single_operand_instruction(i, 4, 8);
+
     return i;
 }
 
@@ -267,11 +262,6 @@ Instruction* gen_tst(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "TST", tst);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-
-    if (instruction_is_valid(i, false, true))
-        i->base_cycles = i->size == Long ?
-            cycles_single_operand_instruction(i, 4, 4) :
-            cycles_single_operand_instruction(i, 4, 4);
-
+    i->base_cycles = cycles_single_operand_instruction(i, 4, 4);
     return i;
 }

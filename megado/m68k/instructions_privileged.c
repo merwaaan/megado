@@ -16,6 +16,7 @@ Instruction* gen_andi_sr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "ANDI SR", andi_sr);
     i->src = operand_make_immediate_value(Word, i);
+    i->base_cycles = 20;
     return i;
 }
 
@@ -30,8 +31,9 @@ Instruction* gen_eori_sr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "EORI SR", eori_sr);
     i->src = operand_make_immediate_value(Word, i);
+    i->base_cycles = 20;
     return i;
-} // TODO cycles
+}
 
 int ori_sr(Instruction* i)
 {
@@ -44,8 +46,9 @@ Instruction* gen_ori_sr(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "ORI SR", ori_sr);
     i->src = operand_make_immediate_value(Word, i);
+    i->base_cycles = 20;
     return i;
-} // TODO cycles
+}
 
 int move_from_sr(Instruction* i)
 {
@@ -59,6 +62,7 @@ Instruction* gen_move_from_sr(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "MOVE from SR", move_from_sr);
     i->size = Word;
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->base_cycles = 6;
     return i;
 }
 
@@ -74,6 +78,7 @@ Instruction* gen_move_to_sr(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "MOVE to SR", move_to_sr);
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->base_cycles = 12;
     return i;
 }
 
@@ -105,11 +110,12 @@ Instruction* gen_move_usp(uint16_t opcode, M68k* m)
     i->base_cycles = 4;
 
     return i;
-}
+} // TODO cycles
 
 Instruction* gen_reset(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "RESET", not_implemented);
+    i->base_cycles = 132;
     return i;
 }
 
@@ -133,5 +139,6 @@ Instruction* gen_rte(uint16_t opcode, M68k* m)
 Instruction* gen_stop(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "STOP", not_implemented);
+    i->base_cycles = 4;
     return i;
 }

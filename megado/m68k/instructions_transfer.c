@@ -114,7 +114,7 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
     i->dst = operand_make(FRAGMENT(opcode, 11, 9) | FRAGMENT(opcode, 8, 6) << 3, i);
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    if (instruction_is_valid(i, true, true))
+    if (instruction_has_operands(i, true, true))
         i->base_cycles = cycles_move_table[i->size == Long][i->src->type][i->dst->type];
 
     return i;
@@ -211,10 +211,7 @@ Instruction* gen_moveq(uint16_t opcode, M68k* m)
     i->size = Long;
     i->src = operand_make_value(BYTE_LO(opcode), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-
-    if (instruction_is_valid(i, true, true))
-        i->base_cycles = cycles_immediate_instruction(i, 4, 0, 0);
-
+    i->base_cycles = cycles_immediate_instruction(i, 4, 0, 0);
     return i;
 }
 
@@ -242,6 +239,7 @@ Instruction* gen_movea(uint16_t opcode, M68k* m)
 Instruction* gen_movep(uint16_t opcode, M68k* m)
 {
     Instruction* i = instruction_make(m, "MOVEP", not_implemented);
+    i->base_cycles = 0; // TODO
     return i;
 }
 
@@ -258,6 +256,7 @@ Instruction* gen_move_to_ccr(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "MOVE to CCR", move_to_ccr);
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->base_cycles = 12;
     return i;
 }
 
@@ -281,7 +280,7 @@ int unlk(Instruction* i)
 {
     // Load the stack pointer with the address register
     i->context->address_registers[7] = i->context->address_registers[i->src->n];
-    
+
     // Load the address register with the long word at the top of the stack
     i->context->address_registers[i->src->n] = m68k_read_l(i->context, i->context->address_registers[7]);
     i->context->address_registers[7] += 4;
@@ -294,5 +293,6 @@ Instruction* gen_unlk(uint16_t opcode, M68k* m)
     Instruction* i = instruction_make(m, "UNLK", unlk);
     i->size = Long;
     i->src = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
+    i->base_cycles = 12; 
     return i;
 }
