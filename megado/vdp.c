@@ -24,10 +24,6 @@ Vdp* vdp_make(Genesis* genesis)
     Vdp* v = calloc(1, sizeof(Vdp));
     v->genesis = genesis;
 
-    v->vram = calloc(0x10000, sizeof(uint8_t));
-    v->vsram = calloc(64, sizeof(uint16_t));
-    v->cram = calloc(64, sizeof(Color));
-
     v->output_buffer = calloc(BUFFER_SIZE, sizeof(uint8_t));
 
     v->pending_command = false;
@@ -44,9 +40,6 @@ void vdp_free(Vdp* v)
     if (v == NULL)
         return;
 
-    free(v->vram);
-    free(v->vsram);
-    free(v->cram);
     free(v->output_buffer);
     free(v);
 }

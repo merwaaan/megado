@@ -61,11 +61,9 @@ typedef struct Vdp
 {
     struct Genesis* genesis;
 
-    uint8_t* vram;
-    uint16_t* vsram;
-
-    // We directly store the CRAM data as decoded 8-bit colors.
-    Color* cram;
+    uint8_t vram[0x10000];
+    uint16_t vsram[0x40];
+    Color cram[0x40]; // We directly store the CRAM data as decoded 8-bit colors
 
     // If set, a first command word has been written.
     // We're waiting for the second half.
