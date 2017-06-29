@@ -58,7 +58,7 @@ typedef struct
 } Color;
 
 typedef struct Vdp
-{
+{ // TODO check types
     struct Genesis* genesis;
 
     uint8_t vram[0x10000];
@@ -69,13 +69,13 @@ typedef struct Vdp
     // We're waiting for the second half.
     bool pending_command;
 
+    // The next word written to the data port will trigger a DMA fill
+    bool pending_dma_fill;
+
     // Read/Write configuration.
     // Set through the control port.
     int access_mode;
     uint16_t access_address;
-
-    // The next word written to the data port will trigger a DMA fill
-    bool pending_dma_fill;
 
     // http://md.squee.co/VDP#VDP_Registers
     // Register $00
@@ -168,7 +168,9 @@ typedef struct Vdp
 Vdp* vdp_make(struct Genesis* cpu);
 void vdp_free(Vdp*);
 
-uint16_t vdp_read_data(Vdp* v);
+void vdp_initialize(Vdp*);
+
+uint16_t vdp_read_data(Vdp*);
 uint8_t vdp_read_data_hi(Vdp*);
 uint8_t vdp_read_data_lo(Vdp*);
 void vdp_write_data(Vdp*, uint16_t value); // TODO 8bit writes OK but only 16bit reads?

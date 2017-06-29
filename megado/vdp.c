@@ -44,6 +44,22 @@ void vdp_free(Vdp* v)
     free(v);
 }
 
+void vdp_initialize(Vdp* v)
+{
+    // Reset the internal state
+
+    v->pending_command = false;
+    v->pending_dma_fill = false;
+    v->dma_in_progress = false;
+    v->hblank_in_progress = false;
+    v->vblank_in_progress = false;
+    v->vblank_pending = false;
+
+    v->h_counter = 0;
+    v->v_counter = 0;
+    v->hblank_counter = 0;
+}
+
 uint16_t vdp_read_data(Vdp* v)
 {
     v->pending_command = false;

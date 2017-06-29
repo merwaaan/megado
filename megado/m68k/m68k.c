@@ -19,7 +19,6 @@ M68k* m68k_make(Genesis* g)
 {
     M68k* m68k = calloc(1, sizeof(M68k));
     m68k->genesis = g;
-    m68k->pending_interrupt = -1;
 
     // Generate every possible opcode
     m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
@@ -41,14 +40,14 @@ void m68k_free(M68k* m)
 void m68k_initialize(M68k* m)
 {
     m->status = 0x2700;
-    m->address_registers[7] = m68k_read_l(m, 0); // TODO really required? Games seem to do this as part of their startup routine
+    m->address_registers[7] = m68k_read_l(m, 0); // Stack pointer
+    m->pc = m68k_read_l(m, 4); // Program start
 
-    // Entry point
-    m->pc = m68k_read_l(m, 4);
-
+    m->cycles = 0;
+    m->pending_interrupt = -1;
     m->prefetch_address = 0xFFFFFFFF; // Invalid value, will initiate the initial prefetch
 
-    // Reset breakpoints
+                                      // Reset breakpoints
     for (uint8_t i = 0; i < BREAKPOINTS_COUNT; ++i)
         m->breakpoints[i] = (Breakpoint) { false, 0 };
 }
@@ -134,7 +133,7 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
 
         if (c == 0)
         {
-            LOG_M68K("WARNING, instruction took ZERO CYCLES\n");
+            //LOG_M68K("WARNING, instruction took ZERO CYCLES\n");
             c = 10; // we don't want to block the execution
         }
 
@@ -185,7 +184,7 @@ uint8_t m68k_step(M68k* m)
 #ifdef DEBUG
     DecodedInstruction* d = m68k_decode(m, m->instruction_address);
     if (d != NULL)
-        printf("%#06X   %s\n", m->pc - 2, d->mnemonics);
+        printf("%#06X [%0X] %s\n", m->pc - 2, m->instruction_register, d->mnemonics);
     decoded_instruction_free(d);
 #endif
 

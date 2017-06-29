@@ -200,7 +200,7 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
         if (PATTERN_MATCH(opcode, all_patterns[i]))
         {
             if (opcode == 0xe18c)
-                printf("a");
+                printf("");
 
             // Generate the instruction
             Instruction* instr = PATTERN_GENERATE(all_patterns[i], opcode, context);

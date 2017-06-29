@@ -55,7 +55,7 @@ typedef struct M68k
     // the CPU is in the other one. 
     // The active stack pointer value must always be accessed via A7.
     uint32_t ssp;
-    uint32_t usp;
+    uint32_t usp; // TODO really necessary?
 
     uint64_t cycles;
 
@@ -68,7 +68,7 @@ typedef struct M68k
     uint16_t instruction_register; // Instruction currently being decoded
     uint32_t instruction_address; // Instruction currently being decoded
 
-    struct Instruction** opcode_table;
+    struct Instruction** opcode_table; // TODO move out
 
     // Breakpoints
     Breakpoint breakpoints[BREAKPOINTS_COUNT]; // The emulation will pause when the PC reaches one of those addresses
@@ -103,7 +103,7 @@ typedef struct Pattern {
 M68k* m68k_make(struct Genesis*);
 void m68k_free(M68k*);
 
-// Prepare the CPU for execution (stack pointer, program start, initial prefetch...)
+// Prepare the CPU for execution (setup stack pointer, program start, initial prefetch...)
 void m68k_initialize(M68k*);
 
 uint8_t m68k_step(M68k*); // Execute one instruction, return cycles taken
