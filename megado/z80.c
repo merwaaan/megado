@@ -38,7 +38,7 @@ uint8_t z80_step(Z80* z) {
         LOG_Z80("z80: Unknown opcode: %02x\n", opcode);
         return 4;
     } else {
-        LOG_Z80("z80: %04x: %02x\n", z->pc, opcode);
+        LOG_Z80("z80: %04x: %02x  %s\n", z->pc, opcode, z80_disasm_table[opcode]);
         uint8_t cycles = (*op)(z);
         if (cycles == 0) {
             LOG_Z80("z80: instruction took 0 cycles: %02x\n", opcode);
