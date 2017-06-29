@@ -151,8 +151,8 @@ static Pattern all_patterns[] =
     { 0xE2C0, 0xFEC0, &gen_lsd_mem, MODE_MASK(Value), MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
     { 0xE4C0, 0xFEC0, &gen_roxd_mem, MODE_MASK(Value), MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
     { 0xE6C0, 0xFEC0, &gen_rod_mem, MODE_MASK(Value), MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-    { 0xE000, 0xF020, &gen_asd, MODE_MASK(Value), MODES_DATA },
-    { 0xE020, 0xF020, &gen_asd, MODES_DATA, MODES_DATA },
+    { 0xE000, 0xF038, &gen_asd, MODE_MASK(Value), MODES_DATA },
+    { 0xE020, 0xF038, &gen_asd, MODES_DATA, MODES_DATA },
     { 0xE008, 0xF038, &gen_lsd, MODE_MASK(Value), MODES_DATA },
     { 0xE028, 0xF038, &gen_lsd, MODES_DATA, MODES_DATA },
     { 0xE010, 0xF038, &gen_roxd, MODE_MASK(Value), MODES_DATA },
@@ -199,7 +199,7 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
     {
         if (PATTERN_MATCH(opcode, all_patterns[i]))
         {
-            if (opcode == 0x4cdd)
+            if (opcode == 0xe18c)
                 printf("a");
 
             // Generate the instruction
