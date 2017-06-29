@@ -29,7 +29,7 @@ void z80_initialize(Z80* z) {
 }
 
 uint8_t z80_step(Z80* z) {
-    uint16_t opcode = z->ram[z->pc++];
+    uint16_t opcode = z->ram[z->pc];
     z->pc = (z->pc + 1) % Z80_RAM_LENGTH;
 
     z80_op op = z80_op_table[opcode];
