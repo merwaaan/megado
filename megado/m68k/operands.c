@@ -52,7 +52,7 @@ void operand_free(Operand* operand)
     free(operand);
 }
 
-int operand_tostring(Operand* operand, char* buffer)
+int operand_tostring(Operand* operand, M68k* ctx, char* buffer)
 {
     if (operand == NULL)
         return 0;
@@ -71,32 +71,32 @@ int operand_tostring(Operand* operand, char* buffer)
         return sprintf(buffer, "(A%d)+", operand->n);
     case AddressRegisterIndirectDisplacement:
     {
-        int16_t displacement = m68k_fetch(operand->instruction->context);
-        uint32_t target = operand->instruction->context->address_registers[operand->n] + displacement;
+        int16_t displacement = m68k_fetch(ctx);
+        uint32_t target = ctx->address_registers[operand->n] + displacement;
         return sprintf(buffer, "(%0X,A%d) [%010x]", displacement, operand->n, target);
     }
     case AddressRegisterIndirectIndexed:
         return sprintf(buffer, "TODO %d(A%d, D%d)", operand->n, operand->n, operand->n);
     case ProgramCounterDisplacement:
     {
-        int16_t displacement = m68k_fetch(operand->instruction->context);
-        uint32_t target = operand->instruction->context->pc + displacement - 2;
+        int16_t displacement = m68k_fetch(ctx);
+        uint32_t target = ctx->pc + displacement - 2;
         return sprintf(buffer, "(%0X,PC) [%0X]", displacement, target);
     }
     case ProgramCounterIndexed:
         return sprintf(buffer, "TODO %d(PC, D%d)", operand->n, operand->n);
     case Immediate:
-        return sprintf(buffer, "#$%0X", FETCH_EA_AND_GET(operand));
+        return sprintf(buffer, "#$%0X", FETCH_EA_AND_GET(operand, ctx));
     case Value:
         return sprintf(buffer, "#$%0X", operand->n);
     case AbsoluteShort:
-        return sprintf(buffer, "($%0X).w", FETCH_EA(operand));
+        return sprintf(buffer, "($%0X).w", FETCH_EA(operand, ctx));
     case AbsoluteLong:
-        return sprintf(buffer, "($%0X).l", FETCH_EA(operand));
+        return sprintf(buffer, "($%0X).l", FETCH_EA(operand, ctx));
     case BranchingOffset:
     {
-        int16_t offset = FETCH_EA_AND_GET(operand);
-        uint32_t target = operand->instruction->context->instruction_address + 2
+        int16_t offset = FETCH_EA_AND_GET(operand, ctx);
+        uint32_t target = ctx->instruction_address + 2
             + (operand->instruction->size == Byte ? (int8_t)offset : offset);
         return sprintf(buffer, "$%0X [%0X]", offset, target);
     }
@@ -186,25 +186,25 @@ int operand_get_cycles(Operand* o)
     return address_calculation_cycles[o->type][o->instruction->size == Long];
 }
 
-void noop(Operand* o, uint32_t value)
+void noop(Operand* o, M68k* ctx, uint32_t value)
 {
 }
 
 // Most operands that point to memory data will use those to get/set values from the effective address
 
-uint32_t get_from_ea(Operand* o)
+uint32_t get_from_ea(Operand* o, M68k* ctx)
 {
-    return m68k_read(o->instruction->context, o->instruction->size, o->last_ea);
+    return m68k_read(ctx, o->instruction->size, o->last_ea);
 }
 
-void set_from_ea(Operand* o, uint32_t value)
+void set_from_ea(Operand* o, M68k* ctx, uint32_t value)
 {
-    m68k_write(o->instruction->context, o->instruction->size, o->last_ea, value);
+    m68k_write(ctx, o->instruction->size, o->last_ea, value);
 }
 
 // Placeholder function for addressing modes that do not have effective address to compute
 
-uint32_t fetch_no_ea(Operand* o)
+uint32_t fetch_no_ea(Operand* o, M68k* ctx)
 {
     return 0;
 }
@@ -213,20 +213,20 @@ uint32_t fetch_no_ea(Operand* o)
  * Data register
  */
 
-uint32_t data_register_ea(Operand* o)
+uint32_t data_register_ea(Operand* o, M68k* ctx)
 {
-    return MASK_ABOVE_INC(o->instruction->context->data_registers[o->n], o->instruction->size);
+    return MASK_ABOVE_INC(ctx->data_registers[o->n], o->instruction->size);
 }
 
-uint32_t data_register_get(Operand* o)
+uint32_t data_register_get(Operand* o, M68k* ctx)
 {
-    return MASK_ABOVE_INC(o->instruction->context->data_registers[o->n], o->instruction->size);
+    return MASK_ABOVE_INC(ctx->data_registers[o->n], o->instruction->size);
 }
 
-void data_register_set(Operand* o, uint32_t value)
+void data_register_set(Operand* o, M68k* ctx, uint32_t value)
 {
-    o->instruction->context->data_registers[o->n] =
-        MASK_BELOW(o->instruction->context->data_registers[o->n], o->instruction->size) |
+    ctx->data_registers[o->n] =
+        MASK_BELOW(ctx->data_registers[o->n], o->instruction->size) |
         MASK_ABOVE_INC(value, o->instruction->size);
 }
 
@@ -246,20 +246,20 @@ Operand* operand_make_data_register(int n, Instruction* instr)
  * Address register
  */
 
-uint32_t address_register_ea(Operand* o)
+uint32_t address_register_ea(Operand* o, M68k* ctx)
 {
-    return MASK_ABOVE_INC(o->instruction->context->address_registers[o->n], o->instruction->size);
+    return MASK_ABOVE_INC(ctx->address_registers[o->n], o->instruction->size);
 }
 
-uint32_t address_register_get(Operand* o)
+uint32_t address_register_get(Operand* o, M68k* ctx)
 {
-    return MASK_ABOVE_INC(o->instruction->context->address_registers[o->n], o->instruction->size);
+    return MASK_ABOVE_INC(ctx->address_registers[o->n], o->instruction->size);
 }
 
-void address_register_set(Operand* o, uint32_t value)
+void address_register_set(Operand* o, M68k* ctx, uint32_t value)
 {
-    o->instruction->context->address_registers[o->n] =
-        MASK_BELOW(o->instruction->context->address_registers[o->n], o->instruction->size) |
+    ctx->address_registers[o->n] =
+        MASK_BELOW(ctx->address_registers[o->n], o->instruction->size) |
         MASK_ABOVE_INC(value, o->instruction->size);
 }
 
@@ -281,9 +281,9 @@ Operand* operand_make_address_register(int n, Instruction* instr)
  * The register contains the address of the data in memory.
  */
 
-uint32_t address_indirect_ea(Operand* o)
+uint32_t address_indirect_ea(Operand* o, M68k* ctx)
 {
-    return o->instruction->context->address_registers[o->n] & 0xFFFFFF;
+    return ctx->address_registers[o->n] & 0xFFFFFF;
 }
 
 Operand* operand_make_address_register_indirect(int n, Instruction* instr)
@@ -305,9 +305,9 @@ Operand* operand_make_address_register_indirect(int n, Instruction* instr)
  * The increment value depends on the instruction size.
  */
 
-void address_inc(Operand* o)
+void address_inc(Operand* o, M68k* ctx)
 {
-    o->instruction->context->address_registers[o->n] += size_in_bytes(o->instruction->size);
+    ctx->address_registers[o->n] += size_in_bytes(o->instruction->size);
 }
 
 Operand* operand_make_address_register_indirect_postinc(int n, struct Instruction* instr)
@@ -330,9 +330,9 @@ Operand* operand_make_address_register_indirect_postinc(int n, struct Instructio
  * The decrement value depends on the instruction size.
  */
 
-void address_dec(Operand* o)
+void address_dec(Operand* o, M68k* ctx)
 {
-    o->instruction->context->address_registers[o->n] -= size_in_bytes(o->instruction->size);
+    ctx->address_registers[o->n] -= size_in_bytes(o->instruction->size);
 }
 
 Operand* operand_make_address_register_indirect_predec(int n, struct Instruction* instr)
@@ -354,10 +354,10 @@ Operand* operand_make_address_register_indirect_predec(int n, struct Instruction
 * The data is located at the stored address + a displacement (extension)
 */
 
-uint32_t address_indirect_displacement_ea(Operand* o)
+uint32_t address_indirect_displacement_ea(Operand* o, M68k* ctx)
 {
-    int16_t displacement = m68k_fetch(o->instruction->context);
-    return  o->instruction->context->address_registers[o->n] + displacement;
+    int16_t displacement = m68k_fetch(ctx);
+    return  ctx->address_registers[o->n] + displacement;
 }
 
 Operand* operand_make_address_register_indirect_displacement(int n, struct Instruction* instr)
@@ -380,13 +380,13 @@ Operand* operand_make_address_register_indirect_displacement(int n, struct Instr
 * Extension word format: https://github.com/traviscross/libzrtp/blob/master/third_party/bnlib/lbn68000.c#L342
 */
 
-#define INDEX_REGISTER(extension) ((BIT((extension), 15) ? o->instruction->context->address_registers[FRAGMENT((extension), 14, 12)] : o->instruction->context->data_registers[FRAGMENT((extension), 14, 12)]))
+#define INDEX_REGISTER(extension) ((BIT((extension), 15) ? ctx->address_registers[FRAGMENT((extension), 14, 12)] : ctx->data_registers[FRAGMENT((extension), 14, 12)]))
 #define INDEX_LENGTH(extension) (BIT(extension, 11))
 #define INDEX_DISPLACEMENT(extension) (FRAGMENT(extension, 7, 0))
 
-uint32_t address_indirect_index_ea(Operand* o)
+uint32_t address_indirect_index_ea(Operand* o, M68k* ctx)
 {
-    M68k* m = o->instruction->context;
+    M68k* m = ctx;
     uint32_t ext = m68k_fetch(m);
 
     uint32_t index = INDEX_LENGTH(ext) ? INDEX_REGISTER(ext) : SIGN_EXTEND_W(INDEX_REGISTER(ext));
@@ -409,32 +409,32 @@ Operand* operand_make_address_register_indirect_index(int n, struct Instruction*
 * Immediate value encoded in the extension words of an instruction
 */
 
-uint32_t immediate_byte_word_ea(Operand* o)
+uint32_t immediate_byte_word_ea(Operand* o, M68k* ctx)
 {
-    m68k_fetch(o->instruction->context);
-    return o->instruction->context->pc - 2;
+    m68k_fetch(ctx);
+    return ctx->pc - 2;
 }
 
-uint32_t immediate_long_ea(Operand* o)
+uint32_t immediate_long_ea(Operand* o, M68k* ctx)
 {
-    m68k_fetch(o->instruction->context);
-    m68k_fetch(o->instruction->context);
-    return o->instruction->context->pc - 4;
+    m68k_fetch(ctx);
+    m68k_fetch(ctx);
+    return ctx->pc - 4;
 }
 
-uint32_t immediate_byte_get(Operand* o)
+uint32_t immediate_byte_get(Operand* o, M68k* ctx)
 {
-    return MASK_ABOVE_INC(m68k_read_w(o->instruction->context, o->last_ea), 8);
+    return MASK_ABOVE_INC(m68k_read_w(ctx, o->last_ea), 8);
 }
 
-uint32_t immediate_word_get(Operand* o)
+uint32_t immediate_word_get(Operand* o, M68k* ctx)
 {
-    return m68k_read_w(o->instruction->context, o->last_ea);
+    return m68k_read_w(ctx, o->last_ea);
 }
 
-uint32_t immediate_long_get(Operand* o)
+uint32_t immediate_long_get(Operand* o, M68k* ctx)
 {
-    return m68k_read_l(o->instruction->context, o->last_ea);
+    return m68k_read_l(ctx, o->last_ea);
 }
 
 Operand* operand_make_immediate_value(Size size, Instruction* instr)
@@ -465,9 +465,9 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
  * Address encoded in the extension words of an instruction
  */
 
-uint32_t absolute_short_ea(Operand* o)
+uint32_t absolute_short_ea(Operand* o, M68k* ctx)
 {
-    uint16_t address = m68k_fetch(o->instruction->context);
+    uint16_t address = m68k_fetch(ctx);
     return SIGN_EXTEND_W(address);
 }
 
@@ -482,9 +482,9 @@ Operand* operand_make_absolute_short(Instruction* instr)
     return op;
 }
 
-uint32_t absolute_long_ea(Operand* o)
+uint32_t absolute_long_ea(Operand* o, M68k* ctx)
 {
-    return m68k_fetch(o->instruction->context) << 16 | m68k_fetch(o->instruction->context);
+    return m68k_fetch(ctx) << 16 | m68k_fetch(ctx);
     // TODO not sure about w.l
 }
 
@@ -503,10 +503,10 @@ Operand* operand_make_absolute_long(Instruction* instr)
  *
  */
 
-uint32_t pc_displacement_word_ea(Operand* o)
+uint32_t pc_displacement_word_ea(Operand* o, M68k* ctx)
 {
-    int16_t displacement = m68k_fetch(o->instruction->context);
-    return o->instruction->context->instruction_address + 2 + displacement;
+    int16_t displacement = m68k_fetch(ctx);
+    return ctx->instruction_address + 2 + displacement;
 }
 
 Operand* operand_make_pc_displacement(Instruction* instr)
@@ -528,9 +528,9 @@ Operand* operand_make_pc_displacement(Instruction* instr)
 * https://github.com/traviscross/libzrtp/blob/master/third_party/bnlib/lbn68000.c#L342
 */
 
-uint32_t pc_index_ea(Operand* o)
+uint32_t pc_index_ea(Operand* o, M68k* ctx)
 {
-    M68k* m = o->instruction->context;
+    M68k* m = ctx;
     uint32_t ext = m68k_fetch(m);
 
     uint32_t index = INDEX_LENGTH(ext) ? INDEX_REGISTER(ext) : SIGN_EXTEND_W(INDEX_REGISTER(ext));
@@ -552,7 +552,7 @@ Operand* operand_make_pc_index(struct Instruction* instr)
 * Value directly stored within the opcode
 */
 
-uint32_t value_get(Operand* o)
+uint32_t value_get(Operand* o, M68k* ctx)
 {
     return o->n;
 }
@@ -572,20 +572,20 @@ Operand* operand_make_value(int value, struct Instruction* instr)
  * Branching offset, specific to control flow instruction such as Bcc
  */
 
-uint32_t branching_offset_ea(Operand* o)
+uint32_t branching_offset_ea(Operand* o, M68k* ctx)
 {
-    m68k_fetch(o->instruction->context);
-    return o->instruction->context->pc - 2;
+    m68k_fetch(ctx);
+    return ctx->pc - 2;
 }
 
-uint32_t branching_offset_byte_get(Operand* o)
+uint32_t branching_offset_byte_get(Operand* o, M68k* ctx)
 {
-    return o->instruction->context->instruction_register & 0xFF;
+    return ctx->instruction_register & 0xFF;
 }
 
-uint32_t branching_offset_word_get(Operand* o)
+uint32_t branching_offset_word_get(Operand* o, M68k* ctx)
 {
-    return m68k_read_w(o->instruction->context, o->instruction->context->instruction_address + 2);
+    return m68k_read_w(ctx, ctx->instruction_address + 2);
 }
 
 Operand* operand_make_branching_offset(Instruction* instr, Size size)
@@ -640,28 +640,28 @@ int operand_length(Operand* operand)
 
 #define FATAL(...) do { fprintf(stderr, "FATAL(in %s): ", __func__); fprintf(stderr, __VA_ARGS__); exit(1); } while (0)
 
-uint32_t operand_fetch_ea_and_get(Operand* operand) {
+uint32_t operand_fetch_ea_and_get(Operand* operand, M68k* ctx) {
     if (operand->fetch_ea_func == NULL) {
         FATAL("fetch_ea_func is null (opcode: %04X, name: %s)\n",
               operand->instruction->opcode, operand->instruction->name);
     }
-    operand->last_ea = operand->fetch_ea_func(operand);
+    operand->last_ea = operand->fetch_ea_func(operand, ctx);
     if (operand->get_value_func == NULL) {
         FATAL("get_value_func is null (opcode: %04X, name: %s)\n",
               operand->instruction->opcode, operand->instruction->name);
     }
-    return operand->get_value_func(operand);
+    return operand->get_value_func(operand, ctx);
 }
 
-void operand_fetch_ea_and_set(Operand* operand, uint32_t value) {
+void operand_fetch_ea_and_set(Operand* operand, M68k* ctx, uint32_t value) {
     if (operand->fetch_ea_func == NULL) {
         FATAL("fetch_ea_func is null (opcode: %04X, name: %s)\n",
               operand->instruction->opcode, operand->instruction->name);
     }
-    operand->last_ea = operand->fetch_ea_func(operand);
+    operand->last_ea = operand->fetch_ea_func(operand, ctx);
     if (operand->set_value_func == NULL) {
         FATAL("set_value_func is null (opcode: %04X, name: %s)\n",
               operand->instruction->opcode, operand->instruction->name);
     }
-    operand->set_value_func(operand, value);
+    operand->set_value_func(operand, ctx, value);
 }

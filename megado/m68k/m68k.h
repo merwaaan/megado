@@ -68,14 +68,12 @@ typedef struct M68k
     uint16_t instruction_register; // Instruction currently being decoded
     uint32_t instruction_address; // Instruction currently being decoded
 
-    struct Instruction** opcode_table; // TODO move out
-
     // Breakpoints
     Breakpoint breakpoints[BREAKPOINTS_COUNT]; // The emulation will pause when the PC reaches one of those addresses
     Breakpoint* active_breakpoint; // The breakpoint currently blocking the emulation
 } M68k;
 
-typedef struct Instruction* (GenFunc)(uint16_t opcode, M68k* context);
+typedef struct Instruction* (GenFunc)(uint16_t opcode);
 
 // TODO move
 typedef struct Pattern {
@@ -150,3 +148,5 @@ void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);
 void m68k_write_b(M68k*, uint32_t address, uint8_t value);
 void m68k_write_w(M68k*, uint32_t address, uint16_t value);
 void m68k_write_l(M68k*, uint32_t address, uint32_t value);
+
+static struct Instruction** opcode_table;

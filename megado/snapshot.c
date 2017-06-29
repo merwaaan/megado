@@ -53,6 +53,7 @@ void snapshot_load(Genesis* g, uint8_t slot)
     *g->m68k = s.m68k;
     *g->z80 = s.z80;
     *g->vdp = s.vdp;
+    // TODO rebind genesis
 }
 
 SnapshotMetadata* snapshots_preload(Genesis* g)

@@ -27,9 +27,9 @@
 typedef struct Snapshot
 {
     uint8_t memory[10]; // TODO we save the whole memory but a big chunk of it is never used, cut it into pieces?
-    M68k m68k; // TODO remove opcodes, breakpoints
+    M68k m68k; // TODO remove breakpoints
     Z80 z80;
-    Vdp vdp; // TODO make static vram, vsram, cram
+    Vdp vdp;
 
 } Snapshot;
 

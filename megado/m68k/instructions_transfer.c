@@ -7,18 +7,18 @@
 #include "m68k.h"
 #include "operands.h"
 
-int exg(Instruction* i)
+int exg(Instruction* i, M68k* ctx)
 {
-    int32_t dst = GET(i->dst);
-    SET(i->dst, GET(i->src));
-    SET(i->src, dst);
+    int32_t dst = GET(i->dst, ctx);
+    SET(i->dst, ctx, GET(i->src, ctx));
+    SET(i->src, ctx, dst);
 
     return 0;
 }
 
-Instruction* gen_exg(uint16_t opcode, M68k* m)
+Instruction* gen_exg(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "EXG", exg);
+    Instruction* i = instruction_make("EXG", exg);
     i->size = Long;
     i->base_cycles = 6;
 
@@ -47,46 +47,46 @@ Instruction* gen_exg(uint16_t opcode, M68k* m)
     return i;
 }
 
-int lea(Instruction* i)
+int lea(Instruction* i, M68k* ctx)
 {
-    uint32_t ea = FETCH_EA(i->src);
+    uint32_t ea = FETCH_EA(i->src, ctx);
 
     // TODO not documented but Regen does this, need to check other emulators
     if (i->src->type == AbsoluteShort)
         ea = SIGN_EXTEND_W(ea);
 
-    SET(i->dst, ea);
+    SET(i->dst, ctx, ea);
 
     return 0;
 }
 
-Instruction* gen_lea(uint16_t opcode, M68k* m)
+Instruction* gen_lea(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "LEA", lea);
+    Instruction* i = instruction_make("LEA", lea);
     i->size = Long;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
     return i;
 }
 
-int link(Instruction* i)
+int link(Instruction* i, M68k* ctx)
 {
     // Push the address register onto the stack
-    i->context->address_registers[7] -= 4;
-    m68k_write_l(i->context, i->context->address_registers[7], i->context->address_registers[i->src->n]);
+    ctx->address_registers[7] -= 4;
+    m68k_write_l(ctx, ctx->address_registers[7], ctx->address_registers[i->src->n]);
 
     // Place the new stack pointer in the address register
-    i->context->address_registers[i->src->n] = i->context->address_registers[7];
+    ctx->address_registers[i->src->n] = ctx->address_registers[7];
 
     // Add the offset to the stack pointer
-    i->context->address_registers[7] += (int16_t)FETCH_EA_AND_GET(i->dst);
+    ctx->address_registers[7] += (int16_t)FETCH_EA_AND_GET(i->dst, ctx);
 
     return 0;
 }
 
-Instruction* gen_link(uint16_t opcode, M68k* m)
+Instruction* gen_link(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "LINK", link);
+    Instruction* i = instruction_make("LINK", link);
     i->size = Long;
     i->src = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
     i->dst = operand_make_immediate_value(Word, i);
@@ -94,22 +94,22 @@ Instruction* gen_link(uint16_t opcode, M68k* m)
     return i;
 }
 
-int move(Instruction* i)
+int move(Instruction* i, M68k* ctx)
 {
-    uint32_t value = FETCH_EA_AND_GET(i->src);
-    FETCH_EA_AND_SET(i->dst, value);
+    uint32_t value = FETCH_EA_AND_GET(i->src, ctx);
+    FETCH_EA_AND_SET(i->dst, ctx, value);
 
-    CARRY_SET(i->context, false);
-    OVERFLOW_SET(i->context, false);
-    ZERO_SET(i->context, value == 0);
-    NEGATIVE_SET(i->context, BIT(value, i->size - 1) == 1);
+    CARRY_SET(ctx, false);
+    OVERFLOW_SET(ctx, false);
+    ZERO_SET(ctx, value == 0);
+    NEGATIVE_SET(ctx, BIT(value, i->size - 1) == 1);
 
     return 0;
 }
 
-Instruction* gen_move(uint16_t opcode, M68k* m)
+Instruction* gen_move(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "MOVE", move);
+    Instruction* i = instruction_make("MOVE", move);
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
     i->dst = operand_make(FRAGMENT(opcode, 11, 9) | FRAGMENT(opcode, 8, 6) << 3, i);
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
@@ -121,17 +121,17 @@ Instruction* gen_move(uint16_t opcode, M68k* m)
 }
 
 // Computer pointers to the nth register in post-inc or pre-dec order
-#define MOVEM_POSTINC_ORDER(n) (n < 8 ? i->context->data_registers + n : i->context->address_registers + n - 8)
-#define MOVEM_PREDEC_ORDER(n) (n < 8 ? i->context->address_registers + (7 - n) : i->context->data_registers + (7 - (n - 8)))
+#define MOVEM_POSTINC_ORDER(n) (n < 8 ? ctx->data_registers + n : ctx->address_registers + n - 8)
+#define MOVEM_PREDEC_ORDER(n) (n < 8 ? ctx->address_registers + (7 - n) : ctx->data_registers + (7 - (n - 8)))
 
-int movem(Instruction* i)
+int movem(Instruction* i, M68k* ctx)
 {
     // TODO mask as an operand
 
-    uint16_t mask = m68k_fetch(i->context);
+    uint16_t mask = m68k_fetch(ctx);
 
     Operand* ea = i->src != NULL ? i->src : i->dst;
-    uint32_t offset = FETCH_EA(ea);
+    uint32_t offset = FETCH_EA(ea, ctx);
 
     int moved = 0;
     for (int m = 0; m < 16; ++m)
@@ -142,7 +142,7 @@ int movem(Instruction* i)
             {
                 uint32_t* reg = ea->type == AddressRegisterIndirectPreDec ? MOVEM_PREDEC_ORDER(m) : MOVEM_POSTINC_ORDER(m);
 
-                *reg = m68k_read(i->context, i->size, offset);
+                *reg = m68k_read(ctx, i->size, offset);
 
                 if (i->size == Word)
                     *reg = SIGN_EXTEND_W(*reg);
@@ -155,7 +155,7 @@ int movem(Instruction* i)
                 if (i->size == Word)
                     *reg = SIGN_EXTEND_W(*reg);
 
-                m68k_write(i->context, i->size, offset, *reg);
+                m68k_write(ctx, i->size, offset, *reg);
             }
 
             if (ea->type == AddressRegisterIndirectPreDec)
@@ -169,16 +169,16 @@ int movem(Instruction* i)
     // Update the address register in pre-dec/post-inc modes
     // (take into account the one dec/inc that is handled by the operand's pre/post functions) 
     if (ea->type == AddressRegisterIndirectPreDec)
-        i->context->address_registers[ea->n] = offset + size_in_bytes(i->size);
+        ctx->address_registers[ea->n] = offset + size_in_bytes(i->size);
     else if (ea->type == AddressRegisterIndirectPostInc)
-        i->context->address_registers[ea->n] = offset - size_in_bytes(i->size);
+        ctx->address_registers[ea->n] = offset - size_in_bytes(i->size);
 
     return 4 * moved;
 }
 
-Instruction* gen_movem(uint16_t opcode, M68k* m)
+Instruction* gen_movem(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "MOVEM", movem);
+    Instruction* i = instruction_make("MOVEM", movem);
     i->size = operand_size3(BIT(opcode, 6));
 
     Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
@@ -192,22 +192,22 @@ Instruction* gen_movem(uint16_t opcode, M68k* m)
     return i;
 }
 
-int moveq(Instruction* i)
+int moveq(Instruction* i, M68k* ctx)
 {
-    int32_t value = SIGN_EXTEND_B_L(GET(i->src));
-    SET(i->dst, value);
+    int32_t value = SIGN_EXTEND_B_L(GET(i->src, ctx));
+    SET(i->dst, ctx, value);
 
-    CARRY_SET(i->context, false);
-    OVERFLOW_SET(i->context, false);
-    ZERO_SET(i->context, value == 0);
-    NEGATIVE_SET(i->context, BIT(value, 31) == 1);
+    CARRY_SET(ctx, false);
+    OVERFLOW_SET(ctx, false);
+    ZERO_SET(ctx, value == 0);
+    NEGATIVE_SET(ctx, BIT(value, 31) == 1);
 
     return 0;
 }
 
-Instruction* gen_moveq(uint16_t opcode, M68k* m)
+Instruction* gen_moveq(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "MOVEQ", moveq);
+    Instruction* i = instruction_make("MOVEQ", moveq);
     i->size = Long;
     i->src = operand_make_value(BYTE_LO(opcode), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
@@ -215,82 +215,82 @@ Instruction* gen_moveq(uint16_t opcode, M68k* m)
     return i;
 }
 
-int movea(Instruction* i)
+int movea(Instruction* i, M68k* ctx)
 {
-    int32_t value = FETCH_EA_AND_GET(i->src);
+    int32_t value = FETCH_EA_AND_GET(i->src, ctx);
 
     if (i->size == Word)
         value = SIGN_EXTEND_W(value);
 
-    i->context->address_registers[i->dst->n] = value;
+    ctx->address_registers[i->dst->n] = value;
 
     return 0;
 }
 
-Instruction* gen_movea(uint16_t opcode, M68k* m)
+Instruction* gen_movea(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "MOVEA", movea);
+    Instruction* i = instruction_make("MOVEA", movea);
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
     return i;
 }
 
-Instruction* gen_movep(uint16_t opcode, M68k* m)
+Instruction* gen_movep(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "MOVEP", not_implemented);
+    Instruction* i = instruction_make("MOVEP", not_implemented);
     i->base_cycles = 0; // TODO
     return i;
 }
 
-int move_to_ccr(Instruction* i)
+int move_to_ccr(Instruction* i, M68k* ctx)
 {
     // Only update the CCR segment of the status register
-    i->context->status = (i->context->status & 0xFFE0) | (FETCH_EA_AND_GET(i->src) & 0x1F);
+    ctx->status = (ctx->status & 0xFFE0) | (FETCH_EA_AND_GET(i->src, ctx) & 0x1F);
 
     return 0;
 }
 
-Instruction* gen_move_to_ccr(uint16_t opcode, M68k* m)
+Instruction* gen_move_to_ccr(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "MOVE to CCR", move_to_ccr);
+    Instruction* i = instruction_make("MOVE to CCR", move_to_ccr);
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->base_cycles = 12;
     return i;
 }
 
-int pea(Instruction* i)
+int pea(Instruction* i, M68k* ctx)
 {
-    i->context->address_registers[7] -= 4;
-    m68k_write_l(i->context, i->context->address_registers[7], FETCH_EA(i->src));
+    ctx->address_registers[7] -= 4;
+    m68k_write_l(ctx, ctx->address_registers[7], FETCH_EA(i->src, ctx));
 
     return 0;
 }
 
-Instruction* gen_pea(uint16_t opcode, M68k* m)
+Instruction* gen_pea(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "PEA", pea);
+    Instruction* i = instruction_make("PEA", pea);
     i->size = Long;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
 
-int unlk(Instruction* i)
+int unlk(Instruction* i, M68k* ctx)
 {
     // Load the stack pointer with the address register
-    i->context->address_registers[7] = i->context->address_registers[i->src->n];
+    ctx->address_registers[7] = ctx->address_registers[i->src->n];
 
     // Load the address register with the long word at the top of the stack
-    i->context->address_registers[i->src->n] = m68k_read_l(i->context, i->context->address_registers[7]);
-    i->context->address_registers[7] += 4;
+    ctx->address_registers[i->src->n] = m68k_read_l(ctx, ctx->address_registers[7]);
+    ctx->address_registers[7] += 4;
 
     return 0;
 }
 
-Instruction* gen_unlk(uint16_t opcode, M68k* m)
+Instruction* gen_unlk(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "UNLK", unlk);
+    Instruction* i = instruction_make("UNLK", unlk);
     i->size = Long;
     i->src = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
     i->base_cycles = 12; 

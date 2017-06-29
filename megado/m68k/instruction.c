@@ -5,15 +5,14 @@
 #include "m68k.h"
 #include "operands.h"
 
-int not_implemented(Instruction* i)
+int not_implemented(Instruction* i, M68k* ctx)
 {
     return 0;
 }
 
-Instruction* instruction_make(M68k* context, char* name, InstructionFunc func)
+Instruction* instruction_make(char* name, InstructionFunc func)
 {
     Instruction* i = calloc(1, sizeof(Instruction));
-    i->context = context;
     i->func = func;
     i->base_cycles = 0; // TODO
 
@@ -199,9 +198,6 @@ Instruction* instruction_generate(M68k* context, uint16_t opcode)
     {
         if (PATTERN_MATCH(opcode, all_patterns[i]))
         {
-            if (opcode == 0xe18c)
-                printf("");
-
             // Generate the instruction
             Instruction* instr = PATTERN_GENERATE(all_patterns[i], opcode, context);
 
@@ -233,22 +229,22 @@ bool instruction_has_operands(Instruction* instr, bool src, bool dst)
     return true;
 }
 
-int instruction_execute(Instruction* instr)
+int instruction_execute(Instruction* instr, M68k* ctx)
 {
     // TODO faster to use noops?
     // Pre-execution actions
     if (instr->src != NULL && instr->src->pre_func != NULL)
-        instr->src->pre_func(instr->src);
+        instr->src->pre_func(instr->src, ctx);
     if (instr->dst != NULL && instr->dst->pre_func != NULL)
-        instr->dst->pre_func(instr->dst);
+        instr->dst->pre_func(instr->dst, ctx);
 
-    int additional_cycles = instr->func(instr);
+    int additional_cycles = instr->func(instr, ctx);
 
     // Post-execution actions
     if (instr->src != NULL && instr->src->post_func != NULL)
-        instr->src->post_func(instr->src);
+        instr->src->post_func(instr->src, ctx);
     if (instr->dst != NULL && instr->dst->post_func != NULL)
-        instr->dst->post_func(instr->dst);
+        instr->dst->post_func(instr->dst, ctx);
 
     return instr->base_cycles + additional_cycles;
 }

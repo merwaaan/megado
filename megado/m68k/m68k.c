@@ -20,10 +20,14 @@ M68k* m68k_make(Genesis* g)
     M68k* m68k = calloc(1, sizeof(M68k));
     m68k->genesis = g;
 
-    // Generate every possible opcode
-    m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
-    for (int opcode = 0; opcode < 0x10000; ++opcode)
-        m68k->opcode_table[opcode] = instruction_generate(m68k, opcode);
+    // Generate the instruction table
+    if (opcode_table == NULL)
+    {
+        opcode_table = calloc(0x10000, sizeof(Instruction*));
+        
+        for (int opcode = 0; opcode < 0x10000; ++opcode)
+            opcode_table[opcode] = instruction_generate(m68k, opcode);
+    }
 
     return m68k;
 }
@@ -31,9 +35,9 @@ M68k* m68k_make(Genesis* g)
 void m68k_free(M68k* m)
 {
     for (int opcode = 0; opcode < 0x10000; ++opcode)
-        instruction_free(m->opcode_table[opcode]);
+        instruction_free(opcode_table[opcode]);
 
-    free(m->opcode_table);
+    free(opcode_table);
     free(m);
 }
 
@@ -64,7 +68,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     uint16_t opcode = m68k_fetch(m);
     m->instruction_register = opcode;
 
-    Instruction* instr = m->opcode_table[opcode];
+    Instruction* instr = opcode_table[opcode];
     DecodedInstruction* decoded = NULL;
     if (instr == NULL)
     {
@@ -97,7 +101,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 
     if (instr->src != NULL)
     {
-        pos += operand_tostring(instr->src, decoded->mnemonics + pos);
+        pos += operand_tostring(instr->src, m, decoded->mnemonics + pos);
         decoded->length += operand_length(instr->src);
     }
 
@@ -106,7 +110,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 
     if (instr->dst != NULL)
     {
-        pos += operand_tostring(instr->dst, decoded->mnemonics + pos);
+        pos += operand_tostring(instr->dst, m, decoded->mnemonics + pos);
         decoded->length += operand_length(instr->dst);
     }
 
@@ -171,7 +175,7 @@ uint8_t m68k_step(M68k* m)
     // Fetch the instruction
     m->instruction_address = m->pc;
     m->instruction_register = m68k_fetch(m);
-    Instruction* instr = m->opcode_table[m->instruction_register];
+    Instruction* instr = opcode_table[m->instruction_register];
 
     // 35C: weird move with unknown regmode
 
@@ -191,7 +195,7 @@ uint8_t m68k_step(M68k* m)
     //if (m->instruction_callback != NULL)
     //    m->instruction_callback(m);
 
-    int cycles = instruction_execute(instr);
+    int cycles = instruction_execute(instr, m);
     m->cycles += cycles;
 
     m68k_handle_interrupt(m);

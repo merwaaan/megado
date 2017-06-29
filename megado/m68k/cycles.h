@@ -5,7 +5,7 @@
 
 // http://www.nxp.com/docs/en/reference-manual/MC68000UM.pdf (Section 8)
 // http://oldwww.nvg.ntnu.no/amiga/MC680x0_Sections/mc68000timing.HTML
-// TODO 8.8, 8.9, 8.10, 8.11 (memory column) 8.12
+// TODO 8.9, 8.10, 8.11 (memory column) 8.12
 struct Instruction;
 
 // Cycles required to compute an effective address.

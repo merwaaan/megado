@@ -10,14 +10,13 @@ struct Instruction;
 struct M68k;
 struct Operand;
 
-typedef int (InstructionFunc)(struct Instruction*);
+// Instruction implementations are passed the instruction data and the CPU context
+typedef int (InstructionFunc)(struct Instruction*, struct M68k*);
 
-typedef struct Instruction {
+typedef struct Instruction
+{
     char* name;
     uint16_t opcode;
-
-    // The M68000 instance that the instruction is bound to
-    struct M68k* context;
 
     // Implementation
     InstructionFunc* func;
@@ -47,12 +46,13 @@ typedef struct Instruction {
     };
 } Instruction;
 
-typedef struct DecodedInstruction {
+typedef struct DecodedInstruction
+{
     char* mnemonics;
     uint8_t length;
 } DecodedInstruction;
 
-Instruction* instruction_make(struct M68k* context, char* name, InstructionFunc func);
+Instruction* instruction_make(char* name, InstructionFunc func);
 void instruction_free(Instruction*);
 
 // Generate the appropriate instruction from an opcode
@@ -62,7 +62,7 @@ bool instruction_has_operands(Instruction*, bool src, bool dst);
 
 // Execute the given instruction.
 // Returns the elapsed cycles.
-int instruction_execute(Instruction*);
+int instruction_execute(Instruction*, struct M68k*);
 
 DecodedInstruction* decoded_instruction_make(); // TODO
 void decoded_instruction_free(DecodedInstruction*);
@@ -70,8 +70,9 @@ void decoded_instruction_free(DecodedInstruction*);
 /*
  * Instruction generators
  */
+ // TODO why declared here?
 
-#define DEFINE_INSTR(name) Instruction* gen_ ## name (uint16_t opcode, struct M68k* context)
+#define DEFINE_INSTR(name) Instruction* gen_ ## name(uint16_t opcode)
 
 // Bit-wise operations
 DEFINE_INSTR(bchg);
@@ -183,4 +184,4 @@ DEFINE_INSTR(rte);
 DEFINE_INSTR(stop);
 
 
-int not_implemented(Instruction* i);
+int not_implemented(Instruction* i, struct M68k*);
