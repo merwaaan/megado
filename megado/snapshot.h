@@ -9,7 +9,7 @@
 #include "z80.h"
 
 #define SNAPSHOT_SLOTS 3
-#define SNAPSHOT_NAME(NAME, SLOT) "NAME ## SLOT ## .snapshot"
+#define SNAPSHOT_NAME(NAME, SLOT) NAME #SLOT ".snapshot"
 
 // Bump that version number when changing the format or the structure of the
 // underlying data in order to discard out of date snapshots.
@@ -26,7 +26,7 @@
 
 typedef struct Snapshot
 {
-    uint8_t memory[10]; // TODO we save the whole memory but a big chunk of it is never used, cut it into pieces?
+    uint8_t ram[0x10000];
     M68k m68k; // TODO remove breakpoints
     Z80 z80;
     Vdp vdp;

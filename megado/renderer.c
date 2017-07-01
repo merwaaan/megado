@@ -446,9 +446,13 @@ static void build_ui(Renderer* r)
                         igTextColored(color_accent, "%s", "date?");
                     igSameLine(0, 10);
 
-                    igButton("save", (struct ImVec2) { 50, 20 });
+                    if (igButton("save", (struct ImVec2) { 50, 20 }))
+                        snapshot_save(r->genesis, slot);
+                        
                     igSameLine(0, 3);
-                    igButton("load", (struct ImVec2) { 50, 20 });
+
+                    if (igButton("load", (struct ImVec2) { 50, 20 }))
+                        snapshot_load(r->genesis, slot);
                 }
                 igEndMenu();
             }
