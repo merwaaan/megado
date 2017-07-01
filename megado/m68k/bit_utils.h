@@ -7,7 +7,7 @@
 #define FULL_MASK ((uint64_t) 0xFFFFFFFF)
 
 // Get the n-th bit of x
-#define BIT(x, n) (((x) & (1 << (n))) != 0)
+#define BIT(x, n) (((x) & (1 << (n))) != 0) // TODO (((x) >> (n)) & 1) faster?
 
 // Set/Clear the n-th bit of x
 #define BIT_SET(x, n) ((x) | (1 << (n)))

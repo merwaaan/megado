@@ -374,15 +374,7 @@ Operand* operand_make_address_register_indirect_displacement(int n, struct Instr
 
 /*
 * Address indirect with index
-*
-* The data is located at the stored address + a displacement + the value of an index register
-*
-* Extension word format: https://github.com/traviscross/libzrtp/blob/master/third_party/bnlib/lbn68000.c#L342
 */
-
-#define INDEX_REGISTER(extension) ((BIT((extension), 15) ? ctx->address_registers[FRAGMENT((extension), 14, 12)] : ctx->data_registers[FRAGMENT((extension), 14, 12)]))
-#define INDEX_LENGTH(extension) (BIT(extension, 11))
-#define INDEX_DISPLACEMENT(extension) (FRAGMENT(extension, 7, 0))
 
 uint32_t address_indirect_index_ea(Operand* o, M68k* ctx)
 {

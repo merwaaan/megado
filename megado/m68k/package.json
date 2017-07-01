@@ -1,0 +1,13 @@
+{
+    "name": "m68k-gen",
+    "version": "1.0.0",
+    "main": "m68k_gen.js",
+    "scripts": {
+        "test": "node m68k_gen.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "shortid": "^2.2.8"
+    }
+}

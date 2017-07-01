@@ -229,26 +229,46 @@ bool instruction_has_operands(Instruction* instr, bool src, bool dst)
     return true;
 }
 
+#define USE_GENERATED_INSTRUCTIONS
+
+#ifdef USE_GENERATED_INSTRUCTIONS
+#include "instructions_generated.gen";
+int instruction_execute_generated(uint16_t opcode, M68k* ctx)
+{
+#include "instructions_switch.gen"
+}
+#endif
+
 int instruction_execute(Instruction* instr, M68k* ctx)
 {
-    // TODO faster to use noops?
-    // Pre-execution actions
-    if (instr->src != NULL && instr->src->pre_func != NULL)
-        instr->src->pre_func(instr->src, ctx);
-    if (instr->dst != NULL && instr->dst->pre_func != NULL)
-        instr->dst->pre_func(instr->dst, ctx);
+    int additional_cycles;
 
-    int additional_cycles = instr->func(instr, ctx);
+#ifdef USE_GENERATED_INSTRUCTIONS
+    if (generated_instructions[instr->opcode])
+    {
+        additional_cycles = instruction_execute_generated(instr->opcode, ctx);
+    }
+    else
+#endif
+    {
+        // TODO faster to use noops?
+        // Pre-execution actions
+        if (instr->src != NULL && instr->src->pre_func != NULL)
+            instr->src->pre_func(instr->src, ctx);
+        if (instr->dst != NULL && instr->dst->pre_func != NULL)
+            instr->dst->pre_func(instr->dst, ctx);
 
-    // Post-execution actions
-    if (instr->src != NULL && instr->src->post_func != NULL)
-        instr->src->post_func(instr->src, ctx);
-    if (instr->dst != NULL && instr->dst->post_func != NULL)
-        instr->dst->post_func(instr->dst, ctx);
+        additional_cycles = instr->func(instr, ctx);
+
+        // Post-execution actions
+        if (instr->src != NULL && instr->src->post_func != NULL)
+            instr->src->post_func(instr->src, ctx);
+        if (instr->dst != NULL && instr->dst->post_func != NULL)
+            instr->dst->post_func(instr->dst, ctx);
+    }
 
     return instr->base_cycles + additional_cycles;
 }
-
 
 void decoded_instruction_free(DecodedInstruction* decoded)
 {

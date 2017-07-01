@@ -1,3 +1,4 @@
 imgui.ini
 settings.json
 build/
+megado/m68k/*.gen

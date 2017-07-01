@@ -61,7 +61,7 @@ Instruction* instruction_generate(struct M68k* context, uint16_t opcode);
 bool instruction_has_operands(Instruction*, bool src, bool dst);
 
 // Execute the given instruction.
-// Returns the elapsed cycles.
+// Return the elapsed cycles.
 int instruction_execute(Instruction*, struct M68k*);
 
 DecodedInstruction* decoded_instruction_make(); // TODO
@@ -183,5 +183,10 @@ DEFINE_INSTR(reset);
 DEFINE_INSTR(rte);
 DEFINE_INSTR(stop);
 
-
 int not_implemented(Instruction* i, struct M68k*);
+
+// For indexed addressing modes, displacement and index register are stored in an extension word.
+// Extension word format: https://github.com/traviscross/libzrtp/blob/master/third_party/bnlib/lbn68000.c#L342
+#define INDEX_REGISTER(extension) ((BIT((extension), 15) ? ctx->address_registers[FRAGMENT((extension), 14, 12)] : ctx->data_registers[FRAGMENT((extension), 14, 12)]))
+#define INDEX_LENGTH(extension) (BIT(extension, 11))
+#define INDEX_DISPLACEMENT(extension) (FRAGMENT(extension, 7, 0))
