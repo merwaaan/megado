@@ -8,6 +8,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "enum": "^2.4.0",
         "shortid": "^2.2.8"
     }
 }

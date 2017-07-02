@@ -20,7 +20,6 @@ module.exports.gen_add = (opcode) =>
     return {
         mnemonics: `ADD.${size} ${src.str()}, ${dst.str()}`,
         src, dst,
-
         code: `
             ${u.size_types[size]} a = ${src.get()};
             ${u.size_types[size]} b = ${dst.get()};
@@ -31,35 +30,46 @@ module.exports.gen_add = (opcode) =>
             OVERFLOW_SET(ctx, CHECK_OVERFLOW_ADD(a, b, ${u.size_enum[size]}));
             ZERO_SET(ctx, result == 0);
             NEGATIVE_SET(ctx, BIT(result, ${u.size_enum[size]} - 1));
-            EXTENDED_SET(ctx, CARRY(ctx));
-
-            return 0;`
+            EXTENDED_SET(ctx, CARRY(ctx));`
     };
 };
 
 module.exports.gen_bset = (opcode) =>
 {
-    // Size is long only when the destination is a data register; byte otherwise
+    // Size is long only when the destination is a data register, byte otherwise
     const size = u.bits(opcode, 5, 3) === 0 ? 2 : 0;
-    if (opcode === 0x1f8)
-    {
-        //console.log(dst.get(), dst.set(1), u.bits(opcode, 5, 0), size);
-        debugger;
-    }
+
     const src = op.data_reg(u.bits(opcode, 11, 9), size);
     const dst = op.operand_from_pattern(u.bits(opcode, 5, 0), size);
 
     return {
         mnemonics: `BSET.${size} ${src.str()}, ${dst.str()}`,
         src, dst,
-
         code: `
             uint8_t bit = ${src.get()} % ${u.size_values[size]};
             uint32_t initial = ${dst.get()};
             ${src.set('BIT_SET(initial, bit)')};
 
-            ZERO_SET(ctx, BIT(initial, bit) == 0);
+            ZERO_SET(ctx, BIT(initial, bit) == 0);`
+    };
+};
 
-            return 0;`
+module.exports.gen_move = (opcode) =>
+{
+    const size = u.size3[u.bits(opcode, 13, 12)];
+    const src = op.operand_from_pattern(u.bits(opcode, 5, 0), size);
+    const dst = op.operand_from_pattern((u.bits(opcode, 8, 6) << 3) | u.bits(opcode, 11, 9), size); // The destination mode is swapped
+
+    return {
+        mnemonics: `MOVE.${size} ${src.str()}, ${dst.str()}`,
+        src, dst,
+        code: `
+            ${u.size_types[size]} value = ${src.get()};
+            ${dst.set('value')};
+
+            CARRY_SET(ctx, false);
+            OVERFLOW_SET(ctx, false);
+            ZERO_SET(ctx, value == 0);
+            NEGATIVE_SET(ctx, BIT(value, ${u.size_values[size] - 1}) == 1); `
     };
 };

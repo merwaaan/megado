@@ -24,7 +24,7 @@ M68k* m68k_make(Genesis* g)
     if (opcode_table == NULL)
     {
         opcode_table = calloc(0x10000, sizeof(Instruction*));
-        
+
         for (int opcode = 0; opcode < 0x10000; ++opcode)
             opcode_table[opcode] = instruction_generate(m68k, opcode);
     }
@@ -187,8 +187,13 @@ uint8_t m68k_step(M68k* m)
 
 #ifdef DEBUG
     DecodedInstruction* d = m68k_decode(m, m->instruction_address);
+
     if (d != NULL)
-        printf("%#06X [%0X] %s\n", m->pc - 2, m->instruction_register, d->mnemonics);
+        printf("%#06X [%0X] %s | D %0X %0X %0X %0X %0X %0X %0X %0X | A %0X %0X %0X %0X %0X %0X %0X %0X\n",
+            m->pc - 2, m->instruction_register, d->mnemonics,
+            m->data_registers[0], m->data_registers[1], m->data_registers[2], m->data_registers[3], m->data_registers[4], m->data_registers[5], m->data_registers[6], m->data_registers[7],
+            m->address_registers[0], m->address_registers[1], m->address_registers[2], m->address_registers[3], m->address_registers[4], m->address_registers[5], m->address_registers[6], m->address_registers[7]);
+    
     decoded_instruction_free(d);
 #endif
 

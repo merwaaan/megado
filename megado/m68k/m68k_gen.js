@@ -1,37 +1,68 @@
 const u = require('./m68k_gen_utils');
 const instr = require('./m68k_gen_instructions');
 
+// Group modes that often go together
+const modes_data_reg = u.mode_mask('DataReg');
+const modes_addr_reg = u.mode_mask('AddrReg');
+const modes_addr = u.mode_mask('Addr | AddrPostInc | AddrPreDec');
+const modes_addr_offset = u.mode_mask('AddrDisp | AddrIndex');
+const modes_abs = u.mode_mask('AbsWord | AbsLong');
+const modes_pc = u.mode_mask('PCDisp | PCIndex');
+const modes_imm = u.mode_mask('Imm');
+const modes_all = modes_data_reg + modes_addr_reg + modes_addr + modes_addr_offset + modes_abs + modes_pc + modes_imm;
+
 // Metadata to generate the M68000's instruction set.
 // http://goldencrystal.free.fr/M68kOpcodes-v2.3.pdf
+// https://emu-docs.org/CPU%2068k/68kstat.txt
 //
 // Patterns may contain the following tokens:
+//   - ?: any bit
 //   - 0/1: cleared/set bit
 //   - RRR: register number
 //   - S/S2/S3: size
-//   - MMMXXX: addressing mode
+//   - MMMXXX/XXXMMM: addressing mode
 
 const patterns =
 [
-    // [generator, format, source addressing modes, destination addressing modes]
-    //[instr.gen_add, '1101RRR0S2MMMXXX'], // TODO add legal addressing modes
-    [instr.gen_bset, '0000RRR111MMMXXX']
+    // [generator, format, legal addressing modes for MMMXXX...]
+    //[instr.gen_add, '1101RRR0S2MMMXXX'],
+    //[instr.gen_bset, '0000RRR111MMMXXX'],
+    [instr.gen_move, '0001XXXMMMMMMXXX', modes_data_reg + modes_addr + modes_addr_offset + modes_abs, modes_all - modes_addr_reg], // Byte size: address register is not allowed as source
+    [instr.gen_move, '001?XXXMMMMMMXXX', modes_data_reg + modes_addr + modes_addr_offset + modes_abs, modes_all] // Word, long
 ];
 
 // Check if the given opcode matches the pattern.
 function match(opcode, pattern)
 {
     const opcode_bin = u.num_to_bin(opcode);
-    const format_regexp = /([01]+|RRR|MMMXXX|S2|S3|S)+?/g;
+    const format_regexp = /([01]+|RRR|MMMXXX|XXXMMM|S2|S3|S)+?/g;
+
+    let ea = 0; // Count effective addresses to refer to the appropriate mask
 
     // Go through each token
     let match;
     while (match = format_regexp.exec(pattern[1]))
     {
-        const opcode_section = opcode_bin.substr(match.index, match[0].length);
+        let opcode_section = opcode_bin.substr(match.index, match[0].length);
         //if (opcode === 0x1c0) console.log(opcode.toString(16), opcode_bin, match[0], opcode_section);
+
         // Check that the opcode section corresponds to the token type
         if (!check_opcode_token(match[0], opcode_section))
             return false;
+
+        // Check that the bit pattern describes a legal addressing mode
+        if (match[0] === 'MMMXXX' || match[0] === 'XXXMMM')
+        {
+            // Swap the halves if necessary
+            opcode_section = match[0] === 'MMMXXX' ? opcode_section : opcode_section.substr(3, 3) + opcode_section.substr(0, 3);
+
+            const mode = u.mode_from_pattern(parseInt(opcode_section, 2));
+
+            if ((pattern[2 + ea] & mode) === 0)
+                return false;
+
+            ++ea;
+        }
     }
 
     return true;
@@ -39,12 +70,22 @@ function match(opcode, pattern)
 
 function check_opcode_token(format, token)
 {
+    // Make sure that the token only contains zeros and ones
+    // and that is has the same size as the format
+    if (!/^[01]+$/.test(token) || format.length !== token.length)
+        return false;
+
     switch (format)
     {
-        case 'RRR': return true; // Any 3-bit value is valid as a register number
+        case '?': return true;
         case 'S': return true; // Any value is valid as a 1-bit size
         case 'S2': return ['00', '01', '10'].some(x => x === token);
         case 'S3': return ['01', '11', '10'].some(x => x === token);
+        case 'RRR': return true; // Any 3-bit value is valid as a register number
+
+        case 'XXXMMM':
+            // Swap the halves and let the next case handle it
+            token = token.substr(3, 3) + token.substr(0, 3);
 
         case 'MMMXXX':
 
@@ -62,7 +103,7 @@ function check_opcode_token(format, token)
 
         default:
             // The last case should be fixed bits
-            return /^[01]+$/.test(token) && format === token;
+            return /^[01]+$/.test(format) && format === token;
     }
 };
 
@@ -95,12 +136,21 @@ let code = instructions.map((instr, opcode) =>
     // Switch case, and mnemonics as a comment
     c = `case 0x${u.num_to_hex(opcode)}: /* ${instr.mnemonics} */ {\n`;
 
+    // Add optional pre-step
+    if (instr.src.pre) c += instr.src.pre();
+    if (instr.dst.pre) c += instr.dst.pre();
+
     // Add optional fetching code
-    if (instr.src.fetch) c += instr.src.fetch() + '\n';
-    if (instr.dst.fetch) c += instr.dst.fetch() + '\n';
+    if (instr.src.fetch) c += `${instr.src.fetch()} // src fetch\n`;
+    if (instr.dst.fetch) c += `${instr.dst.fetch()} // dst fetch\n`;
 
     c += instr.code;
-    c += '\n}\n';
+
+    // Add optional post-step
+    if (instr.src.post) c += instr.src.post();
+    if (instr.dst.post) c += instr.dst.post();
+
+    c += 'return 0;\n}\n'; // TODO cycles
     return c;
 });
 
