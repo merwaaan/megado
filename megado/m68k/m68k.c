@@ -209,7 +209,7 @@ uint8_t m68k_step(M68k* m)
     return cycles;
 }
 
-uint16_t m68k_fetch(M68k* m)
+inline uint16_t m68k_fetch(M68k* m)
 {
     // If the PC jumped, discard the prefetch queue
     if (m->pc != m->prefetch_address)

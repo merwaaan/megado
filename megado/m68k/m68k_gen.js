@@ -29,6 +29,8 @@ const patterns =
     // [generator, format, legal addressing modes for MMMXXX...]
     //[instr.gen_add, '1101RRR0S2MMMXXX'],
     //[instr.gen_bset, '0000RRR111MMMXXX'],
+    [instr.gen_bcc, '0110????????????'],
+    [instr.gen_cmp, '1011RRR0S2MMMXXX', modes_all], // TODO size subtlety
     [instr.gen_move, '0001XXXMMMMMMXXX', modes_data_reg + modes_addr + modes_addr_offset + modes_abs, modes_all - modes_addr_reg], // Byte size: address register is not allowed as source
     [instr.gen_move, '001?XXXMMMMMMXXX', modes_data_reg + modes_addr + modes_addr_offset + modes_abs, modes_all], // Word, long
     [instr.gen_tst, '01001010S2MMMXXX', modes_all - modes_addr_reg - modes_imm]
@@ -37,9 +39,10 @@ const patterns =
 // Check if the given opcode matches the pattern.
 function match(opcode, pattern)
 {
+if (u.bits(opcode, 15, 8) == 0b01100001) return false;
     const opcode_bin = u.num_to_bin(opcode);
     const format_regexp = /([01]+|RRR|MMMXXX|XXXMMM|S2|S3|S)+?/g;
-
+    // TODO ? token
     let ea = 0; // Count effective addresses to refer to the appropriate mask
 
     // Go through each token

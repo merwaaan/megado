@@ -68,6 +68,25 @@ module.exports =
         }
     },
 
+    conditions: [
+        'true',
+        'false',
+        'ZERO(ctx) + CARRY(ctx) == 0',
+        'ZERO(ctx) | CARRY(ctx)',
+        '!CARRY(ctx)',
+        'CARRY(ctx)',
+        '!ZERO(ctx)',
+        'ZERO(ctx)',
+        '!OVERFLOW(ctx)',
+        'OVERFLOW(ctx)',
+        '!NEGATIVE(ctx)',
+        'NEGATIVE(ctx)',
+        '(NEGATIVE(ctx) & OVERFLOW(ctx)) | (!NEGATIVE(ctx) & !OVERFLOW(ctx))',
+        '(NEGATIVE(ctx) & !OVERFLOW(ctx)) | (!NEGATIVE(ctx) & OVERFLOW(ctx))',
+        '(NEGATIVE(ctx) & OVERFLOW(ctx) & !ZERO(ctx)) | (!NEGATIVE(ctx) & !OVERFLOW(ctx) & !ZERO(ctx))',
+        'ZERO(ctx) | (NEGATIVE(ctx) & !OVERFLOW(ctx)) | (!NEGATIVE(ctx) & OVERFLOW(ctx))'
+    ],
+
     // Convert a number to its binary representation
     num_to_bin: x => x.toString(2).padStart(16, '0'),
     num_to_hex: x => x.toString(16).padStart(4, '0')

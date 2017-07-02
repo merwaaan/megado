@@ -120,7 +120,7 @@ uint32_t m68k_run_cycles(M68k*, int); // Execute n cycles worth of instructions,
 // http://pasti.fxatari.com/68kdocs/68kPrefetch.html
 // http://ataristeven.exxoshost.co.uk/txt/Prefetch.txt
 // "Assembly Language and Systems Programming for the M68000 Family", p. 790
-uint16_t m68k_fetch(M68k* m);
+inline uint16_t m68k_fetch(M68k* m);
 
 // Interrupt handling
 //

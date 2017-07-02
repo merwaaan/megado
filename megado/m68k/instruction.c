@@ -252,29 +252,33 @@ int instruction_execute(Instruction* instr, M68k* ctx)
         additional_cycles = instruction_execute_generated(instr->opcode, ctx);
     }*/
 
-    if (ctx->use_generated_instr && generated_instructions_jumptable[instr->opcode] != NULL)
+    if (ctx->use_generated_instr)
     {
-        additional_cycles = generated_instructions_jumptable[instr->opcode](ctx);
+        GeneratedInstruction* x = generated_instructions_jumptable[instr->opcode];
+        if (x != NULL)
+        {
+            additional_cycles = generated_instructions_jumptable[instr->opcode](ctx);
+            return instr->base_cycles + additional_cycles;
+        }
     }
 
-    else
 #endif
-    {
-        // TODO faster to use noops?
-        // Pre-execution actions
-        if (instr->src != NULL && instr->src->pre_func != NULL)
-            instr->src->pre_func(instr->src, ctx);
-        if (instr->dst != NULL && instr->dst->pre_func != NULL)
-            instr->dst->pre_func(instr->dst, ctx);
 
-        additional_cycles = instr->func(instr, ctx);
+    // TODO faster to use noops?
+    // Pre-execution actions
+    if (instr->src != NULL && instr->src->pre_func != NULL)
+        instr->src->pre_func(instr->src, ctx);
+    if (instr->dst != NULL && instr->dst->pre_func != NULL)
+        instr->dst->pre_func(instr->dst, ctx);
 
-        // Post-execution actions
-        if (instr->src != NULL && instr->src->post_func != NULL)
-            instr->src->post_func(instr->src, ctx);
-        if (instr->dst != NULL && instr->dst->post_func != NULL)
-            instr->dst->post_func(instr->dst, ctx);
-    }
+    additional_cycles = instr->func(instr, ctx);
+
+    // Post-execution actions
+    if (instr->src != NULL && instr->src->post_func != NULL)
+        instr->src->post_func(instr->src, ctx);
+    if (instr->dst != NULL && instr->dst->post_func != NULL)
+        instr->dst->post_func(instr->dst, ctx);
+
 
     return instr->base_cycles + additional_cycles;
 }
