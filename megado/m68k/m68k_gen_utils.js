@@ -12,6 +12,8 @@ module.exports =
     size_enum: ['Byte', 'Word', 'Long'],
     size_values: [8, 16, 32],
     size_bytes: [1, 2, 4],
+    read_funcs: ['m68k_read_b', 'm68k_read_w', 'm68k_read_l'],
+    write_funcs: ['m68k_write_b', 'm68k_write_w', 'm68k_write_l'],
 
     // There are three different formats to encode size in opcodes.
     // The index is the pattern, the value is the size.

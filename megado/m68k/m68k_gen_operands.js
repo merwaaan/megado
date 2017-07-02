@@ -3,7 +3,6 @@ const u = require('./m68k_gen_utils');
 const shortid = require('shortid');
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$'); // Replace default dictionary (had invalid characters)
 
-// TODO directly use correct m68k_read_X/m68k_write_X func
 // TODO how to ease disassembly on the C side from here? (tempalte mnemonics?)
 
 // Generate a unique variable name for effective addresses.
@@ -52,8 +51,8 @@ function addr_reg(size, n)
 function addr(size, n)
 {
     return {
-        get: () => `m68k_read(ctx, ${u.size_enum[size]}, ctx->address_registers[${n}])`,
-        set: (val) => `m68k_write(ctx, ${u.size_enum[size]}, ctx->address_registers[${n}], ${val})`,
+        get: () => `${u.read_funcs[size]}(ctx, ctx->address_registers[${n}])`,
+        set: (val) => `${u.write_funcs[size]}(ctx, ctx->address_registers[${n}], ${val})`,
         str: () => `(A${n})`
     };
 }
@@ -62,8 +61,8 @@ function addr_postinc(size, n)
 {
     return {
         post: () => `ctx->address_registers[${n}] += ${u.size_bytes[size]};`,
-        get: () => `m68k_read(ctx, ${u.size_enum[size]}, ctx->address_registers[${n}])`,
-        set: (val) => `m68k_write(ctx, ${u.size_enum[size]}, ctx->address_registers[${n}], ${val})`,
+        get: () => `${u.read_funcs[size]}(ctx, ctx->address_registers[${n}])`,
+        set: (val) => `${u.write_funcs[size]}(ctx, ctx->address_registers[${n}], ${val})`,
         str: () => `(A${n})+`
     };
 }
@@ -72,8 +71,8 @@ function addr_predec(size, n)
 {
     return {
         pre: () => `ctx->address_registers[${n}] -= ${u.size_bytes[size]};`,
-        get: () => `m68k_read(ctx, ${u.size_enum[size]}, ctx->address_registers[${n}])`,
-        set: (val) => `m68k_write(ctx, ${u.size_enum[size]}, ctx->address_registers[${n}], ${val})`,
+        get: () => `${u.read_funcs[size]}(ctx, ctx->address_registers[${n}])`,
+        set: (val) => `${u.write_funcs[size]}(ctx, ctx->address_registers[${n}], ${val})`,
         str: () => `-(A${n})`
     };
 }
@@ -83,8 +82,8 @@ function addr_disp(size, n)
     const id = ea_id();
     return {
         fetch: () => `uint32_t ${id} = ctx->address_registers[${n}] + (int16_t)m68k_fetch(ctx);`,
-        get: () => `m68k_read(ctx, ${u.size_enum[size]}, ${id})`,
-        set: (val) => `m68k_write(ctx, ${u.size_enum[size]}, ${id}, ${val})`,
+        get: () => `${u.read_funcs[size]}(ctx, ${id})`,
+        set: (val) => `${u.write_funcs[size]}(ctx, ${id}, ${val})`,
         str: () => `(d, A${n})`
     };
 }
@@ -97,8 +96,8 @@ function addr_index(size, n)
             uint32_t ext_${id} = m68k_fetch(ctx);
             uint32_t index_${id} = BIT(ext_${id}, 11) ? INDEX_REGISTER(ext_${id}): SIGN_EXTEND_W(INDEX_REGISTER(ext_${id}));
             uint32_t ${id} = ctx->address_registers[${n}]+(int8_t) FRAGMENT(ext_${id}, 7, 0) +(int32_t) index_${id}; `,
-        get: () => `m68k_read(ctx, ${u.size_enum[size]}, ${id})`,
-        set: (val) => `m68k_write(ctx, ${u.size_enum[size]}, ${id}, ${val})`,
+        get: () => `${u.read_funcs[size]}(ctx, ${id})`,
+        set: (val) => `${u.write_funcs[size]}(ctx, ${id}, ${val})`,
         str: () => `(d, A${n}, X)`
     };
 }
@@ -108,8 +107,8 @@ function pc_disp(size)
     const id = ea_id();
     return {
         fetch: () => `uint32_t ${id} = ctx->instruction_address + 2 + (int16_t)m68k_fetch(ctx);`,
-        get: () => `m68k_read(ctx, ${u.size_enum[size]}, ${id})`,
-        set: (val) => `m68k_write(ctx, ${u.size_enum[size]}, ${id})`,
+        get: () => `${u.read_funcs[size]}(ctx, ${id})`,
+        set: (val) => `${u.write_funcs[size]}(ctx, ${id}, ${val})`,
         str: () => `(d, PC)`
     };
 }
@@ -122,8 +121,8 @@ function pc_index(size)
             uint32_t ext_${id} = m68k_fetch(ctx);
             uint32_t index_${id} = INDEX_LENGTH(ext_${id}) ? INDEX_REGISTER(ext_${id}): SIGN_EXTEND_W(INDEX_REGISTER(ext_${id}));
             uint32_t ${id} = ctx->instruction_address +2 +(int8_t) INDEX_DISPLACEMENT(ext_${id}) +(int32_t) index_${id}; `,
-        get: () => `m68k_read(ctx, ${u.size_enum[size]}, ${id})`,
-        set: (val) => `m68k_write(ctx, ${u.size_enum[size]}, ${id})`,
+        get: () => `${u.read_funcs[size]}(ctx, ${id})`,
+        set: (val) => `${u.write_funcs[size]}(ctx, ${id}, ${val})`,
         str: () => `(d, PC, X)`
     };
 }
@@ -132,9 +131,11 @@ function abs_word(size)
 {
     const id = ea_id();
     return {
-        fetch: () => `uint16_t ${id} = SIGN_EXTEND_W(m68k_fetch(ctx));`,
-        get: () => `m68k_read(ctx, ${u.size_enum[size]}, ${id})`,
-        set: (val) => `m68k_write(ctx, ${u.size_enum[size]}, ${id}, ${val})`,
+        fetch: () => `
+            uint32_t ${id} = m68k_fetch(ctx);
+            ${id} = SIGN_EXTEND_W(${id}); `, // Separate in two steps or the extend macro will fetch twice!
+        get: () => `${u.read_funcs[size]}(ctx, ${id})`,
+        set: (val) => `${u.write_funcs[size]}(ctx, ${id}, ${val})`,
         str: () => `(xxx).w`
     };
 }
@@ -144,8 +145,8 @@ function abs_long(size)
     const id = ea_id();
     return {
         fetch: () => `uint32_t ${id} = (m68k_fetch(ctx) << 16) | m68k_fetch(ctx);`,
-        get: () => `m68k_read(ctx, ${u.size_enum[size]}, ${id})`,
-        set: (val) => `m68k_write(ctx, ${u.size_enum[size]}, ${id}, ${val})`,
+        get: () => `${u.read_funcs[size]}(ctx, ${id})`,
+        set: (val) => `${u.write_funcs[size]}(ctx, ${id}, ${val})`,
         str: () => `(xxx).l`
     };
 }

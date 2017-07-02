@@ -16,6 +16,7 @@ typedef struct Settings
     bool vsync;
 
     // UI settings
+    bool show_metrics;
     bool show_cpu_registers;
     bool show_cpu_disassembly;
     bool show_vdp_registers;

@@ -35,6 +35,7 @@ void settings_save(Settings* s)
     JSON_SET_FLOAT(video_scale);
     JSON_SET_BOOL(vsync);
 
+    JSON_SET_BOOL(show_metrics);
     JSON_SET_BOOL(show_cpu_registers);
     JSON_SET_BOOL(show_cpu_disassembly);
     JSON_SET_BOOL(show_vdp_registers);
@@ -107,6 +108,7 @@ Settings* settings_load()
     JSON_GET_FLOAT(video_scale);
     JSON_GET_BOOL(vsync);
 
+    JSON_GET_BOOL(show_metrics);
     JSON_GET_BOOL(show_cpu_registers);
     JSON_GET_BOOL(show_cpu_disassembly);
     JSON_GET_BOOL(show_vdp_registers);

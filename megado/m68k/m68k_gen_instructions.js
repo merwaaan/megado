@@ -70,6 +70,24 @@ module.exports.gen_move = (opcode) =>
             CARRY_SET(ctx, false);
             OVERFLOW_SET(ctx, false);
             ZERO_SET(ctx, value == 0);
-            NEGATIVE_SET(ctx, BIT(value, ${u.size_values[size] - 1}) == 1); `
+            NEGATIVE_SET(ctx, BIT(value, ${u.size_values[size] - 1}) == 1);`
+    };
+};
+
+module.exports.gen_tst = (opcode) =>
+{
+    const size = u.size2[u.bits(opcode, 7, 6)];
+    const src = op.operand_from_pattern(u.bits(opcode, 5, 0), size);
+
+    return {
+        mnemonics: `TST.${size} ${src.str()}`,
+        src,
+        code: `
+            ${u.size_types[size]} value = ${src.get()};
+
+            CARRY_SET(ctx, false);
+            OVERFLOW_SET(ctx, false);
+            ZERO_SET(ctx, value == 0);
+            NEGATIVE_SET(ctx, BIT(value, ${u.size_values[size] - 1}) == 1);`
     };
 };

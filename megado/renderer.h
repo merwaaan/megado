@@ -34,6 +34,8 @@ typedef struct Renderer
     GLuint ui_vertex_array_object, ui_vertex_buffer_object, ui_element_buffer_object;
     GLint ui_shader_texture_loc, ui_shader_projection_loc;
 
+    double last_time; // tmp
+    int instr_per_sec; // tmp
 } Renderer;
 
 Renderer* renderer_make(Genesis*);

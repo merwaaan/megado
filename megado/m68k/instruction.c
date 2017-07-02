@@ -229,6 +229,10 @@ bool instruction_has_operands(Instruction* instr, bool src, bool dst)
     return true;
 }
 
+uint16_t test(uint16_t x)
+{
+    return (((x) & 0xFFFF) | (BIT((x), 15) ? 0xFFFF0000 : 0));
+}
 #define USE_GENERATED_INSTRUCTIONS
 
 #ifdef USE_GENERATED_INSTRUCTIONS
@@ -244,7 +248,7 @@ int instruction_execute(Instruction* instr, M68k* ctx)
     int additional_cycles;
 
 #ifdef USE_GENERATED_INSTRUCTIONS
-    if (generated_instructions[instr->opcode])
+    if (ctx->use_generated_instr && generated_instructions[instr->opcode])
     {
         additional_cycles = instruction_execute_generated(instr->opcode, ctx);
     }

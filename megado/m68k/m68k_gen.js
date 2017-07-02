@@ -28,7 +28,8 @@ const patterns =
     //[instr.gen_add, '1101RRR0S2MMMXXX'],
     //[instr.gen_bset, '0000RRR111MMMXXX'],
     [instr.gen_move, '0001XXXMMMMMMXXX', modes_data_reg + modes_addr + modes_addr_offset + modes_abs, modes_all - modes_addr_reg], // Byte size: address register is not allowed as source
-    [instr.gen_move, '001?XXXMMMMMMXXX', modes_data_reg + modes_addr + modes_addr_offset + modes_abs, modes_all] // Word, long
+    [instr.gen_move, '001?XXXMMMMMMXXX', modes_data_reg + modes_addr + modes_addr_offset + modes_abs, modes_all], // Word, long
+    [instr.gen_tst, '01001010S2MMMXXX', modes_all - modes_addr_reg - modes_imm]
 ];
 
 // Check if the given opcode matches the pattern.
@@ -137,18 +138,18 @@ let code = instructions.map((instr, opcode) =>
     c = `case 0x${u.num_to_hex(opcode)}: /* ${instr.mnemonics} */ {\n`;
 
     // Add optional pre-step
-    if (instr.src.pre) c += instr.src.pre();
-    if (instr.dst.pre) c += instr.dst.pre();
+    if (instr.src && instr.src.pre) c += instr.src.pre();
+    if (instr.dst && instr.dst.pre) c += instr.dst.pre();
 
     // Add optional fetching code
-    if (instr.src.fetch) c += `${instr.src.fetch()} // src fetch\n`;
-    if (instr.dst.fetch) c += `${instr.dst.fetch()} // dst fetch\n`;
+    if (instr.src && instr.src.fetch) c += `${instr.src.fetch()} // src fetch\n`;
+    if (instr.dst && instr.dst.fetch) c += `${instr.dst.fetch()} // dst fetch\n`;
 
     c += instr.code;
 
     // Add optional post-step
-    if (instr.src.post) c += instr.src.post();
-    if (instr.dst.post) c += instr.dst.post();
+    if (instr.src && instr.src.post) c += instr.src.post();
+    if (instr.dst && instr.dst.post) c += instr.dst.post();
 
     c += 'return 0;\n}\n'; // TODO cycles
     return c;

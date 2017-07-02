@@ -28,7 +28,7 @@ M68k* m68k_make(Genesis* g)
         for (int opcode = 0; opcode < 0x10000; ++opcode)
             opcode_table[opcode] = instruction_generate(m68k, opcode);
     }
-
+    m68k->use_generated_instr = true;
     return m68k;
 }
 
@@ -51,7 +51,7 @@ void m68k_initialize(M68k* m)
     m->pending_interrupt = -1;
     m->prefetch_address = 0xFFFFFFFF; // Invalid value, will initiate the initial prefetch
 
-                                      // Reset breakpoints
+    // Reset breakpoints
     for (uint8_t i = 0; i < BREAKPOINTS_COUNT; ++i)
         m->breakpoints[i] = (Breakpoint) { false, 0 };
 }
@@ -187,13 +187,13 @@ uint8_t m68k_step(M68k* m)
 
 #ifdef DEBUG
     DecodedInstruction* d = m68k_decode(m, m->instruction_address);
-
-    if (d != NULL)
-        printf("%#06X [%0X] %s | D %0X %0X %0X %0X %0X %0X %0X %0X | A %0X %0X %0X %0X %0X %0X %0X %0X\n",
-            m->pc - 2, m->instruction_register, d->mnemonics,
-            m->data_registers[0], m->data_registers[1], m->data_registers[2], m->data_registers[3], m->data_registers[4], m->data_registers[5], m->data_registers[6], m->data_registers[7],
-            m->address_registers[0], m->address_registers[1], m->address_registers[2], m->address_registers[3], m->address_registers[4], m->address_registers[5], m->address_registers[6], m->address_registers[7]);
     
+    if (d != NULL)
+        printf("%#06X [%0X] %s | D %0X\n",// %0X %0X %0X %0X %0X %0X %0X | A %0X %0X %0X %0X %0X %0X %0X %0X %0X\n",
+            m->pc - 2, m->instruction_register, d->mnemonics, m68k_read_w(m, 0xFFFFF610));
+            //m->data_registers[0], m->data_registers[1], m->data_registers[2], m->data_registers[3], m->data_registers[4], m->data_registers[5], m->data_registers[6], m->data_registers[7],
+            //m->address_registers[0], m->address_registers[1], m->address_registers[2], m->address_registers[3], m->address_registers[4], m->address_registers[5], m->address_registers[6], m->address_registers[7]);
+
     decoded_instruction_free(d);
 #endif
 
@@ -202,6 +202,7 @@ uint8_t m68k_step(M68k* m)
 
     int cycles = instruction_execute(instr, m);
     m->cycles += cycles;
+    ++m->instruction_count; // tmp counter
 
     m68k_handle_interrupt(m);
 
