@@ -1,6 +1,8 @@
 const u = require('./m68k_gen_utils');
 const instr = require('./m68k_gen_instructions');
 
+const fs = require('fs');
+
 // Group modes that often go together
 const modes_data_reg = u.mode_mask('DataReg');
 const modes_addr_reg = u.mode_mask('AddrReg');
@@ -108,6 +110,36 @@ function check_opcode_token(format, token)
     }
 };
 
+// Assembles the code for the given instruction.
+function build_code(instr)
+{
+    let c = '';
+
+    // Add optional pre-step
+    if (instr.src && instr.src.pre) c += instr.src.pre();
+    if (instr.dst && instr.dst.pre) c += instr.dst.pre();
+
+    // Add optional fetching code
+    if (instr.src && instr.src.fetch) c += `${instr.src.fetch()} // src fetch\n`;
+    if (instr.dst && instr.dst.fetch) c += `${instr.dst.fetch()} // dst fetch\n`;
+
+    c += instr.code;
+
+    // Add optional post-step
+    if (instr.src && instr.src.post) c += instr.src.post();
+    if (instr.dst && instr.dst.post) c += instr.dst.post();
+
+    // TODO cycles
+    c += '\nreturn 0;\n';
+
+    return c;
+}
+
+function write(data, file)
+{
+    fs.writeFile(file, data, (err) => console.log(err));
+}
+
 ///////////////////////////////////////////////////////////
 
 // Generate the instruction set
@@ -127,52 +159,76 @@ for (let opcode = 0; opcode < 0x10000; ++opcode)
     }
 }
 
-// Concatenate the instructions into a single switch
-
-let code = instructions.map((instr, opcode) =>
+// Builds a huge switch with each instruction as a separate case.
+function build_switch(instructions)
 {
-    if (instr === null)
-        return '';
+    // Concatenate the instructions into a single switch
+    let code = instructions.map((instr, opcode) =>
+    {
+        if (instr === null)
+            return '';
 
-    // Switch case, and mnemonics as a comment
-    c = `case 0x${u.num_to_hex(opcode)}: /* ${instr.mnemonics} */ {\n`;
+        // Switch case, and mnemonics as a comment
+        c = `case 0x${u.num_to_hex(opcode)}: /* ${instr.mnemonics} */ {\n`;
 
-    // Add optional pre-step
-    if (instr.src && instr.src.pre) c += instr.src.pre();
-    if (instr.dst && instr.dst.pre) c += instr.dst.pre();
+        // Instruction body
+        c += build_code(instr);
 
-    // Add optional fetching code
-    if (instr.src && instr.src.fetch) c += `${instr.src.fetch()} // src fetch\n`;
-    if (instr.dst && instr.dst.fetch) c += `${instr.dst.fetch()} // dst fetch\n`;
+        return c;
+    });
 
-    c += instr.code;
+    const output1 = `switch (opcode) {
+        ${code.join('')}
+    }`;
 
-    // Add optional post-step
-    if (instr.src && instr.src.post) c += instr.src.post();
-    if (instr.dst && instr.dst.post) c += instr.dst.post();
+    write(output1, 'instructions_switch.gen');
 
-    c += 'return 0;\n}\n'; // TODO cycles
-    return c;
-});
+    // Build a table listing generated instructions
 
-let output = `switch (opcode) {
-    ${code.join('')}
-}`;
+    const generated_table = instructions.map((instr, opcode) => !!instr);
+
+    const output2 = `bool generated_instructions[] = {${generated_table.join(', ')}};\n`;
+
+    write(output2, 'instructions_generated.gen');
+}
+
+// Builds a jump table with each instruction as a separate function.
+function build_jumptable(instructions)
+{
+    const instr_name = (opcode) => `instr_${opcode.toString(16)}`;
+
+    // Generate one function per instruction
+    let functions = instructions.map((instr, opcode) =>
+    {
+        if (instr === null)
+            return '';
+
+        return `uint8_t ${instr_name(opcode)}(M68k* ctx)
+        {
+            // ${instr.mnemonics}
+            ${build_code(instr)}
+        }
+        `;
+    });
+
+    // Store functions pointers in a jumptable
+    let pointers = instructions.map((instr, opcode) => instr === null ? 'NULL' : '&' + instr_name(opcode));
+
+    let output = `
+        ${functions.join('')}
+
+        typedef uint8_t (GeneratedInstruction) (M68k*);
+
+        GeneratedInstruction* generated_instructions_jumptable[]=
+        {
+            ${pointers.join(',')}
+        };
+        `;
+
+    write(output, 'instructions_jumptable.gen');
+}
+
 // TODO clean up wild indentation
 
-const fs = require('fs');
-fs.writeFile('instructions_switch.gen', output, handle_file_error);
-
-// Build a table listing generated instructions
-
-const generated_table = instructions.map((instr, opcode) => !!instr);
-
-output = `bool generated_instructions[] = {${generated_table.join(', ')}};\n`;
-
-fs.writeFile('instructions_generated.gen', output, handle_file_error);
-
-function handle_file_error(err)
-{
-    if (err)
-        console.error(err);
-}
+//build_switch(instructions);
+build_jumptable(instructions);

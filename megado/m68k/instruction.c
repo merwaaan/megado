@@ -229,18 +229,17 @@ bool instruction_has_operands(Instruction* instr, bool src, bool dst)
     return true;
 }
 
-uint16_t test(uint16_t x)
-{
-    return (((x) & 0xFFFF) | (BIT((x), 15) ? 0xFFFF0000 : 0));
-}
 #define USE_GENERATED_INSTRUCTIONS
 
 #ifdef USE_GENERATED_INSTRUCTIONS
-#include "instructions_generated.gen";
+
+/*#include "instructions_generated.gen";
 int instruction_execute_generated(uint16_t opcode, M68k* ctx)
 {
 #include "instructions_switch.gen"
-}
+}*/
+
+#include "instructions_jumptable.gen"
 #endif
 
 int instruction_execute(Instruction* instr, M68k* ctx)
@@ -248,10 +247,16 @@ int instruction_execute(Instruction* instr, M68k* ctx)
     int additional_cycles;
 
 #ifdef USE_GENERATED_INSTRUCTIONS
-    if (ctx->use_generated_instr && generated_instructions[instr->opcode])
+    /*if (ctx->use_generated_instr && generated_instructions[instr->opcode])
     {
         additional_cycles = instruction_execute_generated(instr->opcode, ctx);
+    }*/
+
+    if (ctx->use_generated_instr && generated_instructions_jumptable[instr->opcode] != NULL)
+    {
+        additional_cycles = generated_instructions_jumptable[instr->opcode](ctx);
     }
+
     else
 #endif
     {
