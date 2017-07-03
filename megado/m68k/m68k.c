@@ -28,7 +28,7 @@ M68k* m68k_make(Genesis* g)
         for (int opcode = 0; opcode < 0x10000; ++opcode)
             opcode_table[opcode] = instruction_generate(m68k, opcode);
     }
-    m68k->use_generated_instr = true;
+
     return m68k;
 }
 
@@ -202,7 +202,6 @@ uint8_t m68k_step(M68k* m)
 
     int cycles = instruction_execute(instr, m);
     m->cycles += cycles;
-    ++m->instruction_count; // tmp counter
 
     m68k_handle_interrupt(m);
 

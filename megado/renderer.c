@@ -966,7 +966,8 @@ static void build_ui(Renderer* r)
     }
 
     // Metrics
-    if (settings->show_metrics)
+    // TODO
+    /*if (settings->show_metrics)
     {
         double now = glfwGetTime(); // quick counter to check stuff, to be done properly later
         if (now - r->last_time > 1)
@@ -983,7 +984,7 @@ static void build_ui(Renderer* r)
         igText("Instr/s: %d %s", r->instr_per_sec, r->genesis->m68k->use_generated_instr ? "gen" : "");
         igEnd();
         igPopStyleColor(1);
-    }
+    }*/
 
     bool a = true;
     //igShowTestWindow(&a);
@@ -1097,9 +1098,6 @@ static void handle_inputs(Renderer* r, int key, int action)
         case GLFW_KEY_P: toggle_pause(r); break;
         case GLFW_KEY_SPACE: step(r); break;
         case GLFW_KEY_ESCAPE: r->genesis->status = Status_Quitting; break;
-        
-        // tmp
-        case GLFW_KEY_G: r->genesis->m68k->use_generated_instr = !r->genesis->m68k->use_generated_instr; break;
         }
         break;
     }
