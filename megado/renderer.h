@@ -5,6 +5,7 @@
 #include "vdp.h"
 
 #define TPF_LENGTH 128
+#define IPF_LENGTH 128
 
 typedef struct Renderer
 {
@@ -17,6 +18,11 @@ typedef struct Renderer
     float avg_tpf;
     int tpf_idx;
     float tpf_refresh_counter;
+
+    float ipf[IPF_LENGTH]; // instructions per frame
+    float avg_ipf;
+    int ipf_idx;
+    float ipf_refresh_counter;
 
     enum Planes selected_plane;
     uint8_t* plane_buffer;

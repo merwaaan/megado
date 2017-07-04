@@ -189,6 +189,8 @@ uint8_t m68k_step(M68k* m)
     decoded_instruction_free(d);
 #endif
 
+    m->instruction_count += 1;
+
     //if (m->instruction_callback != NULL)
     //    m->instruction_callback(m);
 

@@ -78,6 +78,8 @@ typedef struct M68k
     // Breakpoints
     Breakpoint breakpoints[BREAKPOINTS_COUNT]; // The emulation will pause when the PC reaches one of those addresses
     Breakpoint* active_breakpoint; // The breakpoint currently blocking the emulation
+
+    uint64_t instruction_count;
 } M68k;
 
 typedef struct Instruction* (GenFunc)(uint16_t opcode, M68k* context);

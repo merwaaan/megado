@@ -960,7 +960,6 @@ static void build_ui(Renderer* r)
     r->tpf[r->tpf_idx] = dt * 1000;
     r->tpf_idx = (r->tpf_idx + 1) % TPF_LENGTH;
     r->tpf_refresh_counter += dt;
-
     if (r->tpf_refresh_counter > 1) {
         for (int i=0; i < TPF_LENGTH; ++i) {
             r->avg_tpf += r->tpf[i];
@@ -969,12 +968,31 @@ static void build_ui(Renderer* r)
         r->tpf_refresh_counter = 0;
     }
 
+    r->ipf[r->ipf_idx] = r->genesis->m68k->instruction_count / 1000.0;
+    r->genesis->m68k->instruction_count = 0;
+    r->ipf_idx = (r->ipf_idx + 1) % IPF_LENGTH;
+    r->ipf_refresh_counter += dt;
+    if (r->ipf_refresh_counter > 1) {
+        for (int i=0; i < IPF_LENGTH; ++i) {
+            r->avg_ipf += r->ipf[i];
+        }
+        r->avg_ipf /= IPF_LENGTH;
+        r->ipf_refresh_counter = 0;
+    }
+
     if (settings->show_metrics) {
         igBegin("Metrics", &settings->show_metrics, 0);
-        char buf[100];
-        snprintf(buf, 100, "tpf (ms)\navg: %.3fms", r->avg_tpf);
+        char buf[50];
+
+        // Time per frame, in milliseconds
+        snprintf(buf, sizeof buf, "tpf (ms)\navg: %.3f", r->avg_tpf);
         igPlotHistogram(buf, r->tpf, TPF_LENGTH, r->tpf_idx,
                         NULL, 0, r->avg_tpf * 2, (struct ImVec2) { 0,40 }, 4);
+
+        // (M68k) instructions per frame, in kilos
+        snprintf(buf, sizeof buf, "ipf (k)\navg: %.3f", r->avg_ipf);
+        igPlotHistogram(buf, r->ipf, IPF_LENGTH, r->ipf_idx,
+                        NULL, 0, r->avg_ipf * 2, (struct ImVec2) { 0,40 }, 4);
         igEnd();
     }
 
