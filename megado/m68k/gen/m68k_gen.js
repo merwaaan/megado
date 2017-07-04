@@ -39,7 +39,6 @@ const patterns =
 // Check if the given opcode matches the pattern.
 function match(opcode, pattern)
 {
-if (u.bits(opcode, 15, 8) == 0b01100001) return false;
     const opcode_bin = u.num_to_bin(opcode);
     const format_regexp = /([01]+|RRR|MMMXXX|XXXMMM|S2|S3|S)+?/g;
     // TODO ? token

@@ -26,7 +26,7 @@ Instruction* gen_bit_instruction(uint16_t opcode, char* name, InstructionFunc fu
     return i;
 }
 
-int bchg(Instruction* i, M68k* ctx)
+uint8_t bchg(Instruction* i, M68k* ctx)
 {
     uint8_t bit = FETCH_EA_AND_GET(i->src, ctx) % i->size;
 
@@ -60,7 +60,7 @@ Instruction* gen_bchg_imm(uint16_t opcode)
     return i;
 }
 
-int bclr(Instruction* i, M68k* ctx)
+uint8_t bclr(Instruction* i, M68k* ctx)
 {
     uint8_t bit = FETCH_EA_AND_GET(i->src, ctx) % i->size;
 
@@ -94,7 +94,7 @@ Instruction* gen_bclr_imm(uint16_t opcode)
     return i;
 }
 
-int bset(Instruction* i, M68k* ctx)
+uint8_t bset(Instruction* i, M68k* ctx)
 {
     uint8_t bit = FETCH_EA_AND_GET(i->src, ctx) % i->size;
 
@@ -128,7 +128,7 @@ Instruction* gen_bset_imm(uint16_t opcode)
     return i;
 }
 
-int btst(Instruction* i, M68k* ctx) // TODO check doc
+uint8_t btst(Instruction* i, M68k* ctx) // TODO check doc
 {
     int bit = FETCH_EA_AND_GET(i->src, ctx) % i->size;
     int set = BIT(FETCH_EA_AND_GET(i->dst, ctx), bit);

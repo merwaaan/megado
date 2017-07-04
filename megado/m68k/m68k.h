@@ -75,29 +75,6 @@ typedef struct M68k
 
 typedef struct Instruction* (GenFunc)(uint16_t opcode);
 
-// TODO move
-typedef struct Pattern {
-
-    // Unique bit pattern of the instruction.
-    //
-    // eg. ANDI's opcode is 0000 0010 SSMM MXXX
-    //     ANDI's pattern is $0200 (0000 0010 0000 0000)
-    uint16_t pattern;
-
-    // Bits to check for the pattern (the fixed part of the opcode).
-    //
-    // eg. ANDI's mask is $FF00 (1111 1111 0000 0000)
-    uint16_t mask;
-
-    // Function that returns an instance of the instruction
-    // setup with appropriate operands depending on the opcode.
-    GenFunc* generator;
-
-    // Masks describing legal addressing modes for both operands.
-    uint16_t src_addressing_modes;
-    uint16_t dst_addressing_modes;
-} Pattern;
-
 M68k* m68k_make(struct Genesis*);
 void m68k_free(M68k*);
 
@@ -125,19 +102,15 @@ inline uint16_t m68k_fetch(M68k* m);
 void m68k_request_interrupt(M68k* m, uint8_t level);
 void m68k_handle_interrupt(M68k* m);
 
-struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
-
 // Breakpoint handling
 void m68k_toggle_breakpoint(M68k*, uint32_t address); // Add/Remove a breakpoint at the given address
 Breakpoint* m68k_get_breakpoint(M68k*, uint32_t address); // Return a possible enabled breakpoint at the given address
 
-// -----
 // I/O functions
 //
 // Note: While the 68000 handles 32-bit addresses, its address
 // bus is 24-bit. The I/O functions must take that into account
 // (eg. by masking the addresses by 0xFFFFFF).
-// -----
 
 uint32_t m68k_read(M68k*, Size size, uint32_t address);
 uint8_t m68k_read_b(M68k*, uint32_t address);
@@ -150,3 +123,15 @@ void m68k_write_w(M68k*, uint32_t address, uint16_t value);
 void m68k_write_l(M68k*, uint32_t address, uint32_t value);
 
 static struct Instruction** opcode_table;
+
+// Instruction disassembly
+
+typedef struct DecodedInstruction
+{
+    char* mnemonics;
+    uint8_t length;
+} DecodedInstruction;
+
+DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
+void decoded_instruction_free(DecodedInstruction*);
+

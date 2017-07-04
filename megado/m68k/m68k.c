@@ -125,6 +125,15 @@ bail:
     return decoded;
 }
 
+void decoded_instruction_free(DecodedInstruction* decoded)
+{
+    if (decoded == NULL)
+        return;
+
+    free(decoded->mnemonics);
+    free(decoded);
+}
+
 uint32_t m68k_run_cycles(M68k* m, int cycles)
 {
     /*while (cycles > 0)
@@ -187,10 +196,10 @@ uint8_t m68k_step(M68k* m)
 
 #ifdef DEBUG
     DecodedInstruction* d = m68k_decode(m, m->instruction_address);
-    
+
     if (d != NULL)
-        printf("%#06X [%0X] %s | D %0X\n",// %0X %0X %0X %0X %0X %0X %0X | A %0X %0X %0X %0X %0X %0X %0X %0X %0X\n",
-            m->pc - 2, m->instruction_register, d->mnemonics, m68k_read_w(m, 0xFFFFF610));
+        printf("%#06X [%0X] %s\n",// %0X %0X %0X %0X %0X %0X %0X | A %0X %0X %0X %0X %0X %0X %0X %0X %0X\n",
+            m->pc - 2, m->instruction_register, d->mnemonics);
             //m->data_registers[0], m->data_registers[1], m->data_registers[2], m->data_registers[3], m->data_registers[4], m->data_registers[5], m->data_registers[6], m->data_registers[7],
             //m->address_registers[0], m->address_registers[1], m->address_registers[2], m->address_registers[3], m->address_registers[4], m->address_registers[5], m->address_registers[6], m->address_registers[7]);
 

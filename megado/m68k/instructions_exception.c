@@ -17,7 +17,7 @@ Instruction* gen_illegal(uint16_t opcode)
     return i;
 }
 
-int trap(Instruction* i, M68k* ctx)
+uint8_t trap(Instruction* i, M68k* ctx)
 {
     // Push the current PC onto the stack
     ctx->address_registers[7] -= 4;

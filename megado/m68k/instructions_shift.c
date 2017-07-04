@@ -31,15 +31,12 @@ Instruction* gen_shift_memory_instruction(uint16_t opcode, char* name, Instructi
     Instruction* i = instruction_make(name, func);
     i->size = Word;
     i->src = operand_make_value(1, i); // The shift count is always 1
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
-    
-    if (instruction_has_operands(i, true, true))
-        i->base_cycles = 8 + cycles_ea_calculation_table[i->src->type][i->dst->type];
-
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);    
+    i->base_cycles = 8 + cycles_ea_calculation_table[i->src->type][i->dst->type];
     return i;
 }
 
-int asr(Instruction* i, M68k* ctx)
+uint8_t asr(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -65,7 +62,7 @@ int asr(Instruction* i, M68k* ctx)
     return 2 * shift;
 }
 
-int lsl(Instruction* i, M68k* ctx)
+uint8_t lsl(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -90,7 +87,7 @@ int lsl(Instruction* i, M68k* ctx)
     return 2 * shift;
 }
 
-int lsr(Instruction* i, M68k* ctx)
+uint8_t lsr(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -139,7 +136,7 @@ Instruction* gen_lsd_mem(uint16_t opcode)
     return gen_shift_memory_instruction(opcode, direction ? "LSL" : "LSR", direction ? lsl : lsr);
 }
 
-int rol(Instruction* i, M68k* ctx)
+uint8_t rol(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -164,7 +161,7 @@ int rol(Instruction* i, M68k* ctx)
     return 2 * rotation;
 }
 
-int ror(Instruction* i, M68k* ctx)
+uint8_t ror(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -201,7 +198,7 @@ Instruction* gen_rod_mem(uint16_t opcode)
     return gen_shift_memory_instruction(opcode, direction ? "ROL" : "ROR", direction ? rol : ror);
 }
 
-int roxl(Instruction* i, M68k* ctx)
+uint8_t roxl(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -229,7 +226,7 @@ int roxl(Instruction* i, M68k* ctx)
     return 2 * rotation;
 }
 
-int roxr(Instruction* i, M68k* ctx)
+uint8_t roxr(Instruction* i, M68k* ctx)
 {
     FETCH_EA(i->dst, ctx);
     uint32_t initial = GET(i->dst, ctx);
@@ -264,7 +261,7 @@ Instruction* gen_roxd_mem(uint16_t opcode)
     return gen_shift_memory_instruction(opcode, direction ? "ROXL" : "ROXR", direction ? roxl : roxr);
 }
 
-int swap(Instruction* i, M68k* ctx)
+uint8_t swap(Instruction* i, M68k* ctx)
 {
     uint32_t value = GET(i->src, ctx);
     uint16_t lo = value & 0xFFFF;

@@ -8,7 +8,7 @@
 #include "m68k.h"
 #include "operands.h"
 
-int bcc(Instruction* i, M68k* ctx)
+uint8_t bcc(Instruction* i, M68k* ctx)
 {
     int16_t offset = FETCH_EA_AND_GET(i->src, ctx);
 
@@ -48,7 +48,7 @@ Instruction* gen_bcc(uint16_t opcode)
     return i;
 }
 
-int bra(Instruction* i, M68k* ctx)
+uint8_t bra(Instruction* i, M68k* ctx)
 {
     // Jump from (instruction address + 2)
     int16_t offset = FETCH_EA_AND_GET(i->src, ctx);
@@ -77,7 +77,7 @@ Instruction* gen_bra(uint16_t opcode)
     return i;
 }
 
-int bsr(Instruction* i, M68k* ctx)
+uint8_t bsr(Instruction* i, M68k* ctx)
 {
     int16_t offset = FETCH_EA_AND_GET(i->src, ctx);
 
@@ -103,7 +103,7 @@ Instruction* gen_bsr(uint16_t opcode)
     return i;
 }
 
-int dbcc(Instruction* i, M68k* ctx)
+uint8_t dbcc(Instruction* i, M68k* ctx)
 {
     int16_t offset = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -143,7 +143,7 @@ Instruction* gen_dbcc(uint16_t opcode)
     return i;
 }
 
-int jmp(Instruction* i, M68k* ctx)
+uint8_t jmp(Instruction* i, M68k* ctx)
 {
     ctx->pc = FETCH_EA(i->src, ctx);
 
@@ -157,7 +157,7 @@ Instruction* gen_jmp(uint16_t opcode)
     return i;
 }
 
-int jsr(Instruction* i, M68k* ctx)
+uint8_t jsr(Instruction* i, M68k* ctx)
 {
     uint32_t ea = FETCH_EA(i->src, ctx);
 
@@ -182,7 +182,7 @@ Instruction* gen_jsr(uint16_t opcode)
     return i;
 }
 
-int nop(Instruction* i, M68k* ctx)
+uint8_t nop(Instruction* i, M68k* ctx)
 {
     return 0;
 }
@@ -200,7 +200,7 @@ Instruction* gen_rtd(uint16_t opcode)
     return i;
 }
 
-int rtr(Instruction* i, M68k* ctx)
+uint8_t rtr(Instruction* i, M68k* ctx)
 {
     uint8_t ccr = m68k_read_w(ctx, ctx->address_registers[7]);
     ctx->status = (ctx->status & 0xFFE0) | (ccr & 0x1F);
@@ -220,7 +220,7 @@ Instruction* gen_rtr(uint16_t opcode)
     return i;
 }
 
-int rts(Instruction* i, M68k* ctx)
+uint8_t rts(Instruction* i, M68k* ctx)
 {
     ctx->pc = m68k_read_l(ctx, ctx->address_registers[7]);
     ctx->address_registers[7] += 4;

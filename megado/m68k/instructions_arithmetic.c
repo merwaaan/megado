@@ -5,7 +5,7 @@
 #include "m68k.h"
 #include "operands.h"
 
-int add(Instruction* i, M68k* ctx)
+uint8_t add(Instruction* i, M68k* ctx)
 {
     uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
     uint32_t a = FETCH_EA_AND_GET(i->dst, ctx);
@@ -49,7 +49,7 @@ Instruction* gen_add(uint16_t opcode)
     return i;
 }
 
-int adda(Instruction* i, M68k* ctx)
+uint8_t adda(Instruction* i, M68k* ctx)
 {
     uint32_t a = FETCH_EA_AND_GET(i->src, ctx);
 
@@ -89,7 +89,7 @@ Instruction* gen_addi(uint16_t opcode)
     return i;
 }
 
-int addq(Instruction* i, M68k* ctx)
+uint8_t addq(Instruction* i, M68k* ctx)
 {
     // Extract the quick value, 0 represents 8
     uint32_t quick = GET(i->src, ctx);
@@ -122,7 +122,7 @@ Instruction* gen_addq(uint16_t opcode)
     return i;
 }
 
-int addx(Instruction* i, M68k* ctx)
+uint8_t addx(Instruction* i, M68k* ctx)
 {
     uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
     uint32_t a = FETCH_EA_AND_GET(i->dst, ctx);
@@ -159,7 +159,7 @@ Instruction* gen_addx(uint16_t opcode)
     return i;
 }
 
-int clr(Instruction* i, M68k* ctx)
+uint8_t clr(Instruction* i, M68k* ctx)
 {
     FETCH_EA_AND_SET(i->src, ctx, 0);
 
@@ -184,7 +184,7 @@ Instruction* gen_clr(uint16_t opcode)
     return i;
 }
 
-int cmp(Instruction* i, M68k* ctx)
+uint8_t cmp(Instruction* i, M68k* ctx)
 {
     uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
     uint32_t a = FETCH_EA_AND_GET(i->dst, ctx);
@@ -211,7 +211,7 @@ Instruction* gen_cmp(uint16_t opcode)
     return i;
 }
 
-int cmpa(Instruction* i, M68k* ctx)
+uint8_t cmpa(Instruction* i, M68k* ctx)
 {
     uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
     if (i->size == Word)
@@ -264,7 +264,7 @@ Instruction* gen_cmpm(uint16_t opcode)
     return i;
 }
 
-int divu(Instruction* i, M68k* ctx)
+uint8_t divu(Instruction* i, M68k* ctx)
 {
     uint16_t a = FETCH_EA_AND_GET(i->src, ctx);
     uint32_t b = ctx->data_registers[i->dst->n];
@@ -287,7 +287,7 @@ int divu(Instruction* i, M68k* ctx)
     return 144; // TODO: should add address calculation time
 }
 
-int divs(Instruction* i, M68k* ctx)
+uint8_t divs(Instruction* i, M68k* ctx)
 {
     // Same as DIVU, but assuming signed operands
     int16_t a = FETCH_EA_AND_GET(i->src, ctx);
@@ -331,7 +331,7 @@ Instruction* gen_divu(uint16_t opcode)
     return i;
 }
 
-int ext(Instruction* i, M68k* ctx)
+uint8_t ext(Instruction* i, M68k* ctx)
 {
     int x = GET(i->src, ctx);
 
@@ -364,7 +364,7 @@ Instruction* gen_ext(uint16_t opcode)
     return i;
 }
 
-int mul(Instruction* i, M68k* ctx)
+uint8_t mul(Instruction* i, M68k* ctx)
 {
     ctx->data_registers[i->dst->n] = FETCH_EA_AND_GET(i->src, ctx) * ctx->data_registers[i->dst->n];
 
@@ -397,7 +397,7 @@ Instruction* gen_mulu(uint16_t opcode)
     return i;
 }
 
-int neg(Instruction* i, M68k* ctx)
+uint8_t neg(Instruction* i, M68k* ctx)
 {
     uint32_t value = FETCH_EA_AND_GET(i->src, ctx);
     SET(i->src, ctx, 0 - value);
@@ -436,7 +436,7 @@ Instruction* gen_negx(uint16_t opcode)
     return i;
 }
 
-int sub(Instruction* i, M68k* ctx)
+uint8_t sub(Instruction* i, M68k* ctx)
 {
     uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
     uint32_t a = FETCH_EA_AND_GET(i->dst, ctx);
@@ -478,7 +478,7 @@ Instruction* gen_sub(uint16_t opcode)
     return i;
 }
 
-int suba(Instruction* i, M68k* ctx)
+uint8_t suba(Instruction* i, M68k* ctx)
 {
     uint32_t a = FETCH_EA_AND_GET(i->src, ctx);
 
@@ -513,7 +513,7 @@ Instruction* gen_subi(uint16_t opcode)
     return i;
 }
 
-int subq(Instruction* i, M68k* ctx)
+uint8_t subq(Instruction* i, M68k* ctx)
 {
     // Extract the quick value, 0 represents 8
     uint32_t quick = GET(i->src, ctx);
@@ -552,7 +552,7 @@ Instruction* gen_subx(uint16_t opcode)
     return i;
 }
 
-int tas(Instruction* i, M68k* ctx)
+uint8_t tas(Instruction* i, M68k* ctx)
 {
     uint32_t value = FETCH_EA_AND_GET(i->src, ctx);
 

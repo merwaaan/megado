@@ -7,7 +7,7 @@
 #include "m68k.h"
 #include "operands.h"
 
-int exg(Instruction* i, M68k* ctx)
+uint8_t exg(Instruction* i, M68k* ctx)
 {
     int32_t dst = GET(i->dst, ctx);
     SET(i->dst, ctx, GET(i->src, ctx));
@@ -47,7 +47,7 @@ Instruction* gen_exg(uint16_t opcode)
     return i;
 }
 
-int lea(Instruction* i, M68k* ctx)
+uint8_t lea(Instruction* i, M68k* ctx)
 {
     uint32_t ea = FETCH_EA(i->src, ctx);
 
@@ -69,7 +69,7 @@ Instruction* gen_lea(uint16_t opcode)
     return i;
 }
 
-int link(Instruction* i, M68k* ctx)
+uint8_t link(Instruction* i, M68k* ctx)
 {
     // Push the address register onto the stack
     ctx->address_registers[7] -= 4;
@@ -94,7 +94,7 @@ Instruction* gen_link(uint16_t opcode)
     return i;
 }
 
-int move(Instruction* i, M68k* ctx)
+uint8_t move(Instruction* i, M68k* ctx)
 {
     uint32_t value = FETCH_EA_AND_GET(i->src, ctx);
     FETCH_EA_AND_SET(i->dst, ctx, value);
@@ -113,10 +113,7 @@ Instruction* gen_move(uint16_t opcode)
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
     i->dst = operand_make(FRAGMENT(opcode, 11, 9) | FRAGMENT(opcode, 8, 6) << 3, i);
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-
-    if (instruction_has_operands(i, true, true))
-        i->base_cycles = cycles_move_table[i->size == Long][i->src->type][i->dst->type];
-
+    i->base_cycles = cycles_move_table[i->size == Long][i->src->type][i->dst->type];
     return i;
 }
 
@@ -124,7 +121,7 @@ Instruction* gen_move(uint16_t opcode)
 #define MOVEM_POSTINC_ORDER(n) (n < 8 ? ctx->data_registers + n : ctx->address_registers + n - 8)
 #define MOVEM_PREDEC_ORDER(n) (n < 8 ? ctx->address_registers + (7 - n) : ctx->data_registers + (7 - (n - 8)))
 
-int movem(Instruction* i, M68k* ctx)
+uint8_t movem(Instruction* i, M68k* ctx)
 {
     // TODO mask as an operand
 
@@ -192,7 +189,7 @@ Instruction* gen_movem(uint16_t opcode)
     return i;
 }
 
-int moveq(Instruction* i, M68k* ctx)
+uint8_t moveq(Instruction* i, M68k* ctx)
 {
     int32_t value = SIGN_EXTEND_B_L(GET(i->src, ctx));
     SET(i->dst, ctx, value);
@@ -215,7 +212,7 @@ Instruction* gen_moveq(uint16_t opcode)
     return i;
 }
 
-int movea(Instruction* i, M68k* ctx)
+uint8_t movea(Instruction* i, M68k* ctx)
 {
     int32_t value = FETCH_EA_AND_GET(i->src, ctx);
 
@@ -243,7 +240,7 @@ Instruction* gen_movep(uint16_t opcode)
     return i;
 }
 
-int move_to_ccr(Instruction* i, M68k* ctx)
+uint8_t move_to_ccr(Instruction* i, M68k* ctx)
 {
     // Only update the CCR segment of the status register
     ctx->status = (ctx->status & 0xFFE0) | (FETCH_EA_AND_GET(i->src, ctx) & 0x1F);
@@ -260,7 +257,7 @@ Instruction* gen_move_to_ccr(uint16_t opcode)
     return i;
 }
 
-int pea(Instruction* i, M68k* ctx)
+uint8_t pea(Instruction* i, M68k* ctx)
 {
     ctx->address_registers[7] -= 4;
     m68k_write_l(ctx, ctx->address_registers[7], FETCH_EA(i->src, ctx));
@@ -276,7 +273,7 @@ Instruction* gen_pea(uint16_t opcode)
     return i;
 }
 
-int unlk(Instruction* i, M68k* ctx)
+uint8_t unlk(Instruction* i, M68k* ctx)
 {
     // Load the stack pointer with the address register
     ctx->address_registers[7] = ctx->address_registers[i->src->n];

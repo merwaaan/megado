@@ -41,7 +41,7 @@ Instruction* gen_boolean_instruction_immediate(uint16_t opcode, char* name, Inst
     return i;
 }
 
-int and(Instruction* i, M68k* ctx)
+uint8_t and(Instruction* i, M68k* ctx)
 {
     // Fetch both effective addresses to cover the two variants: AND ea, Dn & AND Dn, ea
     uint32_t result = FETCH_EA_AND_GET(i->src, ctx) & FETCH_EA_AND_GET(i->dst, ctx);
@@ -77,7 +77,7 @@ Instruction* gen_andi(uint16_t opcode)
     return i;
 }
 
-int andi_ccr(Instruction* i, M68k* ctx)
+uint8_t andi_ccr(Instruction* i, M68k* ctx)
 {
     ctx->status = (ctx->status & 0xFFE0) | (ctx->status & FETCH_EA_AND_GET(i->src, ctx) & 0x1F);
 
@@ -92,7 +92,7 @@ Instruction* gen_andi_ccr(uint16_t opcode)
     return i;
 }
 
-int eor(Instruction* i, M68k* ctx)
+uint8_t eor(Instruction* i, M68k* ctx)
 {
     uint32_t result = FETCH_EA_AND_GET(i->src, ctx) ^ FETCH_EA_AND_GET(i->dst, ctx);
     SET(i->dst, ctx, result);
@@ -127,7 +127,7 @@ Instruction* gen_eori(uint16_t opcode)
     return i;
 }
 
-int eori_ccr(Instruction* i, M68k* ctx)
+uint8_t eori_ccr(Instruction* i, M68k* ctx)
 {
     ctx->status = (ctx->status & 0xFFE0) | ((ctx->status ^ FETCH_EA_AND_GET(i->src, ctx)) & 0x1F);
 
@@ -142,7 +142,7 @@ Instruction* gen_eori_ccr(uint16_t opcode)
     return i;
 }
 
-int or (Instruction* i, M68k* ctx)
+uint8_t or (Instruction* i, M68k* ctx)
 {
     uint32_t result = FETCH_EA_AND_GET(i->src, ctx) | FETCH_EA_AND_GET(i->dst, ctx);
     SET(i->dst, ctx, result);
@@ -177,7 +177,7 @@ Instruction* gen_ori(uint16_t opcode)
     return i;
 }
 
-int ori_ccr(Instruction* i, M68k* ctx)
+uint8_t ori_ccr(Instruction* i, M68k* ctx)
 {
     ctx->status = (ctx->status & 0xFFE0) | ((ctx->status | FETCH_EA_AND_GET(i->src, ctx)) & 0x1F);
 
@@ -192,7 +192,7 @@ Instruction* gen_ori_ccr(uint16_t opcode)
     return i;
 }
 
-int not(Instruction* i, M68k* ctx)
+uint8_t not(Instruction* i, M68k* ctx)
 {
     FETCH_EA(i->src, ctx);
     SET(i->src, ctx, ~GET(i->src, ctx));
@@ -219,7 +219,7 @@ Instruction* gen_not(uint16_t opcode)
     return i;
 }
 
-int scc(Instruction* i, M68k* ctx)
+uint8_t scc(Instruction* i, M68k* ctx)
 {
     FETCH_EA_AND_SET(i->src, ctx, i->condition->func(ctx) ? 0xFF : 0);
 
@@ -246,7 +246,7 @@ Instruction* gen_scc(uint16_t opcode)
     return i;
 }
 
-int tst(Instruction* i, M68k* ctx)
+uint8_t tst(Instruction* i, M68k* ctx)
 {
     uint32_t value = FETCH_EA_AND_GET(i->src, ctx);
 

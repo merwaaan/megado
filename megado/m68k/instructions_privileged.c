@@ -5,7 +5,7 @@
 #include "m68k.h"
 #include "operands.h"
 
-int andi_sr(Instruction* i, M68k* ctx)
+uint8_t andi_sr(Instruction* i, M68k* ctx)
 {
     ctx->status &= FETCH_EA_AND_GET(i->src, ctx);
 
@@ -20,7 +20,7 @@ Instruction* gen_andi_sr(uint16_t opcode)
     return i;
 }
 
-int eori_sr(Instruction* i, M68k* ctx)
+uint8_t eori_sr(Instruction* i, M68k* ctx)
 {
     ctx->status ^= FETCH_EA_AND_GET(i->src, ctx);
 
@@ -35,7 +35,7 @@ Instruction* gen_eori_sr(uint16_t opcode)
     return i;
 }
 
-int ori_sr(Instruction* i, M68k* ctx)
+uint8_t ori_sr(Instruction* i, M68k* ctx)
 {
     ctx->status |= FETCH_EA_AND_GET(i->src, ctx);
 
@@ -50,7 +50,7 @@ Instruction* gen_ori_sr(uint16_t opcode)
     return i;
 }
 
-int move_from_sr(Instruction* i, M68k* ctx)
+uint8_t move_from_sr(Instruction* i, M68k* ctx)
 {
     FETCH_EA_AND_SET(i->dst, ctx, ctx->status);
 
@@ -66,7 +66,7 @@ Instruction* gen_move_from_sr(uint16_t opcode)
     return i;
 }
 
-int move_to_sr(Instruction* i, M68k* ctx)
+uint8_t move_to_sr(Instruction* i, M68k* ctx)
 {
     ctx->status = FETCH_EA_AND_GET(i->src, ctx);
 
@@ -82,7 +82,7 @@ Instruction* gen_move_to_sr(uint16_t opcode)
     return i;
 }
 
-int move_usp(Instruction* i, M68k* ctx)
+uint8_t move_usp(Instruction* i, M68k* ctx)
 {
     // Register -> user stack pointer
     if (i->src != NULL)
@@ -119,7 +119,7 @@ Instruction* gen_reset(uint16_t opcode)
     return i;
 }
 
-int rte(Instruction* i, M68k* ctx)
+uint8_t rte(Instruction* i, M68k* ctx)
 {
     ctx->status = m68k_read_w(ctx, ctx->address_registers[7]);
     ctx->address_registers[7] += 2;

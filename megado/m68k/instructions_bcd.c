@@ -19,7 +19,7 @@ static uint8_t binary_to_packed_bcd(uint8_t binary)
     return (binary / 10) << 4 | (binary % 10);
 }
 
-int abcd(Instruction* i, M68k* ctx)
+uint8_t abcd(Instruction* i, M68k* ctx)
 {
     uint8_t a = packed_bcd_to_binary(FETCH_EA_AND_GET(i->src, ctx));
     uint8_t b = packed_bcd_to_binary(FETCH_EA_AND_GET(i->dst, ctx));
