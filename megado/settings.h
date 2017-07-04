@@ -28,6 +28,7 @@ typedef struct Settings
     bool show_vram;
     bool show_vsram;
     bool show_cram;
+    bool show_metrics;
 
     // Breakpoints
     uint32_t breakpoints[3];

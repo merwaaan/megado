@@ -4,11 +4,19 @@
 #include <stdbool.h>
 #include "vdp.h"
 
+#define TPF_LENGTH 128
+
 typedef struct Renderer
 {
     Genesis* genesis;
 
     GLFWwindow* window;
+
+    double last_time;
+    float tpf[TPF_LENGTH]; // time per frame
+    float avg_tpf;
+    int tpf_idx;
+    float tpf_refresh_counter;
 
     enum Planes selected_plane;
     uint8_t* plane_buffer;

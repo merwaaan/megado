@@ -443,6 +443,10 @@ static void build_ui(Renderer* r)
 
             //igSeparator();
             //igMenuItemPtr("Settings", NULL, &dummy_flag, false);
+
+            igSeparator();
+            igMenuItemPtr("Metrics", NULL, &settings->show_metrics, true);
+
             igEndMenu();
         }
 
@@ -948,6 +952,30 @@ static void build_ui(Renderer* r)
         igTextColored(color_accent, "Paused");
         igEnd();
         igPopStyleColor(1);
+    }
+
+    double now = glfwGetTime();
+    double dt = now - r->last_time;
+    r->last_time = now;
+    r->tpf[r->tpf_idx] = dt * 1000;
+    r->tpf_idx = (r->tpf_idx + 1) % TPF_LENGTH;
+    r->tpf_refresh_counter += dt;
+
+    if (r->tpf_refresh_counter > 1) {
+        for (int i=0; i < TPF_LENGTH; ++i) {
+            r->avg_tpf += r->tpf[i];
+        }
+        r->avg_tpf /= TPF_LENGTH;
+        r->tpf_refresh_counter = 0;
+    }
+
+    if (settings->show_metrics) {
+        igBegin("Metrics", &settings->show_metrics, 0);
+        char buf[100];
+        snprintf(buf, 100, "tpf (ms)\navg: %.3fms", r->avg_tpf);
+        igPlotHistogram(buf, r->tpf, TPF_LENGTH, r->tpf_idx,
+                        NULL, 0, r->avg_tpf * 2, (struct ImVec2) { 0,40 }, 4);
+        igEnd();
     }
 
     bool a = true;
