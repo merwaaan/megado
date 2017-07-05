@@ -6,6 +6,7 @@
 
 #define TPF_LENGTH 128
 #define IPF_LENGTH 128
+#define IPS_LENGTH 16
 
 typedef struct Renderer
 {
@@ -14,15 +15,21 @@ typedef struct Renderer
     GLFWwindow* window;
 
     double last_time;
-    float tpf[TPF_LENGTH]; // time per frame
+    float tpf[TPF_LENGTH];      // time per frame
     float avg_tpf;
     int tpf_idx;
     float tpf_refresh_counter;
 
-    float ipf[IPF_LENGTH]; // instructions per frame
+    float ipf[IPF_LENGTH];      // instructions per frame
     float avg_ipf;
     int ipf_idx;
     float ipf_refresh_counter;
+
+    float instructions_this_second;
+    float ips[IPS_LENGTH];      // instructions per second
+    float avg_ips;
+    int ips_idx;
+    float ips_refresh_counter;
 
     enum Planes selected_plane;
     uint8_t* plane_buffer;
