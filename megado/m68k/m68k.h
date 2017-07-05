@@ -34,6 +34,9 @@ struct DecodedInstruction;
 struct Genesis;
 struct M68k;
 
+// Jump table that contains all the M68000 instructions
+extern struct Instruction** opcode_table;
+
 typedef struct Breakpoint
 {
     bool enabled;
@@ -74,8 +77,6 @@ typedef struct M68k
 
     uint64_t instruction_count;
 } M68k;
-
-typedef struct Instruction* (GenFunc)(uint16_t opcode);
 
 M68k* m68k_make(struct Genesis*);
 void m68k_free(M68k*);
@@ -124,8 +125,6 @@ void m68k_write_b(M68k*, uint32_t address, uint8_t value);
 void m68k_write_w(M68k*, uint32_t address, uint16_t value);
 void m68k_write_l(M68k*, uint32_t address, uint32_t value);
 
-static struct Instruction** opcode_table;
-
 // Instruction disassembly
 
 typedef struct DecodedInstruction
@@ -136,4 +135,3 @@ typedef struct DecodedInstruction
 
 DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
 void decoded_instruction_free(DecodedInstruction*);
-

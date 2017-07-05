@@ -2,6 +2,8 @@
 
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
+
+#include "snapshot.h"
 #include "vdp.h"
 #include "metric.h"
 
@@ -13,7 +15,7 @@ typedef struct Renderer
 
     GLFWwindow* window;
 
-    struct SnapshotMetadata* snapshots;
+    struct SnapshotMetadata* snapshots[SNAPSHOT_SLOTS];
 
     float last_time;
     float metrics_refresh_counter;

@@ -15,29 +15,17 @@
 #define LOG_M68K(...)
 #endif
 
+Instruction** opcode_table;
+
 M68k* m68k_make(Genesis* g)
 {
     M68k* m68k = calloc(1, sizeof(M68k));
     m68k->genesis = g;
-
-    // Generate the instruction table
-    if (opcode_table == NULL)
-    {
-        opcode_table = calloc(0x10000, sizeof(Instruction*));
-
-        for (int opcode = 0; opcode < 0x10000; ++opcode)
-            opcode_table[opcode] = instruction_generate(m68k, opcode);
-    }
-
     return m68k;
 }
 
 void m68k_free(M68k* m)
 {
-    for (int opcode = 0; opcode < 0x10000; ++opcode)
-        instruction_free(opcode_table[opcode]);
-
-    free(opcode_table);
     free(m);
 }
 

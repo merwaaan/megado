@@ -32,7 +32,7 @@ typedef struct Settings
 
     // Breakpoints
     uint32_t breakpoints[3];
-    // TODO keep checkpoints for all games (key = name in header? checksum?)
+    // TODO keep breakpoints for all games (key = name in header? checksum?)
 } Settings;
 
 Settings* settings_make();

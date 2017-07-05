@@ -124,6 +124,9 @@ uint8_t not_implemented(Instruction* i, M68k* ctx)
 
 // TODO move from ccr?
 
+// Generator function
+typedef struct Instruction* (GenFunc)(uint16_t opcode);
+
 // Metadata to generate the M68000's instruction set.
 // http://goldencrystal.free.fr/M68kOpcodes-v2.3.pdf
 // https://emu-docs.org/CPU%2068k/68kstat.txt
@@ -367,7 +370,7 @@ static bool pattern_match(Pattern* pattern, uint16_t opcode)
     return true;
 }
 
-Instruction* instruction_generate(M68k* context, uint16_t opcode)
+Instruction* instruction_generate(uint16_t opcode)
 {
     uint8_t pattern_count = sizeof(instruction_patterns) / sizeof(Pattern);
 

@@ -433,6 +433,7 @@ static void build_ui(Renderer* r)
     {
         if (igBeginMenu("Game", true))
         {
+            // Snapshots
             if (igBeginMenu("Save slots", true))
             {
                 for (uint8_t slot = 0; slot < SNAPSHOT_SLOTS; ++slot)
@@ -440,18 +441,29 @@ static void build_ui(Renderer* r)
                     igText("Slot %d:", slot);
                     igSameLine(0, 5);
 
-                    if (true)
+                    if (r->snapshots[slot] == NULL)
                         igTextColored(color_dimmed, "empty");
                     else
-                        igTextColored(color_accent, "%s", "date?");
+                    {
+                        char date[30];
+                        strftime(date, 30, "%Y-%m-%d %H:%M:%S", localtime(&r->snapshots[slot]->date));
+                        igTextColored(color_accent, "%s", date);
+                    }
+
                     igSameLine(0, 10);
 
-                    if (igButton("save", (struct ImVec2) { 50, 20 }))
+                    char button_name[10];
+                    sprintf(button_name, "save##%d", slot);
+                    if (igButton(button_name, (struct ImVec2) { 50, 20 }))
+                    {
                         snapshot_save(r->genesis, slot);
+                        r->snapshots[slot]->date = time(NULL);
+                    }
 
                     igSameLine(0, 3);
 
-                    if (igButton("load", (struct ImVec2) { 50, 20 }))
+                    sprintf(button_name, "load##%d", slot);
+                    if (igButton(button_name, (struct ImVec2) { 50, 20 }))
                         snapshot_load(r->genesis, slot);
                 }
                 igEndMenu();

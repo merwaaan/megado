@@ -51,3 +51,11 @@ struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc);
 void genesis_update(Genesis* g);
 void genesis_step(Genesis* g);
 void genesis_frame(Genesis* g);
+
+// Return the name of the game currently being executed as 
+// stored in the ROM header. The international name is looked 
+// for first and the domestic name is used as a fallback.
+//
+// Note: the provided buffer must be at least 49 characters 
+// long to accomodate all titles plus a terminator character.
+void genesis_get_rom_name(Genesis* g, char* name);

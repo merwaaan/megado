@@ -50,7 +50,7 @@ Instruction* instruction_make(char* name, InstructionFunc func);
 void instruction_free(Instruction*);
 
 // Generates the appropriate instruction from an opcode.
-Instruction* instruction_generate(struct M68k* context, uint16_t opcode);
+Instruction* instruction_generate(uint16_t opcode);
 
 // Executes the given instruction and returns the elapsed cycles.
 uint8_t instruction_execute(Instruction*, struct M68k*);

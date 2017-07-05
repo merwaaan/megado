@@ -9,6 +9,7 @@
 #include "m68k/instruction.h"
 #include "renderer.h"
 #include "settings.h"
+#include "snapshot.h"
 #include "vdp.h"
 
 Genesis* genesis_make()
@@ -83,6 +84,9 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     print_header_info("[Serial number]", g->memory + 0x180, 8);
     print_header_info("[Country]", g->memory + 0x1F0, 8);
     printf("----------------\n");
+
+    // Look for snapshots of this game
+    snapshots_preload(g, g->renderer->snapshots);
 
     // Set the system region depending on country code of the game
     uint8_t* country_codes = g->memory + 0x1F0;
@@ -168,4 +172,20 @@ void genesis_frame(Genesis* g)
         if (g->status != Status_Running)
             break;
     }
+}
+
+void genesis_get_rom_name(Genesis* g, char* name)
+{
+    // Get the international title from the header
+    strncpy(name, g->memory + 0x150, 48);
+
+    // Use the domestic title as a fallback
+    if (name[0] == ' ')
+        strncpy(name, g->memory + 0x120, 48);
+
+    // Remove trailing whitespaces
+    uint8_t cursor = 48;
+    while (name[--cursor] == ' ');
+
+    name[cursor + 1] = '\0';
 }
