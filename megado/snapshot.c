@@ -21,7 +21,7 @@ void snapshot_save(Genesis* g, uint8_t slot)
     sprintf(file_name, "%s %d.snapshot", metadata.game, slot);
 
     printf("Saving snapshot %s...\n", file_name);
-    FILE* file = fopen(file_name, "w");
+    FILE* file = fopen(file_name, "wb");
     if (!file)
     {
         printf("Cannot open file \"%s\"", file_name);
@@ -40,7 +40,7 @@ void snapshot_load(Genesis* g, uint8_t slot)
 
     printf("Loading snapshot %s...\n", file_name);
 
-    FILE* file = fopen(file_name, "r");
+    FILE* file = fopen(file_name, "rb");
     if (!file)
     {
         printf("Cannot open file \"%s\"", file_name);
@@ -68,7 +68,7 @@ SnapshotMetadata* snapshots_preload(Genesis* g)
 
     for (uint8_t slot = 0; slot < SNAPSHOT_SLOTS; ++slot)
     {
-        char* name = SNAPSHOT_NAME("test" , slot);
+        char* name = SNAPSHOT_NAME("test", slot);
 
         FILE* file = fopen(name, "r");
         if (!file)
