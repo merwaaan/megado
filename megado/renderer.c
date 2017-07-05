@@ -13,6 +13,7 @@
 #include "m68k/m68k.h"
 #include "renderer.h"
 #include "settings.h"
+#include "snapshot.h"
 #include "vdp.h"
 
 #define DISASSEMBLY_LENGTH 20
@@ -432,6 +433,31 @@ static void build_ui(Renderer* r)
     {
         if (igBeginMenu("Game", true))
         {
+            if (igBeginMenu("Save slots", true))
+            {
+                for (uint8_t slot = 0; slot < SNAPSHOT_SLOTS; ++slot)
+                {
+                    igText("Slot %d:", slot);
+                    igSameLine(0, 5);
+
+                    if (true)
+                        igTextColored(color_dimmed, "empty");
+                    else
+                        igTextColored(color_accent, "%s", "date?");
+                    igSameLine(0, 10);
+
+                    if (igButton("save", (struct ImVec2) { 50, 20 }))
+                        snapshot_save(r->genesis, slot);
+
+                    igSameLine(0, 3);
+
+                    if (igButton("load", (struct ImVec2) { 50, 20 }))
+                        snapshot_load(r->genesis, slot);
+                }
+                igEndMenu();
+            }
+            igSeparator();
+
             if (igMenuItem("Reset", NULL, false, true))
                 genesis_initialize(r->genesis);
 
@@ -440,9 +466,6 @@ static void build_ui(Renderer* r)
 
             if (igMenuItem("Step", "Space", false, r->genesis->status == Status_Pause))
                 step(r);
-
-            //igSeparator();
-            //igMenuItemPtr("Settings", NULL, &dummy_flag, false);
 
             igSeparator();
             igMenuItemPtr("Metrics", NULL, &settings->show_metrics, true);

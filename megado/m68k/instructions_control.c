@@ -8,21 +8,21 @@
 #include "m68k.h"
 #include "operands.h"
 
-int bcc(Instruction* i)
+uint8_t bcc(Instruction* i, M68k* ctx)
 {
-    int16_t offset = FETCH_EA_AND_GET(i->src);
+    int16_t offset = FETCH_EA_AND_GET(i->src, ctx);
 
     // If the condition is true, jump from (instruction address + 2)
-    if (i->condition->func(i->context))
+    if (i->condition->func(ctx))
     {
-        i->context->pc = i->context->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
+        ctx->pc = ctx->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
         return 10;
     }
 
     return i->size == Byte ? 8 : 12;
 }
 
-Instruction* gen_bcc(uint16_t opcode, M68k* m)
+Instruction* gen_bcc(uint16_t opcode)
 {
     Condition* condition = condition_get(FRAGMENT(opcode, 11, 8));
 
@@ -30,7 +30,7 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m)
     char name[5];
     sprintf(name, "B%s", condition->mnemonics);
 
-    Instruction* i = instruction_make(m, name, bcc);
+    Instruction* i = instruction_make(name, bcc);
     i->condition = condition;
 
     int displacement = FRAGMENT(opcode, 7, 0);
@@ -48,18 +48,18 @@ Instruction* gen_bcc(uint16_t opcode, M68k* m)
     return i;
 }
 
-int bra(Instruction* i)
+uint8_t bra(Instruction* i, M68k* ctx)
 {
     // Jump from (instruction address + 2)
-    int16_t offset = FETCH_EA_AND_GET(i->src);
-    i->context->pc = i->context->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
+    int16_t offset = FETCH_EA_AND_GET(i->src, ctx);
+    ctx->pc = ctx->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
 
     return 0;
 }
 
-Instruction* gen_bra(uint16_t opcode, M68k* m)
+Instruction* gen_bra(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "BRA", bra);
+    Instruction* i = instruction_make("BRA", bra);
     i->base_cycles = 10;
 
     int offset = FRAGMENT(opcode, 7, 0);
@@ -77,65 +77,57 @@ Instruction* gen_bra(uint16_t opcode, M68k* m)
     return i;
 }
 
-int bsr(Instruction* i)
+uint8_t bsr(Instruction* i, M68k* ctx)
 {
-    int16_t offset = FETCH_EA_AND_GET(i->src);
+    int16_t offset = FETCH_EA_AND_GET(i->src, ctx);
 
     // Push the address that follows the instruction on the stack
-    i->context->address_registers[7] -= 4;
-    m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
+    ctx->address_registers[7] -= 4;
+    m68k_write_l(ctx, ctx->address_registers[7], ctx->pc);
 
     // Jump from (instruction address + 2)
-    i->context->pc = i->context->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
+    ctx->pc = ctx->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
 
     return 0;
 }
 
-Instruction* gen_bsr(uint16_t opcode, M68k* m)
+Instruction* gen_bsr(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "BSR", bsr);
+    Instruction* i = instruction_make("BSR", bsr);
     i->base_cycles = 18;
 
-    int offset = FRAGMENT(opcode, 7, 0);
-    if (offset == 0)
-    {
-        i->size = Word;
-        i->src = operand_make_branching_offset(i, Word);
-    }
-    else
-    {
-        i->size = Byte;
-        i->src = operand_make_branching_offset(i, Byte);
-    }
-
+    uint8_t offset = FRAGMENT(opcode, 7, 0);
+    i->size = offset == 0 ? Word : Byte;
+    i->src = operand_make_branching_offset(i, i->size);
+    
     return i;
 }
 
-int dbcc(Instruction* i)
+uint8_t dbcc(Instruction* i, M68k* ctx)
 {
-    int16_t offset = FETCH_EA_AND_GET(i->dst);
+    int16_t offset = FETCH_EA_AND_GET(i->dst, ctx);
 
     // If the condition is true, no operation is performed
-    if (i->condition->func(i->context))
+    if (i->condition->func(ctx))
         return 12;
 
     bool branch_taken = false;
 
     // If the counter is still positive, jump from (instruction address + 2) 
-    uint16_t reg = GET(i->src);
+    uint16_t reg = GET(i->src, ctx);
     if (reg > 0)
     {
-        i->context->pc = i->context->instruction_address + 2 + offset;
+        ctx->pc = ctx->instruction_address + 2 + offset;
         branch_taken = true;
     }
 
     // Decrement the counter
-    SET(i->src, reg - 1);
+    SET(i->src, ctx, reg - 1);
 
     return branch_taken ? 10 : 14;
 }
 
-Instruction* gen_dbcc(uint16_t opcode, M68k* m)
+Instruction* gen_dbcc(uint16_t opcode)
 {
     Condition* condition = condition_get(FRAGMENT(opcode, 11, 8));
 
@@ -143,7 +135,7 @@ Instruction* gen_dbcc(uint16_t opcode, M68k* m)
     char name[5];
     sprintf(name, "DB%s", condition->mnemonics);
 
-    Instruction* i = instruction_make(m, name, dbcc);
+    Instruction* i = instruction_make(name, dbcc);
     i->size = Word;
     i->condition = condition;
     i->src = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
@@ -151,93 +143,94 @@ Instruction* gen_dbcc(uint16_t opcode, M68k* m)
     return i;
 }
 
-int jmp(Instruction* i)
+uint8_t jmp(Instruction* i, M68k* ctx)
 {
-    i->context->pc = FETCH_EA(i->src);
+    ctx->pc = FETCH_EA(i->src, ctx);
 
     return 0;
 }
 
-Instruction* gen_jmp(uint16_t opcode, M68k* m)
+Instruction* gen_jmp(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "JMP", jmp);
+    Instruction* i = instruction_make("JMP", jmp);
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     return i;
 }
 
-int jsr(Instruction* i)
+uint8_t jsr(Instruction* i, M68k* ctx)
 {
-    uint32_t ea = FETCH_EA(i->dst);
+    uint32_t ea = FETCH_EA(i->src, ctx);
 
-    if (i->dst->type == AbsoluteShort)
+    if (i->src->type == AbsoluteShort)
         ea = SIGN_EXTEND_W(ea);
 
     // Push the address following the instruction onto the stack
-    i->context->address_registers[7] -= 4;
-    m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
+    ctx->address_registers[7] -= 4;
+    m68k_write_l(ctx, ctx->address_registers[7], ctx->pc);
 
     // Jump to the location specified by ea
-    i->context->pc = ea;
+    ctx->pc = ea;
 
     return 0;
 }
 
-Instruction* gen_jsr(uint16_t opcode, M68k* m)
+Instruction* gen_jsr(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "JSR", jsr);
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    Instruction* i = instruction_make("JSR", jsr);
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->size = Long;
     return i;
 }
 
-int nop(Instruction* i)
+uint8_t nop(Instruction* i, M68k* ctx)
 {
     return 0;
 }
 
-Instruction* gen_nop(uint16_t opcode, M68k* m)
+Instruction* gen_nop(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "NOP", nop);
+    Instruction* i = instruction_make("NOP", nop);
     i->base_cycles = 4;
     return i;
 }
 
-Instruction* gen_rtd(uint16_t opcode, M68k* m)
+Instruction* gen_rtd(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "RTD", not_implemented);
+    Instruction* i = instruction_make("RTD", not_implemented);
     return i;
 }
 
-int rtr(Instruction* i)
+uint8_t rtr(Instruction* i, M68k* ctx)
 {
-    uint8_t ccr = m68k_read_w(i->context, i->context->address_registers[7]);
-    i->context->status = (i->context->status & 0xFFE0) | (ccr & 0x1F);
+    uint8_t ccr = m68k_read_w(ctx, ctx->address_registers[7]);
+    ctx->status = (ctx->status & 0xFFE0) | (ccr & 0x1F);
 
-    uint32_t pc = m68k_read_l(i->context, i->context->address_registers[7] + 2);
-    i->context->pc = pc;
+    uint32_t pc = m68k_read_l(ctx, ctx->address_registers[7] + 2);
+    ctx->pc = pc;
 
-    i->context->address_registers[7] += 6;
+    ctx->address_registers[7] += 6;
 
     return 0;
 }
 
-Instruction* gen_rtr(uint16_t opcode, M68k* m)
+Instruction* gen_rtr(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "RTR", rtr);
+    Instruction* i = instruction_make("RTR", rtr);
     i->base_cycles = 20;
     return i;
 }
 
-int rts(Instruction* i)
+uint8_t rts(Instruction* i, M68k* ctx)
 {
-    i->context->pc = m68k_read_l(i->context, i->context->address_registers[7]);
-    i->context->address_registers[7] += 4;
+    ctx->pc = m68k_read_l(ctx, ctx->address_registers[7]);
+    ctx->address_registers[7] += 4;
 
     return 0;
 }
 
-Instruction* gen_rts(uint16_t opcode, M68k* m)
+Instruction* gen_rts(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "RTS", rts);
+    Instruction* i = instruction_make("RTS", rts);
     i->base_cycles = 16;
     return i;
 }

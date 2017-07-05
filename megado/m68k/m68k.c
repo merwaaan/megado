@@ -19,12 +19,15 @@ M68k* m68k_make(Genesis* g)
 {
     M68k* m68k = calloc(1, sizeof(M68k));
     m68k->genesis = g;
-    m68k->pending_interrupt = -1;
 
-    // Generate every possible opcode
-    m68k->opcode_table = calloc(0x10000, sizeof(Instruction*));
-    for (int opcode = 0; opcode < 0x10000; ++opcode)
-        m68k->opcode_table[opcode] = instruction_generate(m68k, opcode);
+    // Generate the instruction table
+    if (opcode_table == NULL)
+    {
+        opcode_table = calloc(0x10000, sizeof(Instruction*));
+
+        for (int opcode = 0; opcode < 0x10000; ++opcode)
+            opcode_table[opcode] = instruction_generate(m68k, opcode);
+    }
 
     return m68k;
 }
@@ -32,20 +35,20 @@ M68k* m68k_make(Genesis* g)
 void m68k_free(M68k* m)
 {
     for (int opcode = 0; opcode < 0x10000; ++opcode)
-        instruction_free(m->opcode_table[opcode]);
+        instruction_free(opcode_table[opcode]);
 
-    free(m->opcode_table);
+    free(opcode_table);
     free(m);
 }
 
 void m68k_initialize(M68k* m)
 {
     m->status = 0x2700;
-    m->address_registers[7] = m68k_read_l(m, 0); // TODO really required? Games seem to do this as part of their startup routine
+    m->address_registers[7] = m68k_read_l(m, 0); // Stack pointer
+    m->pc = m68k_read_l(m, 4); // Program start
 
-    // Entry point
-    m->pc = m68k_read_l(m, 4);
-
+    m->cycles = 0;
+    m->pending_interrupt = -1;
     m->prefetch_address = 0xFFFFFFFF; // Invalid value, will initiate the initial prefetch
 
     // Reset breakpoints
@@ -65,7 +68,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     uint16_t opcode = m68k_fetch(m);
     m->instruction_register = opcode;
 
-    Instruction* instr = m->opcode_table[opcode];
+    Instruction* instr = opcode_table[opcode];
     DecodedInstruction* decoded = NULL;
     if (instr == NULL)
     {
@@ -98,7 +101,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 
     if (instr->src != NULL)
     {
-        pos += operand_tostring(instr->src, decoded->mnemonics + pos);
+        pos += operand_tostring(instr->src, m, decoded->mnemonics + pos);
         decoded->length += operand_length(instr->src);
     }
 
@@ -107,7 +110,7 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 
     if (instr->dst != NULL)
     {
-        pos += operand_tostring(instr->dst, decoded->mnemonics + pos);
+        pos += operand_tostring(instr->dst, m, decoded->mnemonics + pos);
         decoded->length += operand_length(instr->dst);
     }
 
@@ -122,6 +125,15 @@ bail:
     return decoded;
 }
 
+void decoded_instruction_free(DecodedInstruction* decoded)
+{
+    if (decoded == NULL)
+        return;
+
+    free(decoded->mnemonics);
+    free(decoded);
+}
+
 uint32_t m68k_run_cycles(M68k* m, int cycles)
 {
     /*while (cycles > 0)
@@ -134,7 +146,7 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
 
         if (c == 0)
         {
-            LOG_M68K("WARNING, instruction took ZERO CYCLES\n");
+            //LOG_M68K("WARNING, instruction took ZERO CYCLES\n");
             c = 10; // we don't want to block the execution
         }
 
@@ -172,7 +184,7 @@ uint8_t m68k_step(M68k* m)
     // Fetch the instruction
     m->instruction_address = m->pc;
     m->instruction_register = m68k_fetch(m);
-    Instruction* instr = m->opcode_table[m->instruction_register];
+    Instruction* instr = opcode_table[m->instruction_register];
 
     // 35C: weird move with unknown regmode
 
@@ -184,8 +196,13 @@ uint8_t m68k_step(M68k* m)
 
 #ifdef DEBUG
     DecodedInstruction* d = m68k_decode(m, m->instruction_address);
+
     if (d != NULL)
-        printf("%#06X   %s\n", m->pc - 2, d->mnemonics);
+        printf("%#06X [%0X] %s\n",// %0X %0X %0X %0X %0X %0X %0X | A %0X %0X %0X %0X %0X %0X %0X %0X %0X\n",
+            m->pc - 2, m->instruction_register, d->mnemonics);
+            //m->data_registers[0], m->data_registers[1], m->data_registers[2], m->data_registers[3], m->data_registers[4], m->data_registers[5], m->data_registers[6], m->data_registers[7],
+            //m->address_registers[0], m->address_registers[1], m->address_registers[2], m->address_registers[3], m->address_registers[4], m->address_registers[5], m->address_registers[6], m->address_registers[7]);
+
     decoded_instruction_free(d);
 #endif
 
@@ -194,7 +211,7 @@ uint8_t m68k_step(M68k* m)
     //if (m->instruction_callback != NULL)
     //    m->instruction_callback(m);
 
-    int cycles = instruction_execute(instr);
+    int cycles = instruction_execute(instr, m);
     m->cycles += cycles;
 
     m68k_handle_interrupt(m);
@@ -202,7 +219,7 @@ uint8_t m68k_step(M68k* m)
     return cycles;
 }
 
-uint16_t m68k_fetch(M68k* m)
+inline uint16_t m68k_fetch(M68k* m)
 {
     // If the PC jumped, discard the prefetch queue
     if (m->pc != m->prefetch_address)

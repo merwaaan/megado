@@ -34,8 +34,6 @@ struct DecodedInstruction;
 struct Genesis;
 struct M68k;
 
-typedef void(*CallbackFunc)(struct M68k*);
-
 typedef struct Breakpoint
 {
     bool enabled;
@@ -57,7 +55,7 @@ typedef struct M68k
     // the CPU is in the other one. 
     // The active stack pointer value must always be accessed via A7.
     uint32_t ssp;
-    uint32_t usp;
+    uint32_t usp; // TODO really necessary?
 
     uint64_t cycles;
 
@@ -70,11 +68,6 @@ typedef struct M68k
     uint16_t instruction_register; // Instruction currently being decoded
     uint32_t instruction_address; // Instruction currently being decoded
 
-    struct Instruction** opcode_table;
-
-    // Callbacks
-    CallbackFunc instruction_callback;
-
     // Breakpoints
     Breakpoint breakpoints[BREAKPOINTS_COUNT]; // The emulation will pause when the PC reaches one of those addresses
     Breakpoint* active_breakpoint; // The breakpoint currently blocking the emulation
@@ -82,18 +75,12 @@ typedef struct M68k
     uint64_t instruction_count;
 } M68k;
 
-typedef struct Instruction* (GenFunc)(uint16_t opcode, M68k* context);
-
-typedef struct {
-    uint16_t pattern;
-    uint16_t mask;
-    GenFunc* generator;
-} Pattern;
+typedef struct Instruction* (GenFunc)(uint16_t opcode);
 
 M68k* m68k_make(struct Genesis*);
 void m68k_free(M68k*);
 
-// Prepare the CPU for execution (stack pointer, program start, initial prefetch...)
+// Prepare the CPU for execution (setup stack pointer, program start, initial prefetch...)
 void m68k_initialize(M68k*);
 
 uint8_t m68k_step(M68k*); // Execute one instruction, return cycles taken
@@ -108,7 +95,7 @@ uint32_t m68k_run_cycles(M68k*, int); // Execute n cycles worth of instructions,
 // http://pasti.fxatari.com/68kdocs/68kPrefetch.html
 // http://ataristeven.exxoshost.co.uk/txt/Prefetch.txt
 // "Assembly Language and Systems Programming for the M68000 Family", p. 790
-uint16_t m68k_fetch(M68k* m);
+inline uint16_t m68k_fetch(M68k* m);
 
 // Interrupt handling
 //
@@ -117,19 +104,15 @@ uint16_t m68k_fetch(M68k* m);
 void m68k_request_interrupt(M68k* m, uint8_t level);
 void m68k_handle_interrupt(M68k* m);
 
-struct DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
-
 // Breakpoint handling
 void m68k_toggle_breakpoint(M68k*, uint32_t address); // Add/Remove a breakpoint at the given address
 Breakpoint* m68k_get_breakpoint(M68k*, uint32_t address); // Return a possible enabled breakpoint at the given address
 
-// -----
 // I/O functions
 //
 // Note: While the 68000 handles 32-bit addresses, its address
 // bus is 24-bit. The I/O functions must take that into account
 // (eg. by masking the addresses by 0xFFFFFF).
-// -----
 
 uint32_t m68k_read(M68k*, Size size, uint32_t address);
 uint8_t m68k_read_b(M68k*, uint32_t address);
@@ -140,3 +123,17 @@ void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);
 void m68k_write_b(M68k*, uint32_t address, uint8_t value);
 void m68k_write_w(M68k*, uint32_t address, uint16_t value);
 void m68k_write_l(M68k*, uint32_t address, uint32_t value);
+
+static struct Instruction** opcode_table;
+
+// Instruction disassembly
+
+typedef struct DecodedInstruction
+{
+    char* mnemonics;
+    uint8_t length;
+} DecodedInstruction;
+
+DecodedInstruction* m68k_decode(M68k*, uint32_t pc);
+void decoded_instruction_free(DecodedInstruction*);
+

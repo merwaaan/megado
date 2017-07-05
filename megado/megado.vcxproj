@@ -218,6 +218,7 @@
     <ClCompile Include="m68k\operands.c" />
     <ClCompile Include="renderer.c" />
     <ClCompile Include="settings.c" />
+    <ClCompile Include="snapshot.c" />
     <ClCompile Include="vdp.c" />
     <ClCompile Include="z80.c" />
   </ItemGroup>
@@ -232,6 +233,7 @@
     <ClInclude Include="m68k\operands.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="settings.h" />
+    <ClInclude Include="snapshot.h" />
     <ClInclude Include="vdp.h" />
     <ClInclude Include="z80.h" />
   </ItemGroup>

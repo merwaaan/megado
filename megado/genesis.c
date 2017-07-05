@@ -124,7 +124,7 @@ void genesis_initialize(Genesis* g)
 
     m68k_initialize(g->m68k);
     z80_initialize(g->z80);
-    // TODO should we reset the VDP?
+    vdp_initialize(g->vdp);
 }
 
 void genesis_update(Genesis* g)

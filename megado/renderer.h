@@ -8,11 +8,15 @@
 #define IPF_LENGTH 128
 #define IPS_LENGTH 16
 
+struct SnapshotMetadata;
+
 typedef struct Renderer
 {
     Genesis* genesis;
 
     GLFWwindow* window;
+
+    struct SnapshotMetadata* snapshots;
 
     double last_time;
     float tpf[TPF_LENGTH];      // time per frame
@@ -50,7 +54,6 @@ typedef struct Renderer
     GLuint ui_patterns_texture, ui_magnified_pattern_texture, ui_planes_texture, ui_sprites_texture;
     GLuint ui_vertex_array_object, ui_vertex_buffer_object, ui_element_buffer_object;
     GLint ui_shader_texture_loc, ui_shader_projection_loc;
-
 } Renderer;
 
 Renderer* renderer_make(Genesis*);

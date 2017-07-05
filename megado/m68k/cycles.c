@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "cycles.h"
@@ -16,7 +17,7 @@ uint8_t cycles_ea_calculation(Instruction* i)
 
     if (i->src != NULL && i->src->type != Unsupported)
         cycles += cycles_ea_calculation_table[0][i->src->type];
-        
+
     if (i->dst != NULL && i->dst->type != Unsupported)
         cycles += cycles_ea_calculation_table[0][i->dst->type];
 
@@ -67,43 +68,46 @@ uint8_t cycles_standard_instruction(Instruction* i, uint8_t ea_an_cycles, uint8_
 {
     uint8_t cycles = 0;
 
-    if (i->src->type == DataRegister)
-        cycles = dn_ea_cycles;
-    else if (i->dst->type == AddressRegister)
+    // TODO overlap bw conditions?!
+    if (i->dst != NULL && i->dst->type == AddressRegister)
         cycles = ea_an_cycles;
-    else if (i->dst->type == DataRegister)
+    else if (i->dst != NULL && i->dst->type == DataRegister)
         cycles = ea_dn_cycles;
+    else if (i->src != NULL && i->src->type == DataRegister)
+        cycles = dn_ea_cycles;
+    else
+        printf("should not happen");
 
+    // Add the effective address calculation time
     cycles += i->src != NULL ? cycles_ea_calculation_table[i->size][i->src->type] : 0;
     cycles += i->dst != NULL ? cycles_ea_calculation_table[i->size][i->dst->type] : 0;
 
     return cycles;
 }
 
+uint8_t cycles_immediate_instruction(struct Instruction* i, uint8_t dn_cycles, uint8_t an_cycles, uint8_t memory_cycles)
+{
+    if (i->dst->type == DataRegister)
+        return dn_cycles;
+    if (i->dst->type == AddressRegister)
+        return an_cycles;
+
+    // Add the effective address calculation time
+    return memory_cycles + (i->dst != NULL ? cycles_ea_calculation_table[i->size][i->dst->type] : 0);
+}
+
 uint8_t cycles_single_operand_instruction(Instruction* i, uint8_t register_cycles, uint8_t memory_cycles)
 {
-    if (i->dst->type == DataRegister || i->dst->type == AddressRegister)
+    if (i->src->type == DataRegister || i->src->type == AddressRegister)
         return register_cycles;
-    else
-        return memory_cycles + cycles_ea_calculation_table[i->size][i->dst->type];
+
+    return memory_cycles + cycles_ea_calculation_table[i->size][i->src->type];
 }
 
 uint8_t cycles_bit_manipulation_instruction(struct Instruction* i, uint8_t register_cycles, uint8_t memory_cycles)
 {
-    if (i->src->type == AddressRegister || i->src->type == DataRegister)
+    if (i->dst->type == DataRegister)
         return register_cycles;
 
-    return memory_cycles;
-}
-
-uint8_t cycles_immediate_instruction(struct Instruction* i, uint8_t dn_cycles, uint8_t an_cycles, uint8_t memory_cycles)
-{
-
-    if (i->dst->type == DataRegister)
-        return dn_cycles;
-
-    if (i->dst->type == AddressRegister)
-        return an_cycles;
-
-    return memory_cycles;
+    return memory_cycles + cycles_ea_calculation_table[i->size][i->dst->type];
 }

@@ -12,30 +12,32 @@ struct Instruction;
  */
 
 // Fetch and store the operand's effective address
-#define FETCH_EA(operand) (operand)->last_ea = (operand)->fetch_ea_func(operand)
+#define FETCH_EA(OPERAND, CTX) (OPERAND)->last_ea = (OPERAND)->fetch_ea_func((OPERAND), (CTX))
 
 // Get/Set the operand's value, the stored effective address will be used
-#define GET(operand) (operand)->get_value_func((operand))
-#define SET(operand, value) (operand)->set_value_func((operand), (value))
+#define GET(OPERAND, CTX) (OPERAND)->get_value_func((OPERAND), (CTX))
+#define SET(OPERAND, CTX, VALUE) (OPERAND)->set_value_func((OPERAND), (CTX), (VALUE))
 
 // Fetch the operand's effective address and then get/set its value, in one call
-#define FETCH_EA_AND_GET(operand) (operand_fetch_ea_and_get(operand))
-#define FETCH_EA_AND_SET(operand, value) (operand_fetch_ea_and_set((operand), (value)))
+#define FETCH_EA_AND_GET(OPERAND, CTX) (operand_fetch_ea_and_get((OPERAND), (CTX)))
+#define FETCH_EA_AND_SET(OPERAND, CTX, VALUE) (operand_fetch_ea_and_set((OPERAND), (CTX), (VALUE)))
+
+struct M68k;
 
 // Effective address resolution function
 //
 // Calling such a function might trigger a data fetch and advance the program counter
 // so it must not be done more than once per instruction call.
-typedef uint32_t(*FetchEAFunc)(struct Operand* o);
+typedef uint32_t(*FetchEAFunc)(struct Operand*, struct M68k*);
 
 // Read/Write functions to access an operand's data after its effective address has been computed
 //
 // Can be called as many times as necessary.
-typedef uint32_t(*GetValueFunc)(struct Operand* o);
-typedef void(*SetValueFunc)(struct Operand* o, uint32_t value);
+typedef uint32_t(*GetValueFunc)(struct Operand*, struct M68k*);
+typedef void(*SetValueFunc)(struct Operand*, struct M68k*, uint32_t value);
 
 // Pre/Post instruction action
-typedef void(*Action)(struct Operand* this);
+typedef void(*Action)(struct Operand*, struct M68k*);
 
 typedef enum
 {
@@ -52,7 +54,7 @@ typedef enum
     ProgramCounterIndexed,
     Immediate,
 
-    Value,
+    Value, // TODO unclear, rename to Quick?
     BranchingOffset,
 
     Unsupported
@@ -81,7 +83,7 @@ typedef struct Operand
     int n;
 } Operand;
 
-int operand_tostring(Operand* operand, char* buffer);
+int operand_tostring(Operand* operand, struct M68k*, char* buffer);
 
 Operand* operand_make_data_register(int n, struct Instruction*); // TODO put instr first to be consistent with the order modules
 Operand* operand_make_address_register(int n, struct Instruction*);
@@ -112,5 +114,5 @@ int operand_get_cycles(Operand*);
 Operand* operand_make(uint16_t pattern, struct Instruction* instr);
 void operand_free(Operand* instr);
 
-uint32_t operand_fetch_ea_and_get(Operand*);
-void operand_fetch_ea_and_set(Operand*, uint32_t);
+uint32_t operand_fetch_ea_and_get(Operand*, struct M68k*);
+void operand_fetch_ea_and_set(Operand*, struct M68k*, uint32_t);

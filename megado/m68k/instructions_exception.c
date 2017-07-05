@@ -5,42 +5,43 @@
 #include "m68k.h"
 #include "operands.h"
 
-Instruction* gen_chk(uint16_t opcode, M68k* m)
+Instruction* gen_chk(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "CHK", not_implemented);
+    Instruction* i = instruction_make("CHK", not_implemented);
     return i;
 }
 
-Instruction* gen_illegal(uint16_t opcode, M68k* m)
+Instruction* gen_illegal(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "ILLEGAL", not_implemented);
+    Instruction* i = instruction_make("ILLEGAL", not_implemented);
     return i;
 }
 
-int trap(Instruction* i)
+uint8_t trap(Instruction* i, M68k* ctx)
 {
     // Push the current PC onto the stack
-    i->context->address_registers[7] -= 4;
-    m68k_write_l(i->context, i->context->address_registers[7], i->context->pc);
+    ctx->address_registers[7] -= 4;
+    m68k_write_l(ctx, ctx->address_registers[7], ctx->pc);
 
     // Push the status register onto the stack
-    i->context->address_registers[7] -= 2;
-    m68k_write_w(i->context, i->context->address_registers[7], i->context->status);
+    ctx->address_registers[7] -= 2;
+    m68k_write_w(ctx, ctx->address_registers[7], ctx->status);
 
-    i->context->pc = m68k_read_l(i->context, 0x80 + i->src->n * 4);
+    ctx->pc = m68k_read_l(ctx, 0x80 + i->src->n * 4);
 
     return 0;
 }
 
-Instruction* gen_trap(uint16_t opcode, M68k* m)
+Instruction* gen_trap(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "TRAP", trap);
+    Instruction* i = instruction_make("TRAP", trap);
     i->src = operand_make_value(FRAGMENT(opcode, 3, 0), i);
     return i;
 }
 
-Instruction* gen_trapv(uint16_t opcode, M68k* m)
+Instruction* gen_trapv(uint16_t opcode)
 {
-    Instruction* i = instruction_make(m, "TRAPV", not_implemented);
+    Instruction* i = instruction_make("TRAPV", not_implemented);
+    i->base_cycles = 4;
     return i;
 }
