@@ -980,69 +980,40 @@ static void build_ui(Renderer* r)
     double now = glfwGetTime();
     double dt = now - r->last_time;
     r->last_time = now;
-    r->tpf[r->tpf_idx] = dt * 1000;
-    r->tpf_idx = (r->tpf_idx + 1) % TPF_LENGTH;
-    r->tpf_refresh_counter += dt;
-    if (r->tpf_refresh_counter > 1) {
-        r->avg_tpf = 0;
-        for (int i=0; i < TPF_LENGTH; ++i) {
-            r->avg_tpf += r->tpf[i];
-        }
-        r->avg_tpf /= TPF_LENGTH;
-        r->tpf_refresh_counter = 0;
-    }
-
     float insn = r->genesis->m68k->instruction_count / 1000.0;
     r->genesis->m68k->instruction_count = 0;
-    r->ipf[r->ipf_idx] = insn;
-    r->ipf_idx = (r->ipf_idx + 1) % IPF_LENGTH;
-    r->ipf_refresh_counter += dt;
-    if (r->ipf_refresh_counter > 1) {
-        r->avg_ipf = 0;
-        for (int i=0; i < IPF_LENGTH; ++i) {
-            r->avg_ipf += r->ipf[i];
-        }
-        r->avg_ipf /= IPF_LENGTH;
-        r->ipf_refresh_counter = 0;
-    }
 
+    metric_push(r->tpf, dt * 1000);
+    metric_push(r->ipf, insn);
     r->instructions_this_second += insn;
-    r->ips_refresh_counter += dt;
-    if (r->ips_refresh_counter > 1) {
-        r->ips_refresh_counter = 0;
-        r->ips[r->ips_idx] = r->instructions_this_second / 1000.0;
-        r->ips_idx = (r->ips_idx + 1) % IPS_LENGTH;
-        r->instructions_this_second = 0;
 
-        r->avg_ips = 0;
-        for (int i=0; i < IPS_LENGTH; ++i) {
-            r->avg_ips += r->ips[i];
-        }
-        r->avg_ips /= IPS_LENGTH;
-        r->ips_refresh_counter = 0;
+    r->metrics_refresh_counter += dt;
+    if (r->metrics_refresh_counter > 1) {
+        r->metrics_refresh_counter = 0;
+        metric_avg(r->tpf);
+        metric_avg(r->ipf);
+        metric_push(r->ips, r->instructions_this_second / 1000.0);
+        metric_avg(r->ips);
+        r->instructions_this_second = 0;
     }
 
     if (settings->show_metrics) {
         igBegin("Metrics", &settings->show_metrics, 0);
-        struct ImVec2 size = { 0, 40 };
         char buf[50];
 
         // Time per frame, in milliseconds
-        float avg_fps = 1000.0 / r->avg_tpf;
         snprintf(buf, sizeof(buf), "tpf (ms)\navg: %.2f\nfps: %.2f",
-                 r->avg_tpf, avg_fps);
-        igPlotHistogram(buf, r->tpf, TPF_LENGTH, r->tpf_idx,
-                        NULL, 0, r->avg_tpf * 2, size, sizeof(float));
+                 r->tpf->avg, 1000.0 / r->tpf->avg);
+        metric_plot(r->tpf, buf);
 
         // (M68k) instructions per frame, in kilos
-        snprintf(buf, sizeof buf, "ipf\navg: %.2fK", r->avg_ipf);
-        igPlotHistogram(buf, r->ipf, IPF_LENGTH, r->ipf_idx,
-                        NULL, 0, r->avg_ipf * 2, size, sizeof(float));
+        snprintf(buf, sizeof buf, "ipf\navg: %.2fK", r->ipf->avg);
+        metric_plot(r->ipf, buf);
 
         // (M68k) instructions per seconds, in millions
-        snprintf(buf, sizeof buf, "ips\navg: %.2fM", r->avg_ips);
-        igPlotHistogram(buf, r->ips, IPS_LENGTH, r->ips_idx,
-                        NULL, 0, r->avg_ips * 2, size, sizeof(float));
+        snprintf(buf, sizeof buf, "ips\navg: %.2fM", r->ips->avg);
+        metric_plot(r->ips, buf);
+
         igEnd();
     }
 
@@ -1280,6 +1251,10 @@ Renderer* renderer_make(Genesis* genesis)
     glfwSetWindowUserPointer(r->window, r);
 
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+
+    r->tpf = metric_make(128);
+    r->ipf = metric_make(128);
+    r->ips = metric_make(16);
 
     init_ui_rendering(r);
     init_genesis_rendering(r);
