@@ -1279,6 +1279,7 @@ void renderer_free(Renderer* r)
     if (r == NULL)
         return;
 
+    igShutdown();
     glfwDestroyWindow(r->window);
     glfwTerminate();
 
