@@ -31,8 +31,8 @@ Instruction* gen_shift_memory_instruction(uint16_t opcode, char* name, Instructi
     Instruction* i = instruction_make(name, func);
     i->size = Word;
     i->src = operand_make_value(1, i); // The shift count is always 1
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);    
-    i->base_cycles = 8 + cycles_ea_calculation_table[i->src->type][i->dst->type];
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->base_cycles = 8 + lookup_cycles_ea(i->size, i->dst->type);
     return i;
 }
 
