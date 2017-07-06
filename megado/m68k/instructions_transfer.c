@@ -118,7 +118,7 @@ Instruction* gen_move(uint16_t opcode)
 }
 
 // Computer pointers to the nth register in post-inc or pre-dec order
-#define MOVEM_POSTINC_ORDER(n) (n < 8 ? ctx->data_registers + n : ctx->address_registers + n - 8)
+#define MOVEM_POSTINC_ORDER(n) (n < 8 ? ctx->data_registers + n : ctx->address_registers + (n - 8))
 #define MOVEM_PREDEC_ORDER(n) (n < 8 ? ctx->address_registers + (7 - n) : ctx->data_registers + (7 - (n - 8)))
 
 uint8_t movem(Instruction* i, M68k* ctx)

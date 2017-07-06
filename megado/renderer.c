@@ -801,7 +801,7 @@ static void build_ui(Renderer* r)
                 cell_bottom_right.y = cell_top_left.y + PALETTE_ENTRY_WIDTH;
 
                 Color color = r->genesis->vdp->cram[row * 16 + col];
-                ImDrawList_AddRectFilled(draw_list, cell_top_left, cell_bottom_right, 255 << 24 | color.b << 16 | color.g << 8 | color.r, 0, 0);
+                ImDrawList_AddRectFilled(draw_list, cell_top_left, cell_bottom_right, 255u << 24 | color.b << 16 | color.g << 8 | color.r, 0, 0);
             }
 
         igEnd();
@@ -1015,7 +1015,7 @@ static void build_ui(Renderer* r)
 
         // Time per frame, in milliseconds
         snprintf(buf, sizeof(buf), "tpf (ms)\navg: %.2f\nfps: %.2f",
-                 r->tpf->avg, 1000.0 / r->tpf->avg);
+                 r->tpf->avg, r->tpf->avg > 0 ? 1000.0 / r->tpf->avg : 0);
         metric_plot(r->tpf, buf);
 
         // (M68k) instructions per frame, in kilos

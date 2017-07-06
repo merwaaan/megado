@@ -264,7 +264,7 @@ Instruction* gen_roxd_mem(uint16_t opcode)
 uint8_t swap(Instruction* i, M68k* ctx)
 {
     uint32_t value = GET(i->src, ctx);
-    uint16_t lo = value & 0xFFFF;
+    uint32_t lo = value & 0xFFFF;
     uint16_t hi = value >> 16;
     uint32_t result = (lo << 16) | hi;
     SET(i->src, ctx, result);

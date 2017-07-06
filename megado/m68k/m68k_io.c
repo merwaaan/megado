@@ -88,7 +88,7 @@ uint16_t m68k_read_w(M68k* m, uint32_t address)
 uint32_t m68k_read_l(M68k* m, uint32_t address)
 {
     return
-        m68k_read_w(m, address) << 16 |
+        ((uint32_t) m68k_read_w(m, address)) << 16 |
         m68k_read_w(m, address + 2);
 }
 

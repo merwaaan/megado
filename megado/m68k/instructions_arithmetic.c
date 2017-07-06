@@ -299,7 +299,7 @@ uint8_t divs(Instruction* i, M68k* ctx)
     }
     else {
         int32_t quotient = b / a;
-        int16_t remainder = b % a;
+        uint32_t remainder = b % a;
         ctx->data_registers[i->dst->n] = remainder << 16 | (quotient & 0xFFFF);
 
         CARRY_SET(ctx, false);
