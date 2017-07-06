@@ -62,16 +62,13 @@ so the flag is always cleared.
 
 - Krusty: playable; but item sprite is garbled when in the holding slot
 
+- Castlevania Bloodlines: palette is offset to the blue most of the time;
+  in-game stage has sprite glitches; choosing the second character instantly
+  glitches the whole screen.
+
 # Games that seem to wait for the Z80:
 
 - Daffy Duck in Hollywood @1D7BC8
 - The Addam's Family @43C0E
 - Lost Vikings: waiting for $A01000 to equal zero @FD888 (eerily similar to Addam's Family)
 - Spirou: seems to be waiting for the Z80 to execute something
-
-# Invalid generated instructions
-
-- 0x017C: BCHG with Immediate value as destination (fetch/get/set functions are
-  NULL, so segfault)
-- 0x01FC: BSET with Immediate value as destination
-- 0x19F1: MOV with Immediate value as destination
