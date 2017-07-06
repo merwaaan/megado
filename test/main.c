@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     genesis_free(g);
 
     for (int opcode = 0; opcode < 0x10000; ++opcode)
-        opcode_table[opcode] = instruction_generate(opcode);
+        instruction_free(opcode_table[opcode]);
     free(opcode_table);
 
     return 0;
