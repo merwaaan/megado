@@ -17,12 +17,15 @@ JOBS=4
 RUNNER=
 DEBUG=
 VERBOSE=
+FLAGS=
 
-while getopts "gvj:r:" opt; do
+while getopts "gvj:r:f:" opt; do
     case "$opt" in
         g) DEBUG='-g'
            ;;
         v) VERBOSE='-DDEBUG'
+           ;;
+        f) FLAGS=$OPTARG
            ;;
         j) JOBS=$OPTARG
            ;;
@@ -51,4 +54,4 @@ case $1 in
 esac
 shift
 
-make -j $JOBS USER_FLAGS="$DEBUG $VERBOSE" $TARGET && env $ENV $RUNNER $BIN "$@"
+make -j $JOBS USER_FLAGS="$DEBUG $VERBOSE $FLAGS" $TARGET && env $ENV $RUNNER $BIN "$@"
