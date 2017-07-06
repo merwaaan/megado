@@ -1284,6 +1284,9 @@ void renderer_free(Renderer* r)
 
     free(r->plane_buffer);
     free(r->sprites_buffer);
+    metric_free(r->tpf);
+    metric_free(r->ipf);
+    metric_free(r->ips);
     free(r);
 }
 

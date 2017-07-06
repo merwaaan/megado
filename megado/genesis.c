@@ -41,6 +41,7 @@ void genesis_free(Genesis* g)
     vdp_free(g->vdp);
     joypad_free(g->joypad);
     settings_free(g->settings);
+    renderer_free(g->renderer);
 
     free(g->memory);
     free(g);
