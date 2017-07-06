@@ -201,14 +201,14 @@ static void init_ui_rendering(Renderer* r)
     unsigned char* pixels;
     ImFontAtlas_GetTexDataAsRGBA32(io->Fonts, &pixels, &width, &height, NULL);
 
-    int ui_font_texture;
+    GLuint ui_font_texture;
     glGenTextures(1, &ui_font_texture);
     glBindTexture(GL_TEXTURE_2D, ui_font_texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-    ImFontAtlas_SetTexID(io->Fonts, (ImTextureID)ui_font_texture);
+    ImFontAtlas_SetTexID(io->Fonts, (ImTextureID)(intptr_t)ui_font_texture);
 
     // Setup texture for the patterns and planes debug views
     gen_texture(&r->ui_patterns_texture);
@@ -353,7 +353,7 @@ static void memory_viewer(char* name, bool* opened, void* data, Size data_size, 
             igAlignFirstTextHeightToWidgets();
             igText("Go to address");
             igSameLine(0, 10);
-            if (igInputInt("##address", target_address, 16, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue))
+            if (igInputInt("##address", (int*)target_address, 16, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue))
             {
                 // Re-enter the context of the scrolling area
                 igBeginChild("##memory", (const struct ImVec2) { -1, -1 }, false, 0);
@@ -509,9 +509,9 @@ static void build_ui(Renderer* r)
             igMenuItemPtr("Planes", NULL, &settings->show_vdp_planes, true);
             igMenuItemPtr("Sprites", NULL, &settings->show_vdp_sprites, true);
             igSeparator();
-            igMenuItemPtr("VRAM", NULL, &settings->show_vram, &settings->show_vram);
-            igMenuItemPtr("VSRAM", NULL, &settings->show_vsram, &settings->show_vsram);
-            igMenuItemPtr("CRAM", NULL, &settings->show_cram, &settings->show_cram);
+            igMenuItemPtr("VRAM", NULL, &settings->show_vram, true);
+            igMenuItemPtr("VSRAM", NULL, &settings->show_vsram, true);
+            igMenuItemPtr("CRAM", NULL, &settings->show_cram, true);
             igEndMenu();
         }
 
@@ -659,7 +659,7 @@ static void build_ui(Renderer* r)
             igSameLine(0, 10);
 
             sprintf(name_buffer, "##ba%d", i);
-            igInputInt(name_buffer, &b->address, 1, 2, ImGuiInputTextFlags_CharsHexadecimal);
+            igInputInt(name_buffer, (int*)&b->address, 1, 2, ImGuiInputTextFlags_CharsHexadecimal);
         }
 
         igEnd();
@@ -831,7 +831,7 @@ static void build_ui(Renderer* r)
         glBindTexture(GL_TEXTURE_2D, r->ui_patterns_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, patterns_width, patterns_height, 0, GL_RGB, GL_UNSIGNED_BYTE, patterns_buffer);
 
-        igImage((ImTextureID)r->ui_patterns_texture, (struct ImVec2) { patterns_width, patterns_height }, vec_zero, vec_one, color_white, color_black);
+        igImage((ImTextureID)(intptr_t)r->ui_patterns_texture, (struct ImVec2) { patterns_width, patterns_height }, vec_zero, vec_one, color_white, color_black);
 
         // If a pattern is hovered, show a tooltip with a magnified view
         if (igIsItemHovered())
@@ -847,7 +847,7 @@ static void build_ui(Renderer* r)
 
             igBeginTooltip();
             igText("Pattern #%d", pattern_index);
-            igImage((ImTextureID)r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, vec_zero, vec_one, color_white, color_white);
+            igImage((ImTextureID)(intptr_t)r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, vec_zero, vec_one, color_white, color_white);
             igEndTooltip();
         }
 
@@ -872,7 +872,7 @@ static void build_ui(Renderer* r)
         glBindTexture(GL_TEXTURE_2D, r->ui_planes_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, plane_width, plane_height, 0, GL_RGB, GL_UNSIGNED_BYTE, r->plane_buffer);
 
-        igImage((ImTextureID)r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, vec_zero, vec_one, color_white, color_black);
+        igImage((ImTextureID)(intptr_t)r->ui_planes_texture, (struct ImVec2) { plane_width, plane_height }, vec_zero, vec_one, color_white, color_black);
 
         // If a cell is hovered, show a tooltip with details
         if (igIsItemHovered())
@@ -912,7 +912,7 @@ static void build_ui(Renderer* r)
             igSameLine(0, 0);
             igTextColored(priority ? color_accent : color_dimmed, priority ? "on" : "off");
 
-            igImage((ImTextureID)r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, vec_zero, vec_one, color_white, color_white);
+            igImage((ImTextureID)(intptr_t)r->ui_magnified_pattern_texture, (struct ImVec2) { 8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR }, vec_zero, vec_one, color_white, color_white);
             igEndTooltip();
         }
 
@@ -943,7 +943,7 @@ static void build_ui(Renderer* r)
         glBindTexture(GL_TEXTURE_2D, r->ui_sprites_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 552, 552, 0, GL_RGB, GL_UNSIGNED_BYTE, r->sprites_buffer);
 
-        igImage((ImTextureID)r->ui_sprites_texture, (struct ImVec2) { 552, 552 }, vec_zero, vec_one, color_white, color_black);
+        igImage((ImTextureID)(intptr_t)r->ui_sprites_texture, (struct ImVec2) { 552, 552 }, vec_zero, vec_one, color_white, color_black);
 
         // Draw the screen border
 

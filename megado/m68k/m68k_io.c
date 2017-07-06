@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "m68k.h"
 #include "../genesis.h"
@@ -105,6 +106,9 @@ void m68k_write(M68k* m, Size size, uint32_t address, uint32_t value)
     case Long:
         m68k_write_l(m, address, value);
         break;
+    case InvalidSize:
+        fprintf(stderr, "Invalid operand size in m68k_write\n");
+        exit(1);
     }
 }
 

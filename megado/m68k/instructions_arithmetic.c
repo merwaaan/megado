@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "cycles.h"
@@ -343,6 +344,9 @@ uint8_t ext(Instruction* i, M68k* ctx)
     case Long:
         extended = SIGN_EXTEND_W(x);
         break;
+    default:
+        fprintf(stderr, "Invalid EXT instruction size: %d\n", i->size);
+        exit(1);
     }
 
     SET(i->src, ctx, extended);

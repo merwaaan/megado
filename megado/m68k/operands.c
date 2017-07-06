@@ -451,6 +451,9 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
         op->fetch_ea_func = immediate_long_ea;
         op->get_value_func = immediate_long_get;
         break;
+    case InvalidSize:
+        fprintf(stderr, "Invalid operand size in operand_make_immediate_value\n");
+        exit(1);
     }
 
     return op;

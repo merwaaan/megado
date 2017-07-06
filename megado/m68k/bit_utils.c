@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "bit_utils.h"
 
 uint8_t size_in_bytes(Size size)
@@ -10,9 +13,10 @@ uint8_t size_in_bytes(Size size)
         return 2;
     case Long:
         return 4;
+    case InvalidSize:
+        fprintf(stderr, "Invalid size in size_in_bytes\n");
+        exit(1);
     }
-
-    return 0;
 }
 
 uint16_t bin_parse(char* bin)

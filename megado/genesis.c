@@ -50,7 +50,7 @@ void genesis_free(Genesis* g)
 static void print_header_info(char* label, uint8_t* data, uint8_t length)
 {
     char* string = calloc(length + 1, sizeof(char));
-    strncpy(string, data, length);
+    strncpy(string, (char*)data, length);
 
     printf("%-48s %s\n", string, label);
 
@@ -178,11 +178,11 @@ void genesis_frame(Genesis* g)
 void genesis_get_rom_name(Genesis* g, char* name)
 {
     // Get the international title from the header
-    strncpy(name, g->memory + 0x150, 48);
+    strncpy(name, (char*)(g->memory + 0x150), 48);
 
     // Use the domestic title as a fallback
     if (name[0] == ' ')
-        strncpy(name, g->memory + 0x120, 48);
+        strncpy(name, (char*)(g->memory + 0x120), 48);
 
     // Remove trailing whitespaces
     uint8_t cursor = 48;
