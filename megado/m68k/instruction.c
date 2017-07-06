@@ -172,108 +172,108 @@ typedef struct Pattern
 
 static Pattern instruction_patterns[] =
 {
-   { "0000000000111100", &gen_ori_ccr },
-   { "0000000001111100", &gen_ori_sr },
-   { "00000000S2MMMXXX", &gen_ori, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "0000001000111100", &gen_andi_ccr },
-   { "0000001001111100", &gen_andi_sr },
-   { "00000010S2MMMXXX", &gen_andi, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "00000100S2MMMXXX", &gen_subi, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "00000110S2MMMXXX", &gen_addi, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "0000101000111100", &gen_eori_ccr },
-   { "0000101001111100", &gen_eori_sr },
-   { "00001010S2MMMXXX", &gen_eori, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "00001100S2MMMXXX", &gen_cmpi, MODES_ALL & ~(MODES_ADDR | MODES_IMM) },
-   { "0000100000MMMXXX", &gen_btst_imm, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC },
-   { "0000100001MMMXXX", &gen_bchg_imm, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "0000100010MMMXXX", &gen_bclr_imm, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "0000100011MMMXXX", &gen_bset_imm, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "0000???100MMMXXX", &gen_btst, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC },
-   { "0000???101MMMXXX", &gen_bchg, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "0000???110MMMXXX", &gen_bclr, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "0000???111MMMXXX", &gen_bset, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "0000???1??001???", &gen_movep },
-   { "0011???001MMMXXX", &gen_movea, MODES_ALL }, // Word (no byte-sized version)
-   { "0010???001MMMXXX", &gen_movea, MODES_ALL }, // Long
-   { "0001XXXMMMMMMXXX", &gen_move, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS, MODES_ALL & ~MODES_ADDR}, // Byte: no address register as source
-   { "00S3XXXMMMMMMXXX", &gen_move, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS, MODES_ALL },
-   { "0100000011MMMXXX", &gen_move_from_sr, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "0100010011MMMXXX", &gen_move_to_ccr,  MODES_ALL & ~MODES_ADDR },
-   { "0100011011MMMXXX", &gen_move_to_sr, MODES_ALL & ~MODES_ADDR },
-   { "01000000S2MMMXXX", &gen_negx, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "01000010S2MMMXXX", &gen_clr, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "01000100S2MMMXXX", &gen_neg, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "01000110S2MMMXXX", &gen_not, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "010010001?000???", &gen_ext },
-   { "0100100000MMMXXX", &gen_nbcd, MODES_DATA | MODES_ADDR | MODES_ADDR_OFFSET | MODES_ABS },
-   { "0100100001000???", &gen_swap },
-   { "0100100001MMMXXX", &gen_pea, MODE_MASK(AddressRegisterIndirect) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC },
-   { "0100101011111100", &gen_illegal },
-   { "0100101011MMMXXX", &gen_tas, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "01001010S2MMMXXX", &gen_tst, MODES_ALL & ~(MODES_ADDR | MODES_IMM) },
-   { "010011100100????", &gen_trap },
-   { "0100111001010???", &gen_link },
-   { "0100111001011???", &gen_unlk },
-   { "010011100110????", &gen_move_usp },
-   { "0100111001110000", &gen_reset },
-   { "0100111001110001", &gen_nop },
-   { "0100111001110010", &gen_stop },
-   { "0100111001110011", &gen_rte },
-   { "0100111001110101", &gen_rts },
-   { "0100111001110110", &gen_rtr },
-   { "0100111010MMMXXX", &gen_jsr, MODE_MASK(AddressRegisterIndirect) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC },
-   { "0100111011MMMXXX", &gen_jmp, MODE_MASK(AddressRegisterIndirect) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC },
-   { "010010001?MMMXXX", &gen_movem, MODE_MASK(AddressRegisterIndirect) | MODE_MASK(AddressRegisterIndirectPreDec) | MODES_ADDR_OFFSET | MODES_ABS },
-   { "010011001?MMMXXX", &gen_movem, MODE_MASK(AddressRegisterIndirect) | MODE_MASK(AddressRegisterIndirectPostInc) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC },
-   { "0100???111MMMXXX", &gen_lea,  MODE_MASK(AddressRegisterIndirect) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC },
-   { "0100???110MMMXXX", &gen_chk, MODES_ALL & ~MODES_ADDR },
-   { "0101???000MMMXXX", &gen_addq, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS }, // Byte: no address register
-   { "0101???001MMMXXX", &gen_addq, MODES_DATA | MODES_ADDR | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS }, // Word
-   { "0101???010MMMXXX", &gen_addq, MODES_DATA | MODES_ADDR | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS }, // Long
-   { "0101???100MMMXXX", &gen_subq, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS }, // Byte: no address register
-   { "0101???101MMMXXX", &gen_subq, MODES_DATA | MODES_ADDR | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS }, // Word
-   { "0101???110MMMXXX", &gen_subq, MODES_DATA | MODES_ADDR | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS }, // Long
-   { "0101????11MMMXXX", &gen_scc, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "0101????11001???", &gen_dbcc },
-   { "01100000????????", &gen_bra },
-   { "01100001????????", &gen_bsr },
-   { "0110????????????", &gen_bcc }, 
-   { "0111???0????????", &gen_moveq },
-   { "1000???011MMMXXX", &gen_divu, MODES_ALL & ~MODES_ADDR },
-   { "1000???111MMMXXX", &gen_divs, MODES_ALL & ~MODES_ADDR },
-   { "1000???10000????", &gen_sbcd },
-   { "1000???0S2MMMXXX", &gen_or, MODES_ALL & ~MODES_ADDR },
-   { "1000???1S2MMMXXX", &gen_or, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "1001???000MMMXXX", &gen_sub, MODES_ALL & ~MODES_ADDR }, // Byte: no address register
-   { "1001???001MMMXXX", &gen_sub, MODES_ALL }, // Word
-   { "1001???010MMMXXX", &gen_sub, MODES_ALL }, // Long
-   { "1001???1S2MMMXXX", &gen_sub, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },   
-   { "1001???1S200????", &gen_subx },
-   { "1001????11MMMXXX", &gen_suba, MODES_ALL },
-   { "1011???1S2MMMXXX", &gen_eor, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "1011???1S2001???", &gen_cmpm },
-   { "1011???0S2MMMXXX", &gen_cmp, MODES_ALL },
-   { "1011????11MMMXXX", &gen_cmpa, MODES_ALL },
-   { "1100???011MMMXXX", &gen_mulu, MODES_ALL & ~MODES_ADDR },
-   { "1100???111MMMXXX", &gen_muls, MODES_ALL & ~MODES_ADDR },
-   { "1100???10000????", &gen_abcd },
-   { "1100???1??00????", &gen_exg },
-   { "1100???0S2MMMXXX", &gen_and, MODES_ALL & ~MODES_ADDR },
-   { "1100???1S2MMMXXX", &gen_and, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "1101???000MMMXXX", &gen_add, MODES_ALL & ~MODES_ADDR }, // Byte: no address register
-   { "1101???001MMMXXX", &gen_add, MODES_ALL }, // Word
-   { "1101???010MMMXXX", &gen_add, MODES_ALL }, // Long
-   { "1101???1S2MMMXXX", &gen_add, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS }, // TODO ADDA (w sign extension) for addr reg?
-   { "1101???1S200????", &gen_addx },
-   { "1101????11MMMXXX", &gen_adda, MODES_ALL },
-   { "1110000?11MMMXXX", &gen_asd_mem, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "1110001?11MMMXXX", &gen_lsd_mem, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "1110010?11MMMXXX", &gen_roxd_mem, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "1110011?11MMMXXX", &gen_rod_mem, MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS },
-   { "1110????S2?00???", &gen_asd },
-   { "1110????S2?01???", &gen_lsd },
-   { "1110????S2?10???", &gen_roxd },
-   { "1110????S2?11???", &gen_rod }
+    { "0000000000111100", &gen_ori_ccr,      MODES_NONE,                                                                                                                MODES_NONE },
+    { "0000000001111100", &gen_ori_sr ,      MODES_NONE,                                                                                                                MODES_NONE },
+    { "00000000S2MMMXXX", &gen_ori,          MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "0000001000111100", &gen_andi_ccr,     MODES_NONE,                                                                                                                MODES_NONE },
+    { "0000001001111100", &gen_andi_sr,      MODES_NONE,                                                                                                                MODES_NONE },
+    { "00000010S2MMMXXX", &gen_andi,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "00000100S2MMMXXX", &gen_subi,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "00000110S2MMMXXX", &gen_addi,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "0000101000111100", &gen_eori_ccr,     MODES_NONE,                                                                                                                MODES_NONE },
+    { "0000101001111100", &gen_eori_sr,      MODES_NONE,                                                                                                                MODES_NONE },
+    { "00001010S2MMMXXX", &gen_eori,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "00001100S2MMMXXX", &gen_cmpi,         MODES_ALL & ~(MODES_ADDR | MODES_IMM),                                                                                     MODES_NONE },
+    { "0000100000MMMXXX", &gen_btst_imm,     MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC,                                                    MODES_NONE },
+    { "0000100001MMMXXX", &gen_bchg_imm,     MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "0000100010MMMXXX", &gen_bclr_imm,     MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "0000100011MMMXXX", &gen_bset_imm,     MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "0000???100MMMXXX", &gen_btst,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC,                                                    MODES_NONE },
+    { "0000???101MMMXXX", &gen_bchg,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "0000???110MMMXXX", &gen_bclr,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "0000???111MMMXXX", &gen_bset,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "0000???1??001???", &gen_movep,        MODES_NONE,                                                                                                                MODES_NONE },
+    { "0011???001MMMXXX", &gen_movea,        MODES_ALL,                                                                                                                 MODES_NONE },             // Word (no byte-sized version)
+    { "0010???001MMMXXX", &gen_movea,        MODES_ALL,                                                                                                                 MODES_NONE },             // Long
+    { "0001XXXMMMMMMXXX", &gen_move,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_ALL & ~MODES_ADDR}, // Byte: no address register as source
+    { "00S3XXXMMMMMMXXX", &gen_move,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_ALL },
+    { "0100000011MMMXXX", &gen_move_from_sr, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "0100010011MMMXXX", &gen_move_to_ccr,  MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
+    { "0100011011MMMXXX", &gen_move_to_sr,   MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
+    { "01000000S2MMMXXX", &gen_negx,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "01000010S2MMMXXX", &gen_clr,          MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "01000100S2MMMXXX", &gen_neg,          MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "01000110S2MMMXXX", &gen_not,          MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "010010001?000???", &gen_ext,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100100000MMMXXX", &gen_nbcd,         MODES_DATA | MODES_ADDR | MODES_ADDR_OFFSET | MODES_ABS,                                                                   MODES_NONE },
+    { "0100100001000???", &gen_swap,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100100001MMMXXX", &gen_pea,          MODE_MASK(AddressRegisterIndirect) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC,                                             MODES_NONE },
+    { "0100101011111100", &gen_illegal,      MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100101011MMMXXX", &gen_tas,          MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "01001010S2MMMXXX", &gen_tst,          MODES_ALL & ~(MODES_ADDR | MODES_IMM),                                                                                     MODES_NONE },
+    { "010011100100????", &gen_trap,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100111001010???", &gen_link,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100111001011???", &gen_unlk,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "010011100110????", &gen_move_usp,     MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100111001110000", &gen_reset,        MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100111001110001", &gen_nop,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100111001110010", &gen_stop,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100111001110011", &gen_rte,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100111001110101", &gen_rts,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100111001110110", &gen_rtr,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100111010MMMXXX", &gen_jsr,          MODE_MASK(AddressRegisterIndirect) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC,                                             MODES_NONE },
+    { "0100111011MMMXXX", &gen_jmp,          MODE_MASK(AddressRegisterIndirect) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC,                                             MODES_NONE },
+    { "010010001?MMMXXX", &gen_movem,        MODE_MASK(AddressRegisterIndirect) | MODE_MASK(AddressRegisterIndirectPreDec) | MODES_ADDR_OFFSET | MODES_ABS,             MODES_NONE },
+    { "010011001?MMMXXX", &gen_movem,        MODE_MASK(AddressRegisterIndirect) | MODE_MASK(AddressRegisterIndirectPostInc) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC, MODES_NONE },
+    { "0100???111MMMXXX", &gen_lea,          MODE_MASK(AddressRegisterIndirect) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC,                                             MODES_NONE },
+    { "0100???110MMMXXX", &gen_chk,          MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
+    { "0101???000MMMXXX", &gen_addq,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },             // Byte: no address register
+    { "0101???001MMMXXX", &gen_addq,         MODES_DATA | MODES_ADDR | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                  MODES_NONE },             // Word
+    { "0101???010MMMXXX", &gen_addq,         MODES_DATA | MODES_ADDR | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                  MODES_NONE },             // Long
+    { "0101???100MMMXXX", &gen_subq,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },             // Byte: no address register
+    { "0101???101MMMXXX", &gen_subq,         MODES_DATA | MODES_ADDR | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                  MODES_NONE },             // Word
+    { "0101???110MMMXXX", &gen_subq,         MODES_DATA | MODES_ADDR | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                  MODES_NONE },             // Long
+    { "0101????11MMMXXX", &gen_scc,          MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "0101????11001???", &gen_dbcc,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "01100000????????", &gen_bra,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "01100001????????", &gen_bsr,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "0110????????????", &gen_bcc,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "0111???0????????", &gen_moveq,        MODES_NONE,                                                                                                                MODES_NONE },
+    { "1000???011MMMXXX", &gen_divu,         MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
+    { "1000???111MMMXXX", &gen_divs,         MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
+    { "1000???10000????", &gen_sbcd,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "1000???0S2MMMXXX", &gen_or,           MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
+    { "1000???1S2MMMXXX", &gen_or,           MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },
+    { "1001???000MMMXXX", &gen_sub,          MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },             // Byte: no address register
+    { "1001???001MMMXXX", &gen_sub,          MODES_ALL,                                                                                                                 MODES_NONE },             // Word
+    { "1001???010MMMXXX", &gen_sub,          MODES_ALL,                                                                                                                 MODES_NONE },             // Long
+    { "1001???1S2MMMXXX", &gen_sub,          MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },
+    { "1001???1S200????", &gen_subx,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "1001????11MMMXXX", &gen_suba,         MODES_ALL,                                                                                                                 MODES_NONE },
+    { "1011???1S2MMMXXX", &gen_eor,          MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
+    { "1011???1S2001???", &gen_cmpm,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "1011???0S2MMMXXX", &gen_cmp,          MODES_ALL,                                                                                                                 MODES_NONE },
+    { "1011????11MMMXXX", &gen_cmpa,         MODES_ALL,                                                                                                                 MODES_NONE },
+    { "1100???011MMMXXX", &gen_mulu,         MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
+    { "1100???111MMMXXX", &gen_muls,         MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
+    { "1100???10000????", &gen_abcd,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "1100???1??00????", &gen_exg,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "1100???0S2MMMXXX", &gen_and,          MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
+    { "1100???1S2MMMXXX", &gen_and,          MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },
+    { "1101???000MMMXXX", &gen_add,          MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },             // Byte: no address register
+    { "1101???001MMMXXX", &gen_add,          MODES_ALL,                                                                                                                 MODES_NONE },             // Word
+    { "1101???010MMMXXX", &gen_add,          MODES_ALL,                                                                                                                 MODES_NONE },             // Long
+    { "1101???1S2MMMXXX", &gen_add,          MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },             // TODO ADDA (w sign extension) for addr reg?
+    { "1101???1S200????", &gen_addx,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "1101????11MMMXXX", &gen_adda,         MODES_ALL,                                                                                                                 MODES_NONE },
+    { "1110000?11MMMXXX", &gen_asd_mem,      MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },
+    { "1110001?11MMMXXX", &gen_lsd_mem,      MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },
+    { "1110010?11MMMXXX", &gen_roxd_mem,     MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },
+    { "1110011?11MMMXXX", &gen_rod_mem,      MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },
+    { "1110????S2?00???", &gen_asd,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "1110????S2?01???", &gen_lsd,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "1110????S2?10???", &gen_roxd,         MODES_NONE,                                                                                                                MODES_NONE },
+    { "1110????S2?11???", &gen_rod,          MODES_NONE,                                                                                                                MODES_NONE }
 };
 
 static bool pattern_match(Pattern* pattern, uint16_t opcode)
@@ -341,18 +341,18 @@ static bool pattern_match(Pattern* pattern, uint16_t opcode)
                 (opcode_fragment & 0b000111) << 3 | (opcode_fragment & 0b111000) >> 3 :
                 opcode_fragment;
 
-            if ((opcode_fragment & 0b111000) == 0b000000 && (ea_modes & MODE_MASK(DataRegister)) ||
-                (opcode_fragment & 0b111000) == 0b001000 && (ea_modes & MODE_MASK(AddressRegister)) ||
-                (opcode_fragment & 0b111000) == 0b010000 && (ea_modes & MODE_MASK(AddressRegisterIndirect)) ||
-                (opcode_fragment & 0b111000) == 0b011000 && (ea_modes & MODE_MASK(AddressRegisterIndirectPostInc)) ||
-                (opcode_fragment & 0b111000) == 0b100000 && (ea_modes & MODE_MASK(AddressRegisterIndirectPreDec)) ||
-                (opcode_fragment & 0b111000) == 0b101000 && (ea_modes & MODE_MASK(AddressRegisterIndirectDisplacement)) ||
-                (opcode_fragment & 0b111000) == 0b110000 && (ea_modes & MODE_MASK(AddressRegisterIndirectIndexed)) ||
-                opcode_fragment == 0b111010 && (ea_modes & MODE_MASK(ProgramCounterDisplacement)) ||
-                opcode_fragment == 0b111011 && (ea_modes & MODE_MASK(ProgramCounterIndexed)) ||
-                opcode_fragment == 0b111000 && (ea_modes & MODE_MASK(AbsoluteShort)) ||
-                opcode_fragment == 0b111001 && (ea_modes & MODE_MASK(AbsoluteLong)) ||
-                opcode_fragment == 0b111100 && (ea_modes & MODE_MASK(Immediate)))
+            if (((opcode_fragment & 0b111000) == 0b000000 && (ea_modes & MODE_MASK(DataRegister))) ||
+                ((opcode_fragment & 0b111000) == 0b001000 && (ea_modes & MODE_MASK(AddressRegister))) ||
+                ((opcode_fragment & 0b111000) == 0b010000 && (ea_modes & MODE_MASK(AddressRegisterIndirect))) ||
+                ((opcode_fragment & 0b111000) == 0b011000 && (ea_modes & MODE_MASK(AddressRegisterIndirectPostInc))) ||
+                ((opcode_fragment & 0b111000) == 0b100000 && (ea_modes & MODE_MASK(AddressRegisterIndirectPreDec))) ||
+                ((opcode_fragment & 0b111000) == 0b101000 && (ea_modes & MODE_MASK(AddressRegisterIndirectDisplacement))) ||
+                ((opcode_fragment & 0b111000) == 0b110000 && (ea_modes & MODE_MASK(AddressRegisterIndirectIndexed))) ||
+                (opcode_fragment == 0b111010 && (ea_modes & MODE_MASK(ProgramCounterDisplacement)))||
+                (opcode_fragment == 0b111011 && (ea_modes & MODE_MASK(ProgramCounterIndexed))) ||
+                (opcode_fragment == 0b111000 && (ea_modes & MODE_MASK(AbsoluteShort))) ||
+                (opcode_fragment == 0b111001 && (ea_modes & MODE_MASK(AbsoluteLong))) ||
+                (opcode_fragment == 0b111100 && (ea_modes & MODE_MASK(Immediate))))
             {
                 cursor += 6;
                 ea_modes = pattern->legal_ea_modes2;
