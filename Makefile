@@ -2,8 +2,8 @@
 CC := clang
 # Disable unused parameter warning since not everything is implemented yet
 CFLAGS := -Wall -Wextra -std=c11 -Wno-unused-parameter -Wno-unused-variable
-RELEASE_FLAGS := -O3 -march=native
-DEBUG_FLAGS := -DDEBUG -g
+RELEASE_FLAGS := -O3 -march=native $(USER_FLAGS)
+DEBUG_FLAGS := -g $(USER_FLAGS)
 
 BUILD_DIR := build
 RELEASE_DIR := $(BUILD_DIR)/release

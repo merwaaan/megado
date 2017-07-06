@@ -14,13 +14,19 @@ RELEASE_BIN='build/release/megado'
 
 # Parse arguments
 JOBS=4
-MAYBE_GDB=
+RUNNER=
+DEBUG=
+VERBOSE=
 
-while getopts "gj:" opt; do
+while getopts "gvj:r:" opt; do
     case "$opt" in
-        g) MAYBE_GDB='gdb --args'
+        g) DEBUG='-g'
+           ;;
+        v) VERBOSE='-DDEBUG'
            ;;
         j) JOBS=$OPTARG
+           ;;
+        r) RUNNER=$OPTARG
            ;;
     esac
 done
@@ -32,6 +38,7 @@ case $1 in
     debug)
         TARGET=debug
         BIN=$DEBUG_BIN
+        DEBUG='-g'
         ;;
     release)
         TARGET=release
@@ -44,4 +51,4 @@ case $1 in
 esac
 shift
 
-make -j $JOBS $TARGET && env $ENV $MAYBE_GDB $BIN "$@"
+make -j $JOBS USER_FLAGS="$DEBUG $VERBOSE" $TARGET && env $ENV $RUNNER $BIN "$@"
