@@ -819,8 +819,14 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
             {
                 int16_t scanline_x = x + (horizontal_flip ? total_width - sprite_x - 1 : sprite_x);
 
-                if (scanline_x < 0) // TODO right bound
+                if (scanline_x < 0)
                     continue;
+
+                // TODO: proper right bound
+                // for now, it certainly cannot be larger than BUFFER_WIDTH,
+                // otherwise it might corrupt memory
+                if (scanline_x >= BUFFER_WIDTH)
+                    break;
 
                 // Sprites are drawn front-to-back so don't draw over previous sprites
                 if (data->drawn[scanline_x])
