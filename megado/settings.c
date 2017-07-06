@@ -88,9 +88,10 @@ Settings* settings_load()
 
     fseek(file, 0, SEEK_END);
     int file_length = ftell(file);
-    char* buffer = calloc(file_length, sizeof(char));
+    char* buffer = calloc(file_length + 1, sizeof(char));
     fseek(file, 0, SEEK_SET);
     fread(buffer, sizeof(char), file_length, file);
+    buffer[file_length] = '\0';
     fclose(file);
 
     json_object* json = json_tokener_parse(buffer);
