@@ -51,14 +51,10 @@ so the flag is always cleared.
 
 - Sonic & Knuckles + Sonic 3: stuck in an infinite loop @C336
 
-- Donald in Maui Mallard: SEGA logo cut; in-game background is wonky, but Donald
-  sprite looks alright
-
 - Streets of Rage: no UI in-game; character seems to die randomly; time over
   happens after a few seconds
 
-- Street Fighter II: crashes on an invalid opcode after executing unknown
-  opcodes; last good opcode seems to be around @83A8
+- Street Fighter II: game reset just before going into the first stage
 
 - Krusty: playable; but item sprite is garbled when in the holding slot
 
