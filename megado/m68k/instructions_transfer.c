@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "bit_utils.h"
@@ -38,6 +39,8 @@ Instruction* gen_exg(uint16_t opcode)
         i->dst = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
         break;
     default:
+        fprintf(stderr, "Invalid mode %x in gen_exg\n", mode);
+        exit(1);
         // TODO error
         break;
     }
