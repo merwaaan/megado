@@ -41,7 +41,6 @@ Instruction* gen_exg(uint16_t opcode)
     default:
         fprintf(stderr, "Invalid mode %x in gen_exg\n", mode);
         exit(1);
-        // TODO error
         break;
     }
 
