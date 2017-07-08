@@ -304,6 +304,7 @@ static void render_genesis(Renderer* r)
 static const struct ImVec4 color_black = { 0.0f, 0.0f, 0.0f, 1.0f };
 static const struct ImVec4 color_white = { 1.0f, 1.0f, 1.0f, 1.0f };
 static const struct ImVec4 color_dimmed = { 0.5f, 0.5f, 0.5f, 1.0f };
+static const struct ImVec4 color_disabled = { 0.25f, 0.25f, 0.25f, 1.0f };
 static const struct ImVec4 color_accent = { 1.0f, 0.07f, 0.57f, 1.0f };
 static const struct ImVec4 color_success = { 0.0f, 1.0f, 0.0f, 1.0f };
 static const struct ImVec4 color_error = { 1.0f, 0.0f, 0.0f, 1.0f };
@@ -442,7 +443,9 @@ static void build_ui(Renderer* r)
                     igSameLine(0, 5);
 
                     if (r->snapshots[slot] == NULL)
-                        igTextColored(color_dimmed, "empty");
+                    {
+                        igTextColored(color_dimmed, "       empty       ");
+                    }
                     else
                     {
                         char date[30];
@@ -455,16 +458,25 @@ static void build_ui(Renderer* r)
                     char button_name[10];
                     sprintf(button_name, "save##%d", slot);
                     if (igButton(button_name, (struct ImVec2) { 50, 20 }))
-                    {
-                        snapshot_save(r->genesis, slot);
-                        r->snapshots[slot]->date = time(NULL);
-                    }
+                        r->snapshots[slot] = snapshot_save(r->genesis, slot);
 
                     igSameLine(0, 3);
 
-                    sprintf(button_name, "load##%d", slot);
-                    if (igButton(button_name, (struct ImVec2) { 50, 20 }))
-                        snapshot_load(r->genesis, slot);
+                    if (r->snapshots[slot] == NULL)
+                    {
+                        igPushStyleColor(ImGuiCol_Button, color_disabled);
+                        igPushStyleColor(ImGuiCol_ButtonHovered, color_disabled);
+                        igPushStyleColor(ImGuiCol_ButtonActive, color_disabled);
+                        igPushStyleColor(ImGuiCol_Text, color_black);
+                        igButton("load", (struct ImVec2) { 50, 20 });
+                        igPopStyleColor(4);
+                    }
+                    else
+                    {
+                        sprintf(button_name, "load##%d", slot);
+                        if (igButton(button_name, (struct ImVec2) { 50, 20 }))
+                            snapshot_load(r->genesis, slot);
+                    }
                 }
                 igEndMenu();
             }
@@ -1015,7 +1027,7 @@ static void build_ui(Renderer* r)
 
         // Time per frame, in milliseconds
         snprintf(buf, sizeof(buf), "tpf (ms)\navg: %.2f\nfps: %.2f",
-                 r->tpf->avg, r->tpf->avg > 0 ? 1000.0 / r->tpf->avg : 0);
+            r->tpf->avg, r->tpf->avg > 0 ? 1000.0 / r->tpf->avg : 0);
         metric_plot(r->tpf, buf);
 
         // (M68k) instructions per frame, in kilos

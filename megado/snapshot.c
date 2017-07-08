@@ -6,12 +6,12 @@
 
 #define WRITE_SNAPSHOT_NAME(BUFFER, TITLE, SLOT) sprintf(BUFFER, "%s.snapshot%d", TITLE, SLOT)
 
-void snapshot_save(Genesis* g, uint8_t slot)
+SnapshotMetadata* snapshot_save(Genesis* g, uint8_t slot)
 {
-    SnapshotMetadata metadata;
-    genesis_get_rom_name(g, metadata.game);
-    metadata.date = time(NULL);
-    metadata.version = SNAPSHOT_VERSION;
+    SnapshotMetadata* metadata = calloc(1, sizeof(SnapshotMetadata));
+    genesis_get_rom_name(g, metadata->game);
+    metadata->date = time(NULL);
+    metadata->version = SNAPSHOT_VERSION;
 
     Snapshot snapshot;
     memcpy(snapshot.ram, g->memory + 0xFF0000, 0x10000 * sizeof(uint8_t));
@@ -20,7 +20,7 @@ void snapshot_save(Genesis* g, uint8_t slot)
     snapshot.vdp = *g->vdp;
 
     char file_name[70];
-    WRITE_SNAPSHOT_NAME(file_name, metadata.game, slot);
+    WRITE_SNAPSHOT_NAME(file_name, metadata->game, slot);
 
     printf("Saving snapshot %s...\n", file_name);
     FILE* file = fopen(file_name, "wb");
@@ -30,9 +30,11 @@ void snapshot_save(Genesis* g, uint8_t slot)
         return;
     }
 
-    fwrite(&metadata, sizeof(SnapshotMetadata), 1, file);
+    fwrite(metadata, sizeof(SnapshotMetadata), 1, file);
     fwrite(&snapshot, sizeof(Snapshot), 1, file);
     fclose(file);
+
+    return metadata;
 }
 
 void snapshot_load(Genesis* g, uint8_t slot)

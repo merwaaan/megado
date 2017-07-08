@@ -41,7 +41,7 @@ typedef struct SnapshotMetadata
 } SnapshotMetadata;
 
 // Saves/Loads a snapshot in the given slot for the game currently being executed
-void snapshot_save(Genesis*, uint8_t slot);
+SnapshotMetadata* snapshot_save(Genesis*, uint8_t slot);
 void snapshot_load(Genesis*, uint8_t slot);
 
 // Gets the metadata from saved snapshots of the game currently being executed
