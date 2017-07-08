@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # GLFW
 pushd deps/glfw/
@@ -27,7 +27,8 @@ popd
 
 # json-c
 pushd deps/json-c
-./configure --prefix=$(PWD)
+sh autogen.sh
+./configure --prefix=$PWD
 make
 make install
 popd
