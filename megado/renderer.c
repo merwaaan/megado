@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "debugger.h"
 #include "genesis.h"
 #include "joypad.h"
 #include "m68k/instruction.h"
@@ -16,7 +17,7 @@
 #include "snapshot.h"
 #include "vdp.h"
 
-#define DISASSEMBLY_LENGTH 20
+#define DISASSEMBLY_LENGTH 10
 #define MEMORY_VIEWER_COLUMNS 16
 
 #define PALETTE_ENTRY_WIDTH 16
@@ -501,6 +502,7 @@ static void build_ui(Renderer* r)
         {
             igMenuItemPtr("Registers", NULL, &settings->show_cpu_registers, true);
             igMenuItemPtr("Disassembly", NULL, &settings->show_cpu_disassembly, true);
+            igMenuItemPtr("Log", NULL, &settings->show_cpu_log, true);
             igSeparator();
             igMenuItemPtr("ROM", NULL, &settings->show_rom, true);
             igMenuItemPtr("RAM", NULL, &settings->show_ram, true);
@@ -674,6 +676,27 @@ static void build_ui(Renderer* r)
             igInputInt(name_buffer, (int*)&b->address, 1, 2, ImGuiInputTextFlags_CharsHexadecimal);
         }
 
+        igEnd();
+    }
+
+    // Program log
+    if (settings->show_cpu_log)
+    {
+        igBegin("CPU log", &settings->show_cpu_log, 0);
+
+        Debugger* d = r->genesis->debugger;
+        for (int i = 0; i < M68K_LOG_LENGTH; ++i)
+        {
+            uint32_t address = d->m68k_log_addresses[(d->m68k_log_cursor + 1 + i) % M68K_LOG_LENGTH];
+            DecodedInstruction* instr = m68k_decode(r->genesis->m68k, address);
+            if (instr != NULL)
+            {
+                igText("%04X   %s", address, instr->mnemonics);
+                decoded_instruction_free(instr);
+            }
+        }
+
+        //igButton("clear", )
         igEnd();
     }
 

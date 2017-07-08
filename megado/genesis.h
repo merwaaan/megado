@@ -5,6 +5,7 @@
 
 #include "z80.h"
 
+struct Debugger;
 struct DecodedInstruction;
 struct Joypad;
 struct M68k;
@@ -35,6 +36,7 @@ typedef struct Genesis {
 
     struct Renderer* renderer;
     struct Settings* settings;
+    struct Debugger* debugger;
 
     Status status;
     Regions region;

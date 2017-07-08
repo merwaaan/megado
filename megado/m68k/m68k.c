@@ -7,6 +7,7 @@
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
+#include "../debugger.h"
 #include "../genesis.h"
 
 #ifdef DEBUG
@@ -46,6 +47,8 @@ void m68k_initialize(M68k* m)
 
 DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
 {
+    DecodedInstruction* decoded = NULL;
+
     // Save state that can be modified by instructions; will be restored on exit
     uint32_t _pc = m->pc;
     uint16_t _instruction_register = m->instruction_register;
@@ -57,7 +60,6 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     m->instruction_register = opcode;
 
     Instruction* instr = opcode_table[opcode];
-    DecodedInstruction* decoded = NULL;
     if (instr == NULL)
     {
         LOG_M68K("Opcode %#06X cannot be found in the opcode table\n", opcode);
@@ -201,6 +203,8 @@ uint8_t m68k_step(M68k* m)
 
     int cycles = instruction_execute(instr, m);
     m->cycles += cycles;
+
+    debugger_post_m68k(m->genesis->debugger);
 
     m68k_handle_interrupt(m);
 

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "debugger.h"
 #include "genesis.h"
 #include "joypad.h"
 #include "m68k/m68k.h"
@@ -22,6 +23,7 @@ Genesis* genesis_make()
     g->vdp = vdp_make(g);
     g->joypad = joypad_make();
     g->renderer = renderer_make(g);
+    g->debugger = debugger_make(g);
     g->status = Status_NoGameLoaded;
 
     return g;
@@ -42,6 +44,7 @@ void genesis_free(Genesis* g)
     joypad_free(g->joypad);
     settings_free(g->settings);
     renderer_free(g->renderer);
+    debugger_free(g->debugger);
 
     free(g->memory);
     free(g);

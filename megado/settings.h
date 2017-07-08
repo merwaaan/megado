@@ -18,6 +18,7 @@ typedef struct Settings
     // UI settings
     bool show_cpu_registers;
     bool show_cpu_disassembly;
+    bool show_cpu_log;
     bool show_vdp_registers;
     bool show_vdp_palettes;
     bool show_vdp_patterns;

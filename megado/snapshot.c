@@ -27,7 +27,7 @@ SnapshotMetadata* snapshot_save(Genesis* g, uint8_t slot)
     if (!file)
     {
         printf("Cannot open file \"%s\"", file_name);
-        return;
+        return NULL;
     }
 
     fwrite(metadata, sizeof(SnapshotMetadata), 1, file);

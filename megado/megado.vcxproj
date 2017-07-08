@@ -197,6 +197,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="debugger.c" />
     <ClCompile Include="genesis.c" />
     <ClCompile Include="joypad.c" />
     <ClCompile Include="m68k\bit_utils.c" />
@@ -224,6 +225,7 @@
     <ClCompile Include="z80.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="debugger.h" />
     <ClInclude Include="genesis.h" />
     <ClInclude Include="joypad.h" />
     <ClInclude Include="m68k\bit_utils.h" />
