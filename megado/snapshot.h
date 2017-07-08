@@ -40,6 +40,10 @@ typedef struct SnapshotMetadata
     uint8_t version;
 } SnapshotMetadata;
 
+// Takes/Restores a snapshot for the game currently being executed
+Snapshot* snapshot_take(Genesis*);
+void snapshot_restore(Genesis*, Snapshot*);
+
 // Saves/Loads a snapshot in the given slot for the game currently being executed
 SnapshotMetadata* snapshot_save(Genesis*, uint8_t slot);
 void snapshot_load(Genesis*, uint8_t slot);

@@ -49,6 +49,9 @@
 #define CHECK_OVERFLOW_ADD(a, b, size) (SIGN_BIT(a, size) == SIGN_BIT(b, size) && SIGN_BIT(a, size) != SIGN_BIT((a) + (b), size))
 #define CHECK_OVERFLOW_SUB(a, b, size) (!SIGN_BIT(a, size) && SIGN_BIT(b, size) && SIGN_BIT((a) - (b), size) || SIGN_BIT(a, size) && !SIGN_BIT(b, size) && !SIGN_BIT((a) - (b), size))
 
+// Modulo supporting negative numbers
+#define UMOD(A, B) (((A) % (B) + (B)) % (B))
+
 typedef enum
 {
     Byte = 8,

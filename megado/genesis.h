@@ -17,6 +17,7 @@ typedef enum {
     Status_NoGameLoaded,
     Status_Pause,
     Status_Running,
+    Status_Rewinding,
     Status_Quitting
 } Status;
 
@@ -52,7 +53,6 @@ struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc);
 
 void genesis_update(Genesis* g);
 void genesis_step(Genesis* g);
-void genesis_frame(Genesis* g);
 
 // Return the name of the game currently being executed as 
 // stored in the ROM header. The international name is looked 

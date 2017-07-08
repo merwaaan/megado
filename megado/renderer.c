@@ -494,6 +494,7 @@ static void build_ui(Renderer* r)
 
             igSeparator();
             igMenuItemPtr("Metrics", NULL, &settings->show_metrics, true);
+            igMenuItemPtr("Rewinding", NULL, &settings->rewinding_enabled, true);
 
             igEndMenu();
         }
@@ -1012,14 +1013,14 @@ static void build_ui(Renderer* r)
         memory_viewer("CRAM", &settings->show_cram, raw_cram, Word, 0x40, NULL);
     }
 
-    // "Pause" bubble when the emulation is stopped
+    // Status bubble when the emulation is paused/rewinding
     // TODO would be better to always keep this overlay on top of the other windows but I don't think it's currently possible
-    if (r->genesis->status == Status_Pause)
+    if (r->genesis->status == Status_Pause || r->genesis->status == Status_Rewinding)
     {
-        igSetNextWindowPos((struct ImVec2) { 10, 30 }, 0);
+        igSetNextWindowPos((struct ImVec2) { 10, 50 }, 0);
         igPushStyleColor(ImGuiCol_WindowBg, (struct ImVec4) { 1.0f, 1.0f, 1.0f, 0.10f });
         igBegin("Example: Fixed Overlay", &dummy_flag, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
-        igTextColored(color_accent, "Paused");
+        igTextColored(color_accent, r->genesis->status == Status_Pause ? "Paused" : "Rewinding");
         igEnd();
         igPopStyleColor(1);
     }
@@ -1159,6 +1160,11 @@ static void handle_inputs(Renderer* r, int key, int action)
         case GLFW_KEY_Q: joypad_press(r->genesis->joypad, ButtonA); break;
         case GLFW_KEY_W: joypad_press(r->genesis->joypad, ButtonB); break;
         case GLFW_KEY_E: joypad_press(r->genesis->joypad, ButtonC); break;
+
+        case GLFW_KEY_R:
+            if (r->genesis->settings->rewinding_enabled && r->genesis->status == Status_Running)
+                r->genesis->status = Status_Rewinding;
+            break;
         }
         break;
     case GLFW_RELEASE:
@@ -1176,6 +1182,11 @@ static void handle_inputs(Renderer* r, int key, int action)
         case GLFW_KEY_P: toggle_pause(r); break;
         case GLFW_KEY_SPACE: step(r); break;
         case GLFW_KEY_ESCAPE: r->genesis->status = Status_Quitting; break;
+
+        case GLFW_KEY_R:
+            if (r->genesis->status == Status_Rewinding)
+                r->genesis->status = Status_Running;
+            break;
         }
         break;
     }

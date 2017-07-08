@@ -6,6 +6,32 @@
 
 #define WRITE_SNAPSHOT_NAME(BUFFER, TITLE, SLOT) sprintf(BUFFER, "%s.snapshot%d", TITLE, SLOT)
 
+Snapshot* snapshot_take(Genesis* g)
+{
+    Snapshot* snapshot = calloc(1, sizeof(Snapshot));
+    memcpy(snapshot->ram, g->memory + 0xFF0000, 0x10000 * sizeof(uint8_t));
+    snapshot->m68k = *g->m68k;
+    snapshot->z80 = *g->z80;
+    snapshot->vdp = *g->vdp;
+    return snapshot;
+}
+
+void snapshot_restore(Genesis* g, Snapshot* s)
+{
+    uint8_t* vdp_buffer = g->vdp->output_buffer;
+
+    // Copy the snapshot data
+    memcpy(g->memory + 0xFF0000, &s->ram, 0x10000 * sizeof(uint8_t));
+    memcpy(g->m68k, &s->m68k, sizeof(M68k));
+    memcpy(g->z80, &s->z80, sizeof(Z80));
+    memcpy(g->vdp, &s->vdp, sizeof(Vdp));
+
+    // Rebind internal pointers
+    g->m68k->genesis = g;
+    g->vdp->genesis = g;
+    g->vdp->output_buffer = vdp_buffer;
+}
+
 SnapshotMetadata* snapshot_save(Genesis* g, uint8_t slot)
 {
     SnapshotMetadata* metadata = calloc(1, sizeof(SnapshotMetadata));
@@ -13,11 +39,7 @@ SnapshotMetadata* snapshot_save(Genesis* g, uint8_t slot)
     metadata->date = time(NULL);
     metadata->version = SNAPSHOT_VERSION;
 
-    Snapshot snapshot;
-    memcpy(snapshot.ram, g->memory + 0xFF0000, 0x10000 * sizeof(uint8_t));
-    snapshot.m68k = *g->m68k;
-    snapshot.z80 = *g->z80;
-    snapshot.vdp = *g->vdp;
+    Snapshot* snapshot = snapshot_take(g);
 
     char file_name[70];
     WRITE_SNAPSHOT_NAME(file_name, metadata->game, slot);
@@ -31,7 +53,7 @@ SnapshotMetadata* snapshot_save(Genesis* g, uint8_t slot)
     }
 
     fwrite(metadata, sizeof(SnapshotMetadata), 1, file);
-    fwrite(&snapshot, sizeof(Snapshot), 1, file);
+    fwrite(snapshot, sizeof(Snapshot), 1, file);
     fclose(file);
 
     return metadata;
@@ -59,18 +81,7 @@ void snapshot_load(Genesis* g, uint8_t slot)
     fread(&s, sizeof(Snapshot), 1, file);
     fclose(file);
 
-    uint8_t* vdp_buffer = g->vdp->output_buffer;
-
-    // Copy the snapshot data
-    memcpy(g->memory + 0xFF0000, &s.ram, 0x10000 * sizeof(uint8_t));
-    memcpy(g->m68k, &s.m68k, sizeof(M68k));
-    memcpy(g->z80, &s.z80, sizeof(Z80));
-    memcpy(g->vdp, &s.vdp, sizeof(Vdp));
-
-    // Rebind internal pointers
-    g->m68k->genesis = g;
-    g->vdp->genesis = g;
-    g->vdp->output_buffer = vdp_buffer;
+    snapshot_restore(g, &s);
 }
 
 void snapshots_preload(Genesis* g, SnapshotMetadata* snapshots[])

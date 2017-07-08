@@ -31,6 +31,8 @@ typedef struct Settings
     bool show_cram;
     bool show_metrics;
 
+    bool rewinding_enabled;
+
     // Breakpoints
     uint32_t breakpoints[3];
     // TODO keep breakpoints for all games (key = name in header? checksum?)

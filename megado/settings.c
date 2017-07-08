@@ -47,6 +47,7 @@ void settings_save(Settings* s)
     JSON_SET_BOOL(show_ram);
     JSON_SET_BOOL(show_vram);
     JSON_SET_BOOL(show_metrics);
+    JSON_SET_BOOL(rewinding_enabled);
 
     // TODO breakpoints
 
@@ -122,6 +123,7 @@ Settings* settings_load()
     JSON_GET_BOOL(show_ram);
     JSON_GET_BOOL(show_vram);
     JSON_GET_BOOL(show_metrics);
+    JSON_GET_BOOL(rewinding_enabled);
 
     json_object_put(json);
 

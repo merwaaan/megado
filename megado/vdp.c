@@ -867,55 +867,58 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
         );
 }
 
+void render_scanline(Vdp* v, int scanline)
+{
+    Color background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
+
+    // Get color & priority data for each layer
+    vdp_get_plane_scanline(v, Plane_A, scanline, &plane_a_scanline);
+    vdp_get_plane_scanline(v, Plane_B, scanline, &plane_b_scanline);
+    vdp_get_plane_scanline(v, Plane_Window, scanline, &plane_w_scanline);
+    vdp_get_sprites_scanline(v, scanline, &sprites_scanline);
+
+    // Combine the layers
+    uint16_t screen_width = v->display_width * 8;
+    for (uint16_t pixel = 0; pixel < screen_width; ++pixel)
+    {
+        // Use the color from the layer with the highest priority
+        // TODO more details
+
+        Color pixel_color;
+
+        if (plane_w_scanline.drawn[pixel] && plane_w_scanline.priorities[pixel]) // Window *
+            pixel_color = plane_w_scanline.colors[pixel];
+        else if (sprites_scanline.drawn[pixel] && sprites_scanline.priorities[pixel]) // Sprites *
+            pixel_color = sprites_scanline.colors[pixel];
+        else if (plane_a_scanline.drawn[pixel] && plane_a_scanline.priorities[pixel]) // A *
+            pixel_color = plane_a_scanline.colors[pixel];
+        else if (plane_b_scanline.drawn[pixel] && plane_b_scanline.priorities[pixel]) // B *
+            pixel_color = plane_b_scanline.colors[pixel];
+        else if (plane_w_scanline.drawn[pixel]) // Window
+            pixel_color = plane_w_scanline.colors[pixel];
+        else if (sprites_scanline.drawn[pixel]) // Sprites
+            pixel_color = sprites_scanline.colors[pixel];
+        else if (plane_a_scanline.drawn[pixel]) // A
+            pixel_color = plane_a_scanline.colors[pixel];
+        else if (plane_b_scanline.drawn[pixel]) // B
+            pixel_color = plane_b_scanline.colors[pixel];
+        else // Background
+            pixel_color = background_color;
+
+        uint32_t pixel_offset = (scanline * BUFFER_WIDTH + pixel) * 3;
+        v->output_buffer[pixel_offset] = pixel_color.r;
+        v->output_buffer[pixel_offset + 1] = pixel_color.g;
+        v->output_buffer[pixel_offset + 2] = pixel_color.b;
+    }
+}
+
 void vdp_draw_scanline(Vdp* v, int scanline)
 {
     uint16_t output_width, output_height;
     vdp_get_resolution(v, &output_width, &output_height);
 
     if (v->display_enabled && scanline < output_height)
-    {
-        Color background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
-
-        // Get color & priority data for each layer
-        vdp_get_plane_scanline(v, Plane_A, scanline, &plane_a_scanline);
-        vdp_get_plane_scanline(v, Plane_B, scanline, &plane_b_scanline);
-        vdp_get_plane_scanline(v, Plane_Window, scanline, &plane_w_scanline);
-        vdp_get_sprites_scanline(v, scanline, &sprites_scanline);
-
-        // Combine the layers
-        uint16_t screen_width = v->display_width * 8;
-        for (uint16_t pixel = 0; pixel < screen_width; ++pixel)
-        {
-            // Use the color from the layer with the highest priority
-            // TODO more details
-
-            Color pixel_color;
-
-            if (plane_w_scanline.drawn[pixel] && plane_w_scanline.priorities[pixel]) // Window *
-                pixel_color = plane_w_scanline.colors[pixel];
-            else if (sprites_scanline.drawn[pixel] && sprites_scanline.priorities[pixel]) // Sprites *
-                pixel_color = sprites_scanline.colors[pixel];
-            else if (plane_a_scanline.drawn[pixel] && plane_a_scanline.priorities[pixel]) // A *
-                pixel_color = plane_a_scanline.colors[pixel];
-            else if (plane_b_scanline.drawn[pixel] && plane_b_scanline.priorities[pixel]) // B *
-                pixel_color = plane_b_scanline.colors[pixel];
-            else if (plane_w_scanline.drawn[pixel]) // Window
-                pixel_color = plane_w_scanline.colors[pixel];
-            else if (sprites_scanline.drawn[pixel]) // Sprites
-                pixel_color = sprites_scanline.colors[pixel];
-            else if (plane_a_scanline.drawn[pixel]) // A
-                pixel_color = plane_a_scanline.colors[pixel];
-            else if (plane_b_scanline.drawn[pixel]) // B
-                pixel_color = plane_b_scanline.colors[pixel];
-            else // Background
-                pixel_color = background_color;
-
-            uint32_t pixel_offset = (scanline * BUFFER_WIDTH + pixel) * 3;
-            v->output_buffer[pixel_offset] = pixel_color.r;
-            v->output_buffer[pixel_offset + 1] = pixel_color.g;
-            v->output_buffer[pixel_offset + 2] = pixel_color.b;
-        }
-    }
+        render_scanline(v, scanline);
 
     /*
      * Handle horizontal interrupts
@@ -961,4 +964,14 @@ void vdp_draw_scanline(Vdp* v, int scanline)
     {
         v->vblank_in_progress = false;
     }
+}
+
+void vdp_draw_screen(Vdp* v)
+{
+    uint16_t output_width, output_height;
+    vdp_get_resolution(v, &output_width, &output_height);
+
+    if (v->display_enabled)
+    for (int line = 0; line <= output_height; ++line)
+        render_scanline(v, line);
 }

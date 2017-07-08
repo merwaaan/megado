@@ -135,20 +135,12 @@ void genesis_initialize(Genesis* g)
     vdp_initialize(g->vdp);
 }
 
-void genesis_update(Genesis* g)
-{
-    if (g->status == Status_Running)
-        genesis_frame(g);
-
-    renderer_render(g->renderer);
-}
-
 void genesis_step(Genesis* g)
 {
     m68k_step(g->m68k);
 }
 
-void genesis_frame(Genesis* g)
+static void genesis_frame(Genesis* g)
 {
     // The number of scanlines depends on the region
     // http://forums.sonicretro.org/index.php?showtopic=5615
@@ -160,7 +152,7 @@ void genesis_frame(Genesis* g)
         m68k_run_cycles(g->m68k, 488); // TODO not sure about that value
         z80_run_cycles(g->z80, 244); // Z80 runs at half the frequency of M68
 
-        // Draw the scanline
+                                     // Draw the scanline
         vdp_draw_scanline(g->vdp, line);
 
         // Exit early if the emulation has been paused
@@ -176,6 +168,26 @@ void genesis_frame(Genesis* g)
         if (g->status != Status_Running)
             break;
     }
+
+    debugger_post_frame(g->debugger);
+}
+
+void genesis_update(Genesis* g)
+{
+    if (g->status == Status_Running)
+    {
+        genesis_frame(g);
+    }
+    else if (g->status == Status_Rewinding)
+    {
+        bool more_to_rewind = debugger_rewind(g->debugger);
+        if (!more_to_rewind)
+            g->status = Status_Running;
+
+        vdp_draw_screen(g->vdp);
+    }
+
+    renderer_render(g->renderer);
 }
 
 void genesis_get_rom_name(Genesis* g, char* name)
