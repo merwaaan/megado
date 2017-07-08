@@ -72,17 +72,17 @@ bool GreaterOrEqual(M68k* context)
 
 bool LessThan(M68k* context)
 {
-    return (NEGATIVE(context) & !OVERFLOW(context)) | (!NEGATIVE(context) & OVERFLOW(context));
+    return (NEGATIVE(context) & !OVERFLOW(context)) | ((!NEGATIVE(context)) & OVERFLOW(context));
 }
 
 bool GreaterThan(M68k* context)
 {
-    return (NEGATIVE(context) & OVERFLOW(context) & !ZERO(context)) | (!NEGATIVE(context) & !OVERFLOW(context) & !ZERO(context));
+    return (NEGATIVE(context) & OVERFLOW(context) & !ZERO(context)) | ((!NEGATIVE(context)) & !OVERFLOW(context) & !ZERO(context));
 }
 
 bool LessOrEqual(M68k* context)
 {
-    return ZERO(context) | (NEGATIVE(context) & !OVERFLOW(context)) | (!NEGATIVE(context) & OVERFLOW(context));
+    return ZERO(context) | (NEGATIVE(context) & !OVERFLOW(context)) | ((!NEGATIVE(context)) & OVERFLOW(context));
 }
 
 static Condition all_conditions[] = {
