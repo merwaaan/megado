@@ -16,8 +16,10 @@ uint32_t m68k_read(M68k* m, Size size, uint32_t address)
         return m68k_read_w(m, address);
     case Long:
         return m68k_read_l(m, address);
+    case InvalidSize:
     default:
-        return 0xFF; // TODO error?
+        fprintf(stderr, "Invalid size %x in m68k_read\n", size);
+        exit(1);
     }
 }
 
@@ -107,7 +109,8 @@ void m68k_write(M68k* m, Size size, uint32_t address, uint32_t value)
         m68k_write_l(m, address, value);
         break;
     case InvalidSize:
-        fprintf(stderr, "Invalid operand size in m68k_write\n");
+    default:
+        fprintf(stderr, "Invalid size %x in m68k_write\n", size);
         exit(1);
     }
 }

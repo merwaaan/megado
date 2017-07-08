@@ -345,7 +345,7 @@ uint8_t ext(Instruction* i, M68k* ctx)
         extended = SIGN_EXTEND_W(x);
         break;
     default:
-        fprintf(stderr, "Invalid EXT instruction size: %d\n", i->size);
+        fprintf(stderr, "Invalid size %x in gen_ext\n", i->size);
         exit(1);
     }
 

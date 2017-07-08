@@ -257,7 +257,9 @@ static Pattern instruction_patterns[] =
     { "1100???011MMMXXX", &gen_mulu,         MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
     { "1100???111MMMXXX", &gen_muls,         MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
     { "1100???10000????", &gen_abcd,         MODES_NONE,                                                                                                                MODES_NONE },
-    { "1100???1??00????", &gen_exg,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "1100???101000???", &gen_exg,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "1100???101001???", &gen_exg,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "1100???110001???", &gen_exg,          MODES_NONE,                                                                                                                MODES_NONE },
     { "1100???0S2MMMXXX", &gen_and,          MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
     { "1100???1S2MMMXXX", &gen_and,          MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },
     { "1101???000MMMXXX", &gen_add,          MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },             // Byte: no address register

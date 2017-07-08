@@ -101,6 +101,8 @@ int operand_tostring(Operand* operand, M68k* ctx, char* buffer)
         return sprintf(buffer, "$%0X [%0X]", offset, target);
     }
     default:
+        fprintf(stderr, "Invalid operand type %x in operand_tostring\n", operand->type);
+        exit(1);
         return 0;
     }
 }
@@ -452,7 +454,7 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
         op->get_value_func = immediate_long_get;
         break;
     case InvalidSize:
-        fprintf(stderr, "Invalid operand size in operand_make_immediate_value\n");
+        fprintf(stderr, "Invalid operand size %x in operand_make_immediate_value\n", size);
         exit(1);
     }
 
@@ -606,6 +608,8 @@ Operand* operand_make_branching_offset(Instruction* instr, Size size)
         break;
     default: // The 68000 does not support long branching offsets
         free(op);
+        fprintf(stderr, "Invalid size %x in operand_make_branching_offset\n", size);
+        exit(1);
         return NULL;
     }
 
