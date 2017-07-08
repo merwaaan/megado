@@ -1,0 +1,19 @@
+language: c
+sudo: false
+dist: trusty
+
+addons:
+  apt:
+    packages:
+    - xorg-dev
+
+matrix:
+  include:
+  - compiler: clang
+    env: USER_FLAGS=-Werror
+
+  - compiler: gcc
+
+install: ./install-deps.sh
+
+script: make debug CC=$CC USER_FLAGS=$USER_FLAGS

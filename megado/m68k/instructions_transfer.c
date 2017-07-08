@@ -41,7 +41,6 @@ Instruction* gen_exg(uint16_t opcode)
     default:
         fprintf(stderr, "Invalid mode %x in gen_exg\n", mode);
         exit(1);
-        // TODO error
         break;
     }
 
@@ -121,8 +120,8 @@ Instruction* gen_move(uint16_t opcode)
 }
 
 // Computer pointers to the nth register in post-inc or pre-dec order
-#define MOVEM_POSTINC_ORDER(n) (n < 8 ? ctx->data_registers + n : ctx->address_registers + (n - 8))
-#define MOVEM_PREDEC_ORDER(n) (n < 8 ? ctx->address_registers + (7 - n) : ctx->data_registers + (7 - (n - 8)))
+#define MOVEM_POSTINC_ORDER(n) (n < 8 ? (uint32_t*)ctx->data_registers + n : ctx->address_registers + (n - 8))
+#define MOVEM_PREDEC_ORDER(n) (n < 8 ? ctx->address_registers + (7 - n) : (uint32_t*)ctx->data_registers + (7 - (n - 8)))
 
 uint8_t movem(Instruction* i, M68k* ctx)
 {
@@ -167,7 +166,7 @@ uint8_t movem(Instruction* i, M68k* ctx)
         }
 
     // Update the address register in pre-dec/post-inc modes
-    // (take into account the one dec/inc that is handled by the operand's pre/post functions) 
+    // (take into account the one dec/inc that is handled by the operand's pre/post functions)
     if (ea->type == AddressRegisterIndirectPreDec)
         ctx->address_registers[ea->n] = offset + size_in_bytes(i->size);
     else if (ea->type == AddressRegisterIndirectPostInc)
@@ -293,6 +292,6 @@ Instruction* gen_unlk(uint16_t opcode)
     Instruction* i = instruction_make("UNLK", unlk);
     i->size = Long;
     i->src = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
-    i->base_cycles = 12; 
+    i->base_cycles = 12;
     return i;
 }
