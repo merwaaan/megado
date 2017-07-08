@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/fmdkdd/megado.svg?branch=master)](https://travis-ci.org/fmdkdd/megado)
+[![Build Status](https://travis-ci.org/merwaaan/megado.svg?branch=master)](https://travis-ci.org/merwaaan/megado)
 
 Work in progress.
 
