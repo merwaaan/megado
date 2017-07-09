@@ -48,7 +48,7 @@ case $1 in
         BIN=$RELEASE_BIN
         ;;
     *)
-        echo './run.sh [-g -j NUM] debug|release ROM'
+        echo './run.sh [-gv -j NUM -f FLAGS -r RUNNER] debug|release ROM'
         exit 0
         ;;
 esac
