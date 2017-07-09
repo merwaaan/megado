@@ -271,6 +271,7 @@ uint8_t divu(Instruction* i, M68k* ctx)
     uint32_t b = ctx->data_registers[i->dst->n];
 
     if (a == 0) {
+        printf("WARNING division by zero should be trapped!");
         // TODO: trap the divide by zero
         // operands are unaffected, flags are undefined
     }
@@ -285,7 +286,7 @@ uint8_t divu(Instruction* i, M68k* ctx)
         NEGATIVE_SET(ctx, BIT(quotient, 15));
     }
 
-    return 144; // TODO: should add address calculation time
+    return 0;
 }
 
 uint8_t divs(Instruction* i, M68k* ctx)
@@ -295,6 +296,7 @@ uint8_t divs(Instruction* i, M68k* ctx)
     int32_t b = ctx->data_registers[i->dst->n];
 
     if (a == 0) {
+        printf("WARNING division by zero should be trapped!");
         // TODO: trap the divide by zero
         // operands are unaffected, flags are undefined
     }
@@ -309,7 +311,7 @@ uint8_t divs(Instruction* i, M68k* ctx)
         NEGATIVE_SET(ctx, BIT(quotient, 15));
     }
 
-    return 162; // TODO: should add address calculation time
+    return 0;
 }
 
 Instruction* gen_divs(uint16_t opcode)
@@ -370,11 +372,12 @@ Instruction* gen_ext(uint16_t opcode)
 
 uint8_t mul(Instruction* i, M68k* ctx)
 {
-    ctx->data_registers[i->dst->n] = FETCH_EA_AND_GET(i->src, ctx) * ctx->data_registers[i->dst->n];
+    // All 32 bits of the product are stored in the destination register
+    ctx->data_registers[i->dst->n] = FETCH_EA_AND_GET(i->src, ctx) * (ctx->data_registers[i->dst->n] & 0xFFFF);
 
     uint32_t result = GET(i->dst, ctx);
     CARRY_SET(ctx, false);
-    OVERFLOW_SET(ctx, false); // TODO
+    OVERFLOW_SET(ctx, false);
     ZERO_SET(ctx, result == 0);
     NEGATIVE_SET(ctx, BIT(result, i->size - 1));
 

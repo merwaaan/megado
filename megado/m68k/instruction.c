@@ -78,6 +78,7 @@ DECLARE_INSTR(movea);
 DECLARE_INSTR(movem);
 DECLARE_INSTR(moveq);
 DECLARE_INSTR(movep);
+DECLARE_INSTR(move_from_ccr);
 DECLARE_INSTR(move_to_ccr);
 DECLARE_INSTR(pea);
 DECLARE_INSTR(trap);
@@ -121,8 +122,6 @@ uint8_t not_implemented(Instruction* i, M68k* ctx)
 {
     return 0;
 }
-
-// TODO move from ccr?
 
 // Generator function
 typedef struct Instruction* (GenFunc)(uint16_t opcode);
@@ -197,6 +196,7 @@ static Pattern instruction_patterns[] =
     { "0010???001MMMXXX", &gen_movea,        MODES_ALL,                                                                                                                 MODES_NONE },             // Long
     { "0001XXXMMMMMMXXX", &gen_move,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_ALL & ~MODES_ADDR}, // Byte: no address register as source
     { "00S3XXXMMMMMMXXX", &gen_move,         MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_ALL },
+    { "0100001011MMMXXX", &gen_move_from_ccr, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
     { "0100000011MMMXXX", &gen_move_from_sr, MODES_DATA | MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                               MODES_NONE },
     { "0100010011MMMXXX", &gen_move_to_ccr,  MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
     { "0100011011MMMXXX", &gen_move_to_sr,   MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },
@@ -265,7 +265,7 @@ static Pattern instruction_patterns[] =
     { "1101???000MMMXXX", &gen_add,          MODES_ALL & ~MODES_ADDR,                                                                                                   MODES_NONE },             // Byte: no address register
     { "1101???001MMMXXX", &gen_add,          MODES_ALL,                                                                                                                 MODES_NONE },             // Word
     { "1101???010MMMXXX", &gen_add,          MODES_ALL,                                                                                                                 MODES_NONE },             // Long
-    { "1101???1S2MMMXXX", &gen_add,          MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },             // TODO ADDA (w sign extension) for addr reg?
+    { "1101???1S2MMMXXX", &gen_add,          MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },
     { "1101???1S200????", &gen_addx,         MODES_NONE,                                                                                                                MODES_NONE },
     { "1101????11MMMXXX", &gen_adda,         MODES_ALL,                                                                                                                 MODES_NONE },
     { "1110000?11MMMXXX", &gen_asd_mem,      MODES_ADDR_IND | MODES_ADDR_OFFSET | MODES_ABS,                                                                            MODES_NONE },
@@ -360,8 +360,6 @@ static bool pattern_match(Pattern* pattern, uint16_t opcode)
                 ea_modes = pattern->legal_ea_modes2;
                 continue;
             }
-
-            // TODO check legal modes*/
 
             return false;
         }

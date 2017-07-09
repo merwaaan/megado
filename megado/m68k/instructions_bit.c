@@ -14,9 +14,7 @@ Instruction* gen_bit_instruction(uint16_t opcode, char* name, InstructionFunc fu
     Instruction* i = instruction_make(name, func);
 
     i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
-
-    if (i->dst != NULL)
-        i->size = i->dst->type == DataRegister ? Long : Byte;
+    i->size = i->dst->type == DataRegister ? Long : Byte;
 
     if (immediate)
         i->src = operand_make_immediate_value(Word, i);
@@ -133,7 +131,7 @@ uint8_t btst(Instruction* i, M68k* ctx) // TODO check doc
     int bit = FETCH_EA_AND_GET(i->src, ctx) % i->size;
     int set = BIT(FETCH_EA_AND_GET(i->dst, ctx), bit);
 
-    ZERO_SET(ctx, !set);
+    ZERO_SET(ctx, set == 0);
 
     return 0;
 }

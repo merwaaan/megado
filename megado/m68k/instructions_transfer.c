@@ -242,6 +242,24 @@ Instruction* gen_movep(uint16_t opcode)
     return i;
 }
 
+uint8_t move_from_ccr(Instruction* i, M68k* ctx)
+{
+    // Only update the CCR segment of the status register
+    uint16_t value = FETCH_EA_AND_GET(i->dst, ctx);
+    SET(i->dst, ctx, (value & 0xFF00) | (ctx->status & 0x1F));
+
+    return 0;
+}
+
+Instruction* gen_move_from_ccr(uint16_t opcode)
+{
+    Instruction* i = instruction_make("MOVE from CCR", move_from_ccr);
+    i->size = Word;
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    i->base_cycles = 6; // TODO not sure about that, any doc?
+    return i;
+}
+
 uint8_t move_to_ccr(Instruction* i, M68k* ctx)
 {
     // Only update the CCR segment of the status register

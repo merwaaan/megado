@@ -259,7 +259,7 @@ uint8_t tst(Instruction* i, M68k* ctx)
 }
 
 Instruction* gen_tst(uint16_t opcode)
-{ // TODo check subtlety with size!! http://oldwww.nvg.ntnu.no/amiga/MC680x0_Sections/tst.HTML
+{
     Instruction* i = instruction_make("TST", tst);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);

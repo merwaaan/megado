@@ -17,7 +17,7 @@ bool True(M68k* context)
 
 bool High(M68k* context)
 {
-    return ZERO(context) + CARRY(context) == 0; // TODO
+    return !ZERO(context) & !CARRY(context);
 }
 
 bool LowOrSame(M68k* context)
