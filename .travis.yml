@@ -37,6 +37,8 @@ matrix:
     env:
     - USER_FLAGS="-DALL_WINDOWS -DTIMEOUT=100000000 -fsanitize=address -fno-omit-frame-pointer -O1"
     - RUN=1
+    - LSAN_OPTIONS="suppressions=lsan.supp"
+    - ASAN_OPTIONS="fast_unwind_on_malloc=0"
 
   # We should compile under GCC, but do not fail on -Werror here as there are
   # warnings we haven't heeded yet.
