@@ -654,7 +654,7 @@ static void build_ui(Renderer* r)
             igNextColumn();
 
             address += instr->length;
-            free(instr);
+            decoded_instruction_free(instr);
         }
 
         igColumns(1, NULL, false);

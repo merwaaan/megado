@@ -21,6 +21,7 @@ Settings* settings_make()
 
 void settings_free(Settings* s)
 {
+    free(s->breakpoint_sets);
     free(s);
 }
 
