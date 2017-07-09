@@ -1,4 +1,4 @@
-# Bugs
+# Game-specific bugs
 
 - Sunset Riders: the palettes become greenish on the menu screen
                  (switches back to normal after a few seconds in-game).
@@ -15,7 +15,7 @@
     written to the VDP @ 63AA)
 
 - Alex Kidd in the Enchanted Castle:
-  - Planes are empty during the intro and in-game.
+  - Planes are empty during the intro and in-game (only works in the korean version)
   - The sega logo's gradient is not animated
 
 - Shadowrun: the games becomes completely glitched once the in-game menu is opened.
@@ -23,11 +23,7 @@
 - The Simpsons - Bart's Nightmare: the planes have an invalid size (64*128). This occurs on
 the menu screen and then in-game, which leads to a buffer overflow.
 
-- Spiderman and Venom - Maximum Carnage: the palette is entirely white on the logo screens,
-entirely black in-game.
-
-- Spiderman and Venom - Separation Anxiety: Spiderman is not animated (the exact same bug
-seem to occur on the boot screen of Maximum Carnage).
+- Spiderman and Venom - Maximum Carnage / Separation Anxiety: Spiderman is not animated.
 
 - Spiderman vs The Kingpin:
   - the intro screen has corrupted rows of tiles.
@@ -62,9 +58,28 @@ so the flag is always cleared.
   in-game stage has sprite glitches; choosing the second character instantly
   glitches the whole screen.
 
+- Toy Story: executes the content of the stack.
+
+- Blades of Vengeance:
+    - copyright screen partially wraps around the screen.
+    - the menu screen does not respond.
+
+- California Games: the menu screen does not respond.
+
+- Chameleon Kid: character does not walk but looks in the correct direction.
+
+- Ristar: character goes below the ground.
+
+- Contra:
+    - no UI (Window plane not shown).
+    - character fires his weapon backward!
+
+- Castle of Illusion: Mickey's jumps are too short to pass the first step.
+
 # Games that seem to wait for the Z80:
 
 - Daffy Duck in Hollywood @1D7BC8
 - The Addam's Family @43C0E
 - Lost Vikings: waiting for $A01000 to equal zero @FD888 (eerily similar to Addam's Family)
 - Spirou: seems to be waiting for the Z80 to execute something
+- Pitfall
