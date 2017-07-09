@@ -76,7 +76,7 @@ void settings_save(Settings* s)
     FILE* file = fopen(SETTINGS_FILE, "w");
     if (!file)
     {
-        printf("Cannot open file \"%s\"", SETTINGS_FILE);
+        printf("Cannot open file \"%s\"\n", SETTINGS_FILE);
         return;
     }
 
@@ -104,7 +104,7 @@ Settings* settings_load()
     FILE* file = fopen(SETTINGS_FILE, "r");
     if (!file)
     {
-        printf("Cannot open file \"%s\"", SETTINGS_FILE);
+        printf("Cannot open file \"%s\"\n", SETTINGS_FILE);
         return NULL;
     }
 
@@ -123,7 +123,7 @@ Settings* settings_load()
     int version = json_object_get_int(json_object_object_get(json, "version"));
     if (version != SETTINGS_FORMAT_VERSION)
     {
-        printf("Settings are out of date (loaded version is %d, current version is %d)", version, SETTINGS_FORMAT_VERSION);
+        printf("Settings are out of date (loaded version is %d, current version is %d)\n", version, SETTINGS_FORMAT_VERSION);
         return NULL;
     }
 

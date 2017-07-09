@@ -108,7 +108,7 @@ void genesis_load_rom_file(Genesis* g, const char* path)
         g->region = Region_Europe; break;
 
     default:
-        printf("Invalid country code, using default (Japan)");
+        printf("Invalid country code, using default (Japan)\n");
         g->region = Region_Japan;
     }
     // TODO it seems possible to have multiple country codes, how to handle that?
