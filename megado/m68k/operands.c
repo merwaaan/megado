@@ -309,7 +309,13 @@ Operand* operand_make_address_register_indirect(int n, Instruction* instr)
 
 void address_inc(Operand* o, M68k* ctx)
 {
-    ctx->address_registers[o->n] += size_in_bytes(o->instruction->size);
+    // If the address register is the stack pointer and the operand
+    // size is byte, the address is incremented by two to keep the
+    // stack pointer aligned to a word boundary.
+    if (o->n == 7 && o->instruction->size == Byte)
+        ctx->address_registers[o->n] += 2;
+    else
+        ctx->address_registers[o->n] += size_in_bytes(o->instruction->size);
 }
 
 Operand* operand_make_address_register_indirect_postinc(int n, struct Instruction* instr)
@@ -334,6 +340,12 @@ Operand* operand_make_address_register_indirect_postinc(int n, struct Instructio
 
 void address_dec(Operand* o, M68k* ctx)
 {
+    // If the address register is the stack pointer and the operand
+    // size is byte, the address is decremented by two to keep the
+    // stack pointer aligned to a word boundary.
+    if (o->n == 7 && o->instruction->size == Byte)
+        ctx->address_registers[o->n] -= 2;
+    else
     ctx->address_registers[o->n] -= size_in_bytes(o->instruction->size);
 }
 
