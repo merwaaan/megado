@@ -1,4 +1,5 @@
 #include <megado/genesis.h>
+#include <megado/settings.h>
 #include <megado/m68k/instruction.h>
 #include <megado/m68k/m68k.h>
 #include <stdbool.h>
@@ -10,8 +11,33 @@ void run(Genesis* g, char* path)
     genesis_load_rom_file(g, path);
     genesis_initialize(g);
 
-    while (g->status != Status_Quitting)
+// Enable debug windows on CI to catch more bugs
+#ifdef ALL_WINDOWS
+    g->settings->vsync = false;
+    g->settings->show_cpu_registers = true;
+    g->settings->show_cpu_disassembly = true;
+    g->settings->show_cpu_log = true;
+    g->settings->show_vdp_registers = true;
+    g->settings->show_vdp_palettes = true;
+    g->settings->show_vdp_patterns = true;
+    g->settings->show_vdp_planes = true;
+    g->settings->show_vdp_sprites = true;
+    g->settings->show_rom = true;
+    g->settings->show_ram = true;
+    g->settings->show_vram = true;
+    g->settings->show_vsram = true;
+    g->settings->show_cram = true;
+    g->settings->show_metrics = true;
+#endif
+
+    while (g->status != Status_Quitting) {
         genesis_update(g);
+
+// Automatically exit after a few cycles; necessary for continuous integration
+#ifdef TIMEOUT
+        if (g->m68k->cycles > TIMEOUT) break;
+#endif
+    }
 }
 
 int main(int argc, char **argv)

@@ -1,19 +1,58 @@
 language: c
+# Container is faster to spin than the VM
 sudo: false
+# Need 14.04 for a recent enough CMake
+# Not bad to have more recent clang and gcc
 dist: trusty
 
 addons:
   apt:
+    # Need to fetch from the source.  Here is the motherload:
+    # https://github.com/travis-ci/apt-source-whitelist/blob/master/ubuntu.json
+    sources:
+    - llvm-toolchain-trusty-4.0
+    - ubuntu-toolchain-r-test
     packages:
-    - xorg-dev
+    - xorg-dev                  # needed by GLFW
+    - valgrind
+    - clang-4.0
+    - gcc-7
 
 matrix:
   include:
-  - compiler: clang
-    env: USER_FLAGS=-Werror
+  # One clang build runs valgrind
+  - compiler: clang-4.0
+    env:
+    - USER_FLAGS="-Werror -DALL_WINDOWS -DTIMEOUT=10000"
+    - RUNNER='valgrind --leak-check=full --error-exitcode=1'
 
-  - compiler: gcc
+  # Another runs the undefined behavior sanitizer
+  - compiler: clang-4.0
+    env:
+    - USER_FLAGS="-DALL_WINDOWS -DTIMEOUT=100000000 -fsanitize=undefined -fno-sanitize-recover=undefined"
+    - RUN=1
 
+  # And yet another one runs the address sanitizer
+  - compiler: clang-4.0
+    env:
+    - USER_FLAGS="-DALL_WINDOWS -DTIMEOUT=100000000 -fsanitize=address -fno-omit-frame-pointer -O1"
+    - RUN=1
+
+  # We should compile under GCC, but do not fail on -Werror here as there are
+  # warnings we haven't heeded yet.
+  - compiler: gcc-7
+
+# Build and install deps/ locally
 install: ./install-deps.sh
 
-script: make debug CC=$CC USER_FLAGS=$USER_FLAGS
+# Run a virtual frame buffer (xvfb) rather than disabling the window
+# see https://docs.travis-ci.com/user/gui-and-headless-browsers/#Using-xvfb-to-Run-Tests-That-Require-a-GUI
+before_script:
+- "export DISPLAY=:99.0"
+- "sh -e /etc/init.d/xvfb start"
+- sleep 3 # give xvfb some time to start
+
+script:
+- make debug CC=$CC USER_FLAGS="$USER_FLAGS"
+- if [[ -n $RUNNER ]]; then ./run.sh -r "$RUNNER" debug roms/daytrip.bin; fi
+- if [[ -n $RUN ]]; then ./run.sh debug roms/daytrip.bin; fi
