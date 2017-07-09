@@ -8,6 +8,7 @@
 #include "operands.h"
 
 // TODO check all timings
+// TODO shift/rotation count are modulo the instruction size but it should be 64 for registers
 
 Instruction* gen_shift_instruction(uint16_t opcode, char* name, InstructionFunc func)
 {
@@ -41,14 +42,16 @@ uint8_t asr(Instruction* i, M68k* ctx)
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
     uint8_t shift = FETCH_EA_AND_GET(i->src, ctx);
-    if (shift == 0)
+
+    // For immediate operands, the shift count is in [1, 8]
+    if (shift == 0 && i->src->type == Value)
         shift = 8;
 
     if (shift > 0)
     {
         uint32_t shifted_in = BIT(initial, i->size - 1) ? MASK_BELOW(0xFFFFFFFF, i->size - shift) : 0;
         SET(i->dst, ctx, initial >> shift | shifted_in);
-        
+
         uint8_t last_shifted_out = shift > i->size ? 0 : BIT(initial, shift - 1);
         CARRY_SET(ctx, last_shifted_out);
         EXTENDED_SET(ctx, last_shifted_out);
@@ -67,10 +70,12 @@ uint8_t lsl(Instruction* i, M68k* ctx)
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
     uint8_t shift = FETCH_EA_AND_GET(i->src, ctx);
-    if (shift == 0)
+
+    // For immediate operands, the shift count is in [1, 8]
+    if (shift == 0 && i->src->type == Value)
         shift = 8;
 
-    if (shift > 0) // TODO always > 0!!
+    if (shift > 0)
     {
         SET(i->dst, ctx, initial << shift);
 
@@ -92,10 +97,12 @@ uint8_t lsr(Instruction* i, M68k* ctx)
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
     uint8_t shift = FETCH_EA_AND_GET(i->src, ctx);
-    if (shift == 0)
+
+    // For immediate operands, the shift count is in [1, 8]
+    if (shift == 0 && i->src->type == Value)
         shift = 8;
 
-    if (shift > 0) // TODO always > 0!!
+    if (shift > 0)
     {
         SET(i->dst, ctx, initial >> shift);
 
@@ -141,10 +148,12 @@ uint8_t rol(Instruction* i, M68k* ctx)
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
     int rotation = FETCH_EA_AND_GET(i->src, ctx) % i->size;
-    if (rotation == 0)
+
+    // For immediate operands, the rotation count is in [1, 8]
+    if (rotation == 0 && i->src->type == Value)
         rotation = 8;
 
-    if (rotation > 0) // TODO always true!
+    if (rotation > 0)
     {
         SET(i->dst, ctx, initial << rotation | FRAGMENT(initial, i->size - 1, i->size - rotation));
 
@@ -166,10 +175,12 @@ uint8_t ror(Instruction* i, M68k* ctx)
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
     int rotation = FETCH_EA_AND_GET(i->src, ctx) % i->size;
-    if (rotation == 0)
+
+    // For immediate operands, the rotation count is in [1, 8]
+    if (rotation == 0 && i->src->type == Value)
         rotation = 8;
 
-    if (rotation > 0) //TODO always true!
+    if (rotation > 0)
     {
         SET(i->dst, ctx, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation));
 
@@ -203,10 +214,12 @@ uint8_t roxl(Instruction* i, M68k* ctx)
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
     int rotation = GET(i->src, ctx) % i->size;
-    if (rotation == 0)
+
+    // For immediate operands, the rotation count is in [1, 8]
+    if (rotation == 0 && i->src->type == Value)
         rotation = 8;
 
-    if (rotation > 0) // TODO always true
+    if (rotation > 0)
     {
         uint32_t rotated = rotation > 1 ? FRAGMENT(initial, i->size - 1, i->size - rotation + 1) : 0;
         SET(i->dst, ctx, initial << rotation | EXTENDED(ctx) << (rotation - 1) | rotated);
@@ -232,6 +245,11 @@ uint8_t roxr(Instruction* i, M68k* ctx)
     uint32_t initial = GET(i->dst, ctx);
 
     int rotation = GET(i->src, ctx) % i->size;
+
+    // For immediate operands, the rotation count is in [1, 8]
+    if (rotation == 0 && i->src->type == Value)
+        rotation = 8;
+
     if (rotation > 0)
     {
         SET(i->dst, ctx, initial >> rotation | FRAGMENT(initial, rotation - 1, 0) << (i->size - rotation + 1) | EXTENDED(ctx) << (i->size - rotation));

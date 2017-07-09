@@ -1,12 +1,5 @@
 # Game-specific bugs
 
-- Sunset Riders: the palettes become greenish on the menu screen
-                 (switches back to normal after a few seconds in-game).
-
-- Tiny Toon Adventures - Acme All-Stars: the palettes become greenish on the menu screen.
-
-- Tiny Toon Adventures - Buster's Hidden Treasure: the palettes become greenish in-game.
-
 - Columns:
   - the sega boot animation only appears in Release builds (Visual Studio specific)
     (no SEGA logo with clang either in release and debug).
@@ -18,20 +11,14 @@
   - Planes are empty during the intro and in-game (only works in the korean version)
   - The sega logo's gradient is not animated
 
-- Shadowrun: the games becomes completely glitched once the in-game menu is opened.
-
 - The Simpsons - Bart's Nightmare: the planes have an invalid size (64*128). This occurs on
 the menu screen and then in-game, which leads to a buffer overflow.
 
 - Spiderman and Venom - Maximum Carnage / Separation Anxiety: Spiderman is not animated.
 
 - Spiderman vs The Kingpin:
-  - the intro screen has corrupted rows of tiles.
   - pressing start on the intro screen make the screen flash indefinitely, going faster with
   each key press.
-
-- Teenage Mutant Ninja Turtles - Tournament Fighters: the character slides on the floor and does
-not respond to keypresses. Sometimes he flickers violently from left to right.
 
 - Splatterhouse 2: waits for a DMA transfer (bit 1 of VDP status) but we do those in a single step
 so the flag is always cleared.
@@ -54,8 +41,7 @@ so the flag is always cleared.
 
 - Krusty: playable; but item sprite is garbled when in the holding slot
 
-- Castlevania Bloodlines: palette is offset to the blue most of the time;
-  in-game stage has sprite glitches; choosing the second character instantly
+- Castlevania Bloodlines: in-game stage has sprite glitches; choosing the second character instantly
   glitches the whole screen.
 
 - Toy Story: executes the content of the stack.
@@ -68,13 +54,12 @@ so the flag is always cleared.
 
 - Chameleon Kid: character does not walk but looks in the correct direction.
 
-- Ristar: character goes below the ground.
+- Ristar: goes to the next level when grabbing an enemy.
 
 - Contra:
+    - can no longer select a character (worked before fixing the shift instructions)
     - no UI (Window plane not shown).
     - character fires his weapon backward!
-
-- Castle of Illusion: Mickey's jumps are too short to pass the first step.
 
 # Games that seem to wait for the Z80:
 
