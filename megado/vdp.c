@@ -317,6 +317,8 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->interlace_mode = FRAGMENT(reg_value, 2, 1);
 
             LOG_VDP("\t\tDisplay width %d, Shadow/Highlight enabled %d, Interlace mode  %d\n", v->display_height, v->shadow_highlight_enabled, v->interlace_mode);
+            if (v->interlace_mode != 0)
+                printf("WARNING interlace mode not supported!");
             return;
 
         case 0xD:
@@ -474,7 +476,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
                 // VRAM copy
                 else if (v->dma_type == 3)
                 {
-                    LOG_VDP("WARNING! DMA copy not implemented\n");
+                    printf("WARNING! DMA copy not implemented\n");
                 }
             }
         }

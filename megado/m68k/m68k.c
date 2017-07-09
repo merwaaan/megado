@@ -157,7 +157,7 @@ uint8_t m68k_step(M68k* m)
         Debugger* d = m->genesis->debugger;
 
         // If the breakpoint has already been touched, do not pause again
-        if (breakpoint ==d->active_breakpoint)
+        if (breakpoint == d->active_breakpoint)
         {
             d->active_breakpoint = NULL;
         }
@@ -174,11 +174,9 @@ uint8_t m68k_step(M68k* m)
     m->instruction_register = m68k_fetch(m);
     Instruction* instr = opcode_table[m->instruction_register];
 
-    // 35C: weird move with unknown regmode
-
     if (instr == NULL)
     {
-        LOG_M68K("\tOpcode %#06X cannot be found in the opcode table\n", m->instruction_register);
+        printf("\tOpcode %#06X cannot be found in the opcode table\n", m->instruction_register);
         return 0;
     }
 

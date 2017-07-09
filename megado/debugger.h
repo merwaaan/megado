@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define M68K_LOG_LENGTH 10
+#define M68K_LOG_LENGTH 25
 
 #define BREAKPOINTS_COUNT 3
 
