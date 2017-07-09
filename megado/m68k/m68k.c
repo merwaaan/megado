@@ -39,10 +39,6 @@ void m68k_initialize(M68k* m)
     m->cycles = 0;
     m->pending_interrupt = -1;
     m->prefetch_address = 0xFFFFFFFF; // Invalid value, will initiate the initial prefetch
-
-    // Reset breakpoints
-    for (uint8_t i = 0; i < BREAKPOINTS_COUNT; ++i)
-        m->breakpoints[i] = (Breakpoint) { false, 0 };
 }
 
 DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
@@ -155,18 +151,20 @@ uint8_t m68k_step(M68k* m)
 {
     // Pause on breakpoints
     // TODO only in DEBUG builds? check perf
-    Breakpoint* breakpoint = m68k_get_breakpoint(m, m->pc);
+    Breakpoint* breakpoint = debugger_get_breakpoint(m->genesis->debugger, m->pc);
     if (breakpoint != NULL)
     {
+        Debugger* d = m->genesis->debugger;
+
         // If the breakpoint has already been touched, do not pause again
-        if (breakpoint == m->active_breakpoint)
+        if (breakpoint ==d->active_breakpoint)
         {
-            m->active_breakpoint = NULL;
+            d->active_breakpoint = NULL;
         }
         else
         {
-            m->active_breakpoint = breakpoint;
-            m->genesis->status = Status_Pause;
+            d->active_breakpoint = breakpoint;
+            d->genesis->status = Status_Pause;
             return 0;
         }
     }
@@ -273,35 +271,4 @@ void m68k_handle_interrupt(M68k* m)
     m->pc = m68k_read_l(m, IRQ_VECTOR_OFFSET + m->pending_interrupt * 4);
 
     m->pending_interrupt = -1;
-}
-
-void m68k_toggle_breakpoint(M68k* m, uint32_t address)
-{
-    // Toggle existing breakpoints
-    for (int i = 0; i < BREAKPOINTS_COUNT; ++i)
-        if (m->breakpoints[i].address == address)
-        {
-            m->breakpoints[i].enabled = !m->breakpoints[i].enabled;
-            return;
-        }
-
-    // Otherwise, use the first free slot
-    for (int i = 0; i < BREAKPOINTS_COUNT; ++i)
-        if (!m->breakpoints[i].enabled)
-        {
-            m->breakpoints[i].enabled = true;
-            m->breakpoints[i].address = address;
-            return;
-        }
-
-    printf("Warning, no free slots for a new breakpoint at %0X", address); // TODO would be nice to output warnings/errors via the UI too
-}
-
-Breakpoint* m68k_get_breakpoint(M68k* m, uint32_t address)
-{
-    for (int i = 0; i < BREAKPOINTS_COUNT; ++i)
-        if (m->breakpoints[i].enabled && m->breakpoints[i].address == address)
-            return &m->breakpoints[i];
-
-    return NULL;
 }

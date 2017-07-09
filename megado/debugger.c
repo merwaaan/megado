@@ -1,4 +1,5 @@
 #include <GLFW/glfw3.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "genesis.h"
@@ -20,6 +21,12 @@ void debugger_free(Debugger* d)
     free(d);
 }
 
+void debugger_preload(Debugger* d)
+{
+    char name[49];
+    genesis_get_rom_name(d->genesis, name);
+    d->breakpoints = settings_get_or_create_breakpoints(d->genesis->settings, name);
+}
 void debugger_post_m68k(Debugger* d)
 {
     // Append the last instruction's address to the program log
@@ -49,6 +56,37 @@ void debugger_post_frame(Debugger* d)
             d->rewinding_last_save = now;
         }
     }
+}
+
+void debugger_toggle_breakpoint(Debugger* d, uint32_t address)
+{
+    // Toggle existing breakpoints
+    for (int i = 0; i < BREAKPOINTS_COUNT; ++i)
+        if (d->breakpoints[i].address == address)
+        {
+            d->breakpoints[i].enabled = !d->breakpoints[i].enabled;
+            return;
+        }
+
+    // Otherwise, use the first free slot
+    for (int i = 0; i < BREAKPOINTS_COUNT; ++i)
+        if (!d->breakpoints[i].enabled)
+        {
+            d->breakpoints[i].enabled = true;
+            d->breakpoints[i].address = address;
+            return;
+        }
+
+    printf("Warning, no free slots for a new breakpoint at %0X", address); // TODO would be nice to output warnings/errors via the UI too
+}
+
+Breakpoint* debugger_get_breakpoint(Debugger* d, uint32_t address)
+{
+    for (int i = 0; i < BREAKPOINTS_COUNT; ++i)
+        if (d->breakpoints[i].enabled && d->breakpoints[i].address == address)
+            return &d->breakpoints[i];
+
+    return NULL;
 }
 
 bool debugger_rewind(Debugger* d)

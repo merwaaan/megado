@@ -620,7 +620,7 @@ static void build_ui(Renderer* r)
             }
 
             // Draw a bubble on lines with a breakpoint
-            if (m68k_get_breakpoint(r->genesis->m68k, address) != NULL)
+            if (debugger_get_breakpoint(r->genesis->debugger, address) != NULL)
             {
                 struct ImDrawList* draw_list = igGetWindowDrawList();
 
@@ -642,7 +642,7 @@ static void build_ui(Renderer* r)
             // TODO would be nice to have a hover feedback
             // TODO would be better to click the whole row but grouping seems to be interrupted by columns :(
             if (igIsItemClicked(0))
-                m68k_toggle_breakpoint(r->genesis->m68k, address);
+                debugger_toggle_breakpoint(r->genesis->debugger, address);
 
             igNextColumn();
 
@@ -664,7 +664,7 @@ static void build_ui(Renderer* r)
 
         for (uint8_t i = 0; i < BREAKPOINTS_COUNT; ++i)
         {
-            Breakpoint* b = &r->genesis->m68k->breakpoints[i];
+            Breakpoint* b = &r->genesis->debugger->breakpoints[i];
 
             char name_buffer[100];
 

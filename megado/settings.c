@@ -1,6 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <json.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "settings.h"
 
@@ -50,7 +51,26 @@ void settings_save(Settings* s)
     JSON_SET_BOOL(show_metrics);
     JSON_SET_BOOL(rewinding_enabled);
 
-    // TODO breakpoints
+    // Save the breakpoints
+    json_object* json_sets = json_object_new_array();
+    for (int i = 0; i < s->breakpoint_sets_length; ++i)
+    {
+        json_object* json_set = json_object_new_object();
+        json_object_object_add(json_set, "game", json_object_new_string(s->breakpoint_sets[i].game));
+
+        json_object* json_breakpoints = json_object_new_array();
+        for (int j = 0; j < BREAKPOINTS_COUNT; ++j)
+        {
+            json_object* json_breakpoint = json_object_new_object();
+            json_object_object_add(json_breakpoint, "enabled", json_object_new_boolean(s->breakpoint_sets[i].breakpoints[j].enabled));
+            json_object_object_add(json_breakpoint, "address", json_object_new_int(s->breakpoint_sets[i].breakpoints[j].address));
+            json_object_array_put_idx(json_breakpoints, j, json_breakpoint);
+        }
+        json_object_object_add(json_set, "breakpoints", json_breakpoints);
+
+        json_object_array_put_idx(json_sets, i, json_set);
+    }
+    json_object_object_add(json, "breakpoint_sets", json_sets);
 
     printf("Saving settings...\n");
     FILE* file = fopen(SETTINGS_FILE, "w");
@@ -127,7 +147,46 @@ Settings* settings_load()
     JSON_GET_BOOL(show_metrics);
     JSON_GET_BOOL(rewinding_enabled);
 
+    // Load the breakpoints
+
+    json_object* json_sets = json_get(json, "breakpoint_sets");
+    s->breakpoint_sets_length = json_object_array_length(json_sets);
+    s->breakpoint_sets = calloc(s->breakpoint_sets_length, sizeof(BreakpointSet));
+
+    for (int i = 0; i < s->breakpoint_sets_length; ++i)
+    {
+        json_object* json_set = json_object_array_get_idx(json_sets, i);
+        strcpy(s->breakpoint_sets[i].game, json_object_get_string(json_get(json_set, "game")));
+
+        json_object* json_breakpoints = json_get(json_set, "breakpoints");
+        int breakpoints_length = json_object_array_length(json_breakpoints);
+        for (int j = 0; j < breakpoints_length && j < BREAKPOINTS_COUNT; ++j)
+        {
+            json_object* json_breakpoint = json_object_array_get_idx(json_breakpoints, j);;
+            s->breakpoint_sets[i].breakpoints[j].enabled = json_object_get_boolean(json_get(json_breakpoint, "enabled"));
+            s->breakpoint_sets[i].breakpoints[j].address = json_object_get_int(json_get(json_breakpoint, "address"));
+        }
+    }
+
     json_object_put(json);
 
     return s;
+}
+
+Breakpoint* settings_get_or_create_breakpoints(Settings* s, char* game)
+{
+    // Look for breakpoints for this game in the settings
+    for (int i = 0; i < s->breakpoint_sets_length; ++i)
+        if (strcmp(game, s->breakpoint_sets[i].game) == 0)
+            return s->breakpoint_sets[i].breakpoints;
+
+    // If there are none, create a new set
+    BreakpointSet* set = calloc(1, sizeof(BreakpointSet));
+    strcpy(set->game, game);
+    s->breakpoint_sets_length++;
+
+    s->breakpoint_sets = realloc(s->breakpoint_sets, s->breakpoint_sets_length * sizeof(BreakpointSet));
+    s->breakpoint_sets[s->breakpoint_sets_length - 1] = *set;
+
+    return s->breakpoint_sets[s->breakpoint_sets_length - 1].breakpoints;
 }

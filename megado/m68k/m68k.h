@@ -27,8 +27,6 @@
 #define STATUS_SUPERVISOR_MODE(context) BIT((context)->status, 13)
 #define STATUS_INTERRUPT_MASK(context) FRAGMENT((context)->status, 10, 8)
 
-#define BREAKPOINTS_COUNT 3
-
 struct Instruction;
 struct DecodedInstruction;
 struct Genesis;
@@ -36,13 +34,6 @@ struct M68k;
 
 // Jump table that contains all the M68000 instructions
 extern struct Instruction** opcode_table;
-
-typedef struct Breakpoint
-{
-    bool enabled;
-    uint32_t address;
-    // TODO hit counter could be useful
-} Breakpoint;
 
 typedef struct M68k
 {
@@ -70,10 +61,6 @@ typedef struct M68k
     uint32_t prefetch_address; // Address of the value at the head of the queue
     uint16_t instruction_register; // Instruction currently being decoded
     uint32_t instruction_address; // Instruction currently being decoded
-
-    // Breakpoints
-    Breakpoint breakpoints[BREAKPOINTS_COUNT]; // The emulation will pause when the PC reaches one of those addresses
-    Breakpoint* active_breakpoint; // The breakpoint currently blocking the emulation
 
     uint64_t instruction_count;
 } M68k;
@@ -104,10 +91,6 @@ uint16_t m68k_fetch(M68k* m);
 // Pending interrupts will be serviced after the current instruction.
 void m68k_request_interrupt(M68k* m, uint8_t level);
 void m68k_handle_interrupt(M68k* m);
-
-// Breakpoint handling
-void m68k_toggle_breakpoint(M68k*, uint32_t address); // Add/Remove a breakpoint at the given address
-Breakpoint* m68k_get_breakpoint(M68k*, uint32_t address); // Return a possible enabled breakpoint at the given address
 
 // I/O functions
 //

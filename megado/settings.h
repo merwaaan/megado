@@ -3,11 +3,19 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "debugger.h"
+
 #define SETTINGS_FILE "settings.json"
 
 // Bump that version number when changing the format
 // in order to discard out of date settings
-#define SETTINGS_FORMAT_VERSION 0
+#define SETTINGS_FORMAT_VERSION 2
+
+typedef struct BreakpointSet
+{
+    char game[49];
+    Breakpoint breakpoints[BREAKPOINTS_COUNT];
+} BreakpointSet;
 
 typedef struct Settings
 {
@@ -33,9 +41,8 @@ typedef struct Settings
 
     bool rewinding_enabled;
 
-    // Breakpoints
-    uint32_t breakpoints[3];
-    // TODO keep breakpoints for all games (key = name in header? checksum?)
+    BreakpointSet* breakpoint_sets;
+    int breakpoint_sets_length;
 } Settings;
 
 Settings* settings_make();
@@ -43,3 +50,6 @@ void settings_free(Settings*);
 
 void settings_save(Settings*);
 Settings* settings_load();
+
+// Returns breakpoints for the given game.
+Breakpoint* settings_get_or_create_breakpoints(Settings*, char* game);

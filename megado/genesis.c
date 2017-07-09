@@ -89,8 +89,9 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     print_header_info("[Country]", g->memory + 0x1F0, 8);
     printf("----------------\n");
 
-    // Look for snapshots of this game
+    // Look for snapshots/breakpoints for this game
     snapshots_preload(g, g->renderer->snapshots);
+    debugger_preload(g->debugger);
 
     // Set the system region depending on country code of the game
     uint8_t* country_codes = g->memory + 0x1F0;

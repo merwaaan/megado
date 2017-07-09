@@ -5,6 +5,8 @@
 
 #define M68K_LOG_LENGTH 10
 
+#define BREAKPOINTS_COUNT 3
+
 #define REWIND_BUFFER_LENGTH 100
 #define REWIND_SAVE_INTERVAL 0.1
 #define REWIND_PLAY_INTERVAL 0.05
@@ -12,6 +14,13 @@
 struct DecodedInstruction;
 struct Genesis;
 struct Snapshot;
+
+typedef struct Breakpoint
+{
+    bool enabled;
+    uint32_t address;
+    // TODO hit counter could be useful
+} Breakpoint;
 
 typedef struct Debugger
 {
@@ -31,7 +40,8 @@ typedef struct Debugger
     uint16_t m68k_log_cursor;
 
     // Breakpoints
-    // TODO
+    Breakpoint* breakpoints; // Points to the data stored in settings
+    Breakpoint* active_breakpoint; // The breakpoint currently blocking the emulation
 
     // Watchpoints
     // TODO
@@ -47,8 +57,13 @@ typedef struct Debugger
 Debugger* debugger_make(struct Genesis*);
 void debugger_free(Debugger*);
 
+void debugger_preload(Debugger*);
+
 void debugger_post_m68k(Debugger*);
 void debugger_post_frame(Debugger*);
+
+void debugger_toggle_breakpoint(Debugger*, uint32_t address);
+Breakpoint* debugger_get_breakpoint(Debugger*, uint32_t address);
 
 // Restores the most recent rewinding snapshot.
 // Returns false if there is no more snapshot no restore.
