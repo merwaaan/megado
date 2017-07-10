@@ -15,34 +15,40 @@ addons:
     packages:
     - xorg-dev                  # needed by GLFW
     - valgrind
-    - clang-4.0
+    - clang-4.0                 # bleeding edge
     - gcc-7
 
 matrix:
   include:
-  # One clang build runs valgrind
-  - compiler: clang-4.0
-    env:
-    - USER_FLAGS="-Werror -DALL_WINDOWS -DTIMEOUT=10000"
-    - RUNNER='valgrind --leak-check=full --error-exitcode=1'
 
-  # Another runs the undefined behavior sanitizer
-  - compiler: clang-4.0
-    env:
-    - USER_FLAGS="-DALL_WINDOWS -DTIMEOUT=100000000 -fsanitize=undefined -fno-sanitize-recover=undefined"
-    - RUN=1
+  # GCC build, but do not fail on -Werror here as there are warnings we haven't
+  # heeded yet.
+  - compiler: gcc-7
 
-  # And yet another one runs the address sanitizer
+  # Latest clang build
   - compiler: clang-4.0
     env:
-    - USER_FLAGS="-DALL_WINDOWS -DTIMEOUT=100000000 -fsanitize=address -fno-omit-frame-pointer -O1"
-    - RUN=1
+    - FLAGS="-Werror"
+
+  # Undefined behavior sanitizer
+  - compiler: clang-4.0
+    env:
+    - FLAGS="-fsanitize=undefined -fno-sanitize-recover=undefined -DALL_WINDOWS -DTIMEOUT=100000000"
+    - RUN=debug
+
+  # Address sanitizer
+  - compiler: clang-4.0
+    env:
+    - FLAGS="-fsanitize=address -O1 -fno-omit-frame-pointer -DALL_WINDOWS -DTIMEOUT=100000000"
+    - RUN=debug
     - LSAN_OPTIONS="suppressions=lsan.supp"
     - ASAN_OPTIONS="fast_unwind_on_malloc=0"
 
-  # We should compile under GCC, but do not fail on -Werror here as there are
-  # warnings we haven't heeded yet.
-  - compiler: gcc-7
+  # Valgrind
+  - compiler: clang-4.0
+    env:
+    - RUN=valgrind
+    - FLAGS="-DALL_WINDOWS -DTIMEOUT=10000"
 
 # Build and install deps/ locally
 install: ./install-deps.sh
@@ -55,6 +61,14 @@ before_script:
 - sleep 3 # give xvfb some time to start
 
 script:
-- make debug CC=$CC USER_FLAGS="$USER_FLAGS"
-- if [[ -n $RUNNER ]]; then ./run.sh -r "$RUNNER" debug roms/daytrip.bin; fi
-- if [[ -n $RUN ]]; then ./run.sh debug roms/daytrip.bin; fi
+- make -j2 CC=$CC USER_FLAGS="$FLAGS" BUILD_DIR=build/debug
+- |
+  case $RUN in
+    debug)
+      ./run.sh debug roms/daytrip.bin
+       ;;
+    valgrind)
+      ./run.sh -r 'valgrind --leak-check=full --error-exitcode=1'\
+                   debug roms/daytrip.bin
+      ;;
+  esac
