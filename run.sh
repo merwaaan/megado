@@ -6,26 +6,24 @@
 #
 # The `-g` flag will run the binary through GDB, passing any extra arguments.
 
-OPTIND=1 # Reset getopts (see https://stackoverflow.com/a/14203146)
+OPTIND=1 # Reset getopts (see https://stackoverflow.com/a/14203146 )
 
 ENV='LD_LIBRARY_PATH=deps/cimgui/cimgui:deps/glfw/build/src:deps/glew/build/lib:deps/json-c/lib'
-DEBUG_BIN='build/debug/megado'
-RELEASE_BIN='build/release/megado'
+DEBUG_DIR='build/debug'
+RELEASE_DIR='build/release'
 
 # Parse arguments
 JOBS=4
 RUNNER=
-DEBUG=
-VERBOSE=
 FLAGS=
 
-while getopts "gvj:r:f:" opt; do
+while getopts "gvf:j:r:" opt; do
     case "$opt" in
-        g) DEBUG='-g'
+        g) FLAGS="$FLAGS -g"
            ;;
-        v) VERBOSE='-DDEBUG'
+        v) FLAGS="$FLAGS -DDEBUG"
            ;;
-        f) FLAGS=$OPTARG
+        f) FLAGS="$FLAGS $OPTARG"
            ;;
         j) JOBS=$OPTARG
            ;;
@@ -39,19 +37,24 @@ shift $((OPTIND-1))
 # Parse command
 case $1 in
     debug)
-        TARGET=debug
-        BIN=$DEBUG_BIN
-        DEBUG='-g'
+        BUILD_DIR=$DEBUG_DIR
+        FLAGS="-g $FLAGS"
         ;;
     release)
-        TARGET=release
-        BIN=$RELEASE_BIN
+        BUILD_DIR=$RELEASE_DIR
+        FLAGS="-O3 -march=native $FLAGS"
+        ;;
+    clean)
+        make BUILD_DIR=$DEBUG_DIR clean
+        make BUILD_DIR=$RELEASE_DIR clean
+        exit 0
         ;;
     *)
-        echo './run.sh [-gv -j NUM -f FLAGS -r RUNNER] debug|release ROM'
+        echo './run.sh [-gv -j NUM -f FLAGS -r RUNNER] debug|release|clean ROM'
         exit 0
         ;;
 esac
 shift
 
-make -j $JOBS USER_FLAGS="$DEBUG $VERBOSE $FLAGS" $TARGET && env $ENV $RUNNER $BIN "$@"
+make -j $JOBS BUILD_DIR="$BUILD_DIR" USER_FLAGS="$FLAGS" \
+    && env $ENV $RUNNER $BUILD_DIR/megado-bin "$@"
