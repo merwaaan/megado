@@ -151,21 +151,27 @@ Settings* settings_load()
     // Load the breakpoints
 
     json_object* json_sets = json_get(json, "breakpoint_sets");
-    s->breakpoint_sets_length = json_object_array_length(json_sets);
-    s->breakpoint_sets = calloc(s->breakpoint_sets_length, sizeof(BreakpointSet));
-
-    for (int i = 0; i < s->breakpoint_sets_length; ++i)
+    if (json_sets != NULL)
     {
-        json_object* json_set = json_object_array_get_idx(json_sets, i);
-        strcpy(s->breakpoint_sets[i].game, json_object_get_string(json_get(json_set, "game")));
+        s->breakpoint_sets_length = json_object_array_length(json_sets);
+        s->breakpoint_sets = calloc(s->breakpoint_sets_length, sizeof(BreakpointSet));
 
-        json_object* json_breakpoints = json_get(json_set, "breakpoints");
-        int breakpoints_length = json_object_array_length(json_breakpoints);
-        for (int j = 0; j < breakpoints_length && j < BREAKPOINTS_COUNT; ++j)
+        for (int i = 0; i < s->breakpoint_sets_length; ++i)
         {
-            json_object* json_breakpoint = json_object_array_get_idx(json_breakpoints, j);;
-            s->breakpoint_sets[i].breakpoints[j].enabled = json_object_get_boolean(json_get(json_breakpoint, "enabled"));
-            s->breakpoint_sets[i].breakpoints[j].address = json_object_get_int(json_get(json_breakpoint, "address"));
+            json_object* json_set = json_object_array_get_idx(json_sets, i);
+            strcpy(s->breakpoint_sets[i].game, json_object_get_string(json_get(json_set, "game")));
+
+            json_object* json_breakpoints = json_get(json_set, "breakpoints");
+            if (json_breakpoints != NULL)
+            {
+                int breakpoints_length = json_object_array_length(json_breakpoints);
+                for (int j = 0; j < breakpoints_length && j < BREAKPOINTS_COUNT; ++j)
+                {
+                    json_object* json_breakpoint = json_object_array_get_idx(json_breakpoints, j);;
+                    s->breakpoint_sets[i].breakpoints[j].enabled = json_object_get_boolean(json_get(json_breakpoint, "enabled"));
+                    s->breakpoint_sets[i].breakpoints[j].address = json_object_get_int(json_get(json_breakpoint, "address"));
+                }
+            }
         }
     }
 
@@ -182,12 +188,12 @@ Breakpoint* settings_get_or_create_breakpoints(Settings* s, char* game)
             return s->breakpoint_sets[i].breakpoints;
 
     // If there are none, create a new set
-    BreakpointSet* set = calloc(1, sizeof(BreakpointSet));
-    strcpy(set->game, game);
     s->breakpoint_sets_length++;
-
     s->breakpoint_sets = realloc(s->breakpoint_sets, s->breakpoint_sets_length * sizeof(BreakpointSet));
-    s->breakpoint_sets[s->breakpoint_sets_length - 1] = *set;
+
+    // Initialize the new set
+    strcpy(s->breakpoint_sets[s->breakpoint_sets_length - 1].game, game);
+    memset(s->breakpoint_sets[s->breakpoint_sets_length - 1].breakpoints, 0, BREAKPOINTS_COUNT * sizeof(Breakpoint));
 
     return s->breakpoint_sets[s->breakpoint_sets_length - 1].breakpoints;
 }
