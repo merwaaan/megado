@@ -1,4 +1,7 @@
-# Suppress leak reports from these libraries, are they are probably
+# Suppress leak reports from these libraries, as they are probably
 # due to xvfb (I don't get them with the Nvidia driver)
 leak:/usr/lib/x86_64-linux-gnu/mesa/libGL.so.1
 leak:/usr/lib/x86_64-linux-gnu/libXrandr.so.2
+# This might also be caused by xvfb, not sure, but we seem to dispose correctly
+# of shaders and this cannot be reproduced on other machines.
+leak:create_shader
