@@ -79,13 +79,15 @@ static GLuint create_shader(GLenum shader_type, const GLchar* source)
 static GLuint create_shader_program(const GLchar* vertex_shader_source, const GLchar* fragment_shader_source)
 {
     GLuint program = glCreateProgram();
-    int vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_shader_source);
-    int fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_shader_source);
+    GLuint vertex_shader = create_shader(GL_VERTEX_SHADER, vertex_shader_source);
+    GLuint fragment_shader = create_shader(GL_FRAGMENT_SHADER, fragment_shader_source);
     glAttachShader(program, vertex_shader);
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
     glDetachShader(program, vertex_shader);
     glDetachShader(program, fragment_shader);
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
 
     GLsizei log_length;
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_length);
@@ -1326,6 +1328,9 @@ void renderer_free(Renderer* r)
 {
     if (r == NULL)
         return;
+
+    glDeleteProgram(r->game_shader);
+    glDeleteProgram(r->ui_shader);
 
     igShutdown();
     glfwDestroyWindow(r->window);
