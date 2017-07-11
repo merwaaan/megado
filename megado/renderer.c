@@ -84,6 +84,8 @@ static GLuint create_shader_program(const GLchar* vertex_shader_source, const GL
     glAttachShader(program, vertex_shader);
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
+    glDetachShader(program, vertex_shader);
+    glDetachShader(program, fragment_shader);
 
     GLsizei log_length;
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_length);
