@@ -553,9 +553,40 @@ Instruction* gen_subq(uint16_t opcode)
     return i;
 }
 
+uint8_t subx(Instruction* i, M68k* ctx)
+{
+    uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
+    uint32_t a = FETCH_EA_AND_GET(i->dst, ctx);
+    bool extended = EXTENDED(ctx);
+    SET(i->dst, ctx, a - b - extended);
+
+    uint32_t result = GET(i->dst, ctx);
+    CARRY_SET(ctx, CHECK_CARRY_SUB(a, b + extended, i->size)); // TODO does this work?
+    OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(a, b + extended, i->size));
+    ZERO_SET(ctx, result == 0);
+    NEGATIVE_SET(ctx, BIT(result, i->size - 1));
+    EXTENDED_SET(ctx, CARRY(ctx));
+
+    return 0;
+}
+
 Instruction* gen_subx(uint16_t opcode)
 {
-    Instruction* i = instruction_make("SUBX", not_implemented);
+    Instruction* i = instruction_make("SUBX", subx);
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+
+    bool data_register = BIT(opcode, 3);
+    if (data_register)
+    {
+        i->src = operand_make_address_register_indirect_predec(FRAGMENT(opcode, 2, 0), i);
+        i->dst = operand_make_address_register_indirect_predec(FRAGMENT(opcode, 11, 9), i);
+    }
+    else
+    {
+        i->src = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
+        i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    }
+
     return i;
 }
 
