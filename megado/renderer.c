@@ -1241,7 +1241,6 @@ static void drop_callback(GLFWwindow* window, int path_count, const char** paths
 {
     Renderer* r = (Renderer*)glfwGetWindowUserPointer(window);
     genesis_load_rom_file(r->genesis, paths[0]);
-    genesis_initialize(r->genesis);
 }
 
 void window_close_callback(GLFWwindow* window)

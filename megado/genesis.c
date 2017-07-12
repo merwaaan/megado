@@ -76,8 +76,9 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     int file_length = ftell(file);
     fseek(file, 0, SEEK_SET);
     fread(g->memory, sizeof(uint8_t), file_length, file);
-
     fclose(file);
+
+    genesis_initialize(g);
 
     // Display info from the ROM header
     printf("----------------\n");

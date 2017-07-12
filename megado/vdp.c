@@ -46,6 +46,10 @@ void vdp_free(Vdp* v)
 
 void vdp_initialize(Vdp* v)
 {
+    memset(v->vram, 0, 0x10000 * sizeof(uint8_t));
+    memset(v->vsram, 0, 0x40 * sizeof(uint16_t));
+    memset(v->cram, 0, 0x40 * sizeof(Color));
+
     // Reset the internal state
 
     v->pending_command = false;

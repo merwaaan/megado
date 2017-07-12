@@ -47,7 +47,7 @@ Genesis* genesis_make();
 void genesis_free(Genesis*);
 
 void genesis_load_rom_file(Genesis* g, const char* path);
-void genesis_initialize(Genesis* g); // TODO rename to reset?
+void genesis_initialize(Genesis* g);
 
 struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc);
 

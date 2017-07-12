@@ -9,7 +9,6 @@
 void run(Genesis* g, char* path)
 {
     genesis_load_rom_file(g, path);
-    genesis_initialize(g);
 
 // Enable debug windows on CI to catch more bugs
 #ifdef ALL_WINDOWS
