@@ -432,14 +432,31 @@ Instruction* gen_neg(uint16_t opcode)
     return i;
 }
 
+uint8_t negx(Instruction* i, M68k* ctx)
+{
+    uint32_t value = FETCH_EA_AND_GET(i->src, ctx) + EXTENDED(ctx);
+    SET(i->src, ctx, 0 - value);
+
+    uint32_t result = GET(i->src, ctx);
+    CARRY_SET(ctx, CHECK_CARRY_SUB(0, value, i->size));
+    OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(0, value, i->size));
+    ZERO_SET(ctx, result == 0);
+    NEGATIVE_SET(ctx, BIT(result, i->size - 1));
+    EXTENDED_SET(ctx, CARRY(ctx));
+
+    return 0;
+}
+
 Instruction* gen_negx(uint16_t opcode)
 {
-    Instruction* i = instruction_make("NEGX", not_implemented);
+    Instruction* i = instruction_make("NEGX", negx);
+    i->size = operand_size(FRAGMENT(opcode, 7, 6));
+    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
 
-    /*i->base_cycles = i->size == Long ?
+    i->base_cycles = i->size == Long ?
         cycles_single_operand_instruction(i, 6, 12) :
         cycles_single_operand_instruction(i, 4, 8);
-        */
+
     return i;
 }
 
