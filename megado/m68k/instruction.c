@@ -220,7 +220,7 @@ static Pattern instruction_patterns[] =
     { "0100111001110010", &gen_stop,         MODES_NONE,                                                                                                                MODES_NONE },
     { "0100111001110011", &gen_rte,          MODES_NONE,                                                                                                                MODES_NONE },
     { "0100111001110101", &gen_rts,          MODES_NONE,                                                                                                                MODES_NONE },
-    { "0100111001110110", &gen_rtr,          MODES_NONE,                                                                                                                MODES_NONE },
+    { "0100111001110111", &gen_rtr,          MODES_NONE,                                                                                                                MODES_NONE },
     { "0100111010MMMXXX", &gen_jsr,          MODE_MASK(AddressRegisterIndirect) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC,                                             MODES_NONE },
     { "0100111011MMMXXX", &gen_jmp,          MODE_MASK(AddressRegisterIndirect) | MODES_ADDR_OFFSET | MODES_ABS | MODES_PC,                                             MODES_NONE },
     { "010010001?MMMXXX", &gen_movem,        MODE_MASK(AddressRegisterIndirect) | MODE_MASK(AddressRegisterIndirectPreDec) | MODES_ADDR_OFFSET | MODES_ABS,             MODES_NONE },
