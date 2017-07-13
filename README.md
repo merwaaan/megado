@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/merwaaan/megado.svg?branch=master)](https://travis-ci.org/merwaaan/megado)
+[![Build status](https://ci.appveyor.com/api/projects/status/1byv0ynwt69rxgx9?svg=true)](https://ci.appveyor.com/project/merwaaan/megado)
 
 Work in progress.
 
