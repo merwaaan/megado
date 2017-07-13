@@ -704,6 +704,7 @@ static void build_ui(Renderer* r)
             }
         }
 
+        igSetScrollHere(0);     // scroll to bottom
         //igButton("clear", )
         igEnd();
     }
@@ -778,6 +779,7 @@ static void build_ui(Renderer* r)
             }
         }
 
+        igSetScrollHere(0);     // scroll to bottom
         igEnd();
     }
 
