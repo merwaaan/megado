@@ -19,7 +19,7 @@ Genesis* genesis_make()
     g->settings = settings_make();
     g->memory = calloc(0x1000000, sizeof(uint8_t));
     g->m68k = m68k_make(g);
-    g->z80 = z80_make();
+    g->z80 = z80_make(g);
     g->vdp = vdp_make(g);
     g->joypad = joypad_make();
     g->renderer = renderer_make(g);
@@ -139,7 +139,13 @@ void genesis_initialize(Genesis* g)
 
 void genesis_step(Genesis* g)
 {
-    m68k_step(g->m68k);
+    uint8_t cycles = m68k_step(g->m68k);
+    // The Z80 runs at half the frequency of the M68K, so we run the Z80 only
+    // for half the cycles of the last M68K step.  Note that since we are
+    // dividing integers here, we might lose some accuracy if the number of
+    // cycles is odd.  But, from a cursory look at the cycles tables for the
+    // M68K, it appears they are all even, so we should be good.
+    z80_run_cycles(g->z80, cycles / 2);
 }
 
 static void genesis_frame(Genesis* g)

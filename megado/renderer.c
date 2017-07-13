@@ -505,9 +505,9 @@ static void build_ui(Renderer* r)
 
         if (igBeginMenu("CPU", true))
         {
-            igMenuItemPtr("Registers", NULL, &settings->show_cpu_registers, true);
-            igMenuItemPtr("Disassembly", NULL, &settings->show_cpu_disassembly, true);
-            igMenuItemPtr("Log", NULL, &settings->show_cpu_log, true);
+            igMenuItemPtr("Registers", NULL, &settings->show_m68k_registers, true);
+            igMenuItemPtr("Disassembly", NULL, &settings->show_m68k_disassembly, true);
+            igMenuItemPtr("Log", NULL, &settings->show_m68k_log, true);
             igSeparator();
             igMenuItemPtr("ROM", NULL, &settings->show_rom, true);
             igMenuItemPtr("RAM", NULL, &settings->show_ram, true);
@@ -536,16 +536,19 @@ static void build_ui(Renderer* r)
 
         if (igBeginMenu("Audio", true))
         {
+            igMenuItemPtr("Z80 registers", NULL, &settings->show_z80_registers, true);
+            igMenuItemPtr("Z80 disassembly", NULL, &settings->show_z80_disassembly, true);
+            igMenuItemPtr("Z80 log", NULL, &settings->show_z80_log, true);
             igEndMenu();
         }
 
         igEndMainMenuBar();
     }
 
-    // CPU registers
-    if (settings->show_cpu_registers)
+    // M68K registers
+    if (settings->show_m68k_registers)
     {
-        igBegin("CPU registers", &settings->show_cpu_registers, 0);
+        igBegin("CPU registers", &settings->show_m68k_registers, 0);
         igColumns(2, NULL, true);
 
         for (int i = 0; i < 8; ++i)
@@ -587,10 +590,10 @@ static void build_ui(Renderer* r)
         igEnd();
     }
 
-    // CPU Disassembly
-    if (settings->show_cpu_disassembly)
+    // M68K disassembly
+    if (settings->show_m68k_disassembly)
     {
-        igBegin("CPU Disassembly", &settings->show_cpu_disassembly, 0);
+        igBegin("CPU Disassembly", &settings->show_m68k_disassembly, 0);
 
         igColumns(4, NULL, false);
         igSetColumnOffset(1, 20);
@@ -684,10 +687,10 @@ static void build_ui(Renderer* r)
         igEnd();
     }
 
-    // Program log
-    if (settings->show_cpu_log)
+    // M68K program log
+    if (settings->show_m68k_log)
     {
-        igBegin("CPU log", &settings->show_cpu_log, 0);
+        igBegin("CPU log", &settings->show_m68k_log, 0);
 
         Debugger* d = r->genesis->debugger;
         for (int i = 0; i < M68K_LOG_LENGTH; ++i)
@@ -702,6 +705,79 @@ static void build_ui(Renderer* r)
         }
 
         //igButton("clear", )
+        igEnd();
+    }
+
+    // Z80 disassembly
+    if (settings->show_z80_disassembly)
+    {
+        igBegin("Z80 Disassembly", &settings->show_z80_disassembly, 0);
+
+        igColumns(4, NULL, false);
+        igSetColumnOffset(1, 0);
+        igSetColumnOffset(2, 60);
+
+        igNextColumn();
+        igText("Address");
+        igNextColumn();
+        igText("Instruction");
+        igNextColumn();
+        igText("Opcode");
+        igNextColumn();
+        igSeparator();
+
+        uint32_t address = r->genesis->z80->pc;
+        for (int i = 0; i < DISASSEMBLY_LENGTH; ++i)
+        {
+            DecodedZ80Instruction* instr = z80_decode(r->genesis->z80, address);
+
+            // The memory may not contain valid opcodes, especially after branching instructions
+            if (instr->mnemonics == NULL)
+            {
+                igColumns(1, NULL, false);
+                igTextColored(color_dimmed, "Cannot decode opcode at %04X", address);
+
+                // Fill the disassembler with empty lines to keep the same height
+                for (int j = i + 1; j < DISASSEMBLY_LENGTH; ++j)
+                    igText("");
+
+                break;
+            }
+            igNextColumn();
+
+            igTextColored(i == 0 ? color_accent : color_white, "%04X", address);
+            igNextColumn();
+
+            igTextColored(i == 0 ? color_accent : color_white, instr->mnemonics);
+            igNextColumn();
+
+            for (int byte = 0; byte < instr->length; ++byte)
+            {
+                igTextColored(color_dimmed, "%02X ", z80_read(r->genesis->z80, address + byte));
+                igSameLine(0, 0);
+            }
+            igNextColumn();
+
+            address += instr->length;
+        }
+
+        igEnd();
+    }
+
+    // Z80 program log
+    if (settings->show_z80_log)
+    {
+        igBegin("Z80 log", &settings->show_z80_log, 0);
+
+        Debugger* d = r->genesis->debugger;
+        for (int i = 0; i < Z80_LOG_LENGTH; ++i)
+        {
+            LoggedZ80Instruction* instr = &d->z80_log_instrs[(d->z80_log_cursor + 1 + i) % Z80_LOG_LENGTH];
+            if (instr->mnemonics != NULL) {
+                igText("%04X   %s", instr->address, instr->mnemonics);
+            }
+        }
+
         igEnd();
     }
 

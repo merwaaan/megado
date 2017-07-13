@@ -6,6 +6,8 @@
 #define Z80_RAM_LENGTH 0x2000
 
 typedef struct Z80 {
+    struct Genesis* genesis;
+
     int32_t left_cycles;
 
     uint16_t pc;
@@ -16,7 +18,12 @@ typedef struct Z80 {
     uint8_t ram[Z80_RAM_LENGTH];
 } Z80;
 
-Z80* z80_make();
+typedef struct {
+    uint8_t length;
+    char* mnemonics;
+} DecodedZ80Instruction;
+
+Z80* z80_make(struct Genesis*);
 void z80_free(Z80*);
 
 void z80_initialize(Z80*);
@@ -30,3 +37,5 @@ void z80_reset(Z80*, uint8_t);
 
 uint8_t z80_read(Z80*, uint16_t);
 void z80_write(Z80 *, uint16_t, uint8_t);
+
+DecodedZ80Instruction* z80_decode(Z80*, uint16_t);

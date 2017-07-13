@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "debugger.h"
+#include "genesis.h"
 #include "z80.h"
 #include "z80_ops.h"
 
@@ -10,8 +12,9 @@
 #define LOG_Z80(...)
 #endif
 
-Z80* z80_make() {
+Z80* z80_make(struct Genesis* g) {
     Z80* z80 = calloc(1, sizeof(Z80));
+    z80->genesis = g;
     return z80;
 }
 
@@ -29,24 +32,36 @@ void z80_initialize(Z80* z) {
 }
 
 uint8_t z80_step(Z80* z) {
-    uint16_t opcode = z->ram[z->pc];
-    z->pc = (z->pc + 1) % Z80_RAM_LENGTH;
+    uint16_t instr_address = z->pc;
+    DecodedZ80Instruction* instr = z80_decode(z, instr_address);
 
+    uint16_t opcode = z->ram[instr_address];
     z80_op op = z80_op_table[opcode];
 
+    uint8_t cycles;
     if (op == NULL) {
         LOG_Z80("z80: Unknown opcode: %02x\n", opcode);
-        return 4;
+        instr = NULL;
+        z->pc = (instr_address + 1) % Z80_RAM_LENGTH;
+        cycles = 4;
     } else {
-        LOG_Z80("z80: %04x: %02x  %s\n", z->pc, opcode, z80_disasm_table[opcode]);
-        uint8_t cycles = (*op)(z);
+        LOG_Z80("z80: %04x: %02x  %s\n", instr_address, opcode, z80_disasm_table[opcode]);
+        cycles = (*op)(z);
+        // Stub until instructions increase the PC themselves
+        z->pc = (instr_address + instr->length) % Z80_RAM_LENGTH;
         if (cycles == 0) {
             LOG_Z80("z80: instruction took 0 cycles: %02x\n", opcode);
             cycles = 4;
         }
-        return cycles;
     }
 
+    debugger_post_z80(z->genesis->debugger, instr, instr_address);
+    return cycles;
+}
+
+DecodedZ80Instruction* z80_decode(Z80* z, uint16_t address) {
+    uint16_t opcode = z->ram[address];
+    return &z80_disasm_table[opcode];
 }
 
 void z80_run_cycles(Z80* z, int cycles) {

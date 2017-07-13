@@ -30,10 +30,22 @@ void debugger_preload(Debugger* d)
 void debugger_post_m68k(Debugger* d)
 {
     // Append the last instruction's address to the program log
-    if (d->genesis->settings->show_cpu_log)
+    if (d->genesis->settings->show_m68k_log)
     {
         d->m68k_log_cursor = (d->m68k_log_cursor + 1) % M68K_LOG_LENGTH;
         d->m68k_log_addresses[d->m68k_log_cursor] = d->genesis->m68k->instruction_address;
+    }
+}
+
+void debugger_post_z80(Debugger *d, DecodedZ80Instruction* instr, uint16_t address) {
+    if (d->genesis->settings->show_z80_log) {
+        d->z80_log_cursor = (d->z80_log_cursor + 1) % Z80_LOG_LENGTH;
+        d->z80_log_instrs[d->z80_log_cursor].address = address;
+        if (instr == NULL) {
+            d->z80_log_instrs[d->z80_log_cursor].mnemonics = NULL;
+        } else {
+            d->z80_log_instrs[d->z80_log_cursor].mnemonics = instr->mnemonics;
+        }
     }
 }
 

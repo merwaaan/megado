@@ -3,7 +3,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "z80.h"
+
 #define M68K_LOG_LENGTH 25
+#define Z80_LOG_LENGTH 25
 
 #define BREAKPOINTS_COUNT 3
 
@@ -22,6 +25,11 @@ typedef struct Breakpoint
     // TODO hit counter could be useful
 } Breakpoint;
 
+typedef struct {
+    uint16_t address;
+    char* mnemonics;
+} LoggedZ80Instruction;
+
 typedef struct Debugger
 {
     struct Genesis* genesis;
@@ -38,6 +46,11 @@ typedef struct Debugger
     // later.
     uint32_t m68k_log_addresses[M68K_LOG_LENGTH];
     uint16_t m68k_log_cursor;
+
+    // For the Z80, instructions are all decoded in a static table, and we can
+    // just store the pointers to the last decoded instructions.
+    LoggedZ80Instruction z80_log_instrs[Z80_LOG_LENGTH];
+    uint16_t z80_log_cursor;
 
     // Breakpoints
     Breakpoint* breakpoints; // Points to the data stored in settings
@@ -56,10 +69,12 @@ typedef struct Debugger
 
 Debugger* debugger_make(struct Genesis*);
 void debugger_free(Debugger*);
+void debugger_initialize(Debugger *);
 
 void debugger_preload(Debugger*);
 
 void debugger_post_m68k(Debugger*);
+void debugger_post_z80(Debugger*, DecodedZ80Instruction* instr, uint16_t address);
 void debugger_post_frame(Debugger*);
 
 void debugger_toggle_breakpoint(Debugger*, uint32_t address);

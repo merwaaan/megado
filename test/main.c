@@ -13,9 +13,12 @@ void run(Genesis* g, char* path)
 // Enable debug windows on CI to catch more bugs
 #ifdef ALL_WINDOWS
     g->settings->vsync = false;
-    g->settings->show_cpu_registers = true;
-    g->settings->show_cpu_disassembly = true;
-    g->settings->show_cpu_log = true;
+    g->settings->show_m68k_registers = true;
+    g->settings->show_m68k_disassembly = true;
+    g->settings->show_m68k_log = true;
+    g->settings->show_z80_registers = true;
+    g->settings->show_z80_disassembly = true;
+    g->settings->show_z80_log = true;
     g->settings->show_vdp_registers = true;
     g->settings->show_vdp_palettes = true;
     g->settings->show_vdp_patterns = true;
