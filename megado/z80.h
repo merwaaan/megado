@@ -10,7 +10,52 @@ typedef struct Z80 {
 
     int32_t left_cycles;
 
-    uint16_t pc;
+    // Registers
+    struct {
+        union {
+            struct {
+#ifdef BIG_ENDIAN
+                uint8_t a;
+                union {
+                    uint8_t f;
+                    struct {
+                        uint8_t cf : 1;
+                        uint8_t nf : 1;
+                        uint8_t pf : 1;
+                        uint8_t xf : 1;
+                        uint8_t hf : 1;
+                        uint8_t yf : 1;
+                        uint8_t zf : 1;
+                        uint8_t sf : 1;
+                    };
+                };
+                uint8_t b, c, d, e, h, l;
+#else
+                union {
+                    uint8_t f;
+                    struct {
+                        uint8_t cf : 1;
+                        uint8_t nf : 1;
+                        uint8_t pf : 1;
+                        uint8_t xf : 1;
+                        uint8_t hf : 1;
+                        uint8_t yf : 1;
+                        uint8_t zf : 1;
+                        uint8_t sf : 1;
+                    };
+                };
+                uint8_t a, c, b, e, d, l, h;
+#endif
+            };
+            struct {
+                uint16_t af, bc, de, hl;
+            };
+        };
+
+        uint8_t i, r;
+        uint16_t pc, sp, ix, iy;
+        uint16_t af_, bc_, de_, hl_; // shadow registers
+    };
 
     bool running;                 // Whether the Z80 is executing instructions
     bool resetting;               // Whether the Z80 is being reset
