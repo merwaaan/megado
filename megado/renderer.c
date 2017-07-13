@@ -792,7 +792,7 @@ static void build_ui(Renderer* r)
             DecodedZ80Instruction* instr = z80_decode(r->genesis->z80, address);
 
             // The memory may not contain valid opcodes, especially after branching instructions
-            if (instr->mnemonics == NULL)
+            if (instr == NULL || instr->mnemonics == NULL)
             {
                 igColumns(1, NULL, false);
                 igTextColored(color_dimmed, "Cannot decode opcode at %04X", address);

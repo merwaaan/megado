@@ -60,8 +60,12 @@ uint8_t z80_step(Z80* z) {
 }
 
 DecodedZ80Instruction* z80_decode(Z80* z, uint16_t address) {
-    uint16_t opcode = z->ram[address];
-    return &z80_disasm_table[opcode];
+    if (address < Z80_RAM_LENGTH) {
+        uint16_t opcode = z->ram[address];
+        return &z80_disasm_table[opcode];
+    } else {
+        return NULL;
+    }
 }
 
 void z80_run_cycles(Z80* z, int cycles) {
