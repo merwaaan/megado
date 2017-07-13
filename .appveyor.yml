@@ -1,6 +1,7 @@
 image: Visual Studio 2017
 
 before_build:
-  - pwd
-  - ls
+  - ls C:\cygwin\bin
+  - set PATH=C:\cygwin\bin;%PATH%
+  - git submodule update --init --recursive
   - bash install-deps-win.sh
