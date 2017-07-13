@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include "m68k.h"
 
+struct M68k;
+
 typedef bool(*ConditionFunc)(struct M68k*);
 
 typedef struct Condition
