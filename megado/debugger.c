@@ -1,6 +1,7 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "genesis.h"
 #include "debugger.h"
@@ -19,6 +20,15 @@ Debugger* debugger_make(Genesis* g)
 void debugger_free(Debugger* d)
 {
     free(d);
+}
+
+void debugger_initialize(Debugger *d) {
+    // Reset log entries
+    memset(d->m68k_log_addresses, 0, M68K_LOG_LENGTH * sizeof(d->m68k_log_addresses[0]));
+    d->m68k_log_cursor = 0;
+
+    memset(d->z80_log_instrs, 0, Z80_LOG_LENGTH * sizeof(d->z80_log_instrs[0]));
+    d->z80_log_cursor = 0;
 }
 
 void debugger_preload(Debugger* d)

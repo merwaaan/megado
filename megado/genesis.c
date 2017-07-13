@@ -135,6 +135,7 @@ void genesis_initialize(Genesis* g)
     m68k_initialize(g->m68k);
     z80_initialize(g->z80);
     vdp_initialize(g->vdp);
+    debugger_initialize(g->debugger);
 }
 
 void genesis_step(Genesis* g)
