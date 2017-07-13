@@ -687,6 +687,65 @@ static void build_ui(Renderer* r)
         igEnd();
     }
 
+    // Z80 registers
+    if (settings->show_z80_registers)
+    {
+        Z80* z = r->genesis->z80;
+
+        igBegin("Z80 registers", &settings->show_z80_registers, 0);
+        igColumns(2, NULL, true);
+
+        igText("AF: %04X", z->af);
+        igText("BC: %04X", z->bc);
+        igText("DE: %04X", z->de);
+        igText("HL: %04X", z->hl);
+        igText("IX: %04X", z->ix);
+        igText("I:    %02X", z->i);
+        igText("R:    %02X", z->r);
+
+        igNextColumn();
+
+        igText("AF': %04X", z->af_);
+        igText("BC': %04X", z->bc_);
+        igText("DE': %04X", z->de_);
+        igText("HL': %04X", z->hl_);
+        igText("IY:  %04X", z->iy);
+        igText("PC:  %04X", r->genesis->z80->pc);
+        igText("SP:  %04X", r->genesis->z80->sp);
+
+        igColumns(1, NULL, false);
+        igSeparator();
+
+        igPushStyleColor(ImGuiCol_CheckMark, color_accent);
+        igColumns(2, NULL, false);
+        igCheckbox("running", &z->running);
+        igNextColumn();
+        igCheckbox("resetting", &z->resetting);
+        igNextColumn();
+
+        bool sf = z->sf;
+        bool zf = z->zf;
+        bool yf = z->yf;
+        bool hf = z->hf;
+        bool xf = z->xf;
+        bool pf = z->pf;
+        bool nf = z->nf;
+        bool cf = z->cf;
+
+        igColumns(8, NULL, false);
+        STATUS_BIT("S", sf);
+        STATUS_BIT("Z", zf);
+        STATUS_BIT("Y", yf);
+        STATUS_BIT("H", hf);
+        STATUS_BIT("X", xf);
+        STATUS_BIT("P", pf);
+        STATUS_BIT("N", nf);
+        STATUS_BIT("C", cf);
+        igPopStyleColor(1);
+
+        igEnd();
+    }
+
     // M68K program log
     if (settings->show_m68k_log)
     {
