@@ -19,27 +19,9 @@ static uint8_t binary_to_packed_bcd(uint8_t binary)
     return (binary / 10) << 4 | (binary % 10);
 }
 
-uint8_t abcd(Instruction* i, M68k* ctx)
+static Instruction* gen_xbcd(uint16_t opcode, char* name, InstructionFunc func)
 {
-    uint8_t a = packed_bcd_to_binary(FETCH_EA_AND_GET(i->src, ctx));
-    uint8_t b = packed_bcd_to_binary(FETCH_EA_AND_GET(i->dst, ctx));
-    uint8_t result = a + b + EXTENDED(ctx);
-    SET(i->dst, ctx, binary_to_packed_bcd(result));
-
-    bool carry = (uint16_t)a + (uint16_t)b + EXTENDED(ctx) > 0xFF;
-    EXTENDED_SET(ctx, carry);
-    CARRY_SET(ctx, carry);
-
-    // Only change the zero flag if the result is nonzero
-    if (result != 0)
-        ZERO_SET(ctx, false);
-
-    return 0;
-}
-
-Instruction* gen_abcd(uint16_t opcode)
-{
-    Instruction* i = instruction_make("ABCD", abcd);
+    Instruction* i = instruction_make(name, func);
     i->size = Byte;
 
     bool address_register = BIT(opcode, 3);
@@ -58,15 +40,78 @@ Instruction* gen_abcd(uint16_t opcode)
     return i;
 }
 
-Instruction* gen_nbcd(uint16_t opcode)
+static uint8_t abcd(Instruction* i, M68k* ctx)
 {
-    Instruction* i = instruction_make("NBCD", not_implemented);
-    //i->base_cycles = cycles_single_operand_instruction(i, 6, 8);
-    return i;
+    uint8_t a = packed_bcd_to_binary(FETCH_EA_AND_GET(i->src, ctx));
+    uint8_t b = packed_bcd_to_binary(FETCH_EA_AND_GET(i->dst, ctx));
+    uint8_t e = EXTENDED(ctx);
+    uint8_t result = a + b + e;
+    SET(i->dst, ctx, binary_to_packed_bcd(result));
+
+    bool carry = (uint16_t)a + (uint16_t)b + e > 0xFF;
+    EXTENDED_SET(ctx, carry);
+    CARRY_SET(ctx, carry);
+
+    // Only change the zero flag if the result is non-zero
+    if (result != 0)
+        ZERO_SET(ctx, false);
+
+    return 0;
+}
+
+Instruction* gen_abcd(uint16_t opcode)
+{
+    return gen_xbcd(opcode, "ABCD", abcd);
+}
+
+static uint8_t sbcd(Instruction* i, M68k* ctx)
+{
+    uint8_t a = packed_bcd_to_binary(FETCH_EA_AND_GET(i->src, ctx));
+    uint8_t b = packed_bcd_to_binary(FETCH_EA_AND_GET(i->dst, ctx));
+    uint8_t e = EXTENDED(ctx);
+    uint8_t result = b - a - e;
+    SET(i->dst, ctx, binary_to_packed_bcd(result));
+
+    bool borrow = (uint16_t)a + e > (uint16_t)b;
+    EXTENDED_SET(ctx, borrow);
+    CARRY_SET(ctx, borrow);
+
+    // Only change the zero flag if the result is non-zero
+    if (result != 0)
+        ZERO_SET(ctx, false);
+
+    return 0;
 }
 
 Instruction* gen_sbcd(uint16_t opcode)
 {
-    Instruction* i = instruction_make("SBCD", not_implemented);
+    return gen_xbcd(opcode, "SBCD", sbcd);
+}
+
+
+static uint8_t nbcd(Instruction* i, M68k* ctx)
+{
+    uint8_t x = packed_bcd_to_binary(FETCH_EA_AND_GET(i->dst, ctx));
+    uint8_t e = EXTENDED(ctx);
+    uint8_t result = 0 - x - e;
+    SET(i->dst, ctx, binary_to_packed_bcd(result));
+
+    bool borrow = (x == 0xFF) && e;
+    EXTENDED_SET(ctx, borrow);
+    CARRY_SET(ctx, borrow);
+
+    // Only change the zero flag if the result is non-zero
+    if (result != 0)
+        ZERO_SET(ctx, false);
+
+    return 0;
+}
+
+Instruction* gen_nbcd(uint16_t opcode)
+{
+    Instruction* i = instruction_make("NBCD", nbcd);
+    i->size = Byte;
+    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    //TODO timing
     return i;
 }
