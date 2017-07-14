@@ -8,9 +8,8 @@
 #include "operands.h"
 
 // TODO check all timings
-// TODO shift/rotation count are modulo the instruction size but it should be 64 for registers
 
-Instruction* gen_shift_instruction(uint16_t opcode, char* name, InstructionFunc func)
+static Instruction* gen_shift_instruction(uint16_t opcode, char* name, InstructionFunc func)
 {
     Instruction* i = instruction_make(name, func);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
@@ -27,7 +26,7 @@ Instruction* gen_shift_instruction(uint16_t opcode, char* name, InstructionFunc 
     return i;
 }
 
-Instruction* gen_shift_memory_instruction(uint16_t opcode, char* name, InstructionFunc func)
+static Instruction* gen_shift_memory_instruction(uint16_t opcode, char* name, InstructionFunc func)
 {
     Instruction* i = instruction_make(name, func);
     i->size = Word;
@@ -37,7 +36,7 @@ Instruction* gen_shift_memory_instruction(uint16_t opcode, char* name, Instructi
     return i;
 }
 
-uint8_t asr(Instruction* i, M68k* ctx)
+static uint8_t asr(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -46,6 +45,9 @@ uint8_t asr(Instruction* i, M68k* ctx)
     // For immediate operands, the shift count is in [1, 8]
     if (shift == 0 && i->src->type == Value)
         shift = 8;
+    // For data register, the shift count is modulo 64
+    else if (i->src->type == DataRegister)
+        shift %= 64;
 
     if (shift > 0)
     {
@@ -65,7 +67,7 @@ uint8_t asr(Instruction* i, M68k* ctx)
     return 2 * shift;
 }
 
-uint8_t lsl(Instruction* i, M68k* ctx)
+static uint8_t lsl(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -74,6 +76,9 @@ uint8_t lsl(Instruction* i, M68k* ctx)
     // For immediate operands, the shift count is in [1, 8]
     if (shift == 0 && i->src->type == Value)
         shift = 8;
+    // For data register, the shift count is modulo 64
+    else if (i->src->type == DataRegister)
+        shift %= 64;
 
     if (shift > 0)
     {
@@ -92,7 +97,7 @@ uint8_t lsl(Instruction* i, M68k* ctx)
     return 2 * shift;
 }
 
-uint8_t lsr(Instruction* i, M68k* ctx)
+static uint8_t lsr(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -101,6 +106,9 @@ uint8_t lsr(Instruction* i, M68k* ctx)
     // For immediate operands, the shift count is in [1, 8]
     if (shift == 0 && i->src->type == Value)
         shift = 8;
+    // For data register, the shift count is modulo 64
+    else if (i->src->type == DataRegister)
+        shift %= 64;
 
     if (shift > 0)
     {
@@ -143,7 +151,7 @@ Instruction* gen_lsd_mem(uint16_t opcode)
     return gen_shift_memory_instruction(opcode, direction ? "LSL" : "LSR", direction ? lsl : lsr);
 }
 
-uint8_t rol(Instruction* i, M68k* ctx)
+static uint8_t rol(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -152,6 +160,9 @@ uint8_t rol(Instruction* i, M68k* ctx)
     // For immediate operands, the rotation count is in [1, 8]
     if (rotation == 0 && i->src->type == Value)
         rotation = 8;
+    // For data register, the rotation count is modulo 64
+    else if (i->src->type == DataRegister)
+        rotation %= 64;
 
     if (rotation > 0)
     {
@@ -170,7 +181,7 @@ uint8_t rol(Instruction* i, M68k* ctx)
     return 2 * rotation;
 }
 
-uint8_t ror(Instruction* i, M68k* ctx)
+static uint8_t ror(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -179,6 +190,9 @@ uint8_t ror(Instruction* i, M68k* ctx)
     // For immediate operands, the rotation count is in [1, 8]
     if (rotation == 0 && i->src->type == Value)
         rotation = 8;
+    // For data register, the rotation count is modulo 64
+    else if (i->src->type == DataRegister)
+        rotation %= 64;
 
     if (rotation > 0)
     {
@@ -209,7 +223,7 @@ Instruction* gen_rod_mem(uint16_t opcode)
     return gen_shift_memory_instruction(opcode, direction ? "ROL" : "ROR", direction ? rol : ror);
 }
 
-uint8_t roxl(Instruction* i, M68k* ctx)
+static uint8_t roxl(Instruction* i, M68k* ctx)
 {
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
 
@@ -218,6 +232,9 @@ uint8_t roxl(Instruction* i, M68k* ctx)
     // For immediate operands, the rotation count is in [1, 8]
     if (rotation == 0 && i->src->type == Value)
         rotation = 8;
+    // For data register, the rotation count is modulo 64
+    else if (i->src->type == DataRegister)
+        rotation %= 64;
 
     if (rotation > 0)
     {
@@ -239,7 +256,7 @@ uint8_t roxl(Instruction* i, M68k* ctx)
     return 2 * rotation;
 }
 
-uint8_t roxr(Instruction* i, M68k* ctx)
+static uint8_t roxr(Instruction* i, M68k* ctx)
 {
     FETCH_EA(i->dst, ctx);
     uint32_t initial = GET(i->dst, ctx);
@@ -249,6 +266,9 @@ uint8_t roxr(Instruction* i, M68k* ctx)
     // For immediate operands, the rotation count is in [1, 8]
     if (rotation == 0 && i->src->type == Value)
         rotation = 8;
+    // For data register, the rotation count is modulo 64
+    else if (i->src->type == DataRegister)
+        rotation %= 64;
 
     if (rotation > 0)
     {
@@ -279,7 +299,7 @@ Instruction* gen_roxd_mem(uint16_t opcode)
     return gen_shift_memory_instruction(opcode, direction ? "ROXL" : "ROXR", direction ? roxl : roxr);
 }
 
-uint8_t swap(Instruction* i, M68k* ctx)
+static uint8_t swap(Instruction* i, M68k* ctx)
 {
     uint32_t value = GET(i->src, ctx);
     uint32_t lo = value & 0xFFFF;
