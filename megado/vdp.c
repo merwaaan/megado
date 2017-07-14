@@ -797,8 +797,8 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
         // Extract the sprite attributes
         // http://md.squee.co/VDP#Sprite_Attribute_Table
 
-        uint16_t x = ((attributes[6] & 1) << 8 | attributes[7]) - 128; // Coordinates in screen-space
-        uint16_t y = ((attributes[0] & 3) << 8 | attributes[1]) - 128;
+        int16_t x = ((attributes[6] & 1) << 8 | attributes[7]) - 128; // Coordinates in screen-space
+        int16_t y = ((attributes[0] & 3) << 8 | attributes[1]) - 128;
 
         uint8_t width = FRAGMENT(attributes[2], 3, 2) + 1;
         uint8_t height = FRAGMENT(attributes[2], 1, 0) + 1;
