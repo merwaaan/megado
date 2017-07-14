@@ -34,8 +34,7 @@ so the flag is always cleared.
 
 - Sonic & Knuckles + Sonic 3: stuck in an infinite loop @C336
 
-- Streets of Rage: no UI in-game; character seems to die randomly; time over
-  happens after a few seconds
+- Streets of Rage: character seems to die randomly; time over happens after a few seconds
 
 - Street Fighter II: game reset just before going into the first stage
 
@@ -61,6 +60,12 @@ so the flag is always cleared.
     - no UI (Window plane not shown).
     - character fires his weapon backward!
 
+- Zombies Ate My Neighbors:
+	- the film roll on the character select screen must be transparent (how is this done?)
+	- plane scrolling is visible at the right of the screen 
+
+- Tale Spin: wait for @FF000E to be written to (during an interrupt?)
+
 # Games that seem to wait for the Z80:
 
 - Daffy Duck in Hollywood @1D7BC8
@@ -68,3 +73,4 @@ so the flag is always cleared.
 - Lost Vikings: waiting for $A01000 to equal zero @FD888 (eerily similar to Addam's Family)
 - Spirou: seems to be waiting for the Z80 to execute something
 - Pitfall
+- Wolverine Adamantium Rage
