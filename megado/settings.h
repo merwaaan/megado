@@ -9,7 +9,7 @@
 
 // Bump that version number when changing the format
 // in order to discard out of date settings
-#define SETTINGS_FORMAT_VERSION 2
+#define SETTINGS_FORMAT_VERSION 3
 
 typedef struct BreakpointSet
 {
@@ -19,6 +19,9 @@ typedef struct BreakpointSet
 
 typedef struct Settings
 {
+    int window_width;
+    int window_height;
+
     // Video settings
     float video_scale; // Scaling factor for the Genesis video output
     bool vsync;

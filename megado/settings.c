@@ -14,6 +14,8 @@ Settings* settings_make()
 
     // If not possible, use default settings
     s = calloc(1, sizeof(Settings));
+    s->window_width = 1200;
+    s->window_height = 800;
     s->video_scale = 1.0f;
     s->vsync = true;
     return s;
@@ -25,6 +27,7 @@ void settings_free(Settings* s)
     free(s);
 }
 
+#define JSON_SET_INT(name) json_object_object_add(json, #name, json_object_new_int(s->name));
 #define JSON_SET_FLOAT(name) json_object_object_add(json, #name, json_object_new_double((float)s->name));
 #define JSON_SET_BOOL(name) json_object_object_add(json, #name, json_object_new_boolean(s->name));
 
@@ -33,6 +36,9 @@ void settings_save(Settings* s)
     json_object* json = json_object_new_object();
 
     json_object_object_add(json, "version", json_object_new_int(SETTINGS_FORMAT_VERSION));
+
+    JSON_SET_INT(window_width);
+    JSON_SET_INT(window_height);
 
     JSON_SET_FLOAT(video_scale);
     JSON_SET_BOOL(vsync);
@@ -91,6 +97,7 @@ void settings_save(Settings* s)
     json_object_put(json);
 }
 
+#define JSON_GET_INT(name) s->name = (float) json_object_get_int(json_get(json, #name))
 #define JSON_GET_FLOAT(name) s->name = (float) json_object_get_double(json_get(json, #name))
 #define JSON_GET_BOOL(name) s->name = json_object_get_boolean(json_get(json, #name))
 
@@ -132,6 +139,9 @@ Settings* settings_load()
     }
 
     Settings* s = calloc(1, sizeof(Settings));
+
+    JSON_GET_INT(window_width);
+    JSON_GET_INT(window_height);
 
     JSON_GET_FLOAT(video_scale);
     JSON_GET_BOOL(vsync);

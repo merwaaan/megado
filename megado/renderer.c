@@ -1398,6 +1398,13 @@ static void drop_callback(GLFWwindow* window, int path_count, const char** paths
     genesis_load_rom_file(r->genesis, paths[0]);
 }
 
+void window_resize_callback(GLFWwindow* window, int width, int height)
+{
+    Renderer* r = (Renderer*)glfwGetWindowUserPointer(window);
+    r->genesis->settings->window_width = width;
+    r->genesis->settings->window_height = height;
+}
+
 void window_close_callback(GLFWwindow* window)
 {
     Renderer* r = (Renderer*)glfwGetWindowUserPointer(window);
@@ -1424,7 +1431,7 @@ Renderer* renderer_make(Genesis* genesis)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
-    GLFWwindow* window = glfwCreateWindow(1200, 800, "Megado", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(genesis->settings->window_width, genesis->settings->window_height, "Megado", NULL, NULL);
     if (!window)
     {
         printf("An error occurred while creating a GLFW window");
@@ -1437,6 +1444,7 @@ Renderer* renderer_make(Genesis* genesis)
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetDropCallback(window, drop_callback);
+    glfwSetWindowSizeCallback(window, window_resize_callback);
     glfwSetWindowCloseCallback(window, window_close_callback);
 
     glfwMakeContextCurrent(window);
