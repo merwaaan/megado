@@ -6,8 +6,8 @@
 
 typedef enum
 {
-    // The enum value corresponds to the mask for each input
-    // in the multiplexed word that holds the controller's state
+    // The enum value corresponds to the mask for each input in
+    // the multiplexed word that holds the controller's state.
     Up = 0x101, 
     Down = 0x202, // Up and Down can be read in both bytes
     Left = 0x4,
@@ -21,8 +21,11 @@ typedef enum
 typedef struct Joypad {
     // The low byte contains the first half of the controller's state (Up, Down, Left, Right, B, C).
     // The high byte contains the second half of the controller's state (Up, Down, A, Start).
-    // Depending on bit 6, the high or low byte will be returned when reading the controller's port.
     //
+    // Bit 7 and 6 can be written to.
+    // Bit 7 has no effect.
+    // Bit 6 controls which of the high or low byte is accessed when reading the controller's port.
+    // 
     // A cleared bit means that the button is pressed!
     uint16_t buttons;
 } Joypad;
