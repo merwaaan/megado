@@ -21,7 +21,8 @@ Genesis* genesis_make()
     g->m68k = m68k_make(g);
     g->z80 = z80_make(g);
     g->vdp = vdp_make(g);
-    g->joypad = joypad_make();
+    g->joypad1 = joypad_make();
+    g->joypad2 = joypad_make();
     g->renderer = renderer_make(g);
     g->debugger = debugger_make(g);
     g->status = Status_NoGameLoaded;
@@ -41,7 +42,8 @@ void genesis_free(Genesis* g)
     m68k_free(g->m68k);
     z80_free(g->z80);
     vdp_free(g->vdp);
-    joypad_free(g->joypad);
+    joypad_free(g->joypad1);
+    joypad_free(g->joypad2);
     settings_free(g->settings);
     renderer_free(g->renderer);
     debugger_free(g->debugger);

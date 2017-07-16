@@ -33,7 +33,8 @@ typedef struct Genesis {
     struct M68k* m68k;
     struct Z80* z80;
     struct Vdp* vdp;
-    struct Joypad* joypad;
+    struct Joypad* joypad1;
+    struct Joypad* joypad2;
 
     struct Renderer* renderer;
     struct Settings* settings;

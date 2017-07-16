@@ -1,18 +1,15 @@
 # Game-specific bugs
 
 - Columns:
-  - the sega boot animation only appears in Release builds (Visual Studio specific)
-    (no SEGA logo with clang either in release and debug).
   - score overflows its box (looks like the most significant digit is a repeat
     of the least-significant one, when it should be zero; the bogus digit is
     written to the VDP @ 63AA)
 
 - Alex Kidd in the Enchanted Castle:
   - Planes are empty during the intro and in-game (only works in the korean version)
-  - The sega logo's gradient is not animated
 
-- The Simpsons - Bart's Nightmare: the planes have an invalid size (64*128). This occurs on
-the menu screen and then in-game, which leads to a buffer overflow.
+- The Simpsons - Bart's Nightmare: 
+  - Bart's sprite is not visible
 
 - Spiderman and Venom - Maximum Carnage / Separation Anxiety: Spiderman is not animated.
 
@@ -44,16 +41,14 @@ so the flag is always cleared.
     - copyright screen partially wraps around the screen.
     - the menu screen does not respond.
 
-- California Games: the menu screen does not respond.
-
 - Chameleon Kid: character does not walk but looks in the correct direction.
 
 - Ristar: goes to the next level when grabbing an enemy.
 
 - Contra:
-    - can no longer select a character (worked before fixing the shift instructions)
-    - no UI (Window plane not shown).
     - character fires his weapon backward!
+	- no watery animation of the game logo
+	- the intro sequence of the first level is a mess
 
 - Zombies Ate My Neighbors:
 	- the film roll on the character select screen must be transparent (how is this done?)
@@ -61,11 +56,12 @@ so the flag is always cleared.
 
 - Tale Spin: wait for @FF000E to be written to (during an interrupt?)
 
+- Clue: main menu not responding
+
 # Games that seem to wait for the Z80:
 
 - Daffy Duck in Hollywood @1D7BC8
 - The Addam's Family @43C0E
 - Lost Vikings: waiting for $A01000 to equal zero @FD888 (eerily similar to Addam's Family)
-- Spirou: seems to be waiting for the Z80 to execute something
 - Pitfall
 - Wolverine Adamantium Rage

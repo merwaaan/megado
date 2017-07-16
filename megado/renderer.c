@@ -1293,14 +1293,23 @@ static void handle_inputs(Renderer* r, int key, int action)
     case GLFW_PRESS:
         switch (key)
         {
-        case GLFW_KEY_LEFT: joypad_press(r->genesis->joypad, Left); break;
-        case GLFW_KEY_RIGHT: joypad_press(r->genesis->joypad, Right); break;
-        case GLFW_KEY_UP: joypad_press(r->genesis->joypad, Up); break;
-        case GLFW_KEY_DOWN: joypad_press(r->genesis->joypad, Down); break;
-        case GLFW_KEY_ENTER: joypad_press(r->genesis->joypad, Start); break;
-        case GLFW_KEY_Q: joypad_press(r->genesis->joypad, ButtonA); break;
-        case GLFW_KEY_W: joypad_press(r->genesis->joypad, ButtonB); break;
-        case GLFW_KEY_E: joypad_press(r->genesis->joypad, ButtonC); break;
+        case GLFW_KEY_LEFT: joypad_press(r->genesis->joypad1, Left); break;
+        case GLFW_KEY_RIGHT: joypad_press(r->genesis->joypad1, Right); break;
+        case GLFW_KEY_UP: joypad_press(r->genesis->joypad1, Up); break;
+        case GLFW_KEY_DOWN: joypad_press(r->genesis->joypad1, Down); break;
+        case GLFW_KEY_ENTER: joypad_press(r->genesis->joypad1, Start); break;
+        case GLFW_KEY_Q: joypad_press(r->genesis->joypad1, ButtonA); break;
+        case GLFW_KEY_W: joypad_press(r->genesis->joypad1, ButtonB); break;
+        case GLFW_KEY_E: joypad_press(r->genesis->joypad1, ButtonC); break;
+
+        case GLFW_KEY_1: joypad_press(r->genesis->joypad2, Left); break;
+        case GLFW_KEY_3: joypad_press(r->genesis->joypad2, Right); break;
+        case GLFW_KEY_5: joypad_press(r->genesis->joypad2, Up); break;
+        case GLFW_KEY_2: joypad_press(r->genesis->joypad2, Down); break;
+        case GLFW_KEY_0: joypad_press(r->genesis->joypad2, Start); break;
+        case GLFW_KEY_7: joypad_press(r->genesis->joypad2, ButtonA); break;
+        case GLFW_KEY_8: joypad_press(r->genesis->joypad2, ButtonB); break;
+        case GLFW_KEY_9: joypad_press(r->genesis->joypad2, ButtonC); break;
 
         case GLFW_KEY_R:
             if (r->genesis->settings->rewinding_enabled && r->genesis->status == Status_Running)
@@ -1311,14 +1320,23 @@ static void handle_inputs(Renderer* r, int key, int action)
     case GLFW_RELEASE:
         switch (key)
         {
-        case GLFW_KEY_LEFT: joypad_release(r->genesis->joypad, Left); break;
-        case GLFW_KEY_RIGHT: joypad_release(r->genesis->joypad, Right); break;
-        case GLFW_KEY_UP: joypad_release(r->genesis->joypad, Up); break;
-        case GLFW_KEY_DOWN: joypad_release(r->genesis->joypad, Down); break;
-        case GLFW_KEY_ENTER: joypad_release(r->genesis->joypad, Start); break;
-        case GLFW_KEY_Q: joypad_release(r->genesis->joypad, ButtonA); break;
-        case GLFW_KEY_W: joypad_release(r->genesis->joypad, ButtonB); break;
-        case GLFW_KEY_E: joypad_release(r->genesis->joypad, ButtonC); break;
+        case GLFW_KEY_LEFT: joypad_release(r->genesis->joypad1, Left); break;
+        case GLFW_KEY_RIGHT: joypad_release(r->genesis->joypad1, Right); break;
+        case GLFW_KEY_UP: joypad_release(r->genesis->joypad1, Up); break;
+        case GLFW_KEY_DOWN: joypad_release(r->genesis->joypad1, Down); break;
+        case GLFW_KEY_ENTER: joypad_release(r->genesis->joypad1, Start); break;
+        case GLFW_KEY_Q: joypad_release(r->genesis->joypad1, ButtonA); break;
+        case GLFW_KEY_W: joypad_release(r->genesis->joypad1, ButtonB); break;
+        case GLFW_KEY_E: joypad_release(r->genesis->joypad1, ButtonC); break;
+
+        case GLFW_KEY_1: joypad_release(r->genesis->joypad2, Left); break;
+        case GLFW_KEY_3: joypad_release(r->genesis->joypad2, Right); break;
+        case GLFW_KEY_5: joypad_release(r->genesis->joypad2, Up); break;
+        case GLFW_KEY_2: joypad_release(r->genesis->joypad2, Down); break;
+        case GLFW_KEY_0: joypad_release(r->genesis->joypad2, Start); break;
+        case GLFW_KEY_7: joypad_release(r->genesis->joypad2, ButtonA); break;
+        case GLFW_KEY_8: joypad_release(r->genesis->joypad2, ButtonB); break;
+        case GLFW_KEY_9: joypad_release(r->genesis->joypad2, ButtonC); break;
 
         case GLFW_KEY_P: toggle_pause(r); break;
         case GLFW_KEY_SPACE: step(r); break;

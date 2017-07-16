@@ -47,7 +47,12 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
 
     case 0xA10002:
     case 0xA10003:
-        return joypad_read(m->genesis->joypad);
+        return joypad_read(m->genesis->joypad1);
+        break;
+
+    case 0xA10004:
+    case 0xA10005:
+        return joypad_read(m->genesis->joypad2);
         break;
 
     case 0xA11100:
@@ -128,8 +133,12 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
       z80_write(m->genesis->z80, address & 0xFFFF, value);
     }
 
+    // Joypads
     else if (address == 0xA10002 || address == 0xA10003) {
-        joypad_write(m->genesis->joypad, value);
+        joypad_write(m->genesis->joypad1, value);
+    }
+    else if (address == 0xA10004 || address == 0xA10005) {
+        joypad_write(m->genesis->joypad2, value);
     }
 
     // BUSREQ
