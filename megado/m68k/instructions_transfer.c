@@ -235,10 +235,56 @@ Instruction* gen_movea(uint16_t opcode)
     return i;
 }
 
+uint8_t movep(Instruction* i, M68k* ctx)
+{
+    int32_t value = FETCH_EA_AND_GET(i->src, ctx);
+    FETCH_EA(i->dst, ctx);
+
+    if (i->dst->type == AddressRegisterIndirectDisplacement)
+    {
+        if (i->size == Word)
+        {
+            m68k_write_b(ctx, i->dst->last_ea, (value & 0xFF00) >> 8);
+            m68k_write_b(ctx, i->dst->last_ea + 2, value & 0xFF);
+        }
+        else
+        {
+            m68k_write_b(ctx, i->dst->last_ea, (value & 0xFF000000) >> 24);
+            m68k_write_b(ctx, i->dst->last_ea + 2, (value & 0xFF0000) >> 16);
+            m68k_write_b(ctx, i->dst->last_ea + 4, (value & 0xFF00) >> 8);
+            m68k_write_b(ctx, i->dst->last_ea + 6, value & 0xFF);
+        }
+    }
+    else
+    {
+        // TODO when less sleepy
+        printf("unsupported movep variant");
+        exit(1);
+    }
+
+    ctx->address_registers[i->dst->n] = value;
+
+    return 0;
+}
+
 Instruction* gen_movep(uint16_t opcode)
 {
-    Instruction* i = instruction_make("MOVEP", not_implemented);
+    Instruction* i = instruction_make("MOVEP", movep);
+    i->size = BIT(opcode, 6) ? Long : Word;
     i->base_cycles = 0; // TODO
+
+    bool register_to_memory = BIT(opcode, 7);
+    if (register_to_memory)
+    {
+        i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+        i->dst = operand_make_address_register_indirect_displacement(FRAGMENT(opcode, 2, 0), i);
+    }
+    else
+    {
+        i->src = operand_make_address_register_indirect_displacement(FRAGMENT(opcode, 2, 0), i);
+        i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    }
+
     return i;
 }
 
