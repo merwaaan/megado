@@ -23,12 +23,7 @@ the menu screen and then in-game, which leads to a buffer overflow.
 - Splatterhouse 2: waits for a DMA transfer (bit 1 of VDP status) but we do those in a single step
 so the flag is always cleared.
 
-- Quackshot: can start game and play, but something is very wrong with the
-  display. The VRAM is corrupted because of an invalid DMA transfer with
-  length 0 (spans the whole VRAM) and auto-increment 2 (explains the stripes).
-  Another DMA transfer occured a few cycles before and decremented the length
-  to zero. Possible that the program did not have enough time to setup the
-  faulty DMA because of a timing issue?
+- Quackshot: Donald's sprite is scrambled
 
 - Landstalker: waits for $FF0F8B @B6E
 

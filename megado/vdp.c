@@ -832,29 +832,29 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
                 // TODO: proper right bound
                 // for now, it certainly cannot be larger than BUFFER_WIDTH,
                 // otherwise it might corrupt memory
-                if (scanline_x >= BUFFER_WIDTH)
-                    break;
-
-                // Sprites are drawn front-to-back so don't draw over previous sprites
-                if (data->drawn[scanline_x])
-                    continue;
-
-                uint16_t column_offset = sprite_x / 8 * height * 32;
-
-                uint16_t pixel_offset = pattern_index * 32 + column_offset + sprite_y * 4 + sprite_x % 8 / 2;
-                uint8_t color_indexes = v->vram[pixel_offset];
-                uint8_t color_index = sprite_x % 2 == 0 ? (color_indexes & 0xF0) >> 4 : color_indexes & 0x0F;
-
-                // Zero means transparent
-                if (color_index == 0)
+                if (scanline_x < BUFFER_WIDTH)
                 {
-                    data->drawn[scanline_x] = false;
-                    continue;
-                }
+                    // Sprites are drawn front-to-back so don't draw over previous sprites
+                    if (data->drawn[scanline_x])
+                        continue;
 
-                data->drawn[scanline_x] = true;
-                data->colors[scanline_x] = v->cram[palette_index * 16 + color_index];
-                data->priorities[scanline_x] = priority;
+                    uint16_t column_offset = sprite_x / 8 * height * 32;
+
+                    uint16_t pixel_offset = pattern_index * 32 + column_offset + sprite_y * 4 + sprite_x % 8 / 2;
+                    uint8_t color_indexes = v->vram[pixel_offset];
+                    uint8_t color_index = sprite_x % 2 == 0 ? (color_indexes & 0xF0) >> 4 : color_indexes & 0x0F;
+
+                    // Zero means transparent
+                    if (color_index == 0)
+                    {
+                        data->drawn[scanline_x] = false;
+                        continue;
+                    }
+
+                    data->drawn[scanline_x] = true;
+                    data->colors[scanline_x] = v->cram[palette_index * 16 + color_index];
+                    data->priorities[scanline_x] = priority;
+                }
             }
         }
 
