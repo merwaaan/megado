@@ -24,14 +24,7 @@ Vdp* vdp_make(Genesis* genesis)
 {
     Vdp* v = calloc(1, sizeof(Vdp));
     v->genesis = genesis;
-
     v->output_buffer = calloc(BUFFER_SIZE, sizeof(uint8_t));
-
-    v->pending_command = false;
-    v->display_width = display_width_values[0];
-    v->display_height = display_height_values[0];
-    v->plane_width = plane_size_values[0];
-    v->plane_height = plane_size_values[0];
 
     return v;
 }
@@ -53,6 +46,11 @@ void vdp_initialize(Vdp* v)
 
     // Reset the internal state
 
+    v->display_width = display_width_values[0];
+    v->display_height = display_height_values[0];
+    v->plane_width = plane_size_values[0];
+    v->plane_height = plane_size_values[0];
+
     v->pending_command = false;
     v->pending_dma_fill = false;
     v->dma_in_progress = false;
@@ -63,6 +61,7 @@ void vdp_initialize(Vdp* v)
     v->h_counter = 0;
     v->v_counter = 0;
     v->hblank_counter = 0;
+    v->auto_increment = 2;
 }
 
 uint16_t vdp_read_data(Vdp* v)
@@ -979,6 +978,6 @@ void vdp_draw_screen(Vdp* v)
     vdp_get_resolution(v, &output_width, &output_height);
 
     if (v->display_enabled)
-    for (int line = 0; line <= output_height; ++line)
-        render_scanline(v, line);
+        for (int line = 0; line <= output_height; ++line)
+            render_scanline(v, line);
 }
