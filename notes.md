@@ -20,7 +20,7 @@
 - Splatterhouse 2: waits for a DMA transfer (bit 1 of VDP status) but we do those in a single step
 so the flag is always cleared.
 
-- Quackshot: Donald's sprite is scrambled
+- Quackshot: The plane's sprite is scrambled
 
 - Landstalker: waits for $FF0F8B @B6E
 

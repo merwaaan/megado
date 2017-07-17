@@ -262,8 +262,6 @@ uint8_t movep(Instruction* i, M68k* ctx)
         exit(1);
     }
 
-    ctx->address_registers[i->dst->n] = value;
-
     return 0;
 }
 
