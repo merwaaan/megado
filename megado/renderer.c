@@ -844,11 +844,11 @@ static void build_ui(Renderer* r)
 
     // ROM
     if (settings->show_rom)
-        memory_viewer("ROM", &settings->show_rom, r->genesis->memory, Byte, 0x100000, &r->rom_target_address);
+        memory_viewer("ROM", &settings->show_rom, r->genesis->rom, Byte, 0x100000, &r->rom_target_address);
 
     // RAM
     if (settings->show_ram)
-        memory_viewer("RAM", &settings->show_ram, r->genesis->memory + 0xFF0000, Byte, 0x10000, &r->ram_target_address);
+        memory_viewer("RAM", &settings->show_ram, r->genesis->ram, Byte, 0x10000, &r->ram_target_address);
 
     // VDP registers
     if (settings->show_vdp_registers)

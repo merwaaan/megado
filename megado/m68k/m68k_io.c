@@ -27,8 +27,20 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
 {
     address &= M68K_ADDRESS_WIDTH;
 
+    // ROM
+    if (address <= 0x3FFFFF)
+    {
+        return m->genesis->rom[address];
+    }
+
+    // RAM
+    else if (address >= 0xFF0000)
+    {
+        return m->genesis->ram[address - 0xFF0000];
+    }
+
     // Z80 address space
-    if (address >= 0xA00000 && address < 0xA10000) {
+    else if (address >= 0xA00000 && address < 0xA10000) {
       return z80_read(m->genesis->z80, address & 0xFFFF);
     }
 
@@ -82,7 +94,8 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
         return BYTE_LO(vdp_get_hv_counter(m->genesis->vdp));
 
     default:
-        return m->genesis->memory[address];
+        printf("WARNING read from unsupported address: %0X\n", address);
+        return 0;
     }
 }
 
@@ -122,14 +135,23 @@ void m68k_write(M68k* m, Size size, uint32_t address, uint32_t value)
 
 void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
 {
-    address &= 0xFFFFFF;
+    address &= M68K_ADDRESS_WIDTH;
 
     // Cannot write to ROM
     if (address <= 0x3FFFFF)
+    {
+        printf("WARNING attempted to write to rom: %0X @ %0X\n", value, address);
         return;
+    }
+
+    // RAM
+    else if (address >= 0xFF0000)
+    {
+        m->genesis->ram[address - 0xFF0000] = value;
+    }
 
     // Z80 address space
-    if (address >= 0xA00000 && address < 0xA10000) {
+    else if (address >= 0xA00000 && address < 0xA10000) {
       z80_write(m->genesis->z80, address & 0xFFFF, value);
     }
 
@@ -163,10 +185,8 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
         vdp_write_control(m->genesis->vdp, value & (value << 8));
     }
 
-    else if (address > 0x82e0 && address < 0x82ff)
-        printf("");
-
-    m->genesis->memory[address] = value;
+    else
+        printf("WARNING write to unsupported address: %0X @ %0X\n", value, address);
 }
 
 void m68k_write_w(M68k* m, uint32_t address, uint16_t value)

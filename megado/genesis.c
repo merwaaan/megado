@@ -17,7 +17,8 @@ Genesis* genesis_make()
 {
     Genesis* g = calloc(1, sizeof(Genesis));
     g->settings = settings_make();
-    g->memory = calloc(0x1000000, sizeof(uint8_t));
+    g->rom = calloc(0x400000, sizeof(uint8_t));
+    g->ram = calloc(0x10000, sizeof(uint8_t));
     g->m68k = m68k_make(g);
     g->z80 = z80_make(g);
     g->vdp = vdp_make(g);
@@ -48,7 +49,8 @@ void genesis_free(Genesis* g)
     renderer_free(g->renderer);
     debugger_free(g->debugger);
 
-    free(g->memory);
+    free(g->rom);
+    free(g->ram);
     free(g);
 }
 
@@ -77,19 +79,19 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     fseek(file, 0, SEEK_END);
     int file_length = ftell(file);
     fseek(file, 0, SEEK_SET);
-    fread(g->memory, sizeof(uint8_t), file_length, file);
+    fread(g->rom, sizeof(uint8_t), file_length, file);
     fclose(file);
 
     genesis_initialize(g);
 
     // Display info from the ROM header
     printf("----------------\n");
-    print_header_info("", g->memory + 0x100, 16);
-    print_header_info("", g->memory + 0x110, 16);
-    print_header_info("[Domestic title]", g->memory + 0x120, 48);
-    print_header_info("[International title]", g->memory + 0x150, 48);
-    print_header_info("[Serial number]", g->memory + 0x180, 8);
-    print_header_info("[Country]", g->memory + 0x1F0, 8);
+    print_header_info("", g->rom + 0x100, 16);
+    print_header_info("", g->rom + 0x110, 16);
+    print_header_info("[Domestic title]", g->rom + 0x120, 48);
+    print_header_info("[International title]", g->rom + 0x150, 48);
+    print_header_info("[Serial number]", g->rom + 0x180, 8);
+    print_header_info("[Country]", g->rom + 0x1F0, 8);
     printf("----------------\n");
 
     // Look for snapshots/breakpoints for this game
@@ -97,7 +99,7 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     debugger_preload(g->debugger);
 
     // Set the system region depending on country code of the game
-    uint8_t* country_codes = g->memory + 0x1F0;
+    uint8_t* country_codes = g->rom + 0x1F0;
     switch (country_codes[0])
     {
     case 'E': g->region = Region_Europe; break;
@@ -204,11 +206,11 @@ void genesis_update(Genesis* g)
 void genesis_get_rom_name(Genesis* g, char* name)
 {
     // Get the international title from the header
-    strncpy(name, (char*)(g->memory + 0x150), 48);
+    strncpy(name, (char*)(g->rom + 0x150), 48);
 
     // Use the domestic title as a fallback
     if (name[0] == ' ')
-        strncpy(name, (char*)(g->memory + 0x120), 48);
+        strncpy(name, (char*)(g->rom + 0x120), 48);
 
     // Remove trailing whitespaces
     uint8_t cursor = 48;

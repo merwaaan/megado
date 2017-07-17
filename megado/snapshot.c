@@ -9,7 +9,7 @@
 Snapshot* snapshot_take(Genesis* g)
 {
     Snapshot* snapshot = calloc(1, sizeof(Snapshot));
-    memcpy(snapshot->ram, g->memory + 0xFF0000, 0x10000 * sizeof(uint8_t));
+    memcpy(snapshot->ram, g->ram, 0x10000 * sizeof(uint8_t));
     snapshot->m68k = *g->m68k;
     snapshot->z80 = *g->z80;
     snapshot->vdp = *g->vdp;
@@ -21,7 +21,7 @@ void snapshot_restore(Genesis* g, Snapshot* s)
     uint8_t* vdp_buffer = g->vdp->output_buffer;
 
     // Copy the snapshot data
-    memcpy(g->memory + 0xFF0000, &s->ram, 0x10000 * sizeof(uint8_t));
+    memcpy(g->ram, &s->ram, 0x10000 * sizeof(uint8_t));
     memcpy(g->m68k, &s->m68k, sizeof(M68k));
     memcpy(g->z80, &s->z80, sizeof(Z80));
     memcpy(g->vdp, &s->vdp, sizeof(Vdp));
