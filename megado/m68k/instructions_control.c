@@ -15,7 +15,7 @@ uint8_t bcc(Instruction* i, M68k* ctx)
     // If the condition is true, jump from (instruction address + 2)
     if (i->condition->func(ctx))
     {
-        ctx->pc = ctx->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
+        ctx->pc = (ctx->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset)) & M68K_ADDRESS_WIDTH;
         return 10;
     }
 
@@ -52,7 +52,7 @@ uint8_t bra(Instruction* i, M68k* ctx)
 {
     // Jump from (instruction address + 2)
     int16_t offset = FETCH_EA_AND_GET(i->src, ctx);
-    ctx->pc = ctx->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
+    ctx->pc = (ctx->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset)) & M68K_ADDRESS_WIDTH;
 
     return 0;
 }
@@ -86,7 +86,7 @@ uint8_t bsr(Instruction* i, M68k* ctx)
     m68k_write_l(ctx, ctx->address_registers[7], ctx->pc);
 
     // Jump from (instruction address + 2)
-    ctx->pc = ctx->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset);
+    ctx->pc = (ctx->instruction_address + 2 + (i->size == Byte ? (int8_t)offset : (int16_t)offset)) & M68K_ADDRESS_WIDTH;
 
     return 0;
 }
@@ -117,7 +117,7 @@ uint8_t dbcc(Instruction* i, M68k* ctx)
     uint16_t reg = GET(i->src, ctx);
     if (reg > 0)
     {
-        ctx->pc = ctx->instruction_address + 2 + offset;
+        ctx->pc = (ctx->instruction_address + 2 + offset) & M68K_ADDRESS_WIDTH;
         branch_taken = true;
     }
 
@@ -145,7 +145,7 @@ Instruction* gen_dbcc(uint16_t opcode)
 
 uint8_t jmp(Instruction* i, M68k* ctx)
 {
-    ctx->pc = FETCH_EA(i->src, ctx);
+    ctx->pc = FETCH_EA(i->src, ctx) & M68K_ADDRESS_WIDTH;;
 
     return 0;
 }
@@ -169,7 +169,7 @@ uint8_t jsr(Instruction* i, M68k* ctx)
     m68k_write_l(ctx, ctx->address_registers[7], ctx->pc);
 
     // Jump to the location specified by ea
-    ctx->pc = ea;
+    ctx->pc = ea & M68K_ADDRESS_WIDTH;
 
     return 0;
 }
@@ -205,7 +205,7 @@ uint8_t rtr(Instruction* i, M68k* ctx)
     uint8_t ccr = m68k_read_w(ctx, ctx->address_registers[7]);
     ctx->status = (ctx->status & 0xFFE0) | (ccr & 0x1F);
 
-    uint32_t pc = m68k_read_l(ctx, ctx->address_registers[7] + 2);
+    uint32_t pc = m68k_read_l(ctx, ctx->address_registers[7] + 2) & M68K_ADDRESS_WIDTH;
     ctx->pc = pc;
 
     ctx->address_registers[7] += 6;
@@ -222,7 +222,7 @@ Instruction* gen_rtr(uint16_t opcode)
 
 uint8_t rts(Instruction* i, M68k* ctx)
 {
-    ctx->pc = m68k_read_l(ctx, ctx->address_registers[7]);
+    ctx->pc = m68k_read_l(ctx, ctx->address_registers[7]) & M68K_ADDRESS_WIDTH;
     ctx->address_registers[7] += 4;
 
     return 0;

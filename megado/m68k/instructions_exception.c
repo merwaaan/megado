@@ -27,7 +27,7 @@ uint8_t trap(Instruction* i, M68k* ctx)
     ctx->address_registers[7] -= 2;
     m68k_write_w(ctx, ctx->address_registers[7], ctx->status);
 
-    ctx->pc = m68k_read_l(ctx, 0x80 + i->src->n * 4);
+    ctx->pc = m68k_read_l(ctx, 0x80 + i->src->n * 4) & M68K_ADDRESS_WIDTH;
 
     return 0;
 }

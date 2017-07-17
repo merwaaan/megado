@@ -25,7 +25,7 @@ uint32_t m68k_read(M68k* m, Size size, uint32_t address)
 
 uint8_t m68k_read_b(M68k* m, uint32_t address)
 {
-    address &= 0xFFFFFF; // 24-bit address bus
+    address &= M68K_ADDRESS_WIDTH;
 
     // Z80 address space
     if (address >= 0xA00000 && address < 0xA10000) {
@@ -122,7 +122,7 @@ void m68k_write(M68k* m, Size size, uint32_t address, uint32_t value)
 
 void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
 {
-    address &= 0xFFFFFF; // 24-bit address bus
+    address &= 0xFFFFFF;
 
     // Cannot write to ROM
     if (address <= 0x3FFFFF)
@@ -166,12 +166,12 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     else if (address > 0x82e0 && address < 0x82ff)
         printf("");
 
-    m->genesis->memory[address & 0xFFFFFF] = value;
+    m->genesis->memory[address] = value;
 }
 
 void m68k_write_w(M68k* m, uint32_t address, uint16_t value)
 {
-    address &= 0xFFFFFF;
+    address &= M68K_ADDRESS_WIDTH;
 
     switch (address)
     {

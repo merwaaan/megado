@@ -285,7 +285,7 @@ Operand* operand_make_address_register(int n, Instruction* instr)
 
 uint32_t address_indirect_ea(Operand* o, M68k* ctx)
 {
-    return ctx->address_registers[o->n] & 0xFFFFFF;
+    return ctx->address_registers[o->n] & M68K_ADDRESS_WIDTH;
 }
 
 Operand* operand_make_address_register_indirect(int n, Instruction* instr)

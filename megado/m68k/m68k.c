@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -149,6 +150,9 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
 
 uint8_t m68k_step(M68k* m)
 {
+	assert(m->pc <= M68K_ADDRESS_WIDTH);
+	assert(m->pc % 2 == 0);
+
     // Pause on breakpoints
     // TODO only in DEBUG builds? check perf
     Breakpoint* breakpoint = debugger_get_breakpoint(m->genesis->debugger, m->pc);
@@ -213,7 +217,7 @@ inline uint16_t m68k_fetch(M68k* m)
     if (m->pc != m->prefetch_address)
     {
         uint16_t word = m68k_read_w(m, m->pc);
-        m->pc = m->prefetch_address = m->pc + 2;
+        m->pc = m->prefetch_address = (m->pc + 2) & M68K_ADDRESS_WIDTH;
 
         m->prefetch_queue[0] = m68k_read_w(m, m->pc);
         m->prefetch_queue[1] = m68k_read_w(m, m->pc + 2);
@@ -224,7 +228,7 @@ inline uint16_t m68k_fetch(M68k* m)
     // Otherwise, shift the prefetch queue
     uint16_t word = m->prefetch_queue[0];
     m->prefetch_queue[0] = m->prefetch_queue[1];
-    m->pc = m->prefetch_address = m->pc + 2;
+    m->pc = m->prefetch_address = (m->pc + 2) & M68K_ADDRESS_WIDTH;
     m->prefetch_queue[1] = m68k_read_w(m, m->pc + 2);
     return word;
 }

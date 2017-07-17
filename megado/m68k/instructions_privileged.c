@@ -123,7 +123,7 @@ uint8_t rte(Instruction* i, M68k* ctx)
 {
     ctx->status = m68k_read_w(ctx, ctx->address_registers[7]);
     ctx->address_registers[7] += 2;
-    ctx->pc = m68k_read_l(ctx, ctx->address_registers[7]);
+    ctx->pc = m68k_read_l(ctx, ctx->address_registers[7]) & M68K_ADDRESS_WIDTH;
     ctx->address_registers[7] += 4;
 
     return 0;

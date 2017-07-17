@@ -27,6 +27,9 @@
 #define STATUS_SUPERVISOR_MODE(context) BIT((context)->status, 13)
 #define STATUS_INTERRUPT_MASK(context) FRAGMENT((context)->status, 10, 8)
 
+// The M68000 has a 24-bit address bus
+#define M68K_ADDRESS_WIDTH 0xFFFFFF
+
 struct Instruction;
 struct DecodedInstruction;
 struct Genesis;
@@ -93,10 +96,6 @@ void m68k_request_interrupt(M68k* m, uint8_t level);
 void m68k_handle_interrupt(M68k* m);
 
 // I/O functions
-//
-// Note: While the 68000 handles 32-bit addresses, its address
-// bus is 24-bit. The I/O functions must take that into account
-// (eg. by masking the addresses by 0xFFFFFF).
 
 uint32_t m68k_read(M68k*, Size size, uint32_t address);
 uint8_t m68k_read_b(M68k*, uint32_t address);
