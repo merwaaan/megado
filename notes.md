@@ -5,9 +5,6 @@
     of the least-significant one, when it should be zero; the bogus digit is
     written to the VDP @ 63AA)
 
-- Alex Kidd in the Enchanted Castle:
-  - Planes are empty during the intro and in-game (only works in the korean version)
-
 - The Simpsons - Bart's Nightmare: 
   - Bart's sprite is not visible
 

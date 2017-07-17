@@ -34,9 +34,11 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
     }
 
     // RAM
-    else if (address >= 0xFF0000)
+    //   - officially from 0xFF0000 to 0xFFFFFF
+    //   - mirrored every 64 kb from 0xE00000
+    else if (address >= 0xE00000)
     {
-        return m->genesis->ram[address - 0xFF0000];
+        return m->genesis->ram[address & 0x00FFFF];
     }
 
     // Z80 address space
@@ -145,9 +147,9 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     }
 
     // RAM
-    else if (address >= 0xFF0000)
+    else if (address >= 0xE00000)
     {
-        m->genesis->ram[address - 0xFF0000] = value;
+        m->genesis->ram[address & 0x00FFFF] = value;
     }
 
     // Z80 address space
