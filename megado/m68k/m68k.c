@@ -152,6 +152,7 @@ uint8_t m68k_step(M68k* m)
 {
 	assert(m->pc <= M68K_ADDRESS_WIDTH);
 	assert(m->pc % 2 == 0);
+	assert(m->address_registers[7] % 2 == 0);
 
     // Pause on breakpoints
     // TODO only in DEBUG builds? check perf
