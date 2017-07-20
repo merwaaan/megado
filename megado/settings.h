@@ -24,6 +24,7 @@ typedef struct Settings
 
     // Video settings
     float video_scale; // Scaling factor for the Genesis video output
+    bool full_screen;
     bool vsync;
 
     // UI settings

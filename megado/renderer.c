@@ -384,6 +384,25 @@ static void toggle_pause(Renderer* r)
         r->genesis->status = Status_Running;
 }
 
+static void toggle_full_screen(Renderer* r)
+{
+    r->genesis->settings->full_screen = !r->genesis->settings->full_screen;
+
+    if (r->genesis->settings->full_screen)
+    {
+        // Save the current size to restore it later
+        glfwGetWindowSize(r->window, &r->window_previous_width, &r->window_previous_height);
+
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        glfwSetWindowMonitor(r->window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
+    }
+    else
+    {
+        glfwSetWindowMonitor(r->window, NULL, 50, 50, r->window_previous_width, r->window_previous_height, GLFW_DONT_CARE);
+    }
+}
+
 static void toggle_vsync(Renderer* r) {
     r->genesis->settings->vsync = !r->genesis->settings->vsync;
     glfwSwapInterval(r->genesis->settings->vsync ? 1 : 0);
@@ -518,6 +537,8 @@ static void build_ui(Renderer* r)
         {
 
             igSliderFloat("Scaling", &settings->video_scale, 1.0f, 5.0f, "%f", 1.0f);
+            if (igMenuItem("Full screen", NULL, settings->full_screen, true))
+                toggle_full_screen(r);
             if (igMenuItem("VSync", NULL, settings->vsync, true)) {
                 toggle_vsync(r);
             }
@@ -1338,9 +1359,16 @@ static void handle_inputs(Renderer* r, int key, int action)
         case GLFW_KEY_8: joypad_release(r->genesis->joypad2, ButtonB); break;
         case GLFW_KEY_9: joypad_release(r->genesis->joypad2, ButtonC); break;
 
+        case GLFW_KEY_F: toggle_full_screen(r); break;
         case GLFW_KEY_P: toggle_pause(r); break;
         case GLFW_KEY_SPACE: step(r); break;
-        case GLFW_KEY_ESCAPE: r->genesis->status = Status_Quitting; break;
+
+        case GLFW_KEY_ESCAPE:
+            if (r->genesis->settings->full_screen)
+                toggle_full_screen(r);
+            else
+                r->genesis->status = Status_Quitting;
+            break;
 
         case GLFW_KEY_R:
             if (r->genesis->status == Status_Rewinding)

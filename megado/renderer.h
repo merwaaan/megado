@@ -15,6 +15,9 @@ typedef struct Renderer
 
     GLFWwindow* window;
 
+    // Window dimensions to be restored when leaving full screen
+    int window_previous_width, window_previous_height;
+
     struct SnapshotMetadata* snapshots[SNAPSHOT_SLOTS];
 
     float last_time;
