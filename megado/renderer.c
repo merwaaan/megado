@@ -335,8 +335,13 @@ static void memory_viewer(char* name, bool* opened, void* data, Size data_size, 
 
         for (int row = first_visible_row; row < last_visible_row; ++row)
         {
+            // Count digits for the address
+            int addr_digits = 0;
+            for (int i = data_length - 1; i > 0; i >>= 4)
+                ++addr_digits;
+
             uint32_t row_address = row * MEMORY_VIEWER_COLUMNS;
-            igText("%06X:  ", row_address);
+            igText("%0*X:  ", addr_digits, row_address);
 
             for (int column = 0; column < MEMORY_VIEWER_COLUMNS; ++column)
             {
@@ -394,7 +399,7 @@ static void toggle_full_screen(Renderer* r)
         glfwGetWindowSize(r->window, &r->window_previous_width, &r->window_previous_height);
 
         GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-        GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
         glfwSetWindowMonitor(r->window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
     }
     else
@@ -865,7 +870,7 @@ static void build_ui(Renderer* r)
 
     // ROM
     if (settings->show_rom)
-        memory_viewer("ROM", &settings->show_rom, r->genesis->rom, Byte, 0x100000, &r->rom_target_address);
+        memory_viewer("ROM", &settings->show_rom, r->genesis->rom, Byte, 0x400000, &r->rom_target_address);
 
     // RAM
     if (settings->show_ram)
