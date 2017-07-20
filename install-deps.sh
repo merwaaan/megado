@@ -4,7 +4,7 @@
 pushd deps/glfw/
 mkdir build
 pushd build
-cmake -DBUILD_SHARED_LIBS=ON ../
+cmake ../
 make -j2
 popd
 popd
@@ -24,6 +24,8 @@ popd
 # cimgui
 pushd deps/cimgui/cimgui
 make -j2
+# Build static library since cimgui doesn't do it itself
+ar rcs cimgui.a cimgui.o fontAtlas.o drawList.o listClipper.o ../imgui/imgui.o ../imgui/imgui_draw.o ../imgui/imgui_demo.o
 popd
 
 # json-c

@@ -57,4 +57,4 @@ esac
 shift
 
 make -j $JOBS BUILD_DIR="$BUILD_DIR" USER_FLAGS="$FLAGS" \
-    && env $ENV $RUNNER $BUILD_DIR/megado-bin "$@"
+    && $RUNNER $BUILD_DIR/megado-bin "$@"
