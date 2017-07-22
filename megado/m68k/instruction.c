@@ -120,7 +120,8 @@ DECLARE_INSTR(stop);
 
 uint8_t not_implemented(Instruction* i, M68k* ctx)
 {
-    return 0;
+    printf("Instruction %s not implemented", i->name);
+    exit(1);
 }
 
 // Generator function
