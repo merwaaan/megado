@@ -49,11 +49,18 @@ so the flag is always cleared.
 
 - Zombies Ate My Neighbors:
 	- the film roll on the character select screen must be transparent (how is this done?)
-	- plane scrolling is visible at the right of the screen 
-
-- Tale Spin: wait for @FF000E to be written to (during an interrupt?)
+	- plane scrolling is visible at the right of the screen
 
 - Clue: main menu not responding
+
+- Another World: scanlines are drawn out. This game might very sensible to timing accuracy since
+it implements its own polygon rasterizer.
+
+- Asterix and the Great Rescue: every other rows of tile are glitched.
+
+- Batman Forever: main menu not responding.
+
+- Jurassic Parc: infinite loop in the first level.
 
 # Games that seem to wait for the Z80:
 
@@ -62,3 +69,4 @@ so the flag is always cleared.
 - Lost Vikings: waiting for $A01000 to equal zero @FD888 (eerily similar to Addam's Family)
 - Pitfall
 - Wolverine Adamantium Rage
+- Alien 3
