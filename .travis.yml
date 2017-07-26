@@ -21,9 +21,10 @@ addons:
 matrix:
   include:
 
-  # GCC build, but do not fail on -Werror here as there are warnings we haven't
-  # heeded yet.
+  # Recent GCC
   - compiler: gcc-7
+    env:
+    - FLAGS="-Werror"
 
   # Latest clang build
   - compiler: clang-4.0
