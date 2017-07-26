@@ -4,14 +4,10 @@
 #include <stdbool.h>
 
 #include "snapshot.h"
-#include "vdp.h"
-#include "metric.h"
-
-struct SnapshotMetadata;
 
 typedef struct Renderer
 {
-    Genesis* genesis;
+    struct Genesis* genesis;
 
     GLFWwindow* window;
 
@@ -23,9 +19,9 @@ typedef struct Renderer
     float last_time;
     float metrics_refresh_counter;
     float instructions_this_second;
-    Metric* tpf; // time per frame
-    Metric* ipf; // instructions per frame
-    Metric* ips; // instructions per second
+    struct Metric* tpf; // time per frame
+    struct Metric* ipf; // instructions per frame
+    struct Metric* ips; // instructions per second
 
     enum Planes selected_plane;
     uint8_t* plane_buffer;
@@ -48,7 +44,7 @@ typedef struct Renderer
     GLint ui_shader_texture_loc, ui_shader_projection_loc;
 } Renderer;
 
-Renderer* renderer_make(Genesis*);
+Renderer* renderer_make(struct Genesis*);
 void renderer_free(Renderer*);
 
 void renderer_render(Renderer*);

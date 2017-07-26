@@ -3,8 +3,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "z80.h"
-
 #define M68K_LOG_LENGTH 25
 #define Z80_LOG_LENGTH 25
 
@@ -15,6 +13,7 @@
 #define REWIND_PLAY_INTERVAL 0.05
 
 struct DecodedInstruction;
+struct DecodedZ80Instruction;
 struct Genesis;
 struct Snapshot;
 
@@ -25,7 +24,7 @@ typedef struct Breakpoint
     // TODO hit counter could be useful
 } Breakpoint;
 
-typedef struct {
+typedef struct LoggedZ80Instruction {
     uint16_t address;
     char* mnemonics;
 } LoggedZ80Instruction;
@@ -74,7 +73,7 @@ void debugger_initialize(Debugger *);
 void debugger_preload(Debugger*);
 
 void debugger_post_m68k(Debugger*);
-void debugger_post_z80(Debugger*, DecodedZ80Instruction* instr, uint16_t address);
+void debugger_post_z80(Debugger*, struct DecodedZ80Instruction* instr, uint16_t address);
 void debugger_post_frame(Debugger*);
 
 void debugger_toggle_breakpoint(Debugger*, uint32_t address);

@@ -63,7 +63,7 @@ typedef struct Z80 {
     uint8_t ram[Z80_RAM_LENGTH];
 } Z80;
 
-typedef struct {
+typedef struct DecodedZ80Instruction {
     uint8_t length;
     char* mnemonics;
 } DecodedZ80Instruction;

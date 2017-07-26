@@ -3,8 +3,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "m68k/bit_utils.h"
-
 #define HBLANK_IRQ 4
 #define VBLANK_IRQ 6
 

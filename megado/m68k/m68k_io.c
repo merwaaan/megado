@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "m68k.h"
+#include "../z80.h"
 #include "../genesis.h"
 #include "../joypad.h"
 #include "../vdp.h"

@@ -7,15 +7,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "debugger.h"
 #include "genesis.h"
 #include "joypad.h"
-#include "m68k/instruction.h"
-#include "m68k/m68k.h"
 #include "renderer.h"
 #include "settings.h"
-#include "snapshot.h"
-#include "vdp.h"
+#include "metric.h"
 
 #define DISASSEMBLY_LENGTH 10
 #define MEMORY_VIEWER_COLUMNS 16

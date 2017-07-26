@@ -3,10 +3,11 @@
 #include <stdint.h>
 #include <time.h>
 
-#include "genesis.h"
 #include "m68k/m68k.h"
-#include "vdp.h"
 #include "z80.h"
+#include "vdp.h"
+
+struct Genesis;
 
 #define SNAPSHOT_SLOTS 3
 #define SNAPSHOT_NAME(NAME, SLOT) NAME #SLOT ".snapshot"
@@ -41,12 +42,12 @@ typedef struct SnapshotMetadata
 } SnapshotMetadata;
 
 // Takes/Restores a snapshot for the game currently being executed
-Snapshot* snapshot_take(Genesis*);
-void snapshot_restore(Genesis*, Snapshot*);
+Snapshot* snapshot_take(struct Genesis*);
+void snapshot_restore(struct Genesis*, Snapshot*);
 
 // Saves/Loads a snapshot in the given slot for the game currently being executed
-SnapshotMetadata* snapshot_save(Genesis*, uint8_t slot);
-void snapshot_load(Genesis*, uint8_t slot);
+SnapshotMetadata* snapshot_save(struct Genesis*, uint8_t slot);
+void snapshot_load(struct Genesis*, uint8_t slot);
 
 // Gets the metadata from saved snapshots of the game currently being executed
-void snapshots_preload(Genesis*, SnapshotMetadata*[]);
+void snapshots_preload(struct Genesis*, SnapshotMetadata*[]);

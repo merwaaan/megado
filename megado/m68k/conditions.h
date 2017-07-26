@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdbool.h>
-#include "m68k.h"
 
 struct M68k;
 

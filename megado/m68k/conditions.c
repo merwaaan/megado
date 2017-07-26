@@ -1,82 +1,82 @@
 #include "conditions.h"
 #include "m68k.h"
 
-static bool False(M68k* context)
+static bool False(struct M68k* context)
 {
     return false;
 }
 
-static bool True(M68k* context)
+static bool True(struct M68k* context)
 {
     return true;
 }
 
-static bool High(M68k* context)
+static bool High(struct M68k* context)
 {
     return !ZERO(context) & !CARRY(context);
 }
 
-static bool LowOrSame(M68k* context)
+static bool LowOrSame(struct M68k* context)
 {
     return ZERO(context) | CARRY(context);
 }
 
-static bool CarryClear(M68k* context)
+static bool CarryClear(struct M68k* context)
 {
     return !CARRY(context);
 }
 
-static bool CarrySet(M68k* context)
+static bool CarrySet(struct M68k* context)
 {
     return CARRY(context);
 }
 
-static bool NotEqual(M68k* context)
+static bool NotEqual(struct M68k* context)
 {
     return !ZERO(context);
 }
 
-static bool Equal(M68k* context)
+static bool Equal(struct M68k* context)
 {
     return ZERO(context);
 }
 
-static bool OverflowClear(M68k* context)
+static bool OverflowClear(struct M68k* context)
 {
     return !OVERFLOW(context);
 }
 
-static bool OverflowSet(M68k* context)
+static bool OverflowSet(struct M68k* context)
 {
     return OVERFLOW(context);
 }
 
-static bool Plus(M68k* context)
+static bool Plus(struct M68k* context)
 {
     return !NEGATIVE(context);
 }
 
-static bool Minus(M68k* context)
+static bool Minus(struct M68k* context)
 {
     return NEGATIVE(context);
 }
 
-static bool GreaterOrEqual(M68k* context)
+static bool GreaterOrEqual(struct M68k* context)
 {
     return (NEGATIVE(context) & OVERFLOW(context)) | (!NEGATIVE(context) & !OVERFLOW(context));
 }
 
-static bool LessThan(M68k* context)
+static bool LessThan(struct M68k* context)
 {
     return (NEGATIVE(context) & !OVERFLOW(context)) | ((!NEGATIVE(context)) & OVERFLOW(context));
 }
 
-static bool GreaterThan(M68k* context)
+static bool GreaterThan(struct M68k* context)
 {
     return (NEGATIVE(context) & OVERFLOW(context) & !ZERO(context)) | ((!NEGATIVE(context)) & !OVERFLOW(context) & !ZERO(context));
 }
 
-static bool LessOrEqual(M68k* context)
+static bool LessOrEqual(struct M68k* context)
 {
     return ZERO(context) | (NEGATIVE(context) & !OVERFLOW(context)) | ((!NEGATIVE(context)) & OVERFLOW(context));
 }

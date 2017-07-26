@@ -3,12 +3,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "z80.h"
-
 struct Debugger;
 struct DecodedInstruction;
 struct Joypad;
 struct M68k;
+struct Z80;
 struct Renderer;
 struct Settings;
 struct Vdp;

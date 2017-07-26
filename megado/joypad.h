@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 // References
 // https://emu-docs.org/Genesis/gen-hw.txt (Section 3.2)
 // https://wiki.megadrive.org/index.php?title=Reading_MD3_Joypad

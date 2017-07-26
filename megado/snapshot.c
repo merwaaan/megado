@@ -3,10 +3,11 @@
 #include <string.h>
 
 #include "snapshot.h"
+#include "genesis.h"
 
 #define WRITE_SNAPSHOT_NAME(BUFFER, TITLE, SLOT) sprintf(BUFFER, "%s.snapshot%d", TITLE, SLOT)
 
-Snapshot* snapshot_take(Genesis* g)
+Snapshot* snapshot_take(struct Genesis* g)
 {
     Snapshot* snapshot = calloc(1, sizeof(Snapshot));
     memcpy(snapshot->ram, g->ram, 0x10000 * sizeof(uint8_t));
@@ -16,7 +17,7 @@ Snapshot* snapshot_take(Genesis* g)
     return snapshot;
 }
 
-void snapshot_restore(Genesis* g, Snapshot* s)
+void snapshot_restore(struct Genesis* g, Snapshot* s)
 {
     uint8_t* vdp_buffer = g->vdp->output_buffer;
 
@@ -32,7 +33,7 @@ void snapshot_restore(Genesis* g, Snapshot* s)
     g->vdp->output_buffer = vdp_buffer;
 }
 
-SnapshotMetadata* snapshot_save(Genesis* g, uint8_t slot)
+SnapshotMetadata* snapshot_save(struct Genesis* g, uint8_t slot)
 {
     SnapshotMetadata* metadata = calloc(1, sizeof(SnapshotMetadata));
     genesis_get_rom_name(g, metadata->game);
@@ -59,7 +60,7 @@ SnapshotMetadata* snapshot_save(Genesis* g, uint8_t slot)
     return metadata;
 }
 
-void snapshot_load(Genesis* g, uint8_t slot)
+void snapshot_load(struct Genesis* g, uint8_t slot)
 {
     char rom_name[49];
     genesis_get_rom_name(g, rom_name);
@@ -84,7 +85,7 @@ void snapshot_load(Genesis* g, uint8_t slot)
     snapshot_restore(g, &s);
 }
 
-void snapshots_preload(Genesis* g, SnapshotMetadata* snapshots[])
+void snapshots_preload(struct Genesis* g, SnapshotMetadata* snapshots[])
 {
     char rom_name[49];
     genesis_get_rom_name(g, rom_name);
