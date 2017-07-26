@@ -100,7 +100,7 @@ uint8_t eor(Instruction* i, M68k* ctx)
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
     ZERO_SET(ctx, result == 0);
-    NEGATIVE_SET(ctx, result < 0);
+    NEGATIVE_SET(ctx, BIT(result, i->size - 1) == 1);
 
     return 0;
 }
@@ -150,7 +150,7 @@ uint8_t or (Instruction* i, M68k* ctx)
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
     ZERO_SET(ctx, result == 0);
-    NEGATIVE_SET(ctx, result < 0);
+    NEGATIVE_SET(ctx, BIT(result, i->size - 1) == 1);
 
     return 0;
 }
