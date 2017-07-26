@@ -108,9 +108,9 @@ void snapshots_preload(struct Genesis* g, SnapshotMetadata* snapshots[])
 
         printf("Snapshot found: %s\n", file_name);
 
-        if (metadata->version < SNAPSHOT_VERSION)
+        if (metadata->version != SNAPSHOT_VERSION)
         {
-            printf("Snapshot is out of date (loaded version is %d, current version is %d)", metadata->version, SNAPSHOT_VERSION);
+            printf("Incompatible snapshot version (loaded version is %d, current version is %d)", metadata->version, SNAPSHOT_VERSION);
             snapshots[slot] = NULL;
             continue;
         }
