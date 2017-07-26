@@ -366,7 +366,7 @@ Operand* operand_make_address_register_indirect_predec(int n, struct Instruction
 // The data is located at the stored address + a displacement (extension).
 // Extension word format: https://github.com/traviscross/libzrtp/blob/master/third_party/bnlib/lbn68000.c#L342
 
-#define INDEX_REGISTER(extension) ((BIT((extension), 15) ? ctx->address_registers[FRAGMENT((extension), 14, 12)] : ctx->data_registers[FRAGMENT((extension), 14, 12)]))
+#define INDEX_REGISTER(extension) ((BIT((extension), 15) ? ctx->address_registers[FRAGMENT((extension), 14, 12)] : (uint32_t)ctx->data_registers[FRAGMENT((extension), 14, 12)]))
 #define INDEX_LENGTH(extension) (BIT(extension, 11))
 #define INDEX_DISPLACEMENT(extension) (FRAGMENT(extension, 7, 0))
 

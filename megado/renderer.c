@@ -1295,7 +1295,7 @@ static void render_ui(Renderer* r)
         {
             struct ImDrawCmd* command = ImDrawList_GetCmdPtr(commands, i);
 
-            glBindTexture(GL_TEXTURE_2D, (GLuint)command->TextureId);
+            glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)command->TextureId);
             glScissor((int)command->ClipRect.x, (int)(fb_height - command->ClipRect.w), (int)(command->ClipRect.z - command->ClipRect.x), (int)(command->ClipRect.w - command->ClipRect.y));
             glDrawElements(GL_TRIANGLES, (GLsizei)command->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, (GLvoid*)idx_buffer_offset);
 
