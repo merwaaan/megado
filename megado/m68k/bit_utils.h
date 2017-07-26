@@ -47,7 +47,7 @@
 #define CHECK_CARRY_ADD(a, b, size) (MASK_ABOVE_INC((a) + (b), (size)) < (a))
 #define CHECK_CARRY_SUB(a, b, size) (MASK_ABOVE_INC((a) - (b), (size)) > (a))
 #define CHECK_OVERFLOW_ADD(a, b, size) (SIGN_BIT(a, size) == SIGN_BIT(b, size) && SIGN_BIT(a, size) != SIGN_BIT((a) + (b), size))
-#define CHECK_OVERFLOW_SUB(a, b, size) (!SIGN_BIT(a, size) && SIGN_BIT(b, size) && SIGN_BIT((a) - (b), size) || SIGN_BIT(a, size) && !SIGN_BIT(b, size) && !SIGN_BIT((a) - (b), size))
+#define CHECK_OVERFLOW_SUB(a, b, size) ((!SIGN_BIT(a, size) && SIGN_BIT(b, size) && SIGN_BIT((a) - (b), size)) || (SIGN_BIT(a, size) && !SIGN_BIT(b, size) && !SIGN_BIT((a) - (b), size)))
 
 // Modulo supporting negative numbers
 #define UMOD(A, B) (((A) % (B) + (B)) % (B))
