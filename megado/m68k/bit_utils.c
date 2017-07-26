@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "bit_utils.h"
+#include "../utils.h"
 
 uint8_t size_in_bytes(Size size)
 {
@@ -14,8 +15,8 @@ uint8_t size_in_bytes(Size size)
     case Long:
         return 4;
     case InvalidSize:
-        fprintf(stderr, "Invalid size in size_in_bytes\n");
-        exit(1);
+    default:
+        FATAL("Invalid size: %x", size);
     }
 }
 

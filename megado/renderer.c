@@ -12,6 +12,7 @@
 #include "renderer.h"
 #include "settings.h"
 #include "metric.h"
+#include "utils.h"
 
 #define DISASSEMBLY_LENGTH 10
 #define MEMORY_VIEWER_COLUMNS 16
@@ -65,8 +66,7 @@ static GLuint create_shader(GLenum shader_type, const GLchar* source)
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (success == GL_FALSE)
     {
-        printf("Failed to compile shader\n");
-        exit(1);
+        FATAL("Failed to compile shader");
     }
 
     return shader;
@@ -101,8 +101,7 @@ static GLuint create_shader_program(const GLchar* vertex_shader_source, const GL
     glGetProgramiv(program, GL_LINK_STATUS, &success);
     if (success == GL_FALSE)
     {
-        printf("Failed to compile shader program\n");
-        exit(1);
+        FATAL("Failed to compile shader program");
     }
 
     return program;
@@ -1453,8 +1452,7 @@ Renderer* renderer_make(Genesis* genesis)
     int glfw_success = glfwInit();
     if (glfw_success != GLFW_TRUE)
     {
-        printf("An error occurred while initializing GLFW");
-        exit(1);
+        FATAL("An error occurred while initializing GLFW");
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
@@ -1463,8 +1461,7 @@ Renderer* renderer_make(Genesis* genesis)
     GLFWwindow* window = glfwCreateWindow(genesis->settings->window_width, genesis->settings->window_height, "Megado", NULL, NULL);
     if (!window)
     {
-        printf("An error occurred while creating a GLFW window");
-        exit(1);
+        FATAL("An error occurred while creating a GLFW window");
     }
 
     glfwSetKeyCallback(window, key_callback);
@@ -1483,8 +1480,7 @@ Renderer* renderer_make(Genesis* genesis)
     GLenum glew_success = glewInit();
     if (glew_success != GLEW_OK)
     {
-        printf("An error occurred while initializing GLEW: %s\n", glewGetErrorString(glew_success));
-        exit(1);
+        FATAL("An error occurred while initializing GLEW: %s", glewGetErrorString(glew_success));
     }
 
     char* gl_version;

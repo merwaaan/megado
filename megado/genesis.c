@@ -12,6 +12,7 @@
 #include "settings.h"
 #include "snapshot.h"
 #include "vdp.h"
+#include "utils.h"
 
 Genesis* genesis_make()
 {
@@ -71,8 +72,7 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     FILE* file = fopen(path, "rb");
     if (!file)
     {
-        printf("Cannot read file \"%s\"", path);
-        exit(1);
+        FATAL("Cannot read file \"%s\"", path);
     }
 
     // Load the ROM into memory

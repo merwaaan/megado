@@ -6,6 +6,7 @@
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
+#include "../utils.h"
 
 #define DECLARE_INSTR(name) Instruction* gen_ ## name(uint16_t opcode)
 
@@ -121,8 +122,7 @@ DECLARE_INSTR(stop);
 
 uint8_t not_implemented(Instruction* i, M68k* ctx)
 {
-    printf("Instruction %s not implemented", i->name);
-    exit(1);
+    FATAL("Instruction %s not implemented", i->name);
 }
 
 // Generator function

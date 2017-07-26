@@ -4,6 +4,7 @@
 #include "instruction.h"
 #include "operands.h"
 #include "m68k.h"
+#include "../utils.h"
 
 Operand* operand_make(uint16_t pattern, Instruction* instr)
 {
@@ -101,9 +102,7 @@ int operand_tostring(Operand* operand, M68k* ctx, char* buffer)
         return sprintf(buffer, "$%0X [%0X]", offset, target);
     }
     default:
-        fprintf(stderr, "Invalid operand type %x in operand_tostring\n", operand->type);
-        exit(1);
-        return 0;
+        FATAL("Invalid operand type %x", operand->type);
     }
 }
 
@@ -466,8 +465,7 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
         op->get_value_func = immediate_long_get;
         break;
     case InvalidSize:
-        fprintf(stderr, "Invalid operand size %x in operand_make_immediate_value\n", size);
-        exit(1);
+        FATAL("Invalid operand size %x", size);
     }
 
     return op;
@@ -620,9 +618,7 @@ Operand* operand_make_branching_offset(Instruction* instr, Size size)
         break;
     default: // The 68000 does not support long branching offsets
         free(op);
-        fprintf(stderr, "Invalid size %x in operand_make_branching_offset\n", size);
-        exit(1);
-        return NULL;
+        FATAL("Invalid size %x", size);
     }
 
     return op;
@@ -651,8 +647,6 @@ int operand_length(Operand* operand)
         return 0;
     }
 }
-
-#define FATAL(...) do { fprintf(stderr, "FATAL(in %s): ", __func__); fprintf(stderr, __VA_ARGS__); exit(1); } while (0)
 
 uint32_t operand_fetch_ea_and_get(Operand* operand, M68k* ctx) {
     if (operand->fetch_ea_func == NULL) {

@@ -7,6 +7,7 @@
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
+#include "../utils.h"
 
 uint8_t exg(Instruction* i, M68k* ctx)
 {
@@ -39,8 +40,7 @@ Instruction* gen_exg(uint16_t opcode)
         i->dst = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
         break;
     default:
-        fprintf(stderr, "Invalid mode %x in gen_exg\n", mode);
-        exit(1);
+        FATAL("Invalid mode %x", mode);
         break;
     }
 
@@ -258,8 +258,7 @@ uint8_t movep(Instruction* i, M68k* ctx)
     else
     {
         // TODO when less sleepy
-        printf("unsupported movep variant");
-        exit(1);
+        FATAL("unsupported movep variant");
     }
 
     return 0;

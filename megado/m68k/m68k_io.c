@@ -6,6 +6,7 @@
 #include "../genesis.h"
 #include "../joypad.h"
 #include "../vdp.h"
+#include "../utils.h"
 
 uint32_t m68k_read(M68k* m, Size size, uint32_t address)
 {
@@ -19,8 +20,7 @@ uint32_t m68k_read(M68k* m, Size size, uint32_t address)
         return m68k_read_l(m, address);
     case InvalidSize:
     default:
-        fprintf(stderr, "Invalid size %x in m68k_read\n", size);
-        exit(1);
+        FATAL("Invalid size %x", size);
     }
 }
 
@@ -131,8 +131,7 @@ void m68k_write(M68k* m, Size size, uint32_t address, uint32_t value)
         break;
     case InvalidSize:
     default:
-        fprintf(stderr, "Invalid size %x in m68k_write\n", size);
-        exit(1);
+        FATAL("Invalid size %x", size);
     }
 }
 

@@ -4,6 +4,7 @@
 #include "cycles.h"
 #include "instruction.h"
 #include "operands.h"
+#include "../utils.h"
 
 // Cycles required to compute an effective address.
 // layout: cycles[bw/l][addressing mode]
@@ -16,8 +17,7 @@ uint8_t cycles_ea_calculation_table[2][12] =
 // FIXME: maybe merge with the other function?
 uint8_t lookup_cycles_ea(Size size, OperandType op) {
     if (op == Unsupported) {
-        fprintf(stderr, "Unsupported operand in lookup_cycles_ea");
-        exit(1);
+        FATAL("Unsupported operand");
     }
 
     switch (size) {
@@ -27,8 +27,8 @@ uint8_t lookup_cycles_ea(Size size, OperandType op) {
     case Long:
         return cycles_ea_calculation_table[1][op];
     case InvalidSize:
-        fprintf(stderr, "InvalidSize in lookup_cycles_ea\n");
-        exit(1);
+    default:
+        FATAL("Invalid size: %x", size);
     }
 }
 
@@ -81,7 +81,7 @@ uint8_t cycles_move_table[2][12][9] =
     }
 };
 
-// TODO  ** The base time of six clock periods is increased to eight		
+// TODO  ** The base time of six clock periods is increased to eight
 //if the effective address mode is register direct or
 //immediate(effective address time should also be added)
 // http://oldwww.nvg.ntnu.no/amiga/MC680x0_Sections/timstandard.HTML

@@ -5,6 +5,7 @@
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
+#include "../utils.h"
 
 uint8_t add(Instruction* i, M68k* ctx)
 {
@@ -347,8 +348,7 @@ uint8_t ext(Instruction* i, M68k* ctx)
         extended = SIGN_EXTEND_W(x);
         break;
     default:
-        fprintf(stderr, "Invalid size %x in gen_ext\n", i->size);
-        exit(1);
+        FATAL("Invalid size %x", i->size);
     }
 
     SET(i->src, ctx, extended);
