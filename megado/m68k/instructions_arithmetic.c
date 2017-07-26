@@ -56,7 +56,7 @@ uint8_t adda(Instruction* i, M68k* ctx)
     uint32_t a = FETCH_EA_AND_GET(i->src, ctx);
 
     if (i->size == Word)
-        SIGN_EXTEND_W(a);
+        a = SIGN_EXTEND_W(a);
 
     SET(i->dst, ctx, GET(i->dst, ctx) + a);
 
@@ -507,7 +507,7 @@ uint8_t suba(Instruction* i, M68k* ctx)
     uint32_t a = FETCH_EA_AND_GET(i->src, ctx);
 
     if (i->size == Word)
-        SIGN_EXTEND_W(a);
+        a = SIGN_EXTEND_W(a);
 
     SET(i->dst, ctx, GET(i->dst, ctx) - a);
 
