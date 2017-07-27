@@ -10,6 +10,8 @@ struct Genesis;
 typedef struct SquareChannel {
     uint8_t volume : 4;
     uint16_t tone : 10;
+    uint16_t counter : 10;
+    uint8_t output : 1;
 } SquareChannel;
 
 typedef struct NoiseChannel {
@@ -21,6 +23,7 @@ typedef struct NoiseChannel {
             uint8_t shift_rate : 2;
         };
     };
+    uint16_t counter : 10;
 } NoiseChannel;
 
 typedef struct PSG {
@@ -34,3 +37,4 @@ typedef struct PSG {
 PSG* psg_make(struct Genesis*);
 void psg_free(PSG*);
 void psg_write(PSG*, uint8_t);
+void psg_clock(PSG*);
