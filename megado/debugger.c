@@ -47,15 +47,11 @@ void debugger_post_m68k(Debugger* d)
     }
 }
 
-void debugger_post_z80(Debugger *d, struct DecodedZ80Instruction* instr, uint16_t address) {
+void debugger_post_z80(Debugger *d, const char* mnemonics, uint16_t address) {
     if (d->genesis->settings->show_z80_log) {
         d->z80_log_cursor = (d->z80_log_cursor + 1) % Z80_LOG_LENGTH;
         d->z80_log_instrs[d->z80_log_cursor].address = address;
-        if (instr == NULL) {
-            d->z80_log_instrs[d->z80_log_cursor].mnemonics = NULL;
-        } else {
-            d->z80_log_instrs[d->z80_log_cursor].mnemonics = instr->mnemonics;
-        }
+        strcpy(d->z80_log_instrs[d->z80_log_cursor].mnemonics, mnemonics);
     }
 }
 

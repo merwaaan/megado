@@ -13,7 +13,7 @@
 #define REWIND_PLAY_INTERVAL 0.05
 
 struct DecodedInstruction;
-struct DecodedZ80Instruction;
+struct FullyDecodedZ80Instruction;
 struct Genesis;
 struct Snapshot;
 
@@ -26,7 +26,7 @@ typedef struct Breakpoint
 
 typedef struct LoggedZ80Instruction {
     uint16_t address;
-    char* mnemonics;
+    char mnemonics[30];
 } LoggedZ80Instruction;
 
 typedef struct Debugger
@@ -73,7 +73,7 @@ void debugger_initialize(Debugger *);
 void debugger_preload(Debugger*);
 
 void debugger_post_m68k(Debugger*);
-void debugger_post_z80(Debugger*, struct DecodedZ80Instruction* instr, uint16_t address);
+void debugger_post_z80(Debugger*, const char* mnemonics, uint16_t address);
 void debugger_post_frame(Debugger*);
 
 void debugger_toggle_breakpoint(Debugger*, uint32_t address);

@@ -810,10 +810,10 @@ static void build_ui(Renderer* r)
         uint32_t address = r->genesis->z80->pc;
         for (int i = 0; i < DISASSEMBLY_LENGTH; ++i)
         {
-            DecodedZ80Instruction* instr = z80_decode(r->genesis->z80, address);
+            FullyDecodedZ80Instruction* instr = z80_decode(r->genesis->z80, address);
 
             // The memory may not contain valid opcodes, especially after branching instructions
-            if (instr == NULL || instr->mnemonics == NULL)
+            if (instr == NULL)
             {
                 igColumns(1, NULL, false);
                 igTextColored(color_dimmed, "Cannot decode opcode at %04X", address);
@@ -840,6 +840,8 @@ static void build_ui(Renderer* r)
             igNextColumn();
 
             address += instr->length;
+
+            fully_decoded_z80_instruction_free(instr);
         }
 
         igEnd();
@@ -854,9 +856,7 @@ static void build_ui(Renderer* r)
         for (int i = 0; i < Z80_LOG_LENGTH; ++i)
         {
             LoggedZ80Instruction* instr = &d->z80_log_instrs[(d->z80_log_cursor + 1 + i) % Z80_LOG_LENGTH];
-            if (instr->mnemonics != NULL) {
-                igText("%04X   %s", instr->address, instr->mnemonics);
-            }
+            igText("%04X   %s", instr->address, instr->mnemonics);
         }
 
         igSetScrollHere(0);     // scroll to bottom

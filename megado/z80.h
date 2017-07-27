@@ -63,10 +63,24 @@ typedef struct Z80 {
     uint8_t ram[Z80_RAM_LENGTH];
 } Z80;
 
+typedef enum {
+    None,
+    Unsigned,
+    UnsignedWord,
+    Signed,
+} Z80MnemonicArgType;
+
 typedef struct DecodedZ80Instruction {
     uint8_t length;
-    char* mnemonics;
+    char* mnemonics_fmt;
+    Z80MnemonicArgType arg1;
+    Z80MnemonicArgType arg2;
 } DecodedZ80Instruction;
+
+typedef struct FullyDecodedZ80Instruction {
+    uint8_t length;
+    char* mnemonics;
+} FullyDecodedZ80Instruction;
 
 Z80* z80_make(struct Genesis*);
 void z80_free(Z80*);
@@ -83,4 +97,5 @@ void z80_reset(Z80*, uint8_t);
 uint8_t z80_read(Z80*, uint16_t);
 void z80_write(Z80 *, uint16_t, uint8_t);
 
-DecodedZ80Instruction* z80_decode(Z80*, uint16_t);
+FullyDecodedZ80Instruction* z80_decode(Z80*, uint16_t);
+void fully_decoded_z80_instruction_free(FullyDecodedZ80Instruction*);

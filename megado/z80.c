@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "debugger.h"
 #include "genesis.h"
@@ -33,7 +34,7 @@ void z80_initialize(Z80* z) {
 
 uint8_t z80_step(Z80* z) {
     uint16_t instr_address = z->pc;
-    DecodedZ80Instruction* instr = z80_decode(z, instr_address);
+    FullyDecodedZ80Instruction* instr = z80_decode(z, instr_address);
 
     uint16_t opcode = z->ram[instr_address];
     z80_op op = z80_op_table[opcode];
@@ -41,9 +42,9 @@ uint8_t z80_step(Z80* z) {
     uint8_t cycles;
     if (op == NULL) {
         LOG_Z80("z80: Unknown opcode: %02x\n", opcode);
-        instr = NULL;
         z->pc = (instr_address + 1) % Z80_RAM_LENGTH;
         cycles = 4;
+        debugger_post_z80(z->genesis->debugger, "NOP (Could not decode)", instr_address);
     } else {
         LOG_Z80("z80: %04x: %02x  %s\n", instr_address, opcode, z80_disasm_table[opcode]);
         cycles = (*op)(z);
@@ -53,19 +54,81 @@ uint8_t z80_step(Z80* z) {
             LOG_Z80("z80: instruction took 0 cycles: %02x\n", opcode);
             cycles = 4;
         }
+        debugger_post_z80(z->genesis->debugger, instr->mnemonics, instr_address);
     }
 
-    debugger_post_z80(z->genesis->debugger, instr, instr_address);
+    if (instr != NULL) {
+        fully_decoded_z80_instruction_free(instr);
+    }
     return cycles;
 }
 
-DecodedZ80Instruction* z80_decode(Z80* z, uint16_t address) {
+FullyDecodedZ80Instruction* z80_decode(Z80* z, uint16_t address) {
     if (address < Z80_RAM_LENGTH) {
-        uint16_t opcode = z->ram[address];
-        return &z80_disasm_table[opcode];
-    } else {
-        return NULL;
+        uint16_t pc = address;
+        uint16_t opcode = z->ram[pc++];
+        // Adjust PC if opcode is 16bit
+        if (opcode > 0xFF) { pc++; }
+        DecodedZ80Instruction* i = &z80_disasm_table[opcode];
+        // The disasm_table is not exhaustive
+        if (i->length > 0) {
+            // Prepare arguments
+            uint16_t arg1 = 0;
+            switch (i->arg1) {
+            case Unsigned:
+            case Signed:
+                arg1 = z->ram[pc++];
+                break;
+
+            case UnsignedWord:
+                arg1 = z->ram[pc++] << 8;
+                arg1 |= z->ram[pc++];
+                break;
+            default:
+                break;
+            }
+
+            uint16_t arg2 = 0;
+            switch (i->arg2) {
+            case Unsigned:
+            case Signed:
+                arg2 = z->ram[pc++];
+                break;
+
+            case UnsignedWord:
+                arg2 = z->ram[pc++] << 8;
+                arg2 |= z->ram[pc++];
+                break;
+            default:
+                break;
+            }
+
+            FullyDecodedZ80Instruction* out = calloc(1, sizeof(FullyDecodedZ80Instruction));
+            uint8_t bufsize = 100;
+            out->length = i->length;
+            out->mnemonics = calloc(bufsize + 1, sizeof(char));
+
+            // XXX: A bit dumb, but I don't have sprintf.apply here maybe use
+            // var_list?
+            if (i->arg1 > 0 && i->arg2 > 0) {
+                snprintf(out->mnemonics, bufsize, i->mnemonics_fmt, arg1, arg2);
+            } else if (i->arg1 > 0) {
+                snprintf(out->mnemonics, bufsize, i->mnemonics_fmt, arg1);
+            } else if (i->arg2 > 0) {
+                snprintf(out->mnemonics, bufsize, i->mnemonics_fmt, arg2);
+            } else {
+                strcpy(out->mnemonics, i->mnemonics_fmt);
+            }
+
+            return out;
+        }
     }
+    return NULL;
+}
+
+void fully_decoded_z80_instruction_free(FullyDecodedZ80Instruction* i) {
+    free(i->mnemonics);
+    free(i);
 }
 
 void z80_run_cycles(Z80* z, int cycles) {
