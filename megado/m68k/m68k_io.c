@@ -6,6 +6,7 @@
 #include "../genesis.h"
 #include "../joypad.h"
 #include "../vdp.h"
+#include "../psg.h"
 #include "../utils.h"
 
 uint32_t m68k_read(M68k* m, Size size, uint32_t address)
@@ -185,6 +186,10 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     else if (address == 0xC00004)
     {
         vdp_write_control(m->genesis->vdp, value & (value << 8));
+    }
+
+    else if (address == 0xC00011) {
+        psg_write(m->genesis->psg, value);
     }
 
     else

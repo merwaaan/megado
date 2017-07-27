@@ -12,6 +12,7 @@
 #include "settings.h"
 #include "snapshot.h"
 #include "vdp.h"
+#include "psg.h"
 #include "utils.h"
 
 Genesis* genesis_make()
@@ -23,6 +24,7 @@ Genesis* genesis_make()
     g->m68k = m68k_make(g);
     g->z80 = z80_make(g);
     g->vdp = vdp_make(g);
+    g->psg = psg_make(g);
     g->joypad1 = joypad_make();
     g->joypad2 = joypad_make();
     g->renderer = renderer_make(g);
@@ -44,6 +46,7 @@ void genesis_free(Genesis* g)
     m68k_free(g->m68k);
     z80_free(g->z80);
     vdp_free(g->vdp);
+    psg_free(g->psg);
     joypad_free(g->joypad1);
     joypad_free(g->joypad2);
     settings_free(g->settings);
