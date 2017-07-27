@@ -1,4 +1,5 @@
 #include <megado/genesis.h>
+#include <megado/psg.h>
 #include <megado/settings.h>
 #include <megado/m68k/instruction.h>
 #include <megado/m68k/m68k.h>
@@ -64,6 +65,9 @@ int main(int argc, char **argv)
     for (int opcode = 0; opcode < 0x10000; ++opcode)
         instruction_free(opcode_table[opcode]);
     free(opcode_table);
+
+    // TEMP: write all samples to this file
+    wav_write("out.wav");
 
     return 0;
 }

@@ -154,6 +154,10 @@ void genesis_step(Genesis* g)
     // cycles is odd.  But, from a cursory look at the cycles tables for the
     // M68K, it appears they are all even, so we should be good.
     z80_run_cycles(g->z80, cycles / 2);
+
+    // Catch up the audio
+    // The PSG runs at the Z80 frequency
+    psg_run_cycles(g->psg, cycles / 2);
 }
 
 static void genesis_frame(Genesis* g)
@@ -167,6 +171,7 @@ static void genesis_frame(Genesis* g)
         // Execute one scanline worth of instructions
         m68k_run_cycles(g->m68k, 488); // TODO not sure about that value
         z80_run_cycles(g->z80, 244); // Z80 runs at half the frequency of M68
+        psg_run_cycles(g->psg, 244); // PSG runs at Z80 frequency
 
                                      // Draw the scanline
         vdp_draw_scanline(g->vdp, line);
@@ -178,6 +183,7 @@ static void genesis_frame(Genesis* g)
         g->vdp->hblank_in_progress = true;
         m68k_run_cycles(g->m68k, 84); // http://gendev.spritesmind.net/forum/viewtopic.php?t=94#p1105
         z80_run_cycles(g->z80, 42); // Z80 runs at half the frequency of M68
+        psg_run_cycles(g->psg, 42); // PSG runs at Z80 frequency
         g->vdp->hblank_in_progress = false;
 
         // Exit early if the emulation has been paused
