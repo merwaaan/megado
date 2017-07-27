@@ -77,6 +77,7 @@ FullyDecodedZ80Instruction* z80_decode(Z80* z, uint16_t address) {
             switch (i->arg1) {
             case Unsigned:
             case Signed:
+            case Relative:
                 arg1 = z->ram[pc++];
                 break;
 
@@ -92,6 +93,7 @@ FullyDecodedZ80Instruction* z80_decode(Z80* z, uint16_t address) {
             switch (i->arg2) {
             case Unsigned:
             case Signed:
+            case Relative:
                 arg2 = z->ram[pc++];
                 break;
 
@@ -110,7 +112,11 @@ FullyDecodedZ80Instruction* z80_decode(Z80* z, uint16_t address) {
 
             // XXX: A bit dumb, but I don't have sprintf.apply here maybe use
             // var_list?
-            if (i->arg1 > 0 && i->arg2 > 0) {
+            if (i->arg1 == Relative) {
+                snprintf(out->mnemonics, bufsize, i->mnemonics_fmt, (int8_t)arg1, address + (int8_t)arg1);
+            } else if (i->arg2 == Relative) {
+                snprintf(out->mnemonics, bufsize, i->mnemonics_fmt, (int8_t)arg2, address + (int8_t)arg2);
+            } else if (i->arg1 > 0 && i->arg2 > 0) {
                 snprintf(out->mnemonics, bufsize, i->mnemonics_fmt, arg1, arg2);
             } else if (i->arg1 > 0) {
                 snprintf(out->mnemonics, bufsize, i->mnemonics_fmt, arg1);

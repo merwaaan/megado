@@ -68,6 +68,7 @@ typedef enum {
     Unsigned,
     UnsignedWord,
     Signed,
+    Relative,
 } Z80MnemonicArgType;
 
 typedef struct DecodedZ80Instruction {
