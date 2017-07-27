@@ -3,8 +3,8 @@
 
 #include "psg.h"
 
-void psg_write_latch(PSG*, uint8_t);
-void psg_write_data(PSG*, uint8_t);
+void write_latch(PSG*, uint8_t);
+void write_data(PSG*, uint8_t);
 void square_clock_frequency(SquareChannel*);
 
 uint16_t volume_table[16]={
@@ -25,9 +25,9 @@ void psg_write(PSG* p, uint8_t value) {
     if (value & 0x80) {
         p->latched_channel = value >> 5;
         p->latched_register = value >> 4;
-        psg_write_latch(p, value);
+        write_latch(p, value);
     } else {
-        psg_write_data(p, value);
+        write_data(p, value);
     }
 
     for (int i=0; i < 3; ++i) {
@@ -64,7 +64,7 @@ uint16_t square_output(SquareChannel* s) {
 }
 
 // Write low nibble to the currently latched channel & register
-void psg_write_latch(PSG* p, uint8_t value) {
+void write_latch(PSG* p, uint8_t value) {
     value = value & 0xf;
     switch (p->latched_channel) {
     case 0:
@@ -88,7 +88,7 @@ void psg_write_latch(PSG* p, uint8_t value) {
 }
 
 // Write 6bit value to the currently latched channel & register
-void psg_write_data(PSG* p, uint8_t value) {
+void write_data(PSG* p, uint8_t value) {
     value = value & 0x3f;
     switch (p->latched_channel) {
     case 0:
