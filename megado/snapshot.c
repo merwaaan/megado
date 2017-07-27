@@ -112,9 +112,14 @@ void snapshots_preload(struct Genesis* g, SnapshotMetadata* snapshots[])
         {
             printf("Incompatible snapshot version (loaded version is %d, current version is %d)", metadata->version, SNAPSHOT_VERSION);
             snapshots[slot] = NULL;
+            snapshot_metadata_free(metadata);
             continue;
         }
 
         snapshots[slot] = metadata;
     }
+}
+
+void snapshot_metadata_free(SnapshotMetadata *s) {
+    free(s);
 }

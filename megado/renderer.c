@@ -1528,6 +1528,11 @@ void renderer_free(Renderer* r)
     metric_free(r->tpf);
     metric_free(r->ipf);
     metric_free(r->ips);
+
+    for (int i=0; i < SNAPSHOT_SLOTS; ++i) {
+        snapshot_metadata_free(r->snapshots[i]);
+    }
+
     free(r);
 }
 
