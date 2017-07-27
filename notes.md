@@ -70,3 +70,5 @@ it implements its own polygon rasterizer.
 - Pitfall
 - Wolverine Adamantium Rage
 - Alien 3
+- Chuck Rock
+- Hook

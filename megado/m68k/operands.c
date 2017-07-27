@@ -515,8 +515,9 @@ Operand* operand_make_absolute_long(Instruction* instr)
 
 uint32_t pc_displacement_word_ea(Operand* o, M68k* ctx)
 {
+    uint32_t pc = ctx->pc;
     int16_t displacement = m68k_fetch(ctx);
-    return ctx->instruction_address + 2 + displacement;
+    return pc + displacement;
 }
 
 Operand* operand_make_pc_displacement(Instruction* instr)
@@ -541,10 +542,11 @@ Operand* operand_make_pc_displacement(Instruction* instr)
 uint32_t pc_index_ea(Operand* o, M68k* ctx)
 {
     M68k* m = ctx;
+    uint32_t pc = m->pc;
     uint32_t ext = m68k_fetch(m);
 
     uint32_t index = INDEX_LENGTH(ext) ? INDEX_REGISTER(ext) : SIGN_EXTEND_W(INDEX_REGISTER(ext));
-    return m->instruction_address + 2 + (int8_t)INDEX_DISPLACEMENT(ext) + (int32_t)index;
+    return pc + (int8_t)INDEX_DISPLACEMENT(ext) + (int32_t)index;
 }
 
 Operand* operand_make_pc_index(struct Instruction* instr)

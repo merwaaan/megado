@@ -126,7 +126,7 @@ Instruction* gen_move(uint16_t opcode)
 uint8_t movem(Instruction* i, M68k* ctx)
 {
     // TODO mask as an operand
-
+    // TODO bug: when disassembling, first fetch confused with operand
     uint16_t mask = m68k_fetch(ctx);
 
     Operand* ea = i->src != NULL ? i->src : i->dst;
@@ -166,11 +166,13 @@ uint8_t movem(Instruction* i, M68k* ctx)
         }
 
     // Update the address register in pre-dec/post-inc modes
-    // (take into account the one dec/inc that is handled by the operand's pre/post functions)
+    // (take into account the dec/inc that is already done by the operand's pre/post functions)
     if (ea->type == AddressRegisterIndirectPreDec)
         ctx->address_registers[ea->n] = offset + size_in_bytes(i->size);
     else if (ea->type == AddressRegisterIndirectPostInc)
         ctx->address_registers[ea->n] = offset - size_in_bytes(i->size);
+
+    // TODO final value of the register? check reference manual
 
     return 4 * moved;
 }
