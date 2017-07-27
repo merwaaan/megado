@@ -175,9 +175,9 @@ const unsigned int SAMPLE_RATE = 44100;
 const unsigned short BITS_PER_BYTE = 8;
 
 bool wav_write(const char* fileName){
-    const static unsigned int fSubchunk1Size = 16;
-    const static unsigned short fAudioFormat = 1;
-    const static unsigned short fBitsPerSample = 16;
+    static const unsigned int fSubchunk1Size = 16;
+    static const unsigned short fAudioFormat = 1;
+    static const unsigned short fBitsPerSample = 16;
 
     unsigned int fByteRate = SAMPLE_RATE * N_CHANNELS *
                              fBitsPerSample / BITS_PER_BYTE;
@@ -187,7 +187,6 @@ bool wav_write(const char* fileName){
     unsigned int fChunkSize;
 
     FILE* fout;
-    size_t ws;
 
     if (!fileName || !(fout = fopen( fileName, "w" ))) return false;
 
@@ -214,7 +213,7 @@ bool wav_write(const char* fileName){
     fwrite(&fSubchunk2Size,  sizeof(fSubchunk2Size), 1, fout);
 
     /* sound data: */
-    ws = fwrite(samples, sizeof(int16_t), MAX_SAMPLES * N_CHANNELS, fout);
+    fwrite(samples, sizeof(int16_t), MAX_SAMPLES * N_CHANNELS, fout);
     fclose(fout);
     return true;
 }
