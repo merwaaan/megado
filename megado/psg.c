@@ -14,7 +14,9 @@ const uint32_t SAMPLE_RATE = 44100;
 const uint32_t NTSC_FREQUENCY = 3579545;
 
 // FIXME: this is based on NTSC frequency
-const double PSG_CLOCKS_PER_SAMPLE = (double)NTSC_FREQUENCY / (double)MASTER_CYCLES_PER_PSG_CLOCK / (double)SAMPLE_RATE;
+// (double)NTSC_FREQUENCY / (double)MASTER_CYCLES_PER_PSG_CLOCK / (double)SAMPLE_RATE;
+// C doesn't have constexpr, so have hardcode this one
+const double PSG_CLOCKS_PER_SAMPLE = 5.07305130385;
 
 const int16_t volume_table[16]= {
     32767, 26028, 20675, 16422, 13045, 10362,  8231,  6568,
