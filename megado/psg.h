@@ -27,8 +27,8 @@ typedef struct NoiseChannel {
 } NoiseChannel;
 
 typedef struct PSG {
-    uint16_t remaining_clocks;
-    uint32_t sample_counter;
+    int16_t remaining_clocks;
+    double sample_counter;
 
     SquareChannel square[3];
     NoiseChannel noise;

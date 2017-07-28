@@ -8,10 +8,15 @@ void write_latch(PSG*, uint8_t);
 void write_data(PSG*, uint8_t);
 void square_clock_frequency(SquareChannel*);
 
-// FIXME: this is based on NTSC frequency
-const uint32_t PSG_CLOCKS_PER_SAMPLE = 3579545 / 44100;
+// Divisor for the master clock frequency (actually, the frequency of the Z80)
+const uint8_t MASTER_CYCLES_PER_PSG_CLOCK = 16;
+const uint32_t SAMPLE_RATE = 44100;
+const uint32_t NTSC_FREQUENCY = 3579545;
 
-const int16_t volume_table[16]={
+// FIXME: this is based on NTSC frequency
+const double PSG_CLOCKS_PER_SAMPLE = (double)NTSC_FREQUENCY / (double)MASTER_CYCLES_PER_PSG_CLOCK / (double)SAMPLE_RATE;
+
+const int16_t volume_table[16]= {
     32767, 26028, 20675, 16422, 13045, 10362,  8231,  6568,
     5193,  4125,  3277,  2603,  2067,  1642,  1304,     0
 };
@@ -51,29 +56,31 @@ void psg_write(PSG* p, uint8_t value) {
     /* printf("noise: %x (vol) %x (noise)\n", p->noise.volume, p->noise.noise); */
 }
 
-// Called at Z80 CPU frequency?
-// Doc says: 3579545Hz for NTSC systems and 3546893Hz for PAL/SECAM
+// Called at NTSC_FREQUENCY
 void psg_clock(PSG* p) {
     for (int i=0; i < 3; ++i) {
         square_clock_frequency(&p->square[i]);
     }
 
+    // TODO: noise channel
+
     // Is it time to emit a sample?
     if (p->sample_counter > 0) {
         p->sample_counter--;
     } else {
-        p->sample_counter = PSG_CLOCKS_PER_SAMPLE;
+        p->sample_counter += PSG_CLOCKS_PER_SAMPLE;
         psg_emit_sample_cb(psg_mix(p));
     }
 }
 
 // Entry point used by the rest of emulator
+// Cycles: number of master cycles to emulate
 void psg_run_cycles(PSG* p, uint16_t cycles) {
     p->remaining_clocks += cycles;
 
     while (p->remaining_clocks > 0) {
         psg_clock(p);
-        p->remaining_clocks--;
+        p->remaining_clocks -= MASTER_CYCLES_PER_PSG_CLOCK;
     }
 }
 
@@ -105,6 +112,8 @@ int16_t psg_mix(PSG* p) {
     sample += square_output(&p->square[0]);
     sample += square_output(&p->square[1]);
     sample += square_output(&p->square[2]);
+
+    // TODO: noise channel
 
     sample /= 3;
 
@@ -183,7 +192,6 @@ const char fSubchunk1ID[] = {'f', 'm', 't', ' '};
 const char fSubchunk2ID[] = {'d', 'a', 't', 'a'};
 
 const unsigned short N_CHANNELS = 1;
-const unsigned int SAMPLE_RATE = 44100;
 const unsigned short BITS_PER_BYTE = 8;
 
 bool wav_write(const char* fileName){
