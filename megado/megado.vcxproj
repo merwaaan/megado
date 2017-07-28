@@ -220,6 +220,7 @@
     <ClCompile Include="m68k\main.c" />
     <ClCompile Include="m68k\operands.c" />
     <ClCompile Include="metric.c" />
+    <ClCompile Include="psg.c" />
     <ClCompile Include="renderer.c" />
     <ClCompile Include="settings.c" />
     <ClCompile Include="snapshot.c" />
@@ -237,6 +238,7 @@
     <ClInclude Include="m68k\m68k.h" />
     <ClInclude Include="m68k\operands.h" />
     <ClInclude Include="metric.h" />
+    <ClInclude Include="psg.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="settings.h" />
     <ClInclude Include="snapshot.h" />
