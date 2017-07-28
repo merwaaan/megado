@@ -8,7 +8,7 @@ void write_data(PSG*, uint8_t);
 void square_clock_frequency(SquareChannel*);
 
 // FIXME: this is based on NTSC frequency
-const float PSG_CLOCKS_PER_SAMPLE = 3579545.0f / 44100.0f;
+const uint32_t PSG_CLOCKS_PER_SAMPLE = 3579545 / 44100;
 
 const int16_t volume_table[16]={
     32767, 26028, 20675, 16422, 13045, 10362,  8231,  6568,
@@ -50,7 +50,7 @@ void psg_clock(PSG* p) {
     if (p->sample_counter > 0) {
         p->sample_counter--;
     } else {
-        p->sample_counter += PSG_CLOCKS_PER_SAMPLE;
+        p->sample_counter = PSG_CLOCKS_PER_SAMPLE;
         psg_emit_sample_cb(psg_mix(p));
     }
 }
