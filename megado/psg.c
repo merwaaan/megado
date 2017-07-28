@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "psg.h"
 
@@ -21,6 +22,17 @@ PSG* psg_make(struct Genesis* g) {
 
 void psg_free(PSG* p) {
     free(p);
+}
+
+void psg_initialize(PSG* p) {
+    // Reset
+    memset(p, 0, sizeof(PSG));
+
+    // Mute all channels
+    p->square[0].volume = 0xf;
+    p->square[1].volume = 0xf;
+    p->square[2].volume = 0xf;
+    p->noise.volume = 0xf;
 }
 
 // Entry point for other chip to communicate with the PSG

@@ -39,6 +39,7 @@ typedef struct PSG {
 
 PSG* psg_make(struct Genesis*);
 void psg_free(PSG*);
+void psg_initialize(PSG* p);
 void psg_write(PSG*, uint8_t);
 void psg_clock(PSG*);
 void psg_run_cycles(PSG*, uint16_t);
