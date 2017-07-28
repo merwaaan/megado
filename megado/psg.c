@@ -109,7 +109,7 @@ void write_latch(PSG* p, uint8_t value) {
         if (p->latched_register) {
             p->square[p->latched_channel].volume = value;
         } else {
-            p->square[p->latched_channel].tone = value;
+            p->square[p->latched_channel].tone = (p->square[p->latched_channel].tone & 0x3f0) | value;
         }
         break;
 
@@ -133,7 +133,7 @@ void write_data(PSG* p, uint8_t value) {
         if (p->latched_register) {
             p->square[p->latched_channel].volume = value;
         } else {
-            p->square[p->latched_channel].tone = value << 4;
+            p->square[p->latched_channel].tone = (p->square[p->latched_channel].tone & 0xf) | (value << 4);
         }
         break;
 
