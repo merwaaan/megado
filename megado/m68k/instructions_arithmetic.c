@@ -611,6 +611,12 @@ uint8_t tas(Instruction* i, M68k* ctx)
 {
     uint32_t value = FETCH_EA_AND_GET(i->src, ctx);
 
+    // TAS should set the high-order bit but this only works
+    // for direct register access due to a bug in the Genesis
+    // https://board.byuu.org/viewtopic.php?p=44353#p44353
+    if (i->src->type == DataRegister)
+        SET(i->src, ctx, value | 0x80);
+
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
     ZERO_SET(ctx, value == 0);
