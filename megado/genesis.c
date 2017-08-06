@@ -116,7 +116,7 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     {
         // Specifications were updated for later Genesis versions and a single ASCII character encodes compatible regions
         // (Genesis Technical Bulletin #31, http://mode5.net/32x-DDK/Bulletins/Gen-tech/Tech31-01.gif)
-        uint8_t code = strtol(country_codes, country_codes + 1, 16);
+        uint8_t code = strtol((char*)country_codes, NULL, 16);
         if (code & 1)
             g->region = Region_Japan; // Bit 0 for Japan
         else if (code & 4)
