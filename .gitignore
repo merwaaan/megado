@@ -6,3 +6,4 @@ GRTAGS
 GTAGS
 GSYMS
 megado/m68k/*.gen
+*.bin

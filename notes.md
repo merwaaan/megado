@@ -7,9 +7,7 @@
 
 - The Simpsons - Bart's Nightmare: 
   - Bart's sprite is not visible
-
-- Spiderman and Venom - Maximum Carnage / Separation Anxiety: Spiderman is not animated.
-
+  
 - Spiderman vs The Kingpin:
   - pressing start on the intro screen make the screen flash indefinitely, going faster with
   each key press.
@@ -20,8 +18,6 @@ so the flag is always cleared.
 - Quackshot: The plane's sprite is scrambled
 
 - Landstalker: waits for $FF0F8B @B6E
-
-- Sonic & Knuckles + Sonic 3: stuck in an infinite loop @C336
 
 - Streets of Rage: character seems to die randomly; time over happens after a few seconds
 
@@ -35,7 +31,7 @@ so the flag is always cleared.
 - Toy Story: executes the content of the stack.
 
 - Blades of Vengeance:
-    - copyright screen partially wraps around the screen.
+    - copyright screen blitted twice with an offset (might be the Window plane that should not be enabled but is still drawn)
     - the menu screen does not respond.
 
 - Chameleon Kid: character does not walk but looks in the correct direction.
@@ -51,16 +47,18 @@ so the flag is always cleared.
 	- the film roll on the character select screen must be transparent (how is this done?)
 	- plane scrolling is visible at the right of the screen
 
-- Clue: main menu not responding
+- Clue: cursor jumpign around the screen
 
 - Another World: scanlines are drawn out. This game might very sensible to timing accuracy since
 it implements its own polygon rasterizer.
 
-- Asterix and the Great Rescue: every other rows of tile are glitched.
+- Jurassic Park: infinite loop in the first level.
 
-- Batman Forever: main menu not responding.
+- Jurassic Park 2: executes invalid opcodes.
 
-- Jurassic Parc: infinite loop in the first level.
+- Last Action Hero: overwrites a big section of ROM.
+
+- LHX Attack Chopper: STOP not implemented.
 
 # Games that seem to wait for the Z80:
 
@@ -72,3 +70,5 @@ it implements its own polygon rasterizer.
 - Alien 3
 - Chuck Rock
 - Hook
+- Batman Forever
+- Mr Nutz
