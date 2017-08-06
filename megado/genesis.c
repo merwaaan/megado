@@ -101,26 +101,35 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     snapshots_preload(g, g->renderer->snapshots);
     debugger_preload(g->debugger);
 
-    // Set the system region depending on country code of the game
+    // Set the system region depending on the country code of the game
     uint8_t* country_codes = g->rom + 0x1F0;
     switch (country_codes[0])
     {
-    case 'E': g->region = Region_Europe; break;
-    case 'J': g->region = Region_Japan; break;
-    case 'U':
-    case '4': // TODO sometimes 4 can be found as the region code in (U) roms, not sure about the validity of that
-        g->region = Region_USA; break;
 
-    case 'A': // Maui Mallard has this country code and apparently it's for 'PAL
-              // and french SECAM'
-        g->region = Region_Europe; break;
+    // Initially, the country code was either 'J', 'U' or 'E'
+    // (some games have multiple country codes, we only consider the first one)
+    case 'J': g->region = Region_Japan; break;
+    case 'U': g->region = Region_USA; break;
+    case 'E': g->region = Region_Europe; break;
 
     default:
-        printf("Invalid country code, using default (Japan)\n");
-        g->region = Region_Japan;
+    {
+        // Specifications were updated for later Genesis versions and a single ASCII character encodes compatible regions
+        // (Genesis Technical Bulletin #31, http://mode5.net/32x-DDK/Bulletins/Gen-tech/Tech31-01.gif)
+        uint8_t code = strtol(country_codes, country_codes + 1, 16);
+        if (code & 1)
+            g->region = Region_Japan; // Bit 0 for Japan
+        else if (code & 4)
+            g->region = Region_USA; // BIT 2 for USA
+        else if (code & 0xA)
+            g->region = Region_Europe; // Bit 1 and 4 for Europe (Bit 1 is documented as "Japan PAL", but in practice it seems to be used for "French PAL Secam")
+        else
+        {
+            printf("Invalid country code %s, using default (Japan)\n", country_codes);
+            g->region = Region_Japan;
+        }
     }
-    // TODO it seems possible to have multiple country codes, how to handle that?
-    // TODO found something interesting, try that: http://mode5.net/32x-DDK/Bulletins/Gen-tech/Tech31-01.gif
+    }
 
     g->status = Status_Running;
 }
