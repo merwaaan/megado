@@ -188,7 +188,7 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
         vdp_write_control(m->genesis->vdp, value & (value << 8));
     }
 
-    else if (address == 0xC00011) {
+    else if (address == 0xC00011 || address == 0xC00013 || address == 0xC00015 || address == 0xC00017) {
         psg_write(m->genesis->psg, value);
     }
 
