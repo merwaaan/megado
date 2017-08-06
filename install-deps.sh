@@ -9,15 +9,14 @@ make -j2
 popd
 popd
 
-# GLEW
-# (doesn't behave well with -j2)
-pushd deps/glew/
-pushd auto
-make
-popd
-pushd build
+# GLEW (can't build from git checkout, see https://github.com/nigels-com/glew/issues/85 )
+pushd deps
+wget https://github.com/nigels-com/glew/releases/download/glew-2.1.0/glew-2.1.0.tgz
+tar xf glew-2.1.0.tgz
+mv glew-2.1.0 glew
+pushd glew/build
 cmake ./cmake
-make
+make -j2
 popd
 popd
 
