@@ -127,8 +127,8 @@ void noise_clock_frequency(PSG* p) {
         switch (n->shift_rate) {
         case 0x00: n->counter = 0x10; break;
         case 0x01: n->counter = 0x20; break;
-        case 0x10: n->counter = 0x40; break;
-        case 0x11: n->counter = p->square[2].tone; break;
+        case 0x02: n->counter = 0x40; break;
+        case 0x03: n->counter = p->square[2].tone; break;
         }
 
         // Shift bit in LFSR
