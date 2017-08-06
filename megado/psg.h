@@ -24,6 +24,8 @@ typedef struct NoiseChannel {
         };
     };
     uint16_t counter : 10;
+    uint16_t lfsr;
+    uint8_t output : 1;
 } NoiseChannel;
 
 typedef struct PSG {
@@ -44,6 +46,10 @@ void psg_write(PSG*, uint8_t);
 void psg_clock(PSG*);
 void psg_run_cycles(PSG*, uint16_t);
 int16_t psg_mix(PSG*);
+
+float square_tone_in_hertz(SquareChannel*);
+int16_t square_output(SquareChannel*);
+int16_t noise_output(NoiseChannel* n);
 
 // Callback function called by psg_clock whenever a sample is ready
 void psg_emit_sample_cb(uint16_t);

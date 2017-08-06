@@ -7,6 +7,7 @@
 void write_latch(PSG*, uint8_t);
 void write_data(PSG*, uint8_t);
 void square_clock_frequency(SquareChannel*);
+void noise_clock_frequency(PSG*);
 
 // Divisor for the master clock frequency (actually, the frequency of the Z80)
 const uint8_t MASTER_CYCLES_PER_PSG_CLOCK = 16;
@@ -15,7 +16,7 @@ const uint32_t NTSC_FREQUENCY = 3579545;
 
 // FIXME: this is based on NTSC frequency
 // (double)NTSC_FREQUENCY / (double)MASTER_CYCLES_PER_PSG_CLOCK / (double)SAMPLE_RATE;
-// C doesn't have constexpr, so have hardcode this one
+// C doesn't have constexpr, so we have to hardcode this one:
 const double PSG_CLOCKS_PER_SAMPLE = 5.07305130385;
 
 const int16_t volume_table[16]= {
@@ -51,11 +52,6 @@ void psg_write(PSG* p, uint8_t value) {
     } else {
         write_data(p, value);
     }
-
-    /* for (int i=0; i < 3; ++i) { */
-    /*     printf("chan%d: %x (vol) %x (tone)\n", i, p->square[i].volume, p->square[i].tone); */
-    /* } */
-    /* printf("noise: %x (vol) %x (noise)\n", p->noise.volume, p->noise.noise); */
 }
 
 // Called at NTSC_FREQUENCY
@@ -64,7 +60,7 @@ void psg_clock(PSG* p) {
         square_clock_frequency(&p->square[i]);
     }
 
-    // TODO: noise channel
+    noise_clock_frequency(p);
 
     // Is it time to emit a sample?
     if (p->sample_counter > 0) {
@@ -94,15 +90,63 @@ void square_clock_frequency(SquareChannel* s) {
     // Doc seems to state that reloading can happen in the same clock the
     // counter has gone to zero
     if (s->counter == 0) {
+        // Reload counter
         s->counter = s->tone;
 
-        s->output = !s->output;
+        // If the tone register is 0, output is always +1
+        // XXX: the doc is ambiguous, as it states that a value of 1 also
+        // outputs +1, but it also states that 1 corresponds to the highest
+        // frequency that can be output.
+        if (s->tone == 0) {
+            s->output = 1;
+        } else {
+        // Otherwise flip output
+            s->output = !s->output;
+        }
     }
+}
+
+float square_tone_in_hertz(SquareChannel* s) {
+    return (float)NTSC_FREQUENCY / (2.0f * (float)s->tone * (float)MASTER_CYCLES_PER_PSG_CLOCK);
 }
 
 // Returns the volume-attenuated output for this channel
 int16_t square_output(SquareChannel* s) {
     return s->output ? volume_table[s->volume] : 0;
+}
+
+void noise_clock_frequency(PSG* p) {
+    NoiseChannel* n = &p->noise;
+
+    if (n->counter > 0) {
+        n->counter--;
+    }
+
+    if (n->counter == 0) {
+        // Reload counter
+        switch (n->shift_rate) {
+        case 0x00: n->counter = 0x10; break;
+        case 0x01: n->counter = 0x20; break;
+        case 0x10: n->counter = 0x40; break;
+        case 0x11: n->counter = p->square[2].tone; break;
+        }
+
+        // Shift bit in LFSR
+        uint8_t out = n->lfsr & 1;
+        // Output bit is written back to input in periodic mode
+        uint8_t in = out;
+        if (n->mode == 1) {
+            // In white noise mode, input is XORed with bit 3
+            in ^= ((n->lfsr >> 3) & 1);
+        }
+        n->lfsr = (in << 15) | ((n->lfsr >> 1) & 0x7fff);
+
+        n->output = out;
+    }
+}
+
+int16_t noise_output(NoiseChannel* n) {
+    return n->output ? volume_table[n->volume] : 0;
 }
 
 // Mix outputs from each channel
@@ -114,10 +158,8 @@ int16_t psg_mix(PSG* p) {
     sample += square_output(&p->square[0]);
     sample += square_output(&p->square[1]);
     sample += square_output(&p->square[2]);
-
-    // TODO: noise channel
-
-    sample /= 3;
+    sample += noise_output(&p->noise);
+    sample /= 4;
 
     return sample;
 }
@@ -141,6 +183,8 @@ void write_latch(PSG* p, uint8_t value) {
             p->noise.volume = value;
         } else {
             p->noise.noise = value;
+            // Writing to the noise register resets the LFSR
+            p->noise.lfsr = 0x8000;
         }
         break;
     }
@@ -165,6 +209,8 @@ void write_data(PSG* p, uint8_t value) {
             p->noise.volume = value;
         } else {
             p->noise.noise = value;
+            // Writing to the noise register resets the LFSR
+            p->noise.lfsr = 0x8000;
         }
         break;
     }
