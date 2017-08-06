@@ -257,10 +257,27 @@ uint8_t movep(Instruction* i, M68k* ctx)
             m68k_write_b(ctx, i->dst->last_ea + 6, value & 0xFF);
         }
     }
+    else if (i->dst->type == DataRegister)
+    {
+        if (i->size == Word)
+        {
+            ctx->data_registers[i->dst->n] =
+                m68k_read_b(ctx, i->src->last_ea) << 8 |
+                m68k_read_b(ctx, i->src->last_ea + 2);
+        }
+        else
+        {
+            ctx->data_registers[i->dst->n] =
+                m68k_read_b(ctx, i->src->last_ea) << 24 |
+                m68k_read_b(ctx, i->src->last_ea + 2) << 16 |
+                m68k_read_b(ctx, i->src->last_ea + 4) << 8 |
+                m68k_read_b(ctx, i->src->last_ea + 6);
+        }
+    }
     else
     {
-        // TODO when less sleepy
-        FATAL("unsupported movep variant");
+        FATAL("Invalid addressing mode for MOVEP");
+        exit(1);
     }
 
     return 0;
