@@ -39,6 +39,7 @@ typedef struct Settings
     bool show_vdp_patterns;
     bool show_vdp_planes;
     bool show_vdp_sprites;
+    bool show_psg_registers;
     bool show_rom;
     bool show_ram;
     bool show_vram;

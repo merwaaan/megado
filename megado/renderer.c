@@ -1,7 +1,7 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include <cimgui/cimgui.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <cimgui/cimgui.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,9 +9,10 @@
 
 #include "genesis.h"
 #include "joypad.h"
+#include "metric.h"
+#include "psg.h"
 #include "renderer.h"
 #include "settings.h"
-#include "metric.h"
 #include "utils.h"
 
 #define DISASSEMBLY_LENGTH 10
@@ -560,6 +561,8 @@ static void build_ui(Renderer* r)
             igMenuItemPtr("Z80 registers", NULL, &settings->show_z80_registers, true);
             igMenuItemPtr("Z80 disassembly", NULL, &settings->show_z80_disassembly, true);
             igMenuItemPtr("Z80 log", NULL, &settings->show_z80_log, true);
+            igSeparator();
+            igMenuItemPtr("PSG registers", NULL, &settings->show_psg_registers, true);
             igEndMenu();
         }
 
@@ -1227,8 +1230,41 @@ static void build_ui(Renderer* r)
         igEnd();
     }
 
-    bool a = true;
-    //igShowTestWindow(&a);
+    // PSG registers
+    if (settings->show_psg_registers)
+    {
+        igBegin("PSG registers", &settings->show_psg_registers, 0);
+
+        PSG* p = r->genesis->psg;
+
+        for (int i=0; i < 3; ++i) {
+            igTextColored(color_title, "Square %d", i);
+            if (p->square[i].volume == 0xF) {
+                igSameLine(0,0);
+                igTextColored(color_dimmed, " [silent]");
+            }
+            igText("volume:  %0X", p->square[i].volume);
+            igText("tone:    %0X [%.2fHz]", p->square[i].tone, square_tone_in_hertz(&p->square[i]));
+            igText("counter: %0X", p->square[i].counter);
+            igText("output:  %d", square_output(&p->square[i]));
+        }
+
+        igTextColored(color_title, "Noise");
+        if (p->noise.volume == 0xF) {
+            igSameLine(0,0);
+            igTextColored(color_dimmed, " [silent]");
+        }
+        igText("volume:     %0X", p->noise.volume);
+        igText("mode:       %0X [%s]", p->noise.mode, p->noise.mode ? "white" : "periodic");
+        igText("shift rate: %0X", p->noise.shift_rate);
+        igText("counter:    %0X", p->noise.counter);
+        igText("lfsr:       %0X", p->noise.lfsr);
+        igText("output:     %d", noise_output(&p->noise));
+        igEnd();
+    }
+
+    // bool a = true;
+    // igShowTestWindow(&a);
 }
 
 static void render_ui(Renderer* r)
