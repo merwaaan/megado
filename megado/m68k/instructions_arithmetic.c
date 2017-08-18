@@ -547,11 +547,15 @@ uint8_t subq(Instruction* i, M68k* ctx)
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
     SET(i->dst, ctx, initial - quick);
 
-    CARRY_SET(ctx, CHECK_CARRY_SUB(initial, quick, i->size));
-    OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(initial, quick, i->size));
-    ZERO_SET(ctx, initial == quick);
-    NEGATIVE_SET(ctx, BIT(initial - quick, i->size - 1));
-    EXTENDED_SET(ctx, CARRY(ctx));
+    // The condition codes are not altered when subtracting from address registers
+    if (i->dst->type != AddressRegister)
+    {
+        CARRY_SET(ctx, CHECK_CARRY_SUB(initial, quick, i->size));
+        OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(initial, quick, i->size));
+        ZERO_SET(ctx, initial == quick);
+        NEGATIVE_SET(ctx, BIT(initial - quick, i->size - 1));
+        EXTENDED_SET(ctx, CARRY(ctx));
+    }
 
     return 0;
 }
