@@ -571,6 +571,10 @@ Instruction* gen_subq(uint16_t opcode)
         cycles_immediate_instruction(i, 8, 8, 12) :
         cycles_immediate_instruction(i, 4, 8, 8);
 
+    // For address registers, the entire register is used regardless of the instruction's size
+    if (i->dst->type == AddressRegister)
+        i->size = Long;
+
     return i;
 }
 
