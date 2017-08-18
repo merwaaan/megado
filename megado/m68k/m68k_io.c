@@ -71,9 +71,13 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
         return joypad_read(m->genesis->joypad2);
         break;
 
+    // Z80 BUSREQ
     case 0xA11100:
-      // The 68000 has the bus if the Z80 is not running (0: has the bus)
-      return z80_bus_ack(m->genesis->z80);
+        // Nothing in the high byte
+        return 0;
+    case 0xA11101:
+        // The 68000 has the bus if the Z80 is not running (0: has the bus)
+        return z80_bus_ack(m->genesis->z80);
 
     case 0xA11200:
       return 0;
@@ -166,12 +170,12 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
         joypad_write(m->genesis->joypad2, value);
     }
 
-    // BUSREQ
+    // Z80 BUSREQ
     else if (address == 0xA11100) {
       z80_bus_req(m->genesis->z80, value);
     }
 
-    // RESET
+    // Z80 RESET
     else if (address == 0xA11200) {
       z80_reset(m->genesis->z80, value);
     }

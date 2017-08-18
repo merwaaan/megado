@@ -14,3 +14,6 @@
 	path = deps/json-c
 	url = https://github.com/json-c/json-c.git
 	ignore = untracked
+[submodule "deps/glew"]
+	path = deps/glew
+	url = https://github.com/nigels-com/glew.git
