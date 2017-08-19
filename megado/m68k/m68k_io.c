@@ -59,7 +59,7 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
             (m->genesis->region != Region_Japan) << 7 | // Domestic (0) / Export (1)
             (m->genesis->region == Region_Europe) << 6 | // NTSC (0) / PAL (1)
             false << 5 | // Sega CD connected
-            false; // Version
+            false; // Version (bits 3-0)
 
     case 0xA10002:
     case 0xA10003:
@@ -73,8 +73,6 @@ uint8_t m68k_read_b(M68k* m, uint32_t address)
 
     // Z80 BUSREQ
     case 0xA11100:
-        // Nothing in the high byte
-        return 0;
     case 0xA11101:
         // The 68000 has the bus if the Z80 is not running (0: has the bus)
         return z80_bus_ack(m->genesis->z80);
