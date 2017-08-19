@@ -101,11 +101,15 @@ uint8_t addq(Instruction* i, M68k* ctx)
     uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
     SET(i->dst, ctx, initial + quick);
 
-    uint32_t result = GET(i->dst, ctx);
-    CARRY_SET(ctx, CHECK_CARRY_ADD(initial, quick, i->size));
-    OVERFLOW_SET(ctx, CHECK_OVERFLOW_ADD(initial, quick, i->size));
-    ZERO_SET(ctx, result == 0);
-    NEGATIVE_SET(ctx, BIT(result, i->size - 1));
+    // The condition codes are not altered when subtracting from address registers
+    if (i->dst->type != AddressRegister)
+    {
+        uint32_t result = GET(i->dst, ctx);
+        CARRY_SET(ctx, CHECK_CARRY_ADD(initial, quick, i->size));
+        OVERFLOW_SET(ctx, CHECK_OVERFLOW_ADD(initial, quick, i->size));
+        ZERO_SET(ctx, result == 0);
+        NEGATIVE_SET(ctx, BIT(result, i->size - 1));
+    }
 
     return 0;
 }
@@ -120,6 +124,10 @@ Instruction* gen_addq(uint16_t opcode)
     i->base_cycles = i->size == Long ?
         cycles_immediate_instruction(i, 8, 8, 12) :
         cycles_immediate_instruction(i, 4, 4, 8);
+
+    // For address registers, the entire register is used regardless of the instruction's size
+    if (i->dst->type == AddressRegister)
+        i->size = Long;
 
     return i;
 }
