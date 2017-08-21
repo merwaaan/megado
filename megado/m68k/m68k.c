@@ -38,6 +38,7 @@ void m68k_initialize(M68k* m)
     m->pc = m68k_read_l(m, 4); // Program start
 
     m->cycles = 0;
+    m->stopped = false;
     m->pending_interrupt = -1;
     m->prefetch_address = 0xFFFFFFFF; // Invalid value, will initiate the initial prefetch
 }
@@ -154,6 +155,15 @@ uint8_t m68k_step(M68k* m)
 	assert(m->pc % 2 == 0);
 	assert(m->address_registers[7] % 2 == 0);
 
+    // Handle pending interrupts
+    // (also causes the processor to wake up if stopped)
+    bool interrupted = m68k_handle_interrupt(m);
+    if (interrupted && m->stopped)
+        m->stopped = false;
+
+    if (m->stopped)
+        return;
+
     // Pause on breakpoints
     // TODO only in DEBUG builds? check perf
     Breakpoint* breakpoint = debugger_get_breakpoint(m->genesis->debugger, m->pc);
@@ -207,8 +217,6 @@ uint8_t m68k_step(M68k* m)
 
     debugger_post_m68k(m->genesis->debugger);
 
-    m68k_handle_interrupt(m);
-
     return cycles;
 }
 
@@ -253,10 +261,10 @@ void m68k_request_interrupt(M68k* m, uint8_t level)
     m->pending_interrupt = level;
 }
 
-void m68k_handle_interrupt(M68k* m)
+bool m68k_handle_interrupt(M68k* m)
 {
     if (m->pending_interrupt < 0)
-        return;
+        return false;
 
     LOG_M68K("Interrupt %d handled\n", m->pending_interrupt);
 
@@ -274,4 +282,6 @@ void m68k_handle_interrupt(M68k* m)
     m->pc = m68k_read_l(m, IRQ_VECTOR_OFFSET + m->pending_interrupt * 4) & M68K_ADDRESS_WIDTH;
 
     m->pending_interrupt = -1;
+
+    return true;
 }

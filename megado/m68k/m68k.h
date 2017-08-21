@@ -55,6 +55,7 @@ typedef struct M68k
     uint32_t usp; // TODO really necessary?
 
     uint64_t cycles;
+    bool stopped;
 
     // Level of any pending interrupt (negative values means no interrupts)
     int pending_interrupt;
@@ -93,7 +94,7 @@ uint16_t m68k_fetch(M68k* m);
 // Requested interrupts will be filtered depending on the current mask.
 // Pending interrupts will be serviced after the current instruction.
 void m68k_request_interrupt(M68k* m, uint8_t level);
-void m68k_handle_interrupt(M68k* m);
+bool m68k_handle_interrupt(M68k* m);
 
 // I/O functions
 

@@ -136,9 +136,15 @@ Instruction* gen_rte(uint16_t opcode)
     return i;
 }
 
+uint8_t stop(Instruction* i, M68k* ctx)
+{
+    ctx->stopped = true;
+    return 0;
+}
+
 Instruction* gen_stop(uint16_t opcode)
 {
-    Instruction* i = instruction_make("STOP", not_implemented);
+    Instruction* i = instruction_make("STOP", stop);
     i->base_cycles = 4;
     return i;
 }
