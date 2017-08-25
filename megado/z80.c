@@ -4,6 +4,7 @@
 
 #include "debugger.h"
 #include "genesis.h"
+#include "psg.h"
 #include "z80.h"
 #include "z80_ops.h"
 
@@ -219,6 +220,11 @@ void z80_write(Z80 *z, uint16_t address, uint8_t value) {
     // RAM mirror
     else if (address < 0x4000) {
         z->ram[address - 0x2000] = value;
+    }
+
+    // PSG access from Z80
+    else if (address == 0x7f11) {
+        psg_write(z->genesis->psg, value);
     }
 }
 
