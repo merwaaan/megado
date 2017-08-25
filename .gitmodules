@@ -17,3 +17,4 @@
 [submodule "deps/glew"]
 	path = deps/glew
 	url = https://github.com/nigels-com/glew.git
+	ignore = untracked

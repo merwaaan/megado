@@ -7,3 +7,5 @@ GTAGS
 GSYMS
 megado/m68k/*.gen
 *.bin
+deps/glew-2.1.0.tgz
+*.snapshot*
