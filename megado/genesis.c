@@ -93,8 +93,11 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     print_header_info("", g->rom + 0x110, 16);
     print_header_info("[Domestic title]", g->rom + 0x120, 48);
     print_header_info("[International title]", g->rom + 0x150, 48);
-    print_header_info("[Serial number]", g->rom + 0x180, 8);
+    print_header_info("[Serial number]", g->rom + 0x180, 14);
     print_header_info("[Country]", g->rom + 0x1F0, 8);
+    printf("%06x - %06x                                  [ROM]\n", g->m68k->rom_start, g->m68k->rom_end);
+    printf("%06x - %06x                                  [RAM]\n", g->m68k->ram_start, g->m68k->ram_end);
+    printf("%06x - %06x                                  [SRAM]\n", g->m68k->sram_start, g->m68k->sram_end);
     printf("----------------\n");
 
     // Look for snapshots/breakpoints for this game

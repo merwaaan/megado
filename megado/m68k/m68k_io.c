@@ -143,7 +143,7 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     address &= M68K_ADDRESS_WIDTH;
 
     // Cannot write to ROM
-    if (address <= 0x3FFFFF)
+    if (address <= m->rom_end)
     {
         printf("WARNING attempted to write to rom: %0X @ %0X\n", value, address);
         return;

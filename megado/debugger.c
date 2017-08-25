@@ -40,6 +40,7 @@ void debugger_preload(Debugger* d)
     genesis_get_rom_name(d->genesis, name);
     d->breakpoints = settings_get_or_create_breakpoints(d->genesis->settings, name);
 }
+
 void debugger_post_m68k(Debugger* d)
 {
     // Append the last instruction's address to the program log
