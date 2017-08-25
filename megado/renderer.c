@@ -14,6 +14,7 @@
 #include "renderer.h"
 #include "settings.h"
 #include "utils.h"
+#include "ym2612.h"
 
 #define DISASSEMBLY_LENGTH 10
 #define MEMORY_VIEWER_COLUMNS 16
@@ -563,6 +564,7 @@ static void build_ui(Renderer* r)
             igMenuItemPtr("Z80 log", NULL, &settings->show_z80_log, true);
             igSeparator();
             igMenuItemPtr("PSG registers", NULL, &settings->show_psg_registers, true);
+            igMenuItemPtr("YM2612 registers", NULL, &settings->show_ym2612_registers, true);
             igEndMenu();
         }
 
@@ -1260,6 +1262,67 @@ static void build_ui(Renderer* r)
         igText("counter:    %0X", p->noise.counter);
         igText("lfsr:       %0X", p->noise.lfsr);
         igText("output:     %d", noise_output(&p->noise));
+        igEnd();
+    }
+
+    // YM2612 registers
+    if (settings->show_ym2612_registers)
+    {
+        igBegin("YM2612 registers", &settings->show_ym2612_registers, 0);
+
+        YM2612* y = r->genesis->ym2612;
+
+        // Global registers
+        igText("lfo_enabled:    %s", y->lfo_enabled ? "true" : "false");
+        igText("lfo_frequency:  %0X", y->lfo_frequency_index);
+        igText("timer A:        %0X", y->timer_a);
+        igText("timer B:        %0X", y->timer_b);
+
+        char* channel3_mode_string = "normal";
+        switch (y->channel3_mode) {
+        case 0: channel3_mode_string = "normal"; break;
+        case 1: channel3_mode_string = "special"; break;
+        default: channel3_mode_string = "illegal"; break;
+        }
+        igText("channel 3 mode: %0X [%s]", y->channel3_mode, channel3_mode_string);
+
+        char* channel6_mode_string = "normal";
+        switch (y->channel6_mode) {
+        case 0: channel6_mode_string = "normal"; break;
+        case 1: channel6_mode_string = "special"; break;
+        default: channel6_mode_string = "illegal"; break;
+        }
+        igText("channel 6 mode: %0X [%s]", y->channel6_mode, channel6_mode_string);
+
+        igText("DAC enabled:    %0X", y->dac_enabled);
+        igText("DAC data:       %0X", y->dac_data);
+
+        // Per-channel registers
+        for (int i=0; i < 6; ++i) {
+            igTextColored(color_title, "Channel %d", i + 1);
+            igText("frequency:       %0X:%0X", y->channels[i].frequency.block, y->channels[i].frequency.freq);
+            igText("feedback:        %0X", y->channels[i].feedback);
+            igText("algorithm:       %0X", y->channels[i].algorithm);
+            igText("stereo:          %s%s", y->channels[i].left_output ? "L" : " ", y->channels[i].right_output ? "R" : " ");
+            igText("amp modulation:  %0X", y->channels[i].amplitude_modulation_sensitivity);
+            igText("freq modulation: %0X", y->channels[i].frequency_modulation_sensitivity);
+
+            for (int j=0; j < 4; ++j) {
+                igTextColored(color_title, "Operator %d", j + 1);
+
+                igText("detune:         %0X", y->channels[i].operators[j].detune);
+                igText("multiple:       %0X", y->channels[i].operators[j].multiple);
+                igText("total level:    %0X", y->channels[i].operators[j].total_level);
+                igText("rate scaling:   %0X", y->channels[i].operators[j].rate_scaling);
+                igText("attack rate:    %0X", y->channels[i].operators[j].attack_rate);
+                igText("amp modulation: %0X", y->channels[i].operators[j].amplitude_modulation_enabled);
+                igText("first decay:    %0X", y->channels[i].operators[j].first_decay_rate);
+                igText("second decay:   %0X", y->channels[i].operators[j].second_decay_rate);
+                igText("second amp:     %0X", y->channels[i].operators[j].second_amplitude);
+                igText("release:        %0X", y->channels[i].operators[j].release_rate);
+            }
+        }
+
         igEnd();
     }
 

@@ -56,6 +56,7 @@ void settings_save(Settings* s)
     JSON_SET_BOOL(show_vdp_planes);
     JSON_SET_BOOL(show_vdp_sprites);
     JSON_SET_BOOL(show_psg_registers);
+    JSON_SET_BOOL(show_ym2612_registers);
     JSON_SET_BOOL(show_rom);
     JSON_SET_BOOL(show_ram);
     JSON_SET_BOOL(show_vram);
@@ -160,6 +161,7 @@ Settings* settings_load()
     JSON_GET_BOOL(show_vdp_planes);
     JSON_GET_BOOL(show_vdp_sprites);
     JSON_GET_BOOL(show_psg_registers);
+    JSON_GET_BOOL(show_ym2612_registers);
     JSON_GET_BOOL(show_rom);
     JSON_GET_BOOL(show_ram);
     JSON_GET_BOOL(show_vram);
