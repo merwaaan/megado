@@ -25,12 +25,19 @@ uint32_t m68k_read(M68k* m, Size size, uint32_t address)
     }
 }
 
+// TODO merge rom/ram/sram?
 uint8_t m68k_read_b(M68k* m, uint32_t address)
 {
     address &= M68K_ADDRESS_WIDTH;
+    
+    // SRAM
+    if (address >= m->genesis->sram_start && address <= m->genesis->sram_end)
+    {
+        return m->genesis->sram[address - m->genesis->sram_start];
+    }
 
     // ROM
-    if (address <= 0x3FFFFF)
+    else if (address <= 0x3FFFFF)
     {
         return m->genesis->rom[address];
     }
@@ -143,10 +150,16 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     address &= M68K_ADDRESS_WIDTH;
 
     // Cannot write to ROM
-    if (address <= m->rom_end)
+    if (address <= m->genesis->rom_end)
     {
         printf("WARNING attempted to write to rom: %0X @ %0X\n", value, address);
         return;
+    }
+
+    // SRAM
+    else if (address >= m->genesis->sram_start && address <= m->genesis->sram_end)
+    {
+        m->genesis->sram[address - m->genesis->sram_start] = address;
     }
 
     // RAM

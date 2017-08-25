@@ -29,8 +29,9 @@ typedef enum {
 
 typedef struct Genesis
 {
-    uint8_t* rom; // 0x000000 - 0x3FFFFF
-    uint8_t* ram; // 0xFF0000 - 0xFFFFFF
+    uint8_t* rom; // Typically 0x000000 - 0x3FFFFF
+    uint8_t* ram; // Typically 0xFF0000 - 0xFFFFFF
+    uint8_t* sram;
 
     struct M68k* m68k;
     struct Z80* z80;
@@ -45,6 +46,11 @@ typedef struct Genesis
 
     Status status;
     Regions region;
+
+    // Memory layout
+    uint32_t rom_start, rom_end;
+    uint32_t ram_start, ram_end;
+    uint32_t sram_start, sram_end;
 } Genesis;
 
 Genesis* genesis_make();

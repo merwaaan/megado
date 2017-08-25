@@ -67,10 +67,6 @@ typedef struct M68k
     uint32_t instruction_address; // Instruction currently being decoded
 
     uint64_t instruction_count;
-
-    uint32_t rom_start, rom_end;
-    uint32_t ram_start, ram_end;
-    uint32_t sram_start, sram_end;
 } M68k;
 
 M68k* m68k_make(struct Genesis*);

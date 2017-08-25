@@ -37,13 +37,6 @@ void m68k_initialize(M68k* m)
     m->address_registers[7] = m68k_read_l(m, 0); // Stack pointer
     m->pc = m68k_read_l(m, 4); // Program start
 
-    m->rom_start = m68k_read_l(m, 0x1a0);
-    m->rom_end = m68k_read_l(m, 0x1a4);
-    m->ram_start = m68k_read_l(m, 0x1a8);
-    m->ram_end = m68k_read_l(m, 0x1ac);
-    m->sram_start = m68k_read_l(m, 0x1b4);
-    m->sram_end = m68k_read_l(m, 0x1b8);
-
     m->cycles = 0;
     m->stopped = false;
     m->pending_interrupt = -1;
