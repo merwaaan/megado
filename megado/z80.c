@@ -5,6 +5,7 @@
 #include "debugger.h"
 #include "genesis.h"
 #include "psg.h"
+#include "ym2612.h"
 #include "z80.h"
 #include "z80_ops.h"
 
@@ -195,16 +196,12 @@ uint8_t z80_read(Z80 *z, uint16_t address) {
 
     }
 
-    switch (address) {
-        // YM2612
-    case 0x4000:
-    case 0x4001:
-    case 0x4002:
-    case 0x4003:
-        // Fake it for now: always return non-busy and timer overflowed.
-        return 0x7;
+    // YM2612
+    else if (address <= 0x4003) {
+        return ym2612_read(z->genesis->ym2612, address);
+    }
 
-    default:
+    else {
         return 0xFF;
     }
 }
@@ -222,8 +219,14 @@ void z80_write(Z80 *z, uint16_t address, uint8_t value) {
         z->ram[address - 0x2000] = value;
     }
 
+    // YM2612
+    else if (address <= 0x4003) {
+        ym2612_write(z->genesis->ym2612, address, value);
+    }
+
     // PSG access from Z80
     else if (address == 0x7f11) {
+        printf("Z80 writes to PSG\n");
         psg_write(z->genesis->psg, value);
     }
 }

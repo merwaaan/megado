@@ -14,6 +14,7 @@
 #include "vdp.h"
 #include "psg.h"
 #include "utils.h"
+#include "ym2612.h"
 
 Genesis* genesis_make()
 {
@@ -25,6 +26,7 @@ Genesis* genesis_make()
     g->z80 = z80_make(g);
     g->vdp = vdp_make(g);
     g->psg = psg_make(g);
+    g->ym2612 = ym2612_make(g);
     g->joypad1 = joypad_make();
     g->joypad2 = joypad_make();
     g->renderer = renderer_make(g);
@@ -47,6 +49,7 @@ void genesis_free(Genesis* g)
     z80_free(g->z80);
     vdp_free(g->vdp);
     psg_free(g->psg);
+    ym2612_free(g->ym2612);
     joypad_free(g->joypad1);
     joypad_free(g->joypad2);
     settings_free(g->settings);
@@ -167,6 +170,7 @@ void genesis_initialize(Genesis* g)
     z80_initialize(g->z80);
     vdp_initialize(g->vdp);
     psg_initialize(g->psg);
+    ym2612_initialize(g->ym2612);
     debugger_initialize(g->debugger);
     
     g->sram = calloc(g->sram_end - g->sram_start, sizeof(uint8_t));
@@ -185,6 +189,8 @@ void genesis_step(Genesis* g)
     // Catch up the audio
     // The PSG runs at the Z80 frequency
     psg_run_cycles(g->psg, cycles / 2);
+
+    ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
 }
 
 static void genesis_frame(Genesis* g)
@@ -199,6 +205,7 @@ static void genesis_frame(Genesis* g)
         m68k_run_cycles(g->m68k, 488); // TODO not sure about that value
         z80_run_cycles(g->z80, 244); // Z80 runs at half the frequency of M68
         psg_run_cycles(g->psg, 244); // PSG runs at Z80 frequency
+        ym2612_run_cycles(g->ym2612, 488); // TODO: check freq of YM2612
 
                                      // Draw the scanline
         vdp_draw_scanline(g->vdp, line);
@@ -211,6 +218,7 @@ static void genesis_frame(Genesis* g)
         m68k_run_cycles(g->m68k, 84); // http://gendev.spritesmind.net/forum/viewtopic.php?t=94#p1105
         z80_run_cycles(g->z80, 42); // Z80 runs at half the frequency of M68
         psg_run_cycles(g->psg, 42); // PSG runs at Z80 frequency
+        ym2612_run_cycles(g->ym2612, 84); // TODO: check freq of YM2612
         g->vdp->hblank_in_progress = false;
 
         // Exit early if the emulation has been paused
