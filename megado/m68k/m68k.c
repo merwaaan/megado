@@ -162,7 +162,9 @@ uint8_t m68k_step(M68k* m)
         m->stopped = false;
 
     if (m->stopped)
-        return;
+        return 1; // FIXME: not sure about how many cycles we should report when
+                  // stopped.  Using non-zero value to avoid infinite loops in
+                  // run_cycles.
 
     // Pause on breakpoints
     // TODO only in DEBUG builds? check perf
