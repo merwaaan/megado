@@ -109,14 +109,23 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
         y->dac_enabled = value >> 7;
         break;
 
-    case 0x30 ... 0x9e: {
+        // MSVC does not support the `...` operator in case
+    case 0x30: case 0x31: case 0x32: case 0x34: case 0x35: case 0x36:
+    case 0x38: case 0x39: case 0x3a: case 0x3c: case 0x3d: case 0x3e:
+    case 0x40: case 0x41: case 0x42: case 0x44: case 0x45: case 0x46:
+    case 0x48: case 0x49: case 0x4a: case 0x4c: case 0x4d: case 0x4e:
+    case 0x50: case 0x51: case 0x52: case 0x54: case 0x55: case 0x56:
+    case 0x58: case 0x59: case 0x5a: case 0x5c: case 0x5d: case 0x5e:
+    case 0x60: case 0x61: case 0x62: case 0x64: case 0x65: case 0x66:
+    case 0x68: case 0x69: case 0x6a: case 0x6c: case 0x6d: case 0x6e:
+    case 0x70: case 0x71: case 0x72: case 0x74: case 0x75: case 0x76:
+    case 0x78: case 0x79: case 0x7a: case 0x7c: case 0x7d: case 0x7e:
+    case 0x80: case 0x81: case 0x82: case 0x84: case 0x85: case 0x86:
+    case 0x88: case 0x89: case 0x8a: case 0x8c: case 0x8d: case 0x8e:
+    case 0x90: case 0x91: case 0x92: case 0x94: case 0x95: case 0x96:
+    case 0x98: case 0x99: case 0x9a: case 0x9c: case 0x9d: case 0x9e: {
         uint8_t op    = (address >> 2) & 3;
         uint8_t chan  =  address       & 3;
-
-        // Ignore invalid channels or operators
-        if (op == 3 || chan == 3) {
-            break;
-        }
 
         switch (address & 0xf0) {
         case 0x30:
@@ -153,35 +162,35 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
         }
     } break;
 
-    case 0xa0 ... 0xa2: {
+    case 0xa0: case 0xa1: case 0xa2: {
         uint8_t chan = address & 3;
         channels[chan].frequency.freq = (channels[chan].frequency.freq & 0x700) | value;
     } break;
 
-    case 0xa4 ... 0xa6: {
+    case 0xa4: case 0xa5: case 0xa6: {
         uint8_t chan = address & 3;
         channels[chan].frequency.block = value >> 3;
         channels[chan].frequency.freq  = (channels[chan].frequency.freq & 0x0ff) | (((uint16_t) value) << 8);
     } break;
 
-    case 0xa8 ... 0xaa: {
+    case 0xa8: case 0xa9: case 0xaa: {
         uint8_t op = address & 3;
         additional_freqs[op].freq = (additional_freqs[op].freq & 0x700) | value;
     } break;
 
-    case 0xac ... 0xae: {
+    case 0xac: case 0xad: case 0xae: {
         uint8_t op = 1 + (address & 3);
         additional_freqs[op].block = value >> 3;
         additional_freqs[op].freq = (additional_freqs[op].freq & 0x0ff) | (((uint16_t) value) << 8);
     } break;
 
-    case 0xb0 ... 0xb2: {
+    case 0xb0: case 0xb1: case 0xb2: {
         uint8_t chan = address & 3;
         channels[chan].feedback  = value >> 3;
         channels[chan].algorithm = value;
     } break;
 
-    case 0xb4 ... 0xb6: {
+    case 0xb4: case 0xb5: case 0xb6: {
         uint8_t chan = address & 3;
         channels[chan].left_output                      = value >> 7;
         channels[chan].right_output                     = value >> 6;
