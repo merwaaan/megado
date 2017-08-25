@@ -16,14 +16,14 @@ typedef struct Operator {
     bool    amplitude_modulation_enabled : 1;
     uint8_t first_decay_rate             : 5;
     uint8_t second_decay_rate            : 5;
-    uint8_t secondary_amplitude          : 4;
+    uint8_t second_amplitude             : 4;
     uint8_t release_rate                 : 4;
     // uint8_t ssg_eg                    : 4;  // proprietary register, skipping
 } Operator;
 
 typedef struct Frequency {
     uint8_t  block     : 3;
-    uint16_t frequency : 11;
+    uint16_t freq      : 11;
 } Frequency;
 
 typedef struct Channel {
@@ -40,11 +40,15 @@ typedef struct Channel {
 
 typedef struct YM2612
 {
+    uint8_t  latched_address_part1;
+    uint8_t  latched_address_part2;
+
     bool     lfo_enabled         : 1;
     uint8_t  lfo_frequency_index : 3;
     uint16_t timer_a             : 10;
     uint8_t  timer_b             : 8;
     uint8_t  channel3_mode       : 2;
+    uint8_t  channel6_mode       : 2;
     uint8_t  dac_data            : 8;
     bool     dac_enabled         : 1;
 
