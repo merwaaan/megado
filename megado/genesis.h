@@ -50,9 +50,7 @@ typedef struct Genesis
     Regions region;
 
     // Memory layout
-    uint32_t rom_start, rom_end;
-    uint32_t ram_start, ram_end;
-    uint32_t sram_start, sram_end;
+    uint32_t rom_end, sram_start, sram_end;
 } Genesis;
 
 Genesis* genesis_make();

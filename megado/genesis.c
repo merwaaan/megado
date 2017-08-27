@@ -91,10 +91,6 @@ void genesis_load_rom_file(Genesis* g, const char* path)
 
     genesis_initialize(g);
 
-    // Temporary check to see if somes games have incorrect values in their header
-    if (g->rom_start != 0 || g->ram_start != 0xFF0000 || g->ram_end != 0xFFFFFF)
-        printf("WARNING! FOUND A GAME WITH AN UNUSUAL MEMORY LAYOUT");
-
     // Display info from the ROM header
     printf("----------------\n");
     print_header_info("", g->rom + 0x100, 16);
@@ -103,8 +99,7 @@ void genesis_load_rom_file(Genesis* g, const char* path)
     print_header_info("[International title]", g->rom + 0x150, 48);
     print_header_info("[Serial number]", g->rom + 0x180, 14);
     print_header_info("[Country]", g->rom + 0x1F0, 8);
-    printf("%06x - %06x                                  [ROM]\n", g->rom_start, g->rom_end);
-    printf("%06x - %06x                                  [RAM]\n", g->ram_start, g->ram_end);
+    printf("%06x - %06x                                  [ROM]\n", 0, g->rom_end);
     printf("%06x - %06x                                  [SRAM]\n", g->sram_start, g->sram_end);
     printf("----------------\n");
 
@@ -159,10 +154,7 @@ void genesis_initialize(Genesis* g)
     // http://darkdust.net/writings/megadrive/initializing
     // http://md.squee.co/Howto:Initialise_a_Mega_Drive
 
-    g->rom_start = m68k_read_l(g->m68k, 0x1a0);
     g->rom_end = m68k_read_l(g->m68k, 0x1a4);
-    g->ram_start = m68k_read_l(g->m68k, 0x1a8);
-    g->ram_end = m68k_read_l(g->m68k, 0x1ac);
     g->sram_start = m68k_read_l(g->m68k, 0x1b4);
     g->sram_end = m68k_read_l(g->m68k, 0x1b8);
 
