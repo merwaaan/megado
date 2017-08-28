@@ -1295,13 +1295,15 @@ static void build_ui(Renderer* r)
 
         igColumns(7, NULL, false);
 
+        struct ImVec2 dummy = { 0, 0 };  // Don't know what it does, but needed
+                                         // as argument to IgSelectable
         igTextColored(color_title, "Channel");
-        igText("frequency");
-        igText("feedback");
-        igText("algorithm");
-        igText("stereo");
-        igText("amp modulation");
-        igText("freq modulation");
+        igSelectable("frequency", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+        igSelectable("feedback", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+        igSelectable("algorithm", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+        igSelectable("stereo", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+        igSelectable("amp modulation", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+        igSelectable("freq modulation", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
 
         igNextColumn();
 
@@ -1342,16 +1344,16 @@ static void build_ui(Renderer* r)
                 igColumns(5, NULL, false);
 
                 igTextColored(color_title, "Operator");
-                igText("detune");
-                igText("multiple");
-                igText("total level");
-                igText("rate scaling");
-                igText("attack rate");
-                igText("amp modulation");
-                igText("first decay");
-                igText("second decay");
-                igText("second amp");
-                igText("release");
+                igSelectable("detune", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("multiple", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("total level", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("rate sacling", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("attack rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("amp modulation", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("first decay", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("second decay", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("second amp", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("release", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
 
                 igNextColumn();
 
