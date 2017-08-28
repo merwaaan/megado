@@ -1273,53 +1273,106 @@ static void build_ui(Renderer* r)
         YM2612* y = r->genesis->ym2612;
 
         // Global registers
-        igText("lfo_enabled:    %s", y->lfo_enabled ? "true" : "false");
-        igText("lfo_frequency:  %0X", y->lfo_frequency_index);
-        igText("timer A:        %0X", y->timer_a);
-        igText("timer B:        %0X", y->timer_b);
+        igTextColored(color_title, "Global registers");
+        igColumns(3, NULL, false);
 
-        char* channel3_mode_string = "normal";
-        switch (y->channel3_mode) {
-        case 0: channel3_mode_string = "normal"; break;
-        case 1: channel3_mode_string = "special"; break;
-        default: channel3_mode_string = "illegal"; break;
-        }
-        igText("channel 3 mode: %0X [%s]", y->channel3_mode, channel3_mode_string);
+        igText("LFO enabled:   %s", y->lfo_enabled ? "true" : "false");
+        igText("LFO frequency: %0X", y->lfo_frequency_index);
 
-        char* channel6_mode_string = "normal";
-        switch (y->channel6_mode) {
-        case 0: channel6_mode_string = "normal"; break;
-        case 1: channel6_mode_string = "special"; break;
-        default: channel6_mode_string = "illegal"; break;
-        }
-        igText("channel 6 mode: %0X [%s]", y->channel6_mode, channel6_mode_string);
+        igNextColumn();
 
-        igText("DAC enabled:    %0X", y->dac_enabled);
-        igText("DAC data:       %0X", y->dac_data);
+        igText("timer A: %0X", y->timer_a);
+        igText("timer B: %0X", y->timer_b);
 
-        // Per-channel registers
+        igNextColumn();
+
+        igText("DAC enabled: %0X", y->dac_enabled);
+        igText("DAC data:    %0X", y->dac_data);
+
+        igSeparator();
+
+        // Channels
+
+        igColumns(7, NULL, false);
+
+        igTextColored(color_title, "Channel");
+        igText("frequency");
+        igText("feedback");
+        igText("algorithm");
+        igText("stereo");
+        igText("amp modulation");
+        igText("freq modulation");
+
+        igNextColumn();
+
         for (int i=0; i < 6; ++i) {
-            igTextColored(color_title, "Channel %d", i + 1);
-            igText("frequency:       %0X:%0X", y->channels[i].frequency.block, y->channels[i].frequency.freq);
-            igText("feedback:        %0X", y->channels[i].feedback);
-            igText("algorithm:       %0X", y->channels[i].algorithm);
-            igText("stereo:          %s%s", y->channels[i].left_output ? "L" : " ", y->channels[i].right_output ? "R" : " ");
-            igText("amp modulation:  %0X", y->channels[i].amplitude_modulation_sensitivity);
-            igText("freq modulation: %0X", y->channels[i].frequency_modulation_sensitivity);
+            igTextColored(color_title, "%d", i + 1);
 
-            for (int j=0; j < 4; ++j) {
-                igTextColored(color_title, "Operator %d", j + 1);
+            if ((i+1) % 3 == 0) {
+                uint8_t channel_mode = i == 3 ? y->channel3_mode : y->channel6_mode;
 
-                igText("detune:         %0X", y->channels[i].operators[j].detune);
-                igText("multiple:       %0X", y->channels[i].operators[j].multiple);
-                igText("total level:    %0X", y->channels[i].operators[j].total_level);
-                igText("rate scaling:   %0X", y->channels[i].operators[j].rate_scaling);
-                igText("attack rate:    %0X", y->channels[i].operators[j].attack_rate);
-                igText("amp modulation: %0X", y->channels[i].operators[j].amplitude_modulation_enabled);
-                igText("first decay:    %0X", y->channels[i].operators[j].first_decay_rate);
-                igText("second decay:   %0X", y->channels[i].operators[j].second_decay_rate);
-                igText("second amp:     %0X", y->channels[i].operators[j].second_amplitude);
-                igText("release:        %0X", y->channels[i].operators[j].release_rate);
+                char* mode_string = "normal";
+                switch (channel_mode) {
+                case 0: mode_string = "normal"; break;
+                case 1: mode_string = "special"; break;
+                default: mode_string = "illegal"; break;
+                }
+
+                igSameLine(0,0);
+                igText(" (%s)", mode_string);
+            }
+
+            igText("%0X:%0X", y->channels[i].frequency.block, y->channels[i].frequency.freq);
+            igText("%0X", y->channels[i].feedback);
+            igText("%0X", y->channels[i].algorithm);
+            igText("%s%s", y->channels[i].left_output ? "L" : " ", y->channels[i].right_output ? "R" : " ");
+            igText("%0X", y->channels[i].amplitude_modulation_sensitivity);
+            igText("%0X", y->channels[i].frequency_modulation_sensitivity);
+
+            igNextColumn();
+        }
+
+        igSeparator();
+
+        // Operators
+        for (int i=0; i < 6; ++i) {
+            igColumns(1, NULL, false);
+            if (igTreeNodePtr((void*)(intptr_t)i, "Operators for channel %d", i+1)) {
+
+                igColumns(5, NULL, false);
+
+                igTextColored(color_title, "Operator");
+                igText("detune");
+                igText("multiple");
+                igText("total level");
+                igText("rate scaling");
+                igText("attack rate");
+                igText("amp modulation");
+                igText("first decay");
+                igText("second decay");
+                igText("second amp");
+                igText("release");
+
+                igNextColumn();
+
+                for (int j=0; j < 4; ++j) {
+                    igTextColored(color_title, "%d", j + 1);
+
+                    igText("%0X", y->channels[i].operators[j].detune);
+                    igText("%0X", y->channels[i].operators[j].multiple);
+                    igText("%0X", y->channels[i].operators[j].total_level);
+                    igText("%0X", y->channels[i].operators[j].rate_scaling);
+                    igText("%0X", y->channels[i].operators[j].attack_rate);
+                    igText("%0X", y->channels[i].operators[j].amplitude_modulation_enabled);
+                    igText("%0X", y->channels[i].operators[j].first_decay_rate);
+                    igText("%0X", y->channels[i].operators[j].second_decay_rate);
+                    igText("%0X", y->channels[i].operators[j].second_amplitude);
+                    igText("%0X", y->channels[i].operators[j].release_rate);
+
+                    igNextColumn();
+                }
+
+                igTreePop();
             }
         }
 
