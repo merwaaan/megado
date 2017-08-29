@@ -345,7 +345,7 @@ void address_dec(Operand* o, M68k* ctx)
     if (o->n == 7 && o->instruction->size == Byte)
         ctx->address_registers[o->n] -= 2;
     else
-    ctx->address_registers[o->n] -= size_in_bytes(o->instruction->size);
+        ctx->address_registers[o->n] -= size_in_bytes(o->instruction->size);
 }
 
 Operand* operand_make_address_register_indirect_predec(int n, struct Instruction* instr)

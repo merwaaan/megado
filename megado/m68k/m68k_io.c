@@ -159,7 +159,7 @@ void m68k_write_b(M68k* m, uint32_t address, uint8_t value)
     // SRAM
     else if (address >= m->genesis->sram_start && address <= m->genesis->sram_end)
     {
-        m->genesis->sram[address - m->genesis->sram_start] = address;
+        m->genesis->sram[address - m->genesis->sram_start] = value;
     }
 
     // RAM
