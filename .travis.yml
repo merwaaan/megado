@@ -51,6 +51,15 @@ matrix:
     - RUN=valgrind
     - FLAGS="-DALL_WINDOWS -DTIMEOUT=10000 -O1 -fno-omit-frame-pointer -g"
 
+  # Valgrind can be killed by Travis because it consumes more than 3Gb of RAM
+  # see https://docs.travis-ci.com/user/common-build-problems/#My-build-script-is-killed-without-any-error
+  fast_finish: true
+  allow_failures:
+  - compiler: clang-4.0
+    env:
+    - RUN=valgrind
+    - FLAGS="-DALL_WINDOWS -DTIMEOUT=10000 -O1 -fno-omit-frame-pointer -g"
+
 # Build and install deps/ locally
 install: ./install-deps.sh
 
