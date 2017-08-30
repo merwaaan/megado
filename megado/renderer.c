@@ -1347,7 +1347,7 @@ static void build_ui(Renderer* r)
                 igSelectable("detune", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
                 igSelectable("multiple", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
                 igSelectable("total level", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("rate sacling", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("rate scaling", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
                 igSelectable("attack rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
                 igSelectable("amp modulation", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
                 igSelectable("first decay", false, ImGuiSelectableFlags_SpanAllColumns, dummy);

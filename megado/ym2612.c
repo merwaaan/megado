@@ -3,6 +3,12 @@
 
 #include "ym2612.h"
 
+#ifdef DEBUG
+#define LOG_YM2612(...) printf(__VA_ARGS__)
+#else
+#define LOG_YM2612(...)
+#endif
+
 // Local functions
 void ym2612_write_register(YM2612*, uint8_t, uint8_t, bool);
 
@@ -33,7 +39,7 @@ uint8_t ym2612_read(YM2612* y, uint32_t address) {
 }
 
 void ym2612_write(YM2612* y, uint32_t address, uint8_t value) {
-    printf("Write to YM2612: %x %x\n", address, value);
+    LOG_YM2612("Write to YM2612: %x %x\n", address, value);
 
     switch (address) {
         // Part I: channels 1, 2 and 3
@@ -199,6 +205,7 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
     } break;
 
     default:
-        printf("Warning: unhandled write to YM2612 Part I: %x <- %x\n", address, value);
+        printf("Warning: unhandled write to YM2612 (%s): %x <- %x\n",
+               part2 ? "part II" : "part I", address, value);
     }
 }
