@@ -164,7 +164,7 @@ void genesis_initialize(Genesis* g)
     psg_initialize(g->psg);
     ym2612_initialize(g->ym2612);
     debugger_initialize(g->debugger);
-    
+
     g->sram = calloc(g->sram_end - g->sram_start, sizeof(uint8_t));
 }
 
@@ -199,7 +199,7 @@ static void genesis_frame(Genesis* g)
         psg_run_cycles(g->psg, 244); // PSG runs at Z80 frequency
         ym2612_run_cycles(g->ym2612, 488); // TODO: check freq of YM2612
 
-                                     // Draw the scanline
+        // Draw the scanline
         vdp_draw_scanline(g->vdp, line);
 
         // Exit early if the emulation has been paused

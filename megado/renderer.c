@@ -1468,14 +1468,14 @@ static void handle_inputs(Renderer* r, int key, int action)
     case GLFW_PRESS:
         switch (key)
         {
-        case GLFW_KEY_LEFT: joypad_press(r->genesis->joypad1, Left); break;
-        case GLFW_KEY_RIGHT: joypad_press(r->genesis->joypad1, Right); break;
-        case GLFW_KEY_UP: joypad_press(r->genesis->joypad1, Up); break;
-        case GLFW_KEY_DOWN: joypad_press(r->genesis->joypad1, Down); break;
-        case GLFW_KEY_ENTER: joypad_press(r->genesis->joypad1, Start); break;
-        case GLFW_KEY_Q: joypad_press(r->genesis->joypad1, ButtonA); break;
-        case GLFW_KEY_W: joypad_press(r->genesis->joypad1, ButtonB); break;
-        case GLFW_KEY_E: joypad_press(r->genesis->joypad1, ButtonC); break;
+        case GLFW_KEY_LEFT  : joypad_press(r->genesis->joypad1, Left); break;
+        case GLFW_KEY_RIGHT : joypad_press(r->genesis->joypad1, Right); break;
+        case GLFW_KEY_UP    : joypad_press(r->genesis->joypad1, Up); break;
+        case GLFW_KEY_DOWN  : joypad_press(r->genesis->joypad1, Down); break;
+        case GLFW_KEY_ENTER : joypad_press(r->genesis->joypad1, Start); break;
+        case GLFW_KEY_Q     : joypad_press(r->genesis->joypad1, ButtonA); break;
+        case GLFW_KEY_W     : joypad_press(r->genesis->joypad1, ButtonB); break;
+        case GLFW_KEY_E     : joypad_press(r->genesis->joypad1, ButtonC); break;
 
         case GLFW_KEY_1: joypad_press(r->genesis->joypad2, Left); break;
         case GLFW_KEY_3: joypad_press(r->genesis->joypad2, Right); break;
@@ -1495,14 +1495,14 @@ static void handle_inputs(Renderer* r, int key, int action)
     case GLFW_RELEASE:
         switch (key)
         {
-        case GLFW_KEY_LEFT: joypad_release(r->genesis->joypad1, Left); break;
-        case GLFW_KEY_RIGHT: joypad_release(r->genesis->joypad1, Right); break;
-        case GLFW_KEY_UP: joypad_release(r->genesis->joypad1, Up); break;
-        case GLFW_KEY_DOWN: joypad_release(r->genesis->joypad1, Down); break;
-        case GLFW_KEY_ENTER: joypad_release(r->genesis->joypad1, Start); break;
-        case GLFW_KEY_Q: joypad_release(r->genesis->joypad1, ButtonA); break;
-        case GLFW_KEY_W: joypad_release(r->genesis->joypad1, ButtonB); break;
-        case GLFW_KEY_E: joypad_release(r->genesis->joypad1, ButtonC); break;
+        case GLFW_KEY_LEFT  : joypad_release(r->genesis->joypad1, Left); break;
+        case GLFW_KEY_RIGHT : joypad_release(r->genesis->joypad1, Right); break;
+        case GLFW_KEY_UP    : joypad_release(r->genesis->joypad1, Up); break;
+        case GLFW_KEY_DOWN  : joypad_release(r->genesis->joypad1, Down); break;
+        case GLFW_KEY_ENTER : joypad_release(r->genesis->joypad1, Start); break;
+        case GLFW_KEY_Q     : joypad_release(r->genesis->joypad1, ButtonA); break;
+        case GLFW_KEY_W     : joypad_release(r->genesis->joypad1, ButtonB); break;
+        case GLFW_KEY_E     : joypad_release(r->genesis->joypad1, ButtonC); break;
 
         case GLFW_KEY_1: joypad_release(r->genesis->joypad2, Left); break;
         case GLFW_KEY_3: joypad_release(r->genesis->joypad2, Right); break;
@@ -1513,9 +1513,9 @@ static void handle_inputs(Renderer* r, int key, int action)
         case GLFW_KEY_8: joypad_release(r->genesis->joypad2, ButtonB); break;
         case GLFW_KEY_9: joypad_release(r->genesis->joypad2, ButtonC); break;
 
-        case GLFW_KEY_F: toggle_full_screen(r); break;
-        case GLFW_KEY_P: toggle_pause(r); break;
-        case GLFW_KEY_SPACE: step(r); break;
+        case GLFW_KEY_F     : toggle_full_screen(r); break;
+        case GLFW_KEY_P     : toggle_pause(r); break;
+        case GLFW_KEY_SPACE : step(r); break;
 
         case GLFW_KEY_ESCAPE:
             if (r->genesis->settings->full_screen)
@@ -1547,10 +1547,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     else if (action == GLFW_RELEASE)
         io->KeysDown[key] = false;
 
-    io->KeyCtrl = io->KeysDown[GLFW_KEY_LEFT_CONTROL] || io->KeysDown[GLFW_KEY_RIGHT_CONTROL];
-    io->KeyShift = io->KeysDown[GLFW_KEY_LEFT_SHIFT] || io->KeysDown[GLFW_KEY_RIGHT_SHIFT];
-    io->KeyAlt = io->KeysDown[GLFW_KEY_LEFT_ALT] || io->KeysDown[GLFW_KEY_RIGHT_ALT];
-    io->KeySuper = io->KeysDown[GLFW_KEY_LEFT_SUPER] || io->KeysDown[GLFW_KEY_RIGHT_SUPER];
+    io->KeyCtrl  = io->KeysDown[GLFW_KEY_LEFT_CONTROL] || io->KeysDown[GLFW_KEY_RIGHT_CONTROL];
+    io->KeyShift = io->KeysDown[GLFW_KEY_LEFT_SHIFT]   || io->KeysDown[GLFW_KEY_RIGHT_SHIFT];
+    io->KeyAlt   = io->KeysDown[GLFW_KEY_LEFT_ALT]     || io->KeysDown[GLFW_KEY_RIGHT_ALT];
+    io->KeySuper = io->KeysDown[GLFW_KEY_LEFT_SUPER]   || io->KeysDown[GLFW_KEY_RIGHT_SUPER];
 }
 
 static void char_callback(GLFWwindow* window, unsigned int character)
