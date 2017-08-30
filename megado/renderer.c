@@ -511,7 +511,7 @@ static void build_ui(Renderer* r)
             if (igMenuItem("Reset", NULL, false, true))
                 genesis_initialize(r->genesis);
 
-            if (igMenuItem(r->genesis->status == Status_Running ? "Pause" : "Resume", "P", false, r->genesis->status != Status_NoGameLoaded))
+            if (igMenuItem(r->genesis->status == Status_Running ? "Pause" : "Resume", glfwGetKeyName(GLFW_KEY_P, 0), false, r->genesis->status != Status_NoGameLoaded))
                 toggle_pause(r);
 
             if (igMenuItem("Step", "Space", false, r->genesis->status == Status_Pause))
