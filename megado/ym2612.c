@@ -15,7 +15,7 @@ const uint8_t MASTER_CYCLES_PER_YM2612_CLOCK = 20;
 const uint32_t YM2612_NTSC_FREQUENCY = 7670453;
 // NTSC_FREQUENCY / MASTER_CYCLES_PER_CLOCK / SAMPLE_RATE
 //        7670453 /                      20 /       44100
-const double YM2612_CLOCKS_PER_SAMPLE = 8.696665873016;
+const double YM2612_CLOCKS_PER_SAMPLE = 8.69665873016;
 
 // Local functions
 
@@ -87,7 +87,8 @@ int16_t channel_output(Channel* c) {
 }
 
 float channel_frequency(Channel* c) {
-    return (c->frequency.freq << (c->frequency.block - 1)) * 8 / 144.0f;
+    return ((float) (c->frequency.freq << (c->frequency.block - 1)))
+        * ((float) YM2612_NTSC_FREQUENCY) / 1048576.0f / 144.0f;
 }
 
 int16_t channel_envelope(Channel* c) {

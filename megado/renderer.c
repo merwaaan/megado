@@ -1326,7 +1326,7 @@ static void build_ui(Renderer* r)
                 igText(" (%s)", mode_string);
             }
 
-            igText("%0X:%0X", y->channels[i].frequency.block, y->channels[i].frequency.freq);
+            igText("%d:%d", y->channels[i].frequency.block, y->channels[i].frequency.freq);
             igText("%.2fHz", channel_frequency(&y->channels[i]));
             igText("%0X", y->channels[i].counter);
             igText("%0X", y->channels[i].feedback);
