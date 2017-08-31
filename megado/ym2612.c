@@ -75,18 +75,27 @@ void channel_clock(Channel* c) {
     }
 
     if (c->counter == 0) {
-        c->counter = c->frequency.freq;
+        c->counter = channel_frequency(c);
     }
 }
 
 #define TAU 6.283185307178586
 
 int16_t channel_output(Channel* c) {
-    double t = ((double) c->counter) / ((double) c->frequency.freq);
-    return channel_envelope(c) * sin(TAU * t);
+    // FIXME: use something faster than sin()
+    if (c->enabled) {
+        double t = ((double) c->counter) / ((double) channel_frequency(c));
+        return channel_envelope(c) * sin(TAU * t * (c->frequency.block - 1));
+    } else {
+        return 0;
+    }
 }
 
-float channel_frequency(Channel* c) {
+uint16_t channel_frequency(Channel* c) {
+    return 2048 - c->frequency.freq;
+}
+
+float channel_frequency_in_hertz(Channel* c) {
     return ((float) (c->frequency.freq << (c->frequency.block - 1)))
         * ((float) YM2612_NTSC_FREQUENCY) / 1048576.0f / 144.0f;
 }
@@ -157,9 +166,15 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
         uint8_t operators = (value >> 4) & 0xf;
         uint8_t channel   =  value       & 0xf;
 
-        // TODO: key on for that channel & operators
-        /* if (operators & 1) { */
-        /* y->channels[channel].operators[operator */
+        if (operators == 0xf) {
+            y->channels[channel].enabled = true;
+        } else if (operators == 0) {
+            y->channels[channel].enabled = false;
+        } else {
+            // FIXME: operators can be enabled invidually, but
+            // does it mean they do not output any frequency otherwise?
+            printf("Warning: YM2612 key on for individual operators: %x\n", operators);
+        }
 
     } break;
 

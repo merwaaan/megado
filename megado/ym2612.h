@@ -42,6 +42,7 @@ typedef struct Channel {
     uint8_t   frequency_modulation_sensitivity : 3;
 
     uint16_t counter;
+    bool     enabled;
 } Channel;
 
 typedef struct YM2612
@@ -93,7 +94,8 @@ int16_t ym2612_mix(YM2612*);
 
 int16_t channel_output(Channel*);
 int16_t channel_envelope(Channel*);
-float channel_frequency(Channel*);
+uint16_t channel_frequency(Channel*);
+float channel_frequency_in_hertz(Channel*);
 
 extern int16_t ym2612_samples[];
 extern uint32_t ym2612_samples_cursor;
