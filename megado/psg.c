@@ -217,15 +217,15 @@ void write_data(PSG* p, uint8_t value) {
 }
 
 // Buffer of 100 seconds
-#define MAX_SAMPLES 4410000
-int16_t samples[MAX_SAMPLES];
-uint32_t samples_cursor = 0;
+#define PSG_MAX_SAMPLES 4410000
+int16_t psg_samples[PSG_MAX_SAMPLES];
+uint32_t psg_samples_cursor = 0;
 
 // TEMP: move to a proper audio backend
 void psg_emit_sample_cb(uint16_t sample) {
     // Fill the buffer then stop
-    if (samples_cursor < MAX_SAMPLES)
-        samples[samples_cursor++] = sample;
+    if (psg_samples_cursor < PSG_MAX_SAMPLES)
+        psg_samples[psg_samples_cursor++] = sample;
     //samples_cursor = (samples_cursor + 1) % MAX_SAMPLES;
 }
 
@@ -242,7 +242,7 @@ const char fSubchunk2ID[] = {'d', 'a', 't', 'a'};
 const unsigned short N_CHANNELS = 1;
 const unsigned short BITS_PER_BYTE = 8;
 
-bool wav_write(const char* fileName){
+bool wav_write(const char* fileName, const void* samples, uint32_t samples_length) {
     static const unsigned int fSubchunk1Size = 16;
     static const unsigned short fAudioFormat = 1;
     static const unsigned short fBitsPerSample = 16;
@@ -258,7 +258,7 @@ bool wav_write(const char* fileName){
 
     if (!fileName || !(fout = fopen( fileName, "w" ))) return false;
 
-    fSubchunk2Size = MAX_SAMPLES * N_CHANNELS * fBitsPerSample / BITS_PER_BYTE;
+    fSubchunk2Size = samples_length * N_CHANNELS * fBitsPerSample / BITS_PER_BYTE;
     fChunkSize = 36 + fSubchunk2Size;
 
     // Writing the RIFF header:
@@ -281,7 +281,7 @@ bool wav_write(const char* fileName){
     fwrite(&fSubchunk2Size,  sizeof(fSubchunk2Size), 1, fout);
 
     /* sound data: */
-    fwrite(samples, sizeof(int16_t), MAX_SAMPLES * N_CHANNELS, fout);
+    fwrite(samples, sizeof(int16_t), samples_length * N_CHANNELS, fout);
     fclose(fout);
     return true;
 }

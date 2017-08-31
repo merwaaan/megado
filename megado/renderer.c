@@ -1298,7 +1298,9 @@ static void build_ui(Renderer* r)
         struct ImVec2 dummy = { 0, 0 };  // Don't know what it does, but needed
                                          // as argument to IgSelectable
         igTextColored(color_title, "Channel");
+        igSelectable("freq number", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("frequency", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+        igSelectable("counter", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("feedback", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("algorithm", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("stereo", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
@@ -1325,6 +1327,8 @@ static void build_ui(Renderer* r)
             }
 
             igText("%0X:%0X", y->channels[i].frequency.block, y->channels[i].frequency.freq);
+            igText("%.2fHz", channel_frequency(&y->channels[i]));
+            igText("%0X", y->channels[i].counter);
             igText("%0X", y->channels[i].feedback);
             igText("%0X", y->channels[i].algorithm);
             igText("%s%s", y->channels[i].left_output ? "L" : " ", y->channels[i].right_output ? "R" : " ");
@@ -1347,13 +1351,13 @@ static void build_ui(Renderer* r)
                 igSelectable("detune", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
                 igSelectable("multiple", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
                 igSelectable("total level", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("rate scaling", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
                 igSelectable("attack rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("decay rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("sustain level", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("sustain rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("release rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+                igSelectable("rate scaling", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
                 igSelectable("amp modulation", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("first decay", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("second decay", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("second amp", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("release", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
 
                 igNextColumn();
 
@@ -1363,13 +1367,13 @@ static void build_ui(Renderer* r)
                     igText("%0X", y->channels[i].operators[j].detune);
                     igText("%0X", y->channels[i].operators[j].multiple);
                     igText("%0X", y->channels[i].operators[j].total_level);
-                    igText("%0X", y->channels[i].operators[j].rate_scaling);
                     igText("%0X", y->channels[i].operators[j].attack_rate);
-                    igText("%0X", y->channels[i].operators[j].amplitude_modulation_enabled);
-                    igText("%0X", y->channels[i].operators[j].first_decay_rate);
-                    igText("%0X", y->channels[i].operators[j].second_decay_rate);
-                    igText("%0X", y->channels[i].operators[j].second_amplitude);
+                    igText("%0X", y->channels[i].operators[j].decay_rate);
+                    igText("%0X", y->channels[i].operators[j].sustain_level);
+                    igText("%0X", y->channels[i].operators[j].sustain_rate);
                     igText("%0X", y->channels[i].operators[j].release_rate);
+                    igText("%0X", y->channels[i].operators[j].rate_scaling);
+                    igText("%0X", y->channels[i].operators[j].amplitude_modulation_enabled);
 
                     igNextColumn();
                 }

@@ -1,5 +1,7 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ym2612.h"
 
@@ -9,8 +11,17 @@
 #define LOG_YM2612(...)
 #endif
 
+const uint8_t MASTER_CYCLES_PER_YM2612_CLOCK = 20;
+const uint32_t YM2612_NTSC_FREQUENCY = 7670453;
+// NTSC_FREQUENCY / MASTER_CYCLES_PER_CLOCK / SAMPLE_RATE
+//        7670453 /                      20 /       44100
+const double YM2612_CLOCKS_PER_SAMPLE = 8.696665873016;
+
 // Local functions
-void ym2612_write_register(YM2612*, uint8_t, uint8_t, bool);
+
+void channel_clock(Channel*);
+
+// Global functions
 
 YM2612* ym2612_make() {
   return calloc(1, sizeof(YM2612));
@@ -21,11 +32,78 @@ void ym2612_free(YM2612* y) {
 }
 
 void ym2612_initialize(YM2612* y) {
+    // Reset
+    memset(y, 0, sizeof(YM2612));
+}
 
+void ym2612_clock(YM2612* y) {
+    for (int i=0; i < 6; ++i) {
+        channel_clock(&y->channels[i]);
+    }
+
+    if (y->sample_counter > 0) {
+        y->sample_counter--;
+    } else {
+        y->sample_counter += YM2612_CLOCKS_PER_SAMPLE;
+        ym2612_emit_sample_cb(ym2612_mix(y));
+    }
 }
 
 void ym2612_run_cycles(YM2612* y, uint16_t cycles) {
+    y->remaining_clocks += cycles;
 
+    while (y->remaining_clocks > 0) {
+        ym2612_clock(y);
+        y->remaining_clocks -= MASTER_CYCLES_PER_YM2612_CLOCK;
+    }
+}
+
+int16_t ym2612_mix(YM2612* y) {
+    int32_t sample = 0;
+
+    for (int i=0; i < 6; ++i) {
+        sample += channel_output(&y->channels[i]);
+    }
+    sample /= 6;
+
+    return sample;
+}
+
+void channel_clock(Channel* c) {
+    if (c->counter > 0) {
+        c->counter--;
+    }
+
+    if (c->counter == 0) {
+        c->counter = c->frequency.freq;
+    }
+}
+
+#define TAU 6.283185307178586
+
+int16_t channel_output(Channel* c) {
+    double t = ((double) c->counter) / ((double) c->frequency.freq);
+    return channel_envelope(c) * sin(TAU * t);
+}
+
+float channel_frequency(Channel* c) {
+    return (c->frequency.freq << (c->frequency.block - 1)) * 8 / 144.0f;
+}
+
+int16_t channel_envelope(Channel* c) {
+    // TODO: envelope
+    return 16422;
+}
+
+// TEMP: move to a proper audio backend
+#define YM2612_MAX_SAMPLES 4410000
+int16_t ym2612_samples[YM2612_MAX_SAMPLES];
+uint32_t ym2612_samples_cursor = 0;
+
+void ym2612_emit_sample_cb(uint16_t sample) {
+    // Fill the buffer then stop
+    if (ym2612_samples_cursor < YM2612_MAX_SAMPLES)
+        ym2612_samples[ym2612_samples_cursor++] = sample;
 }
 
 uint8_t ym2612_read(YM2612* y, uint32_t address) {
@@ -36,32 +114,6 @@ uint8_t ym2612_read(YM2612* y, uint32_t address) {
 
   // Fake it for now: always return non-busy and timer overflowed.
   return 0x7;
-}
-
-void ym2612_write(YM2612* y, uint32_t address, uint8_t value) {
-    LOG_YM2612("Write to YM2612: %x %x\n", address, value);
-
-    switch (address) {
-        // Part I: channels 1, 2 and 3
-    case 0x4000:
-        y->latched_address_part1 = value;
-        break;
-
-    case 0x4001:
-        ym2612_write_register(y, y->latched_address_part1, value, false);
-        break;
-
-        // Part II: channels 4, 5 and 6
-    case 0x4002:
-        y->latched_address_part2 = value;
-        break;
-    case 0x4003:
-        ym2612_write_register(y, y->latched_address_part2, value, true);
-        break;
-
-    default:
-        printf("Warning: unhandled write in YM2612: %x <- %x\n", address, value);
-    }
 }
 
 void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2) {
@@ -105,6 +157,9 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
         uint8_t channel   =  value       & 0xf;
 
         // TODO: key on for that channel & operators
+        /* if (operators & 1) { */
+        /* y->channels[channel].operators[operator */
+
     } break;
 
     case 0x2a:
@@ -150,15 +205,15 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
 
         case 0x60:
             channels[chan].operators[op].amplitude_modulation_enabled = value >> 7;
-            channels[chan].operators[op].first_decay_rate             = value;
+            channels[chan].operators[op].decay_rate                   = value;
             break;
 
         case 0x70:
-            channels[chan].operators[op].second_decay_rate = value;
+            channels[chan].operators[op].sustain_rate = value;
             break;
 
         case 0x80:
-            channels[chan].operators[op].second_amplitude = value >> 4;
+            channels[chan].operators[op].sustain_level    = value >> 4;
             channels[chan].operators[op].release_rate     = value;
             break;
 
@@ -207,5 +262,31 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
     default:
         printf("Warning: unhandled write to YM2612 (%s): %x <- %x\n",
                part2 ? "part II" : "part I", address, value);
+    }
+}
+
+void ym2612_write(YM2612* y, uint32_t address, uint8_t value) {
+    LOG_YM2612("Write to YM2612: %x %x\n", address, value);
+
+    switch (address) {
+        // Part I: channels 1, 2 and 3
+    case 0x4000:
+        y->latched_address_part1 = value;
+        break;
+
+    case 0x4001:
+        ym2612_write_register(y, y->latched_address_part1, value, false);
+        break;
+
+        // Part II: channels 4, 5 and 6
+    case 0x4002:
+        y->latched_address_part2 = value;
+        break;
+    case 0x4003:
+        ym2612_write_register(y, y->latched_address_part2, value, true);
+        break;
+
+    default:
+        printf("Warning: unhandled write in YM2612: %x <- %x\n", address, value);
     }
 }

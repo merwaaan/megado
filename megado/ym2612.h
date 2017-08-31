@@ -8,16 +8,20 @@
 // http://www.smspower.org/maxim/Documents/YM2612
 
 typedef struct Operator {
+    // Frequency
     uint8_t detune                       : 3;
     uint8_t multiple                     : 4;
+
+    // Envelope
     uint8_t total_level                  : 7;
-    uint8_t rate_scaling                 : 2;
     uint8_t attack_rate                  : 5;
-    bool    amplitude_modulation_enabled : 1;
-    uint8_t first_decay_rate             : 5;
-    uint8_t second_decay_rate            : 5;
-    uint8_t second_amplitude             : 4;
+    uint8_t decay_rate                   : 5;
+    uint8_t sustain_level                : 4;
+    uint8_t sustain_rate                 : 5;
     uint8_t release_rate                 : 4;
+    uint8_t rate_scaling                 : 2;
+    bool    amplitude_modulation_enabled : 1;
+
     // uint8_t ssg_eg                    : 4;  // proprietary register, skipping
 } Operator;
 
@@ -36,10 +40,15 @@ typedef struct Channel {
     bool      right_output                     : 1;
     uint8_t   amplitude_modulation_sensitivity : 2;
     uint8_t   frequency_modulation_sensitivity : 3;
+
+    uint16_t counter;
 } Channel;
 
 typedef struct YM2612
 {
+    int16_t  remaining_clocks;
+    double   sample_counter;
+
     uint8_t  latched_address_part1;
     uint8_t  latched_address_part2;
 
@@ -80,3 +89,14 @@ void ym2612_initialize(YM2612*);
 uint8_t ym2612_read(YM2612*, uint32_t address);
 void ym2612_write(YM2612*, uint32_t address, uint8_t value);
 void ym2612_run_cycles(YM2612*, uint16_t);
+int16_t ym2612_mix(YM2612*);
+
+int16_t channel_output(Channel*);
+int16_t channel_envelope(Channel*);
+float channel_frequency(Channel*);
+
+extern int16_t ym2612_samples[];
+extern uint32_t ym2612_samples_cursor;
+
+// Callback function called by psg_clock whenever a sample is ready
+void ym2612_emit_sample_cb(uint16_t);

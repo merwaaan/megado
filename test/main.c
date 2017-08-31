@@ -1,6 +1,7 @@
 #include <megado/genesis.h>
 #include <megado/psg.h>
 #include <megado/settings.h>
+#include <megado/ym2612.h>
 #include <megado/m68k/instruction.h>
 #include <megado/m68k/m68k.h>
 #include <stdbool.h>
@@ -67,7 +68,8 @@ int main(int argc, char **argv)
     free(opcode_table);
 
     // TEMP: write all samples to this file
-    wav_write("out.wav");
+    wav_write("out_psg.wav", psg_samples, psg_samples_cursor);
+    wav_write("out_ym2612.wav", ym2612_samples, ym2612_samples_cursor);
 
     return 0;
 }

@@ -49,11 +49,13 @@ int16_t psg_mix(PSG*);
 
 float square_tone_in_hertz(SquareChannel*);
 int16_t square_output(SquareChannel*);
-int16_t noise_output(NoiseChannel* n);
+int16_t noise_output(NoiseChannel*);
 
 // Callback function called by psg_clock whenever a sample is ready
 void psg_emit_sample_cb(uint16_t);
 
 // TEMP: write to WAV for testing
+extern int16_t psg_samples[];
+extern uint32_t psg_samples_cursor;
 #include <stdbool.h>
-bool wav_write(const char* filename);
+bool wav_write(const char*, const void*, uint32_t);

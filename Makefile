@@ -20,7 +20,7 @@ MODULES := megado megado/m68k test
 # Submodule dependencies
 INCLUDES := -I./ -Ideps/cimgui/ -Ideps/glfw/include\
 	    -Ideps/glew/include -Ideps/json-c/include/json-c
-LIBS := -Ldeps/glew/build/lib -lGLEW -lGLU -lGL -Ldeps/cimgui/cimgui\
+LIBS := -lm -Ldeps/glew/build/lib -lGLEW -lGLU -lGL -Ldeps/cimgui/cimgui\
 	-l:cimgui.so -Ldeps/glfw/build/src -lglfw -Ldeps/json-c/lib -ljson-c
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
