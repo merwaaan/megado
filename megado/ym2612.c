@@ -37,12 +37,12 @@ void ym2612_initialize(YM2612* y) {
 }
 
 void ym2612_clock(YM2612* y) {
-    for (int i=0; i < 6; ++i) {
-        channel_clock(&y->channels[i]);
-    }
-
     if (y->sample_counter > 0) {
         y->sample_counter--;
+
+        for (int i=0; i < 6; ++i) {
+            channel_clock(&y->channels[i]);
+        }
     } else {
         y->sample_counter += YM2612_CLOCKS_PER_SAMPLE;
         ym2612_emit_sample_cb(ym2612_mix(y));
@@ -110,7 +110,7 @@ int16_t channel_envelope(Channel* c) {
 int16_t ym2612_samples[YM2612_MAX_SAMPLES];
 uint32_t ym2612_samples_cursor = 0;
 
-void ym2612_emit_sample_cb(uint16_t sample) {
+void ym2612_emit_sample_cb(int16_t sample) {
     // Fill the buffer then stop
     if (ym2612_samples_cursor < YM2612_MAX_SAMPLES)
         ym2612_samples[ym2612_samples_cursor++] = sample;

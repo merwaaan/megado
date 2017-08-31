@@ -56,15 +56,14 @@ void psg_write(PSG* p, uint8_t value) {
 
 // Called at NTSC_FREQUENCY
 void psg_clock(PSG* p) {
-    for (int i=0; i < 3; ++i) {
-        square_clock_frequency(&p->square[i]);
-    }
-
-    noise_clock_frequency(p);
-
-    // Is it time to emit a sample?
     if (p->sample_counter > 0) {
         p->sample_counter--;
+
+        for (int i=0; i < 3; ++i) {
+            square_clock_frequency(&p->square[i]);
+        }
+
+        noise_clock_frequency(p);
     } else {
         p->sample_counter += PSG_CLOCKS_PER_SAMPLE;
         psg_emit_sample_cb(psg_mix(p));
@@ -222,7 +221,7 @@ int16_t psg_samples[PSG_MAX_SAMPLES];
 uint32_t psg_samples_cursor = 0;
 
 // TEMP: move to a proper audio backend
-void psg_emit_sample_cb(uint16_t sample) {
+void psg_emit_sample_cb(int16_t sample) {
     // Fill the buffer then stop
     if (psg_samples_cursor < PSG_MAX_SAMPLES)
         psg_samples[psg_samples_cursor++] = sample;

@@ -52,7 +52,7 @@ int16_t square_output(SquareChannel*);
 int16_t noise_output(NoiseChannel*);
 
 // Callback function called by psg_clock whenever a sample is ready
-void psg_emit_sample_cb(uint16_t);
+void psg_emit_sample_cb(int16_t);
 
 // TEMP: write to WAV for testing
 extern int16_t psg_samples[];

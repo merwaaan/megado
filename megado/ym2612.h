@@ -101,4 +101,4 @@ extern int16_t ym2612_samples[];
 extern uint32_t ym2612_samples_cursor;
 
 // Callback function called by psg_clock whenever a sample is ready
-void ym2612_emit_sample_cb(uint16_t);
+void ym2612_emit_sample_cb(int16_t);
