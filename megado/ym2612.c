@@ -11,11 +11,11 @@
 #define LOG_YM2612(...)
 #endif
 
-const uint8_t MASTER_CYCLES_PER_YM2612_CLOCK = 20;
+const uint16_t MASTER_CYCLES_PER_YM2612_CLOCK = 144;
 const uint32_t YM2612_NTSC_FREQUENCY = 7670453;
 // NTSC_FREQUENCY / MASTER_CYCLES_PER_CLOCK / SAMPLE_RATE
-//        7670453 /                      20 /       44100
-const double YM2612_CLOCKS_PER_SAMPLE = 8.69665873016;
+//        7670453 /                     144 /       44100
+const double YM2612_CLOCKS_PER_SAMPLE = 1.20786926808;
 
 // Local functions
 
@@ -70,13 +70,31 @@ int16_t ym2612_mix(YM2612* y) {
 }
 
 void channel_clock(Channel* c) {
-    if (c->counter > 0) {
-        c->counter--;
-    }
+    for (int i=0; i < 4; ++i) {
+        uint32_t phase_increment = c->frequency.freq;
 
-    if (c->counter == 0) {
-        c->counter = channel_frequency(c);
+        // Shift by block
+        if (c->frequency.block > 1) {
+            phase_increment <<= c->frequency.block;
+        } else if (c->frequency.block == 0) {
+            phase_increment >>= 1;
+        }
+
+        // TODO: detune
+
+        // Multiply by multiple
+        if (c->operators[i].multiple > 0) {
+            phase_increment *= c->operators[i].multiple;
+        } else {
+            phase_increment >>= 1;
+        }
+
+        c->operators[i].phase_counter += phase_increment;
     }
+}
+
+double operator_phase(Operator* o) {
+    return ((double)(o->phase_counter >> 10)) / ((1 << 10) - 1);
 }
 
 #define TAU 6.283185307178586
@@ -84,15 +102,31 @@ void channel_clock(Channel* c) {
 int16_t channel_output(Channel* c) {
     // FIXME: use something faster than sin()
     if (c->enabled) {
-        double t = ((double) c->counter) / ((double) channel_frequency(c));
-        return channel_envelope(c) * sin(TAU * t * (c->frequency.block - 1));
+        double output = 0;
+        if (c->algorithm == 2) {
+            double s1 = sin(TAU * operator_phase(&c->operators[0]));
+            double s2 = sin(TAU * operator_phase(&c->operators[1]));
+            double s3 = sin(s2 + TAU * operator_phase(&c->operators[2]));
+            double s4 = sin(s1 + s3 + TAU * operator_phase(&c->operators[3]));
+            output = s4;
+
+        } else if (c->algorithm == 4) {
+            output += sin(TAU * operator_phase(&c->operators[1]) + sin(TAU * operator_phase(&c->operators[0])));
+            output += sin(TAU * operator_phase(&c->operators[3]) + sin(TAU * operator_phase(&c->operators[2])));
+            output /= 2;
+        } else if (c->algorithm == 6) {
+            output += sin(TAU * operator_phase(&c->operators[1]) + sin(TAU * operator_phase(&c->operators[0])));
+            output += sin(TAU * operator_phase(&c->operators[2]));
+            output += sin(TAU * operator_phase(&c->operators[3]));
+            output /= 3;
+        } else {
+            output = sin(TAU * operator_phase(&c->operators[0]));
+        }
+
+        return channel_envelope(c) * output;
     } else {
         return 0;
     }
-}
-
-uint16_t channel_frequency(Channel* c) {
-    return 2048 - c->frequency.freq;
 }
 
 float channel_frequency_in_hertz(Channel* c) {

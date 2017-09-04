@@ -23,6 +23,8 @@ typedef struct Operator {
     bool    amplitude_modulation_enabled : 1;
 
     // uint8_t ssg_eg                    : 4;  // proprietary register, skipping
+
+    uint32_t phase_counter : 20;
 } Operator;
 
 typedef struct Frequency {
