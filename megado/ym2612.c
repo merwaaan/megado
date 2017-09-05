@@ -37,15 +37,15 @@ void ym2612_initialize(YM2612* y) {
 }
 
 void ym2612_clock(YM2612* y) {
-    if (y->sample_counter > 0) {
-        y->sample_counter--;
+    for (int i=0; i < 6; ++i) {
+        channel_clock(&y->channels[i]);
+    }
 
-        for (int i=0; i < 6; ++i) {
-            channel_clock(&y->channels[i]);
-        }
-    } else {
-        y->sample_counter += YM2612_CLOCKS_PER_SAMPLE;
+    y->sample_counter++;
+
+    while (y->sample_counter > 0) {
         ym2612_emit_sample_cb(ym2612_mix(y));
+        y->sample_counter -= YM2612_CLOCKS_PER_SAMPLE;
     }
 }
 
