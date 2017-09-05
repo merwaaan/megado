@@ -103,24 +103,71 @@ int16_t channel_output(Channel* c) {
     // FIXME: use something faster than sin()
     if (c->enabled) {
         double output = 0;
-        if (c->algorithm == 2) {
+        switch (c->algorithm) {
+        case 0: {
+            double s1 = sin(TAU * operator_phase(&c->operators[0]));
+            double s2 = sin(s1 + TAU * operator_phase(&c->operators[1]));
+            double s3 = sin(s2 + TAU * operator_phase(&c->operators[2]));
+            double s4 = sin(s3 + TAU * operator_phase(&c->operators[3]));
+            output = s4;
+        } break;
+
+        case 1: {
+            double s1 = sin(TAU * operator_phase(&c->operators[0]));
+            double s2 = sin(TAU * operator_phase(&c->operators[1]));
+            double s3 = sin(s1 + s2 + TAU * operator_phase(&c->operators[2]));
+            double s4 = sin(s3 + TAU * operator_phase(&c->operators[3]));
+            output = s4;
+        } break;
+
+        case 2: {
             double s1 = sin(TAU * operator_phase(&c->operators[0]));
             double s2 = sin(TAU * operator_phase(&c->operators[1]));
             double s3 = sin(s2 + TAU * operator_phase(&c->operators[2]));
             double s4 = sin(s1 + s3 + TAU * operator_phase(&c->operators[3]));
             output = s4;
+        } break;
 
-        } else if (c->algorithm == 4) {
-            output += sin(TAU * operator_phase(&c->operators[1]) + sin(TAU * operator_phase(&c->operators[0])));
-            output += sin(TAU * operator_phase(&c->operators[3]) + sin(TAU * operator_phase(&c->operators[2])));
-            output /= 2;
-        } else if (c->algorithm == 6) {
-            output += sin(TAU * operator_phase(&c->operators[1]) + sin(TAU * operator_phase(&c->operators[0])));
-            output += sin(TAU * operator_phase(&c->operators[2]));
-            output += sin(TAU * operator_phase(&c->operators[3]));
-            output /= 3;
-        } else {
-            output = sin(TAU * operator_phase(&c->operators[0]));
+        case 3: {
+            double s1 = sin(TAU * operator_phase(&c->operators[0]));
+            double s2 = sin(s1 + TAU * operator_phase(&c->operators[1]));
+            double s3 = sin(TAU * operator_phase(&c->operators[2]));
+            double s4 = sin(s2 + s3 + TAU * operator_phase(&c->operators[3]));
+            output = s4;
+        } break;
+
+        case 4: {
+            double s1 = sin(TAU * operator_phase(&c->operators[0]));
+            double s2 = sin(s1 + TAU * operator_phase(&c->operators[1]));
+            double s3 = sin(TAU * operator_phase(&c->operators[2]));
+            double s4 = sin(s3 + TAU * operator_phase(&c->operators[3]));
+            output = (s2 + s4) / 2;
+        } break;
+
+        case 5: {
+            double s1 = sin(TAU * operator_phase(&c->operators[0]));
+            double s2 = sin(s1 + TAU * operator_phase(&c->operators[1]));
+            double s3 = sin(s1 + TAU * operator_phase(&c->operators[2]));
+            double s4 = sin(s1 + TAU * operator_phase(&c->operators[3]));
+            output = (s2 + s3 + s4) / 3;
+        } break;
+
+        case 6: {
+            double s1 = sin(TAU * operator_phase(&c->operators[0]));
+            double s2 = sin(s1 + TAU * operator_phase(&c->operators[1]));
+            double s3 = sin(TAU * operator_phase(&c->operators[2]));
+            double s4 = sin(TAU * operator_phase(&c->operators[3]));
+            output = (s2 + s3 + s4) / 3;
+        } break;
+
+        case 7:{
+            double s1 = sin(TAU * operator_phase(&c->operators[0]));
+            double s2 = sin(TAU * operator_phase(&c->operators[1]));
+            double s3 = sin(TAU * operator_phase(&c->operators[2]));
+            double s4 = sin(TAU * operator_phase(&c->operators[3]));
+            output = (s1 + s2 + s3 + s4) / 4;
+        } break;
+
         }
 
         return channel_envelope(c) * output;
