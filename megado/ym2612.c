@@ -203,7 +203,15 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
 
     case 0x28: {
         uint8_t operators = (value >> 4) & 0xf;
-        uint8_t channel   =  value       & 0xf;
+        uint8_t channel   =  value       & 0x7;
+
+        if (channel == 3 || channel == 7) {
+            printf("Warning: YM2612 key on for invalid channel: %d\n", channel);
+        }
+
+        if (channel > 2) {
+            channel--;
+        }
 
         if (operators == 0xf) {
             y->channels[channel].enabled = true;
@@ -242,6 +250,8 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
     case 0x98: case 0x99: case 0x9a: case 0x9c: case 0x9d: case 0x9e: {
         uint8_t op    = (address >> 2) & 3;
         uint8_t chan  =  address       & 3;
+
+        // TODO: double check mapping of operators and channel here
 
         switch (address & 0xf0) {
         case 0x30:
