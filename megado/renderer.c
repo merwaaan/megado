@@ -1300,7 +1300,6 @@ static void build_ui(Renderer* r)
         igTextColored(color_title, "Channel");
         igSelectable("freq number", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("frequency", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-        igSelectable("counter", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("feedback", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("algorithm", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("stereo", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
@@ -1328,7 +1327,6 @@ static void build_ui(Renderer* r)
 
             igText("%d:%d", y->channels[i].frequency.block, y->channels[i].frequency.freq);
             igText("%.2fHz", channel_frequency_in_hertz(&y->channels[i]));
-            igText("%0X", y->channels[i].counter);
             igText("%0X", y->channels[i].feedback);
             igText("%0X", y->channels[i].algorithm);
             igText("%s%s", y->channels[i].left_output ? "L" : " ", y->channels[i].right_output ? "R" : " ");

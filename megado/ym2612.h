@@ -7,6 +7,10 @@
 // http://md.squee.co/YM2612
 // http://www.smspower.org/maxim/Documents/YM2612
 
+typedef enum {
+    ATTACK, DELAY, SUSTAIN, RELEASE
+} ADSR;
+
 typedef struct Operator {
     // Frequency
     uint8_t detune                       : 3;
@@ -25,6 +29,10 @@ typedef struct Operator {
     // uint8_t ssg_eg                    : 4;  // proprietary register, skipping
 
     uint32_t phase_counter : 20;
+    ADSR     adsr_phase;
+    uint8_t  rate          : 6;
+    uint16_t attenuation   : 10;
+    bool     polarity;
 } Operator;
 
 typedef struct Frequency {
@@ -43,13 +51,13 @@ typedef struct Channel {
     uint8_t   amplitude_modulation_sensitivity : 2;
     uint8_t   frequency_modulation_sensitivity : 3;
 
-    uint16_t counter;
-    bool     enabled;
+    bool enabled;
 } Channel;
 
 typedef struct YM2612
 {
     int16_t  remaining_clocks;
+    int16_t  envelope_remaining_clocks;
     double   sample_counter;
 
     uint8_t  latched_address_part1;

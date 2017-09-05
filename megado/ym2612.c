@@ -12,8 +12,9 @@
 #define LOG_YM2612(...)
 #endif
 
-const uint16_t MASTER_CYCLES_PER_YM2612_CLOCK = 144;
 const uint32_t YM2612_NTSC_FREQUENCY = 7670453;
+const uint16_t MASTER_CYCLES_PER_ENVELOPE_CLOCK = 351;
+const uint16_t MASTER_CYCLES_PER_YM2612_CLOCK = 144;
 // NTSC_FREQUENCY / MASTER_CYCLES_PER_CLOCK / SAMPLE_RATE
 //        7670453 /                     144 /       44100
 const double YM2612_CLOCKS_PER_SAMPLE = 1.20786926808;
@@ -21,6 +22,7 @@ const double YM2612_CLOCKS_PER_SAMPLE = 1.20786926808;
 // Local functions
 
 void channel_clock(Channel*);
+void envelope_clock(YM2612*);
 
 // Global functions
 
@@ -41,13 +43,6 @@ void ym2612_clock(YM2612* y) {
     for (int i=0; i < 6; ++i) {
         channel_clock(&y->channels[i]);
     }
-
-    y->sample_counter++;
-
-    while (y->sample_counter > 0) {
-        ym2612_emit_sample_cb(ym2612_mix(y));
-        y->sample_counter -= YM2612_CLOCKS_PER_SAMPLE;
-    }
 }
 
 void ym2612_run_cycles(YM2612* y, uint16_t cycles) {
@@ -56,6 +51,18 @@ void ym2612_run_cycles(YM2612* y, uint16_t cycles) {
     while (y->remaining_clocks > 0) {
         ym2612_clock(y);
         y->remaining_clocks -= MASTER_CYCLES_PER_YM2612_CLOCK;
+
+        y->envelope_remaining_clocks += MASTER_CYCLES_PER_YM2612_CLOCK;
+        while (y->envelope_remaining_clocks > 0) {
+            envelope_clock(y);
+            y->envelope_remaining_clocks -= MASTER_CYCLES_PER_ENVELOPE_CLOCK;
+        }
+
+        y->sample_counter++;
+        while (y->sample_counter > 0) {
+            ym2612_emit_sample_cb(ym2612_mix(y));
+            y->sample_counter -= YM2612_CLOCKS_PER_SAMPLE;
+        }
     }
 }
 
@@ -68,6 +75,10 @@ int16_t ym2612_mix(YM2612* y) {
     sample /= 6;
 
     return sample;
+}
+
+void envelope_clock(YM2612* y) {
+    // TODO:
 }
 
 uint8_t detune_table[32][4] = {
