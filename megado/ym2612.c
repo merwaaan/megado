@@ -207,6 +207,7 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
 
         if (channel == 3 || channel == 7) {
             printf("Warning: YM2612 key on for invalid channel: %d\n", channel);
+            break;
         }
 
         if (channel > 2) {
@@ -251,7 +252,9 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
         uint8_t op    = (address >> 2) & 3;
         uint8_t chan  =  address       & 3;
 
-        // TODO: double check mapping of operators and channel here
+        // Operators 2 and 3 are swapped
+        if (op == 1) { op = 2; }
+        else if (op == 2) { op = 1; }
 
         switch (address & 0xf0) {
         case 0x30:
@@ -301,11 +304,13 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
 
     case 0xa8: case 0xa9: case 0xaa: {
         uint8_t op = address & 3;
+        // FIXME: japanese manual has different mappings
         additional_freqs[op].freq = (additional_freqs[op].freq & 0x700) | value;
     } break;
 
     case 0xac: case 0xad: case 0xae: {
         uint8_t op = 1 + (address & 3);
+        // FIXME: japanese manual has different mappings
         additional_freqs[op].block = value >> 3;
         additional_freqs[op].freq = (additional_freqs[op].freq & 0x0ff) | (((uint16_t) value) << 8);
     } break;
