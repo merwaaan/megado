@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "m68k/bit_utils.h"
 #include "ym2612.h"
 
 #ifdef DEBUG
@@ -69,6 +70,41 @@ int16_t ym2612_mix(YM2612* y) {
     return sample;
 }
 
+uint8_t detune_table[32][4] = {
+    {0, 0, 1, 2},   //0  (0x00)
+    {0, 0, 1, 2},   //1  (0x01)
+    {0, 0, 1, 2},   //2  (0x02)
+    {0, 0, 1, 2},   //3  (0x03)
+    {0, 1, 2, 2},   //4  (0x04)
+    {0, 1, 2, 3},   //5  (0x05)
+    {0, 1, 2, 3},   //6  (0x06)
+    {0, 1, 2, 3},   //7  (0x07)
+    {0, 1, 2, 4},   //8  (0x08)
+    {0, 1, 3, 4},   //9  (0x09)
+    {0, 1, 3, 4},   //10 (0x0A)
+    {0, 1, 3, 5},   //11 (0x0B)
+    {0, 2, 4, 5},   //12 (0x0C)
+    {0, 2, 4, 6},   //13 (0x0D)
+    {0, 2, 4, 6},   //14 (0x0E)
+    {0, 2, 5, 7},   //15 (0x0F)
+    {0, 2, 5, 8},   //16 (0x10)
+    {0, 3, 6, 8},   //17 (0x11)
+    {0, 3, 6, 9},   //18 (0x12)
+    {0, 3, 7,10},   //19 (0x13)
+    {0, 4, 8,11},   //20 (0x14)
+    {0, 4, 8,12},   //21 (0x15)
+    {0, 4, 9,13},   //22 (0x16)
+    {0, 5,10,14},   //23 (0x17)
+    {0, 5,11,16},   //24 (0x18)
+    {0, 6,12,17},   //25 (0x19)
+    {0, 6,13,19},   //26 (0x1A)
+    {0, 7,14,20},   //27 (0x1B)
+    {0, 8,16,22},   //28 (0x1C)
+    {0, 8,16,22},   //29 (0x1D)
+    {0, 8,16,22},   //30 (0x1E)
+    {0, 8,16,22}    //31 (0x1F)
+};
+
 void channel_clock(Channel* c) {
     for (int i=0; i < 4; ++i) {
         uint32_t phase_increment = c->frequency.freq;
@@ -80,7 +116,20 @@ void channel_clock(Channel* c) {
             phase_increment >>= 1;
         }
 
-        // TODO: detune
+        uint16_t f = c->frequency.freq;
+        uint8_t n4 = BIT(f, 10);
+        uint8_t n3 = (BIT(f, 10) & (BIT(f, 9) | BIT(f, 8) | BIT(f, 7)))
+            | !(BIT(f, 10) & BIT(f, 9) & BIT(f, 8) & BIT(f, 7));
+
+        uint8_t key_code = (c->frequency.block << 2) | (n4 << 1) | n3;
+        uint8_t detune_adjust = detune_table[key_code][c->operators[i].detune & 0x3];
+
+        // MSB of detune is the sign bit
+        if (c->operators[i].detune & 0x4) {
+            phase_increment -= detune_adjust;
+        } else {
+            phase_increment += detune_adjust;
+        }
 
         // Multiply by multiple
         if (c->operators[i].multiple > 0) {
