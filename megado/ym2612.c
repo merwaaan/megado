@@ -130,8 +130,13 @@ int16_t channel_output(Channel* c) {
 }
 
 float channel_frequency_in_hertz(Channel* c) {
-    return ((float) (c->frequency.freq << (c->frequency.block - 1)))
-        * ((float) YM2612_NTSC_FREQUENCY) / 1048576.0f / 144.0f;
+    if (c->frequency.block > 0) {
+        return ((float) (c->frequency.freq << (c->frequency.block - 1)))
+            * ((float) YM2612_NTSC_FREQUENCY) / 1048576.0f / 144.0f;
+    } else {
+        // FIXME: handle block 0
+        return 0;
+    }
 }
 
 int16_t channel_envelope(Channel* c) {

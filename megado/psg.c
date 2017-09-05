@@ -106,7 +106,13 @@ void square_clock_frequency(SquareChannel* s) {
 }
 
 float square_tone_in_hertz(SquareChannel* s) {
+    if (s->tone > 0) {
     return (float)NTSC_FREQUENCY / (2.0f * (float)s->tone * (float)MASTER_CYCLES_PER_PSG_CLOCK);
+    } else {
+        // FIXME: handle 0 tone
+        return 0;
+    }
+
 }
 
 // Returns the volume-attenuated output for this channel
