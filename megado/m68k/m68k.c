@@ -39,6 +39,7 @@ void m68k_initialize(M68k* m)
 
     m->cycles = 0;
     m->stopped = false;
+    m->remaining_cycles = 0;
     m->pending_interrupt = -1;
     m->prefetch_address = 0xFFFFFFFF; // Invalid value, will initiate the initial prefetch
 }
@@ -122,15 +123,18 @@ void decoded_instruction_free(DecodedInstruction* decoded)
     free(decoded);
 }
 
-uint32_t m68k_run_cycles(M68k* m, int cycles)
+uint32_t m68k_run_cycles(M68k* m, uint32_t cycles)
 {
+    uint64_t cycles_this_frame = 0;
+    m->remaining_cycles += cycles;
+
     /*while (cycles > 0)
         cycles -= m68k_step(m);*/
 
         // TODO temporary version for tracking non-timed instructions
-    while (cycles > 0)
+    while (m->remaining_cycles > 0)
     {
-        int c = m68k_step(m);
+        uint8_t c = m68k_step(m);
 
         if (c == 0)
         {
@@ -138,15 +142,15 @@ uint32_t m68k_run_cycles(M68k* m, int cycles)
             c = 10; // we don't want to block the execution
         }
 
-        cycles -= c;
+        m->remaining_cycles -= c;
+        cycles_this_frame += c;
 
         // Exit early if the emulation has been paused
         if (m->genesis->status != Status_Running)
             break;
     }
 
-    // TODO in practice, should only consume available cycles and return the remainder
-    return cycles;
+    return cycles_this_frame;
 }
 
 uint8_t m68k_step(M68k* m)
@@ -214,7 +218,7 @@ uint8_t m68k_step(M68k* m)
     //if (m->instruction_callback != NULL)
     //    m->instruction_callback(m);
 
-    int cycles = instruction_execute(instr, m);
+    uint8_t cycles = instruction_execute(instr, m);
     m->cycles += cycles;
 
     debugger_post_m68k(m->genesis->debugger);

@@ -170,7 +170,7 @@ void genesis_initialize(Genesis* g)
 
 void genesis_step(Genesis* g)
 {
-    uint8_t cycles = m68k_step(g->m68k);
+    uint32_t cycles = m68k_step(g->m68k);
     // The Z80 runs at half the frequency of the M68K, so we run the Z80 only
     // for half the cycles of the last M68K step.  Note that since we are
     // dividing integers here, we might lose some accuracy if the number of
@@ -194,10 +194,10 @@ static void genesis_frame(Genesis* g)
     for (uint16_t line = 0; line < lines; ++line)
     {
         // Execute one scanline worth of instructions
-        m68k_run_cycles(g->m68k, 488); // TODO not sure about that value
-        z80_run_cycles(g->z80, 244); // Z80 runs at half the frequency of M68
-        psg_run_cycles(g->psg, 244); // PSG runs at Z80 frequency
-        ym2612_run_cycles(g->ym2612, 488); // TODO: check freq of YM2612
+        uint32_t cycles = m68k_run_cycles(g->m68k, 488); // TODO not sure about that value
+        z80_run_cycles(g->z80, cycles / 2); // Z80 runs at half the frequency of M68
+        psg_run_cycles(g->psg, cycles / 2); // PSG runs at Z80 frequency
+        ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
 
         // Draw the scanline
         vdp_draw_scanline(g->vdp, line);
@@ -207,10 +207,10 @@ static void genesis_frame(Genesis* g)
             break;
 
         g->vdp->hblank_in_progress = true;
-        m68k_run_cycles(g->m68k, 84); // http://gendev.spritesmind.net/forum/viewtopic.php?t=94#p1105
-        z80_run_cycles(g->z80, 42); // Z80 runs at half the frequency of M68
-        psg_run_cycles(g->psg, 42); // PSG runs at Z80 frequency
-        ym2612_run_cycles(g->ym2612, 84); // TODO: check freq of YM2612
+        cycles = m68k_run_cycles(g->m68k, 84); // http://gendev.spritesmind.net/forum/viewtopic.php?t=94#p1105
+        z80_run_cycles(g->z80, cycles / 2); // Z80 runs at half the frequency of M68
+        psg_run_cycles(g->psg, cycles / 2); // PSG runs at Z80 frequency
+        ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
         g->vdp->hblank_in_progress = false;
 
         // Exit early if the emulation has been paused

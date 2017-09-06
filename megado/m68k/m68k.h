@@ -49,13 +49,14 @@ typedef struct M68k
 
     // The CPU uses different stack pointers in supervisor/user mode.
     // Those variable only hold the value of the disabled mode while
-    // the CPU is in the other one. 
+    // the CPU is in the other one.
     // The active stack pointer value must always be accessed via A7.
     uint32_t ssp;
     uint32_t usp; // TODO really necessary?
 
     uint64_t cycles;
     bool stopped;
+    int32_t remaining_cycles;
 
     // Level of any pending interrupt (negative values means no interrupts)
     int pending_interrupt;
@@ -76,7 +77,7 @@ void m68k_free(M68k*);
 void m68k_initialize(M68k*);
 
 uint8_t m68k_step(M68k*); // Execute one instruction, return cycles taken
-uint32_t m68k_run_cycles(M68k*, int); // Execute n cycles worth of instructions, return cycles that were not consumed
+uint32_t m68k_run_cycles(M68k*, uint32_t); // Execute n cycles worth of instructions, return cycles that were not consumed
 
 // Return the word currently under the program counter
 // and make it advance.
