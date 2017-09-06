@@ -8,10 +8,6 @@
 - The Simpsons - Bart's Nightmare: 
   - Bart's sprite is not visible
   
-- Spiderman vs The Kingpin:
-  - pressing start on the intro screen make the screen flash indefinitely, going faster with
-  each key press.
-
 - Splatterhouse 2: waits for a DMA transfer (bit 1 of VDP status) but we do those in a single step
 so the flag is always cleared.
 
@@ -28,14 +24,14 @@ so the flag is always cleared.
 - Castlevania Bloodlines: in-game stage has sprite glitches; choosing the second character instantly
   glitches the whole screen.
 
-- Toy Story: executes the content of the stack.
+- Toy Story:
+  - graphics seem glitched
+  - frozen during intro
 
 - Blades of Vengeance:
     - copyright screen blitted twice with an offset (might be the Window plane that should not be enabled but is still drawn)
     - the menu screen does not respond.
-
-- Chameleon Kid: character does not walk but looks in the correct direction.
-
+	
 - Ristar: goes to the next level when grabbing an enemy.
 
 - Contra:
@@ -46,9 +42,7 @@ so the flag is always cleared.
 - Zombies Ate My Neighbors:
 	- the film roll on the character select screen must be transparent (how is this done?)
 	- plane scrolling is visible at the right of the screen
-
-- Clue: cursor jumpign around the screen
-
+	
 - Another World: scanlines are drawn out. This game might very sensible to timing accuracy since
 it implements its own polygon rasterizer.
 
@@ -58,7 +52,11 @@ it implements its own polygon rasterizer.
 
 - Last Action Hero: overwrites a big section of ROM.
 
-- LHX Attack Chopper: STOP not implemented.
+- Carmen Sandiego (World/Time): some columns of graphics are glitched.
+
+- We're back!: requires ILLEGAL instruction.
+
+- Warsong: requires DMA copy.
 
 # Games that seem to wait for the Z80:
 
