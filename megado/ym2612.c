@@ -266,19 +266,9 @@ int16_t channel_envelope(Channel* c) {
     return 16422;
 }
 
-// TEMP: move to a proper audio backend
-#define YM2612_MAX_SAMPLES 4096
-int16_t ym2612_samples[YM2612_MAX_SAMPLES];
-uint32_t ym2612_samples_cursor = 0;
-
 void ym2612_emit_sample_cb(YM2612* y, int16_t sample) {
-    ym2612_samples[ym2612_samples_cursor++] = sample;
-
-    if (ym2612_samples_cursor == YM2612_MAX_SAMPLES) {
-        if (SDL_QueueAudio(y->genesis->audio->device, ym2612_samples, sizeof(ym2612_samples)) != 0) {
-            fprintf(stderr, "Failed to queue audio: %s", SDL_GetError());
-        }
-        ym2612_samples_cursor = 0;
+    if (SDL_QueueAudio(y->genesis->audio->device, &sample, sizeof(sample)) != 0) {
+        fprintf(stderr, "Failed to queue audio: %s", SDL_GetError());
     }
 }
 

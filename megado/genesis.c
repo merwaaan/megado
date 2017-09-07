@@ -197,7 +197,7 @@ static void genesis_frame(Genesis* g)
     for (uint16_t line = 0; line < lines; ++line)
     {
         // Execute one scanline worth of instructions
-        uint32_t cycles = m68k_run_cycles(g->m68k, 488); // TODO not sure about that value
+        uint32_t cycles = m68k_run_cycles(g->m68k, 366); // TODO not sure about that value
         z80_run_cycles(g->z80, cycles / 2); // Z80 runs at half the frequency of M68
         psg_run_cycles(g->psg, cycles / 2); // PSG runs at Z80 frequency
         ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
@@ -210,7 +210,7 @@ static void genesis_frame(Genesis* g)
             break;
 
         g->vdp->hblank_in_progress = true;
-        cycles = m68k_run_cycles(g->m68k, 84); // http://gendev.spritesmind.net/forum/viewtopic.php?t=94#p1105
+        cycles = m68k_run_cycles(g->m68k, 122); // http://gendev.spritesmind.net/forum/viewtopic.php?t=94#p1105
         z80_run_cycles(g->z80, cycles / 2); // Z80 runs at half the frequency of M68
         psg_run_cycles(g->psg, cycles / 2); // PSG runs at Z80 frequency
         ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
