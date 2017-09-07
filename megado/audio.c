@@ -5,6 +5,7 @@
 
 Audio* audio_make(Genesis* g) {
     Audio* a = calloc(1, sizeof(Audio));
+    a->genesis = g;
 
     SDL_Init(SDL_INIT_AUDIO);
 
@@ -14,7 +15,7 @@ Audio* audio_make(Genesis* g) {
     want.freq = 44100;
     want.format = AUDIO_S16;
     want.channels = 1;
-    want.samples = 4096;
+    want.samples = 512;
     want.callback = NULL; // Use SDL_QueueAudio instead
 
     a->device = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
@@ -24,10 +25,6 @@ Audio* audio_make(Genesis* g) {
         exit(1);
     }
 
-    SDL_PauseAudioDevice(a->device, 0);
-
-    printf("audio device: %d\n", a->device);
-
     return a;
 }
 
@@ -36,4 +33,16 @@ void audio_free(Audio* a) {
     SDL_Quit();
 
     free(a);
+}
+
+void audio_initialize(Audio* a) {
+    SDL_ClearQueuedAudio(a->device);
+}
+
+void audio_update(Audio* a) {
+    if (a->genesis->status == Status_Running) {
+        SDL_PauseAudioDevice(a->device, 0);
+    } else {
+        SDL_PauseAudioDevice(a->device, 1);
+    }
 }

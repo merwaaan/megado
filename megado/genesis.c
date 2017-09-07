@@ -167,6 +167,7 @@ void genesis_initialize(Genesis* g)
     psg_initialize(g->psg);
     ym2612_initialize(g->ym2612);
     debugger_initialize(g->debugger);
+    audio_initialize(g->audio);
 
     g->sram = calloc(g->sram_end - g->sram_start, sizeof(uint8_t));
 }
@@ -240,6 +241,7 @@ void genesis_update(Genesis* g)
     }
 
     renderer_render(g->renderer);
+    audio_update(g->audio);
 }
 
 void genesis_get_rom_name(Genesis* g, char* name)
