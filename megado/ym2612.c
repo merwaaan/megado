@@ -4,7 +4,18 @@
 #include <string.h>
 
 #include "m68k/bit_utils.h"
+#include "audio.h"
+#include "genesis.h"
 #include "ym2612.h"
+
+// TODO: output audio directly instead of writing to WAV
+// TODO: envelope
+// TODO: stereo
+// TODO: feedback for channel 1
+// TODO: channel 3 & 6 special modes
+// TODO: modulation
+// TODO: timers
+// TODO: dac?
 
 #ifdef DEBUG
 #define LOG_YM2612(...) printf(__VA_ARGS__)
@@ -26,8 +37,10 @@ void envelope_clock(YM2612*);
 
 // Global functions
 
-YM2612* ym2612_make() {
-  return calloc(1, sizeof(YM2612));
+YM2612* ym2612_make(Genesis* g) {
+  YM2612* y = calloc(1, sizeof(YM2612));
+  y->genesis = g;
+  return y;
 }
 
 void ym2612_free(YM2612* y) {
@@ -35,8 +48,10 @@ void ym2612_free(YM2612* y) {
 }
 
 void ym2612_initialize(YM2612* y) {
-    // Reset
+    // Reset but save Genesis pointer
+    Genesis* g = y->genesis;
     memset(y, 0, sizeof(YM2612));
+    y->genesis = g;
 }
 
 void ym2612_clock(YM2612* y) {
@@ -60,7 +75,7 @@ void ym2612_run_cycles(YM2612* y, uint16_t cycles) {
 
         y->sample_counter++;
         while (y->sample_counter > 0) {
-            ym2612_emit_sample_cb(ym2612_mix(y));
+            ym2612_emit_sample_cb(y, ym2612_mix(y));
             y->sample_counter -= YM2612_CLOCKS_PER_SAMPLE;
         }
     }
@@ -252,14 +267,19 @@ int16_t channel_envelope(Channel* c) {
 }
 
 // TEMP: move to a proper audio backend
-#define YM2612_MAX_SAMPLES 4410000
+#define YM2612_MAX_SAMPLES 4096
 int16_t ym2612_samples[YM2612_MAX_SAMPLES];
 uint32_t ym2612_samples_cursor = 0;
 
-void ym2612_emit_sample_cb(int16_t sample) {
-    // Fill the buffer then stop
-    if (ym2612_samples_cursor < YM2612_MAX_SAMPLES)
-        ym2612_samples[ym2612_samples_cursor++] = sample;
+void ym2612_emit_sample_cb(YM2612* y, int16_t sample) {
+    ym2612_samples[ym2612_samples_cursor++] = sample;
+
+    if (ym2612_samples_cursor == YM2612_MAX_SAMPLES) {
+        if (SDL_QueueAudio(y->genesis->audio->device, ym2612_samples, sizeof(ym2612_samples)) != 0) {
+            fprintf(stderr, "Failed to queue audio: %s", SDL_GetError());
+        }
+        ym2612_samples_cursor = 0;
+    }
 }
 
 uint8_t ym2612_read(YM2612* y, uint32_t address) {

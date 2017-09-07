@@ -56,6 +56,8 @@ typedef struct Channel {
 
 typedef struct YM2612
 {
+    struct Genesis* genesis;
+
     int16_t  remaining_clocks;
     int16_t  envelope_remaining_clocks;
     double   sample_counter;
@@ -93,7 +95,7 @@ static float lfo_frequencies[] = {
     72.2
 };
 
-YM2612* ym2612_make();
+YM2612* ym2612_make(struct Genesis*);
 void ym2612_free(YM2612*);
 
 void ym2612_initialize(YM2612*);
@@ -111,4 +113,4 @@ extern int16_t ym2612_samples[];
 extern uint32_t ym2612_samples_cursor;
 
 // Callback function called by psg_clock whenever a sample is ready
-void ym2612_emit_sample_cb(int16_t);
+void ym2612_emit_sample_cb(YM2612*, int16_t);

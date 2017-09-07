@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "audio.h"
 #include "debugger.h"
 #include "genesis.h"
 #include "joypad.h"
@@ -30,6 +31,7 @@ Genesis* genesis_make()
     g->joypad1 = joypad_make();
     g->joypad2 = joypad_make();
     g->renderer = renderer_make(g);
+    g->audio = audio_make(g);
     g->debugger = debugger_make(g);
     g->status = Status_NoGameLoaded;
 
@@ -54,6 +56,7 @@ void genesis_free(Genesis* g)
     joypad_free(g->joypad2);
     settings_free(g->settings);
     renderer_free(g->renderer);
+    audio_free(g->audio);
     debugger_free(g->debugger);
 
     free(g->rom);

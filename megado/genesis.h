@@ -9,6 +9,7 @@ struct Joypad;
 struct M68k;
 struct Z80;
 struct Renderer;
+struct Audio;
 struct Settings;
 struct Vdp;
 struct PSG;
@@ -43,6 +44,7 @@ typedef struct Genesis
     struct YM2612* ym2612;
 
     struct Renderer* renderer;
+    struct Audio*    audio;
     struct Settings* settings;
     struct Debugger* debugger;
 
