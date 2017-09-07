@@ -199,9 +199,11 @@ static void genesis_frame(Genesis* g)
     {
         // Execute one scanline worth of instructions
         uint32_t cycles = m68k_run_cycles(g->m68k, 366); // TODO not sure about that value
-        z80_run_cycles(g->z80, cycles / 2); // Z80 runs at half the frequency of M68
-        psg_run_cycles(g->psg, cycles / 2); // PSG runs at Z80 frequency
+        z80_run_cycles(g->z80, (double)cycles * 0.4667); // Z80 runs at half the frequency of M68
+        psg_run_cycles(g->psg, (double)cycles * 0.4667); // PSG runs at Z80 frequency
         ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
+
+        audio_update(g->audio);
 
         // Draw the scanline
         vdp_draw_scanline(g->vdp, line);
@@ -212,10 +214,12 @@ static void genesis_frame(Genesis* g)
 
         g->vdp->hblank_in_progress = true;
         cycles = m68k_run_cycles(g->m68k, 122); // http://gendev.spritesmind.net/forum/viewtopic.php?t=94#p1105
-        z80_run_cycles(g->z80, cycles / 2); // Z80 runs at half the frequency of M68
-        psg_run_cycles(g->psg, cycles / 2); // PSG runs at Z80 frequency
+        z80_run_cycles(g->z80, (double)cycles * 0.4667); // Z80 runs at half the frequency of M68
+        psg_run_cycles(g->psg, (double)cycles * 0.4667); // PSG runs at Z80 frequency
         ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
         g->vdp->hblank_in_progress = false;
+
+        audio_update(g->audio);
 
         // Exit early if the emulation has been paused
         if (g->status != Status_Running)

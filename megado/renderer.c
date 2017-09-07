@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "audio.h"
 #include "genesis.h"
 #include "joypad.h"
 #include "metric.h"
@@ -1228,6 +1229,8 @@ static void build_ui(Renderer* r)
         // (M68k) instructions per seconds, in millions
         snprintf(buf, sizeof buf, "ips\navg: %.2fM", r->ips->avg);
         metric_plot(r->ips, buf);
+
+        igText("Audio buffer queue: %u", SDL_GetQueuedAudioSize(r->genesis->audio->device) / sizeof(int16_t));
 
         igEnd();
     }

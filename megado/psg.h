@@ -29,6 +29,8 @@ typedef struct NoiseChannel {
 } NoiseChannel;
 
 typedef struct PSG {
+    struct Genesis* genesis;
+
     int16_t remaining_clocks;
     double sample_counter;
 
@@ -52,10 +54,4 @@ int16_t square_output(SquareChannel*);
 int16_t noise_output(NoiseChannel*);
 
 // Callback function called by psg_clock whenever a sample is ready
-void psg_emit_sample_cb(int16_t);
-
-// TEMP: write to WAV for testing
-extern int16_t psg_samples[];
-extern uint32_t psg_samples_cursor;
-#include <stdbool.h>
-bool wav_write(const char*, const void*, uint32_t);
+void psg_emit_sample_cb(PSG*, int16_t);

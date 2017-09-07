@@ -8,7 +8,6 @@
 #include "genesis.h"
 #include "ym2612.h"
 
-// TODO: output audio directly instead of writing to WAV
 // TODO: envelope
 // TODO: stereo
 // TODO: feedback for channel 1
@@ -267,9 +266,9 @@ int16_t channel_envelope(Channel* c) {
 }
 
 void ym2612_emit_sample_cb(YM2612* y, int16_t sample) {
-    if (SDL_QueueAudio(y->genesis->audio->device, &sample, sizeof(sample)) != 0) {
-        fprintf(stderr, "Failed to queue audio: %s", SDL_GetError());
-    }
+    Audio* a = y->genesis->audio;
+    a->ym2612_sample_write_cursor = (a->ym2612_sample_write_cursor + 1) % 512;
+    a->ym2612_samples[a->ym2612_sample_write_cursor] = sample;
 }
 
 uint8_t ym2612_read(YM2612* y, uint32_t address) {
