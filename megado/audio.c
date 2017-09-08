@@ -22,22 +22,26 @@ Audio* audio_make(Genesis* g) {
     a->device = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
 
     if (a->device == 0) {
-        fprintf(stderr, "Failed to open audio: %s", SDL_GetError());
-        exit(1);
+        fprintf(stderr, "Failed to open audio: %s\n", SDL_GetError());
+        fprintf(stderr, "Continuing with audio disabled\n");
     }
 
     return a;
 }
 
 void audio_free(Audio* a) {
-    SDL_CloseAudioDevice(a->device);
+    if (a->device > 0) {
+        SDL_CloseAudioDevice(a->device);
+    }
     SDL_Quit();
 
     free(a);
 }
 
 void audio_initialize(Audio* a) {
-    SDL_ClearQueuedAudio(a->device);
+    if (a->device > 0) {
+        SDL_ClearQueuedAudio(a->device);
+    }
 
     memset(a->ym2612_samples, 0, sizeof(a->ym2612_samples));
     a->ym2612_sample_write_cursor = 0;
@@ -49,9 +53,13 @@ void audio_initialize(Audio* a) {
 
 void audio_update(Audio* a) {
     if (a->genesis->status == Status_Running) {
-        SDL_PauseAudioDevice(a->device, 0);
+        if (a->device > 0) {
+            SDL_PauseAudioDevice(a->device, 0);
+        }
     } else {
-        SDL_PauseAudioDevice(a->device, 1);
+        if (a->device > 0) {
+            SDL_PauseAudioDevice(a->device, 1);
+        }
     }
 
     // Output PSG to the left, YM2612 to the right
@@ -68,7 +76,7 @@ void audio_update(Audio* a) {
     }
 
     // Queue buffer
-    if (i > 0 && SDL_QueueAudio(a->device, mixed_buffer, i * sizeof(int16_t)) != 0) {
+    if (i > 0 && a->device > 0 && SDL_QueueAudio(a->device, mixed_buffer, i * sizeof(int16_t)) != 0) {
         fprintf(stderr, "Failed to queue audio: %s", SDL_GetError());
     }
 }
