@@ -21,4 +21,4 @@
 [submodule "deps/sdl2"]
 	path = deps/sdl2
 	url = https://github.com/spurious/SDL-mirror.git
-	ignore = untracked
+	ignore = all
