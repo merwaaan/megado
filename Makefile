@@ -20,10 +20,10 @@ MODULES := megado megado/m68k test
 # Submodule dependencies
 INCLUDES := -I./ -Ideps/cimgui/ -Ideps/glfw/include\
 	    -Ideps/glew/include -Ideps/json-c/include/json-c\
-	    -D_REENTRANT -I/usr/include/SDL2
+	    -D_REENTRANT -Ideps/sdl2/install/include/SDL2
 LIBS := -lm -Ldeps/glew/build/lib -lGLEW -lGLU -lGL -Ldeps/cimgui/cimgui\
 	-l:cimgui.so -Ldeps/glfw/build/src -lglfw -Ldeps/json-c/lib -ljson-c\
-	-lSDL2
+	-Ldeps/sdl2/install/lib -lSDL2
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

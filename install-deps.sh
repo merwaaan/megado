@@ -32,3 +32,14 @@ sh autogen.sh
 make -j2
 make install
 popd
+
+# SDL2
+pushd deps/sdl2
+./configure --prefix=$PWD/install --disable-mir-shared --disable-video\
+            --disable-render --disable-events --disable-joystick\
+            --disable-haptic --disable-power --disable-filesystem\
+            --disable-file --disable-threads --disable-timers\
+            --disable-libudev --disable-dbus --disable-ime
+make -j2
+make install
+popd
