@@ -18,3 +18,6 @@
 	path = deps/glew
 	url = https://github.com/nigels-com/glew.git
 	ignore = untracked
+[submodule "deps/sdl2"]
+	path = deps/sdl2
+	url = https://github.com/spurious/SDL-mirror.git
