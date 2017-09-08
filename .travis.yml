@@ -18,6 +18,10 @@ addons:
     - clang-4.0                 # bleeding edge
     - gcc-7
 
+env:
+  global:
+    - AUDIODEV=null             # Needed otherwise SDL cannot open audio on Travis
+
 matrix:
   include:
 
