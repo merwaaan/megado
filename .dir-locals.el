@@ -3,6 +3,7 @@
 
 ((c-mode
   (c-basic-offset . 4)
-  (flycheck-clang-include-path "../" "../deps/json-c/include/json-c" "../deps/glfw/include" "../deps/glew/include" "../deps/cimgui")
+  (flycheck-clang-include-path "../" "../deps/json-c/include/json-c" "../deps/glfw/include"
+                               "../deps/glew/include" "../deps/cimgui" "../deps/sdl2/install/include/SDL2")
   (flycheck-clang-language-standard . "c11")
   (flycheck-check-syntax-automatically save)))
