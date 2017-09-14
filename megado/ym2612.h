@@ -58,7 +58,7 @@ typedef struct YM2612
 {
     struct Genesis* genesis;
 
-    int16_t  remaining_clocks;
+    int32_t  remaining_master_cycles;
     int16_t  envelope_remaining_clocks;
     double   sample_counter;
 
@@ -101,7 +101,7 @@ void ym2612_free(YM2612*);
 void ym2612_initialize(YM2612*);
 uint8_t ym2612_read(YM2612*, uint32_t address);
 void ym2612_write(YM2612*, uint32_t address, uint8_t value);
-void ym2612_run_cycles(YM2612*, uint16_t);
+void ym2612_run_cycles(YM2612*, uint32_t);
 int16_t ym2612_mix(YM2612*);
 
 int16_t channel_output(Channel*);

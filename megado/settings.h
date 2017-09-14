@@ -27,6 +27,8 @@ typedef struct Settings
     bool full_screen;
     bool vsync;
 
+    float emulation_speed;
+
     // UI settings
     bool show_m68k_registers;
     bool show_m68k_disassembly;

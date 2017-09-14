@@ -56,7 +56,7 @@ typedef struct M68k
 
     uint64_t cycles;
     bool stopped;
-    int32_t remaining_cycles;
+    int32_t remaining_master_cycles;
 
     // Level of any pending interrupt (negative values means no interrupts)
     int pending_interrupt;

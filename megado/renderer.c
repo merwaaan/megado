@@ -509,6 +509,8 @@ static void build_ui(Renderer* r)
             }
             igSeparator();
 
+            igSliderFloat("Speed", &settings->emulation_speed, 0.2f, 3.0f, "%f", 1.0f);
+
             if (igMenuItem("Reset", NULL, false, true))
                 genesis_initialize(r->genesis);
 
@@ -1231,6 +1233,12 @@ static void build_ui(Renderer* r)
         metric_plot(r->ips, buf);
 
         igText("Audio buffer queue: %u", SDL_GetQueuedAudioSize(r->genesis->audio->device) / sizeof(int16_t));
+
+        igTextColored(color_title, "Remaning master cycles");
+        igText("M68k:   %d", r->genesis->m68k->remaining_master_cycles);
+        igText("Z80:    %d", r->genesis->z80->remaining_master_cycles);
+        igText("PSG:    %d", r->genesis->psg->remaining_master_cycles);
+        igText("YM2612: %d", r->genesis->ym2612->remaining_master_cycles);
 
         igEnd();
     }

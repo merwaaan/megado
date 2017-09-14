@@ -31,7 +31,7 @@ typedef struct NoiseChannel {
 typedef struct PSG {
     struct Genesis* genesis;
 
-    int16_t remaining_clocks;
+    int32_t remaining_master_cycles;
     double sample_counter;
 
     SquareChannel square[3];
@@ -46,7 +46,7 @@ void psg_free(PSG*);
 void psg_initialize(PSG* p);
 void psg_write(PSG*, uint8_t);
 void psg_clock(PSG*);
-void psg_run_cycles(PSG*, uint16_t);
+void psg_run_cycles(PSG*, uint32_t);
 int16_t psg_mix(PSG*);
 
 float square_tone_in_hertz(SquareChannel*);

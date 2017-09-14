@@ -22,9 +22,9 @@
 #define LOG_YM2612(...)
 #endif
 
+static const uint32_t MASTER_CYCLES_PER_CLOCK = 1008;
 const uint32_t YM2612_NTSC_FREQUENCY = 7670453;
 const uint16_t MASTER_CYCLES_PER_ENVELOPE_CLOCK = 351;
-const uint16_t MASTER_CYCLES_PER_YM2612_CLOCK = 144;
 // NTSC_FREQUENCY / MASTER_CYCLES_PER_CLOCK / SAMPLE_RATE
 //        7670453 /                     144 /       44100
 const double YM2612_CLOCKS_PER_SAMPLE = 1.20786926808;
@@ -59,18 +59,18 @@ void ym2612_clock(YM2612* y) {
     }
 }
 
-void ym2612_run_cycles(YM2612* y, uint16_t cycles) {
-    y->remaining_clocks += cycles;
+void ym2612_run_cycles(YM2612* y, uint32_t cycles) {
+    y->remaining_master_cycles += cycles;
 
-    while (y->remaining_clocks > 0) {
+    while (y->remaining_master_cycles > 0) {
         ym2612_clock(y);
-        y->remaining_clocks -= MASTER_CYCLES_PER_YM2612_CLOCK;
+        y->remaining_master_cycles -= MASTER_CYCLES_PER_CLOCK;
 
-        y->envelope_remaining_clocks += MASTER_CYCLES_PER_YM2612_CLOCK;
-        while (y->envelope_remaining_clocks > 0) {
-            envelope_clock(y);
-            y->envelope_remaining_clocks -= MASTER_CYCLES_PER_ENVELOPE_CLOCK;
-        }
+        /* y->envelope_remaining_clocks += MASTER_CYCLES_PER_CLOCK; */
+        /* while (y->envelope_remaining_clocks > 0) { */
+        /*     envelope_clock(y); */
+        /*     y->envelope_remaining_clocks -= MASTER_CYCLES_PER_ENVELOPE_CLOCK; */
+        /* } */
 
         y->sample_counter++;
         while (y->sample_counter > 0) {

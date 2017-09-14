@@ -15,6 +15,8 @@
 #define LOG_Z80(...)
 #endif
 
+static const uint32_t MASTER_CYCLES_PER_CLOCK = 15;
+
 Z80* z80_make(struct Genesis* g) {
     Z80* z80 = calloc(1, sizeof(Z80));
     z80->genesis = g;
@@ -26,7 +28,7 @@ void z80_free(Z80* z) {
 }
 
 void z80_initialize(Z80* z) {
-    z->left_cycles = 0;
+    z->remaining_master_cycles = 0;
 
     // Charles McDonald doc says the Z80 is running on reset, but Sonic expects
     // otherwise.
@@ -139,20 +141,20 @@ void fully_decoded_z80_instruction_free(FullyDecodedZ80Instruction* i) {
     free(i);
 }
 
-void z80_run_cycles(Z80* z, int cycles) {
+void z80_run_cycles(Z80* z, uint32_t cycles) {
     if (z->resetting || !z->running) return;
 
-    z->left_cycles += cycles;
+    z->remaining_master_cycles += cycles;
 
-    while (z->left_cycles > 0) {
-        z->left_cycles -= (int32_t)z80_step(z);
+    while (z->remaining_master_cycles > 0) {
+        z->remaining_master_cycles -= z80_step(z) * MASTER_CYCLES_PER_CLOCK;
     }
 }
 
 void z80_reset(Z80* z, uint8_t rst) {
     if (rst == 0) {
         z->pc = 0;
-        z->left_cycles = 0;
+        z->remaining_master_cycles = 0;
         z->resetting = true;
         LOG_Z80("z80: RESET ON\n");
     } else {

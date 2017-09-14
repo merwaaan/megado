@@ -31,6 +31,8 @@ typedef enum {
 
 typedef struct Genesis
 {
+    double remaining_cycles;
+
     uint8_t* rom; // Typically 0x000000 - 0x3FFFFF
     uint8_t* ram; // Typically 0xFF0000 - 0xFFFFFF
     uint8_t* sram;

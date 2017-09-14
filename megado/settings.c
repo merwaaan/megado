@@ -17,6 +17,7 @@ Settings* settings_make()
     s->window_width = 1200;
     s->window_height = 800;
     s->video_scale = 1.0f;
+    s->emulation_speed = 1.0f;
     s->vsync = true;
     return s;
 }
@@ -42,6 +43,8 @@ void settings_save(Settings* s)
 
     JSON_SET_FLOAT(video_scale);
     JSON_SET_BOOL(vsync);
+
+    JSON_SET_FLOAT(emulation_speed);
 
     JSON_SET_BOOL(show_metrics);
     JSON_SET_BOOL(show_m68k_registers);
@@ -171,6 +174,8 @@ Settings* settings_load()
 
     JSON_GET_FLOAT(video_scale, 1.0f);
     JSON_GET_BOOL(vsync, true);
+
+    JSON_GET_FLOAT(emulation_speed, 1.0f);
 
     JSON_GET_BOOL(show_metrics, false);
     JSON_GET_BOOL(show_m68k_registers, false);

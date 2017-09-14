@@ -17,6 +17,8 @@
 #define LOG_M68K(...)
 #endif
 
+static const uint32_t MASTER_CYCLES_PER_CLOCK = 7;
+
 Instruction** opcode_table;
 
 M68k* m68k_make(Genesis* g)
@@ -39,7 +41,7 @@ void m68k_initialize(M68k* m)
 
     m->cycles = 0;
     m->stopped = false;
-    m->remaining_cycles = 0;
+    m->remaining_master_cycles = 0;
     m->pending_interrupt = -1;
     m->prefetch_address = 0xFFFFFFFF; // Invalid value, will initiate the initial prefetch
 }
@@ -126,23 +128,20 @@ void decoded_instruction_free(DecodedInstruction* decoded)
 uint32_t m68k_run_cycles(M68k* m, uint32_t cycles)
 {
     uint64_t cycles_this_frame = 0;
-    m->remaining_cycles += cycles;
+    m->remaining_master_cycles += cycles;
 
-    /*while (cycles > 0)
-        cycles -= m68k_step(m);*/
-
-        // TODO temporary version for tracking non-timed instructions
-    while (m->remaining_cycles > 0)
+    while (m->remaining_master_cycles > 0)
     {
         uint8_t c = m68k_step(m);
 
+        // TODO temporary version for tracking non-timed instructions
         if (c == 0)
         {
             //LOG_M68K("WARNING, instruction took ZERO CYCLES\n");
             c = 10; // we don't want to block the execution
         }
 
-        m->remaining_cycles -= c;
+        m->remaining_master_cycles -= c * MASTER_CYCLES_PER_CLOCK;
         cycles_this_frame += c;
 
         // Exit early if the emulation has been paused
@@ -155,9 +154,9 @@ uint32_t m68k_run_cycles(M68k* m, uint32_t cycles)
 
 uint8_t m68k_step(M68k* m)
 {
-	assert(m->pc <= M68K_ADDRESS_WIDTH);
-	assert(m->pc % 2 == 0);
-	assert(m->address_registers[7] % 2 == 0);
+    assert(m->pc <= M68K_ADDRESS_WIDTH);
+    assert(m->pc % 2 == 0);
+    assert(m->address_registers[7] % 2 == 0);
 
     // Handle pending interrupts
     // (also causes the processor to wake up if stopped)

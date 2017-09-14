@@ -12,7 +12,7 @@ void square_clock_frequency(SquareChannel*);
 void noise_clock_frequency(PSG*);
 
 // Divisor for the master clock frequency (actually, the frequency of the Z80)
-const uint8_t MASTER_CYCLES_PER_PSG_CLOCK = 16;
+static const uint8_t MASTER_CYCLES_PER_CLOCK = 15;
 const uint32_t SAMPLE_RATE = 44100;
 const uint32_t NTSC_FREQUENCY = 3579545;
 
@@ -71,12 +71,12 @@ void psg_clock(PSG* p) {
 
 // Entry point used by the rest of emulator
 // Cycles: number of master cycles to emulate
-void psg_run_cycles(PSG* p, uint16_t cycles) {
-    p->remaining_clocks += cycles;
+void psg_run_cycles(PSG* p, uint32_t cycles) {
+    p->remaining_master_cycles += cycles;
 
-    while (p->remaining_clocks > 0) {
+    while (p->remaining_master_cycles > 0) {
         psg_clock(p);
-        p->remaining_clocks -= MASTER_CYCLES_PER_PSG_CLOCK;
+        p->remaining_master_cycles -= MASTER_CYCLES_PER_CLOCK;
 
         p->sample_counter++;
         while (p->sample_counter > 0) {
@@ -112,7 +112,7 @@ void square_clock_frequency(SquareChannel* s) {
 
 float square_tone_in_hertz(SquareChannel* s) {
     if (s->tone > 0) {
-    return (float)NTSC_FREQUENCY / (2.0f * (float)s->tone * (float)MASTER_CYCLES_PER_PSG_CLOCK);
+    return (float)NTSC_FREQUENCY / (2.0f * (float)s->tone * (float)MASTER_CYCLES_PER_CLOCK);
     } else {
         // FIXME: handle 0 tone
         return 0;

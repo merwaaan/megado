@@ -17,6 +17,11 @@
 #include "utils.h"
 #include "ym2612.h"
 
+const uint32_t NTSC_MASTER_FREQUENCY = 53693175;
+const uint32_t PAL_MASTER_FREQUENCY  = 53203424;
+const uint32_t PAL_MASTER_CYCLES_PER_FRAME = 1067040;
+const uint32_t NTSC_MASTER_CYCLES_PER_FRAME = 896040;
+
 Genesis* genesis_make()
 {
     Genesis* g = calloc(1, sizeof(Genesis));
@@ -154,6 +159,8 @@ struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc)
 
 void genesis_initialize(Genesis* g)
 {
+    g->remaining_cycles = 0;
+
     // http://darkdust.net/writings/megadrive/initializing
     // http://md.squee.co/Howto:Initialise_a_Mega_Drive
 
@@ -193,30 +200,39 @@ static void genesis_frame(Genesis* g)
 {
     // The number of scanlines depends on the region
     // http://forums.sonicretro.org/index.php?showtopic=5615
-    uint16_t lines = g->region == Region_Europe ? 312 : 262; // TODO not sure about these values
+    // TODO: this assumes progressive scan mode, see https://segaretro.org/Sega_Mega_Drive#Graphics
+    uint16_t lines = g->region == Region_Europe ? 312 : 262;
 
     for (uint16_t line = 0; line < lines; ++line)
     {
-        // Execute one scanline worth of instructions
-        uint32_t cycles = m68k_run_cycles(g->m68k, 366); // TODO not sure about that value
-        z80_run_cycles(g->z80, (double)cycles * 0.4667); // Z80 runs at half the frequency of M68
-        psg_run_cycles(g->psg, (double)cycles * 0.4667); // PSG runs at Z80 frequency
-        ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
+        // Execute one scanline worth of instructions.
+        // One scanline = 3420 master cycles = 2560 cycles + 860 for Hblank
+
+        // Run all systems for the given master cycles clock count
+
+        // FIXME: account for *actual* cycles emulated due to breakpoints
+        m68k_run_cycles(g->m68k, 2560);
+        z80_run_cycles(g->z80, 2560);
+        psg_run_cycles(g->psg, 2560);
+        ym2612_run_cycles(g->ym2612, 2560);
 
         audio_update(g->audio);
 
         // Draw the scanline
+        // FIXME: VDP should work on the matser cycles frequency
         vdp_draw_scanline(g->vdp, line);
 
         // Exit early if the emulation has been paused
         if (g->status != Status_Running)
             break;
 
+        // Hblank is 860 master cycles
+
         g->vdp->hblank_in_progress = true;
-        cycles = m68k_run_cycles(g->m68k, 122); // http://gendev.spritesmind.net/forum/viewtopic.php?t=94#p1105
-        z80_run_cycles(g->z80, (double)cycles * 0.4667); // Z80 runs at half the frequency of M68
-        psg_run_cycles(g->psg, (double)cycles * 0.4667); // PSG runs at Z80 frequency
-        ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
+        m68k_run_cycles(g->m68k, 860);
+        z80_run_cycles(g->z80, 860);
+        psg_run_cycles(g->psg, 860);
+        ym2612_run_cycles(g->ym2612, 860);
         g->vdp->hblank_in_progress = false;
 
         audio_update(g->audio);
@@ -229,11 +245,31 @@ static void genesis_frame(Genesis* g)
     debugger_post_frame(g->debugger);
 }
 
+static void genesis_run_for(Genesis* g, double master_cycles) {
+    g->remaining_cycles += master_cycles;
+
+    while (g->remaining_cycles > 0) {
+        genesis_frame(g);
+        g->remaining_cycles -= g->region == Region_Europe ? PAL_MASTER_CYCLES_PER_FRAME : NTSC_MASTER_CYCLES_PER_FRAME;
+    }
+}
+
 void genesis_update(Genesis* g)
 {
+    // dt is wall time in seconds elapsed since last update
+    static double last_update = 0;
+    double now = glfwGetTime();
+    double dt = now - last_update;
+    last_update = now;
+
     if (g->status == Status_Running)
     {
-        genesis_frame(g);
+        // How many seconds we need to emulate, depending on speed factor
+        double dt_genesis = dt * g->settings->emulation_speed;
+
+        // How many master cycles to emulate, depending on master frequency
+        double d_cycles = dt_genesis * (g->region == Region_Europe ? PAL_MASTER_FREQUENCY : NTSC_MASTER_FREQUENCY);
+        genesis_run_for(g, d_cycles);
     }
     else if (g->status == Status_Rewinding)
     {
