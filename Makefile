@@ -7,7 +7,7 @@
 # Configurables
 CC := clang
 # Disable unused parameter warning since not everything is implemented yet
-CFLAGS := -std=c11 -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
+CFLAGS := -std=c11 -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function
 BIN := megado-bin
 BUILD_DIR := build
 

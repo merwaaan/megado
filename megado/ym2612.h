@@ -111,6 +111,3 @@ float channel_frequency_in_hertz(Channel*);
 
 extern int16_t ym2612_samples[];
 extern uint32_t ym2612_samples_cursor;
-
-// Callback function called by psg_clock whenever a sample is ready
-void ym2612_emit_sample_cb(YM2612*, int16_t);

@@ -245,12 +245,20 @@ static void genesis_frame(Genesis* g)
     debugger_post_frame(g->debugger);
 }
 
-static void genesis_run_for(Genesis* g, double master_cycles) {
-    g->remaining_cycles += master_cycles;
+// Run for a given number of master cycles
+static void genesis_run_cycles(Genesis* g, double cycles) {
+    // Master cycles can be fractional here, but subsystems only deal with the
+    // integral part, hence this loop.
+    g->remaining_cycles += cycles;
 
     while (g->remaining_cycles > 0) {
-        genesis_frame(g);
-        g->remaining_cycles -= g->region == Region_Europe ? PAL_MASTER_CYCLES_PER_FRAME : NTSC_MASTER_CYCLES_PER_FRAME;
+        m68k_run_cycles(g->m68k, cycles);
+        z80_run_cycles(g->z80, cycles);
+        psg_run_cycles(g->psg, cycles);
+        ym2612_run_cycles(g->ym2612, cycles);
+        vdp_run_cycles(g->vdp, cycles);
+
+        g->remaining_cycles -= cycles;
     }
 }
 
@@ -264,12 +272,29 @@ void genesis_update(Genesis* g)
 
     if (g->status == Status_Running)
     {
-        // How many seconds we need to emulate, depending on speed factor
-        double dt_genesis = dt * g->settings->emulation_speed;
+        // Emulate by slices of audio sample
+        g->audio->remaining_time += dt;
+        double time_slice = (double)1 / SAMPLE_RATE;
+        uint32_t master_frequency = g->region == Region_Europe ? PAL_MASTER_FREQUENCY : NTSC_MASTER_FREQUENCY;
 
-        // How many master cycles to emulate, depending on master frequency
-        double d_cycles = dt_genesis * (g->region == Region_Europe ? PAL_MASTER_FREQUENCY : NTSC_MASTER_FREQUENCY);
-        genesis_run_for(g, d_cycles);
+        while (g->audio->remaining_time > 0) {
+            // How many Genesis seconds we need to emulate, depending on speed factor
+            double dt_genesis = time_slice * g->settings->emulation_speed;
+            // Convert the duration to master cycles
+            double d_cycles = dt_genesis * master_frequency;
+            // Emulate enough for one audio sample
+            genesis_run_cycles(g, d_cycles);
+
+            // Sample the audio units
+            // @Temporary: use left channel for PSG and right channel for YM2612
+            int16_t sample[2] = {psg_mix(g->psg), ym2612_mix(g->ym2612)};
+            // Queue samples to audio device
+            if (g->audio->device > 0 && SDL_QueueAudio(g->audio->device, sample, 2 * sizeof(int16_t)) != 0) {
+                fprintf(stderr, "Failed to queue audio: %s", SDL_GetError());
+            }
+
+            g->audio->remaining_time -= time_slice;
+        }
     }
     else if (g->status == Status_Rewinding)
     {

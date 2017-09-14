@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "m68k/bit_utils.h"
-#include "audio.h"
 #include "genesis.h"
 #include "ym2612.h"
 
@@ -23,11 +22,8 @@
 #endif
 
 static const uint32_t MASTER_CYCLES_PER_CLOCK = 1008;
-const uint32_t YM2612_NTSC_FREQUENCY = 7670453;
-const uint16_t MASTER_CYCLES_PER_ENVELOPE_CLOCK = 351;
-// NTSC_FREQUENCY / MASTER_CYCLES_PER_CLOCK / SAMPLE_RATE
-//        7670453 /                     144 /       44100
-const double YM2612_CLOCKS_PER_SAMPLE = 1.20786926808;
+static const uint32_t YM2612_NTSC_FREQUENCY = 7670453;
+static const uint16_t MASTER_CYCLES_PER_ENVELOPE_CLOCK = 351;
 
 // Local functions
 
@@ -71,12 +67,6 @@ void ym2612_run_cycles(YM2612* y, uint32_t cycles) {
         /*     envelope_clock(y); */
         /*     y->envelope_remaining_clocks -= MASTER_CYCLES_PER_ENVELOPE_CLOCK; */
         /* } */
-
-        y->sample_counter++;
-        while (y->sample_counter > 0) {
-            ym2612_emit_sample_cb(y, ym2612_mix(y));
-            y->sample_counter -= YM2612_CLOCKS_PER_SAMPLE;
-        }
     }
 }
 
@@ -263,12 +253,6 @@ float channel_frequency_in_hertz(Channel* c) {
 int16_t channel_envelope(Channel* c) {
     // TODO: envelope
     return 16422;
-}
-
-void ym2612_emit_sample_cb(YM2612* y, int16_t sample) {
-    Audio* a = y->genesis->audio;
-    a->ym2612_sample_write_cursor = (a->ym2612_sample_write_cursor + 1) % 512;
-    a->ym2612_samples[a->ym2612_sample_write_cursor] = sample;
 }
 
 uint8_t ym2612_read(YM2612* y, uint32_t address) {

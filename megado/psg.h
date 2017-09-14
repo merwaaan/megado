@@ -52,6 +52,3 @@ int16_t psg_mix(PSG*);
 float square_tone_in_hertz(SquareChannel*);
 int16_t square_output(SquareChannel*);
 int16_t noise_output(NoiseChannel*);
-
-// Callback function called by psg_clock whenever a sample is ready
-void psg_emit_sample_cb(PSG*, int16_t);

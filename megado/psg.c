@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "audio.h"
 #include "genesis.h"
 #include "psg.h"
 
@@ -11,17 +10,11 @@ void write_data(PSG*, uint8_t);
 void square_clock_frequency(SquareChannel*);
 void noise_clock_frequency(PSG*);
 
-// Divisor for the master clock frequency (actually, the frequency of the Z80)
-static const uint8_t MASTER_CYCLES_PER_CLOCK = 15;
-const uint32_t SAMPLE_RATE = 44100;
-const uint32_t NTSC_FREQUENCY = 3579545;
+// Divisor for the master clock frequency
+static const uint8_t MASTER_CYCLES_PER_CLOCK = 240;
+static const uint32_t NTSC_FREQUENCY = 3579545;
 
-// FIXME: this is based on NTSC frequency
-// (double)NTSC_FREQUENCY / (double)MASTER_CYCLES_PER_PSG_CLOCK / (double)SAMPLE_RATE;
-// C doesn't have constexpr, so we have to hardcode this one:
-const double PSG_CLOCKS_PER_SAMPLE = 5.07305130385;
-
-const int16_t volume_table[16]= {
+static const int16_t volume_table[16]= {
     32767, 26028, 20675, 16422, 13045, 10362,  8231,  6568,
     5193,  4125,  3277,  2603,  2067,  1642,  1304,     0
 };
@@ -60,7 +53,6 @@ void psg_write(PSG* p, uint8_t value) {
     }
 }
 
-// Called at NTSC_FREQUENCY
 void psg_clock(PSG* p) {
     for (int i=0; i < 3; ++i) {
         square_clock_frequency(&p->square[i]);
@@ -77,12 +69,6 @@ void psg_run_cycles(PSG* p, uint32_t cycles) {
     while (p->remaining_master_cycles > 0) {
         psg_clock(p);
         p->remaining_master_cycles -= MASTER_CYCLES_PER_CLOCK;
-
-        p->sample_counter++;
-        while (p->sample_counter > 0) {
-            psg_emit_sample_cb(p, psg_mix(p));
-            p->sample_counter -= PSG_CLOCKS_PER_SAMPLE;
-        }
     }
 }
 
@@ -224,10 +210,4 @@ void write_data(PSG* p, uint8_t value) {
         }
         break;
     }
-}
-
-void psg_emit_sample_cb(PSG* p, int16_t sample) {
-    Audio* a = p->genesis->audio;
-    a->psg_sample_write_cursor = (a->psg_sample_write_cursor + 1) % 512;
-    a->psg_samples[a->psg_sample_write_cursor] = sample;
 }

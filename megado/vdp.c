@@ -13,6 +13,8 @@
 #define LOG_VDP(...)
 #endif
 
+static const uint8_t MASTER_CYCLES_PER_CLOCK = 4;
+
 // Display size values (register 0x1 and 0xC)
 static uint8_t display_height_values[] = { 28, 30 };
 static uint8_t display_width_values[] = { 32, 40 };
@@ -915,6 +917,35 @@ void render_scanline(Vdp* v, int scanline)
         v->output_buffer[pixel_offset] = pixel_color.r;
         v->output_buffer[pixel_offset + 1] = pixel_color.g;
         v->output_buffer[pixel_offset + 2] = pixel_color.b;
+    }
+}
+
+static void vdp_clock(Vdp* v) {
+    v->clock++;
+
+    uint16_t current_line = v->clock / 855;
+    uint16_t lines = v->genesis->region == Region_Europe ? 312 : 262;
+
+    if (current_line >= lines) {
+        v->clock = 0;
+        current_line = 0;
+    }
+
+    uint16_t current_column = v->clock % 855;
+
+    // 855 vdp clocks per scanline = 640 + 215 for Hblank
+    if (current_column == 640) {
+        vdp_draw_scanline(v, current_line);
+    }
+    v->hblank_in_progress = current_column > 640;
+}
+
+void vdp_run_cycles(Vdp* v, uint32_t cycles) {
+    v->remaining_cycles += cycles;
+
+    while (v->remaining_cycles > 0) {
+        vdp_clock(v);
+        v->remaining_cycles -= MASTER_CYCLES_PER_CLOCK;
     }
 }
 
