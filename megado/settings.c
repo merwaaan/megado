@@ -99,9 +99,33 @@ void settings_save(Settings* s)
     json_object_put(json);
 }
 
-#define JSON_GET_INT(name) s->name = (float) json_object_get_int(json_get(json, #name))
-#define JSON_GET_FLOAT(name) s->name = (float) json_object_get_double(json_get(json, #name))
-#define JSON_GET_BOOL(name) s->name = json_object_get_boolean(json_get(json, #name))
+int32_t json_get_int_or(const struct json_object *jso, int32_t default_value) {
+    if (jso == NULL) {
+        return default_value;
+    } else {
+        return json_object_get_int(jso);
+    }
+}
+
+float json_get_float_or(const struct json_object *jso, float default_value) {
+    if (jso == NULL) {
+        return default_value;
+    } else {
+        return (float)json_object_get_double(jso);
+    }
+}
+
+bool json_get_bool_or(const struct json_object *jso, bool default_value) {
+    if (jso == NULL) {
+        return default_value;
+    } else {
+        return json_object_get_boolean(jso);
+    }
+}
+
+#define JSON_GET_INT(name, def) s->name = json_get_int_or(json_get(json, #name), (def))
+#define JSON_GET_FLOAT(name, def) s->name = (float) json_get_float_or(json_get(json, #name), (def))
+#define JSON_GET_BOOL(name, def) s->name = json_get_bool_or(json_get(json, #name), (def))
 
 json_object* json_get(json_object* json, const char* key)
 {
@@ -142,31 +166,31 @@ Settings* settings_load()
 
     Settings* s = calloc(1, sizeof(Settings));
 
-    JSON_GET_INT(window_width);
-    JSON_GET_INT(window_height);
+    JSON_GET_INT(window_width, 1200);
+    JSON_GET_INT(window_height, 800);
 
-    JSON_GET_FLOAT(video_scale);
-    JSON_GET_BOOL(vsync);
+    JSON_GET_FLOAT(video_scale, 1.0f);
+    JSON_GET_BOOL(vsync, true);
 
-    JSON_GET_BOOL(show_metrics);
-    JSON_GET_BOOL(show_m68k_registers);
-    JSON_GET_BOOL(show_m68k_disassembly);
-    JSON_GET_BOOL(show_m68k_log);
-    JSON_GET_BOOL(show_z80_registers);
-    JSON_GET_BOOL(show_z80_disassembly);
-    JSON_GET_BOOL(show_z80_log);
-    JSON_GET_BOOL(show_vdp_registers);
-    JSON_GET_BOOL(show_vdp_palettes);
-    JSON_GET_BOOL(show_vdp_patterns);
-    JSON_GET_BOOL(show_vdp_planes);
-    JSON_GET_BOOL(show_vdp_sprites);
-    JSON_GET_BOOL(show_psg_registers);
-    JSON_GET_BOOL(show_ym2612_registers);
-    JSON_GET_BOOL(show_rom);
-    JSON_GET_BOOL(show_ram);
-    JSON_GET_BOOL(show_vram);
-    JSON_GET_BOOL(show_metrics);
-    JSON_GET_BOOL(rewinding_enabled);
+    JSON_GET_BOOL(show_metrics, false);
+    JSON_GET_BOOL(show_m68k_registers, false);
+    JSON_GET_BOOL(show_m68k_disassembly, false);
+    JSON_GET_BOOL(show_m68k_log, false);
+    JSON_GET_BOOL(show_z80_registers, false);
+    JSON_GET_BOOL(show_z80_disassembly, false);
+    JSON_GET_BOOL(show_z80_log, false);
+    JSON_GET_BOOL(show_vdp_registers, false);
+    JSON_GET_BOOL(show_vdp_palettes, false);
+    JSON_GET_BOOL(show_vdp_patterns, false);
+    JSON_GET_BOOL(show_vdp_planes, false);
+    JSON_GET_BOOL(show_vdp_sprites, false);
+    JSON_GET_BOOL(show_psg_registers, false);
+    JSON_GET_BOOL(show_ym2612_registers, false);
+    JSON_GET_BOOL(show_rom, false);
+    JSON_GET_BOOL(show_ram, false);
+    JSON_GET_BOOL(show_vram, false);
+    JSON_GET_BOOL(show_metrics, false);
+    JSON_GET_BOOL(rewinding_enabled, false);
 
     // Load the breakpoints
 
