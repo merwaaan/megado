@@ -17,11 +17,11 @@ void run(Genesis* g, char* path)
 // Enable debug windows on CI to catch more bugs
 #ifdef TRAVIS
     g->settings->vsync = true;
-    g->settings->video_scale = 1f;
+    g->settings->video_scale = 1;
     g->settings->rewinding_enabled = true;
-    g->settings->emulation_speed = 1f; // FIXME: we should as fast as we can on
-                                       // CI, as a fixed speed rate may already
-                                       // be too much for the VM.
+    g->settings->emulation_speed = 1; // FIXME: we should as fast as we can on
+                                      // CI, as a fixed speed rate may already
+                                      // be too much for the VM.
 
     g->settings->show_m68k_registers = true;
     g->settings->show_m68k_disassembly = true;
