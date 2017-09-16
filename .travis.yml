@@ -34,13 +34,13 @@ matrix:
   # Undefined behavior sanitizer
   - compiler: clang-4.0
     env:
-    - FLAGS="-fsanitize=undefined -fno-sanitize-recover=undefined -g -DALL_WINDOWS -DTIMEOUT=100000000"
+    - FLAGS="-fsanitize=undefined -fno-sanitize-recover=undefined -g -DTRAVIS"
     - RUN=debug
 
   # Address sanitizer
   - compiler: clang-4.0
     env:
-    - FLAGS="-fsanitize=address -O1 -fno-omit-frame-pointer -g -DALL_WINDOWS -DTIMEOUT=100000000"
+    - FLAGS="-fsanitize=address -O1 -fno-omit-frame-pointer -g -DTRAVIS"
     - RUN=debug
     - LSAN_OPTIONS="suppressions=lsan.supp"
     - ASAN_OPTIONS="fast_unwind_on_malloc=0"
@@ -58,7 +58,7 @@ matrix:
   - compiler: clang-4.0
     env:
     - RUN=valgrind
-    - FLAGS="-DALL_WINDOWS -DTIMEOUT=10000 -O1 -fno-omit-frame-pointer -g"
+    - FLAGS="-O1 -fno-omit-frame-pointer -g -DTRAVIS"
 
 # Build and install deps/ locally
 install: ./install-deps.sh
