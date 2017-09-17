@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "debugger.h"
 #include "genesis.h"
 #include "m68k/m68k.h"
 #include "vdp.h"
@@ -929,6 +930,8 @@ static void vdp_clock(Vdp* v) {
     if (current_line >= lines) {
         v->clock = 0;
         current_line = 0;
+        // New frame
+        debugger_post_frame(v->genesis->debugger);
     }
 
     uint16_t current_column = v->clock % 855;

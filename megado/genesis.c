@@ -181,68 +181,14 @@ void genesis_initialize(Genesis* g)
 
 void genesis_step(Genesis* g)
 {
+    // FIXME: I think the better way of handling debugging should be to add an
+    // ephemereal breakpoint to the next M68k instruction and just run.  This
+    // way we always account for the cycles elapsed.
     uint32_t cycles = m68k_step(g->m68k);
-    // The Z80 runs at half the frequency of the M68K, so we run the Z80 only
-    // for half the cycles of the last M68K step.  Note that since we are
-    // dividing integers here, we might lose some accuracy if the number of
-    // cycles is odd.  But, from a cursory look at the cycles tables for the
-    // M68K, it appears they are all even, so we should be good.
-    z80_run_cycles(g->z80, cycles / 2);
-
-    // Catch up the audio
-    // The PSG runs at the Z80 frequency
-    psg_run_cycles(g->psg, cycles / 2);
-
-    ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
-}
-
-static void genesis_frame(Genesis* g)
-{
-    // The number of scanlines depends on the region
-    // http://forums.sonicretro.org/index.php?showtopic=5615
-    // TODO: this assumes progressive scan mode, see https://segaretro.org/Sega_Mega_Drive#Graphics
-    uint16_t lines = g->region == Region_Europe ? 312 : 262;
-
-    for (uint16_t line = 0; line < lines; ++line)
-    {
-        // Execute one scanline worth of instructions.
-        // One scanline = 3420 master cycles = 2560 cycles + 860 for Hblank
-
-        // Run all systems for the given master cycles clock count
-
-        // FIXME: account for *actual* cycles emulated due to breakpoints
-        m68k_run_cycles(g->m68k, 2560);
-        z80_run_cycles(g->z80, 2560);
-        psg_run_cycles(g->psg, 2560);
-        ym2612_run_cycles(g->ym2612, 2560);
-
-        audio_update(g->audio);
-
-        // Draw the scanline
-        // FIXME: VDP should work on the matser cycles frequency
-        vdp_draw_scanline(g->vdp, line);
-
-        // Exit early if the emulation has been paused
-        if (g->status != Status_Running)
-            break;
-
-        // Hblank is 860 master cycles
-
-        g->vdp->hblank_in_progress = true;
-        m68k_run_cycles(g->m68k, 860);
-        z80_run_cycles(g->z80, 860);
-        psg_run_cycles(g->psg, 860);
-        ym2612_run_cycles(g->ym2612, 860);
-        g->vdp->hblank_in_progress = false;
-
-        audio_update(g->audio);
-
-        // Exit early if the emulation has been paused
-        if (g->status != Status_Running)
-            break;
-    }
-
-    debugger_post_frame(g->debugger);
+    uint32_t master_cycles = cycles * 7;
+    z80_run_cycles(g->z80, master_cycles);
+    psg_run_cycles(g->psg, master_cycles);
+    ym2612_run_cycles(g->ym2612, master_cycles);
 }
 
 // Run for a given number of master cycles
