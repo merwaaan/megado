@@ -295,6 +295,14 @@ void genesis_update(Genesis* g)
 
             g->audio->remaining_time -= time_slice;
         }
+
+        // Slow down emulation if the machine has troubles keeping up, otherwise
+        // we'll spiral to a crawl.
+        if (g->audio->device && SDL_GetQueuedAudioSize(g->audio->device) < (200 * sizeof(int16_t))) {
+            g->settings->emulation_speed /= 2;
+            printf("Warning: audio buffer queue has very few samples, slowing down emulation speed to %.2f\n",
+                   g->settings->emulation_speed);
+        }
     }
     else if (g->status == Status_Rewinding)
     {
