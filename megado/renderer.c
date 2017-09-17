@@ -1198,21 +1198,15 @@ static void build_ui(Renderer* r)
     double now = glfwGetTime();
     double dt = now - r->last_time;
     r->last_time = now;
-    float insn = r->genesis->m68k->instruction_count / 1000.0;
-    r->genesis->m68k->instruction_count = 0;
 
     metric_push(r->tpf, dt * 1000);
-    metric_push(r->ipf, insn);
-    r->instructions_this_second += insn;
+    metric_push(r->audio_buffer_queue, SDL_GetQueuedAudioSize(r->genesis->audio->device) / sizeof(int16_t));
 
     r->metrics_refresh_counter += dt;
     if (r->metrics_refresh_counter > 1) {
         r->metrics_refresh_counter = 0;
         metric_avg(r->tpf);
-        metric_avg(r->ipf);
-        metric_push(r->ips, r->instructions_this_second / 1000.0);
-        metric_avg(r->ips);
-        r->instructions_this_second = 0;
+        metric_avg(r->audio_buffer_queue);
     }
 
     if (settings->show_metrics) {
@@ -1225,14 +1219,8 @@ static void build_ui(Renderer* r)
         metric_plot(r->tpf, buf);
 
         // (M68k) instructions per frame, in kilos
-        snprintf(buf, sizeof buf, "ipf\navg: %.2fK", r->ipf->avg);
-        metric_plot(r->ipf, buf);
-
-        // (M68k) instructions per seconds, in millions
-        snprintf(buf, sizeof buf, "ips\navg: %.2fM", r->ips->avg);
-        metric_plot(r->ips, buf);
-
-        igText("Audio buffer queue: %u", SDL_GetQueuedAudioSize(r->genesis->audio->device) / sizeof(int16_t));
+        snprintf(buf, sizeof buf, "audio queue (samples)\navg: %.2f", r->audio_buffer_queue->avg);
+        metric_plot(r->audio_buffer_queue, buf);
 
         igTextColored(color_title, "Remaning master cycles");
         igText("M68k:   %d", r->genesis->m68k->remaining_master_cycles);
@@ -1669,8 +1657,7 @@ Renderer* renderer_make(Genesis* genesis)
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 
     r->tpf = metric_make(128);
-    r->ipf = metric_make(128);
-    r->ips = metric_make(16);
+    r->audio_buffer_queue = metric_make(128);
 
     init_ui_rendering(r);
     init_genesis_rendering(r);
@@ -1693,8 +1680,7 @@ void renderer_free(Renderer* r)
     free(r->plane_buffer);
     free(r->sprites_buffer);
     metric_free(r->tpf);
-    metric_free(r->ipf);
-    metric_free(r->ips);
+    metric_free(r->audio_buffer_queue);
 
     for (int i=0; i < SNAPSHOT_SLOTS; ++i) {
         snapshot_metadata_free(r->snapshots[i]);
