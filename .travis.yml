@@ -10,12 +10,12 @@ addons:
     # Need to fetch from the source.  Here is the motherload:
     # https://github.com/travis-ci/apt-source-whitelist/blob/master/ubuntu.json
     sources:
-    - llvm-toolchain-trusty-4.0
+    - llvm-toolchain-trusty-5.0
     - ubuntu-toolchain-r-test
     packages:
     - xorg-dev                  # needed by GLFW
     - valgrind
-    - clang-4.0                 # bleeding edge
+    - clang-5.0                 # bleeding edge
     - gcc-7
 
 matrix:
