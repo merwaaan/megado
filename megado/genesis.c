@@ -223,11 +223,12 @@ void genesis_update(Genesis* g)
         double time_slice = (double)1 / SAMPLE_RATE;
         uint32_t master_frequency = g->region == Region_Europe ? PAL_MASTER_FREQUENCY : NTSC_MASTER_FREQUENCY;
 
+        // How many Genesis seconds we need to emulate, depending on speed factor
+        double dt_genesis = time_slice * g->settings->emulation_speed;
+        // Convert the duration to master cycles
+        double d_cycles = dt_genesis * master_frequency;
+
         while (g->audio->remaining_time > 0) {
-            // How many Genesis seconds we need to emulate, depending on speed factor
-            double dt_genesis = time_slice * g->settings->emulation_speed;
-            // Convert the duration to master cycles
-            double d_cycles = dt_genesis * master_frequency;
             // Emulate enough for one audio sample
             genesis_run_cycles(g, d_cycles);
 
