@@ -44,14 +44,19 @@ void run(Genesis* g, char* path)
     g->settings->show_metrics = true;
 #endif
 
+#ifdef TRAVIS
     double start = glfwGetTime();
+#endif
 
     while (g->status != Status_Quitting) {
         genesis_update(g);
 
 // Automatically exit after 5 minutes on continuous integration
 #ifdef TRAVIS
-        if (glfwGetTime() - start > 300) break;
+        if (glfwGetTime() - start > 300) {
+            printf("Exiting to due built-in timeout\n");
+            break;
+        }
 #endif
     }
 }
