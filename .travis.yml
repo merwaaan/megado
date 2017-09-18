@@ -27,18 +27,18 @@ matrix:
     - FLAGS="-Werror"
 
   # Latest clang build
-  - compiler: clang-4.0
+  - compiler: clang-5.0
     env:
     - FLAGS="-Werror"
 
   # Undefined behavior sanitizer
-  - compiler: clang-4.0
+  - compiler: clang-5.0
     env:
     - FLAGS="-fsanitize=undefined -fno-sanitize-recover=undefined -g -DTRAVIS"
     - RUN=debug
 
   # Address sanitizer
-  - compiler: clang-4.0
+  - compiler: clang-5.0
     env:
     - FLAGS="-fsanitize=address -O1 -fno-omit-frame-pointer -g -DTRAVIS"
     - RUN=debug
@@ -46,7 +46,7 @@ matrix:
     - ASAN_OPTIONS="fast_unwind_on_malloc=0"
 
   # Valgrind
-  - compiler: clang-4.0
+  - compiler: clang-5.0
     env:
     - RUN=valgrind
     - FLAGS="-O1 -fno-omit-frame-pointer -g -DTRAVIS"
@@ -55,7 +55,7 @@ matrix:
   # see https://docs.travis-ci.com/user/common-build-problems/#My-build-script-is-killed-without-any-error
   fast_finish: true
   allow_failures:
-  - compiler: clang-4.0
+  - compiler: clang-5.0
     env:
     - RUN=valgrind
     - FLAGS="-O1 -fno-omit-frame-pointer -g -DTRAVIS"
