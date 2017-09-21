@@ -179,6 +179,10 @@ void genesis_initialize(Genesis* g)
     g->sram = calloc(g->sram_end - g->sram_start, sizeof(uint8_t));
 }
 
+uint32_t genesis_master_frequency(Genesis* g) {
+    return g->region == Region_Europe ? PAL_MASTER_FREQUENCY : NTSC_MASTER_FREQUENCY;
+}
+
 void genesis_step(Genesis* g)
 {
     // FIXME: I think the better way of handling debugging should be to add an
@@ -221,12 +225,11 @@ void genesis_update(Genesis* g)
         // Emulate by slices of audio sample
         g->audio->remaining_time += dt;
         double time_slice = (double)1 / SAMPLE_RATE;
-        uint32_t master_frequency = g->region == Region_Europe ? PAL_MASTER_FREQUENCY : NTSC_MASTER_FREQUENCY;
 
         // How many Genesis seconds we need to emulate, depending on speed factor
         double dt_genesis = time_slice * g->settings->emulation_speed;
         // Convert the duration to master cycles
-        double d_cycles = dt_genesis * master_frequency;
+        double d_cycles = dt_genesis * genesis_master_frequency(g);
 
         while (g->audio->remaining_time > 0) {
             // Emulate enough for one audio sample

@@ -21,7 +21,7 @@
 #define LOG_YM2612(...)
 #endif
 
-static const uint32_t MASTER_CYCLES_PER_CLOCK = 1008;
+static const uint32_t MASTER_CYCLES_PER_CLOCK = 1008; // 144 * 7
 static const uint32_t YM2612_NTSC_FREQUENCY = 7670453;
 static const uint16_t MASTER_CYCLES_PER_ENVELOPE_CLOCK = 351;
 
@@ -240,14 +240,18 @@ int16_t channel_output(Channel* c) {
     }
 }
 
-float channel_frequency_in_hertz(Channel* c) {
+float channel_frequency_in_hertz(Channel* c, uint32_t master_frequency) {
+    float note;
+
+    // TODO: double check this results
     if (c->frequency.block > 0) {
-        return ((float) (c->frequency.freq << (c->frequency.block - 1)))
-            * ((float) YM2612_NTSC_FREQUENCY) / 1048576.0f / 144.0f;
+        note = (c->frequency.freq << (c->frequency.block - 1));
     } else {
-        // FIXME: handle block 0
-        return 0;
+        note = (c->frequency.freq >> 1);
     }
+
+    note = note * master_frequency / (2 << 19) / 144;
+    return note;
 }
 
 int16_t channel_envelope(Channel* c) {

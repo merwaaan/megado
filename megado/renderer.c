@@ -1325,7 +1325,7 @@ static void build_ui(Renderer* r)
             }
 
             igText("%d:%d", y->channels[i].frequency.block, y->channels[i].frequency.freq);
-            igText("%.2fHz", channel_frequency_in_hertz(&y->channels[i]));
+            igText("%.2fHz", channel_frequency_in_hertz(&y->channels[i], genesis_master_frequency(r->genesis)));
             igText("%0X", y->channels[i].feedback);
             igText("%0X", y->channels[i].algorithm);
             igText("%s%s", y->channels[i].left_output ? "L" : " ", y->channels[i].right_output ? "R" : " ");

@@ -107,7 +107,8 @@ int16_t ym2612_mix(YM2612*);
 int16_t channel_output(Channel*);
 int16_t channel_envelope(Channel*);
 uint16_t channel_frequency(Channel*);
-float channel_frequency_in_hertz(Channel*);
+
+float channel_frequency_in_hertz(Channel*, uint32_t master_frequency);
 
 extern int16_t ym2612_samples[];
 extern uint32_t ym2612_samples_cursor;

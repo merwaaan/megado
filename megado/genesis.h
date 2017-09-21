@@ -68,6 +68,8 @@ struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc);
 void genesis_update(Genesis* g);
 void genesis_step(Genesis* g);
 
+uint32_t genesis_master_frequency(Genesis*);
+
 // Return the name of the game currently being executed as
 // stored in the ROM header. The international name is looked
 // for first and the domestic name is used as a fallback.
