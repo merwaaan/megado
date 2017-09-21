@@ -1297,6 +1297,7 @@ static void build_ui(Renderer* r)
         struct ImVec2 dummy = { 0, 0 };  // Don't know what it does, but needed
                                          // as argument to IgSelectable
         igTextColored(color_title, "Channel");
+        igSelectable("enabled", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("freq number", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("frequency", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("feedback", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
@@ -1309,6 +1310,15 @@ static void build_ui(Renderer* r)
 
         for (int i=0; i < 6; ++i) {
             igTextColored(color_title, "%d", i + 1);
+
+            // FIXME: the checkbox is too tall for the line, shifting all the
+            // lines in the table after it.
+            igPushStyleColor(ImGuiCol_CheckMark, color_accent);
+            igSameLine(20,0);
+            char name_buffer[10];
+            sprintf(name_buffer, "##chan%d", i);
+            igCheckbox(name_buffer, &y->channels[i].muted);
+            igPopStyleColor(1);
 
             if ((i+1) % 3 == 0) {
                 uint8_t channel_mode = i == 3 ? y->channel3_mode : y->channel6_mode;
@@ -1324,6 +1334,7 @@ static void build_ui(Renderer* r)
                 igText(" (%s)", mode_string);
             }
 
+            igText("%d", y->channels[i].enabled);
             igText("%d:%d", y->channels[i].frequency.block, y->channels[i].frequency.freq);
             igText("%.2fHz", channel_frequency_in_hertz(&y->channels[i], genesis_master_frequency(r->genesis)));
             igText("%0X", y->channels[i].feedback);

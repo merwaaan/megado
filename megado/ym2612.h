@@ -52,6 +52,7 @@ typedef struct Channel {
     uint8_t   frequency_modulation_sensitivity : 3;
 
     bool enabled;
+    bool muted;
 } Channel;
 
 typedef struct YM2612
