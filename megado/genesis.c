@@ -17,10 +17,8 @@
 #include "utils.h"
 #include "ym2612.h"
 
-const uint32_t NTSC_MASTER_FREQUENCY = 53693175;
-const uint32_t PAL_MASTER_FREQUENCY  = 53203424;
-const uint32_t PAL_MASTER_CYCLES_PER_FRAME = 1067040;
-const uint32_t NTSC_MASTER_CYCLES_PER_FRAME = 896040;
+static const uint32_t NTSC_MASTER_FREQUENCY = 53693175;
+static const uint32_t PAL_MASTER_FREQUENCY  = 53203424;
 
 Genesis* genesis_make()
 {

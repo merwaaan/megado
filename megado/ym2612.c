@@ -11,6 +11,7 @@
 // TODO: stereo
 // TODO: feedback for channel 1
 // TODO: channel 3 & 6 special modes
+// TODO: CSM
 // TODO: modulation
 // TODO: timers
 // TODO: dac?
@@ -21,14 +22,21 @@
 #define LOG_YM2612(...)
 #endif
 
-static const uint32_t MASTER_CYCLES_PER_CLOCK = 1008; // 144 * 7
-static const uint32_t YM2612_NTSC_FREQUENCY = 7670453;
-static const uint16_t MASTER_CYCLES_PER_ENVELOPE_CLOCK = 351;
+// The YM2612 divides the master clock by 7
+// Then, the FM clock divides the YM2612 clock by 144
+static const uint32_t MASTER_CYCLES_PER_FM_CLOCK = 1008; // 144 * 7
+
+// The envelope clock divides the FM clock by 3
+static const uint16_t MASTER_CYCLES_PER_ENVELOPE_CLOCK = 336; // 1008 / 3
 
 // Local functions
 
-void channel_clock(Channel*);
-void envelope_clock(YM2612*);
+static void channel_clock(Channel*);
+static int16_t channel_output(Channel*);
+static int16_t channel_envelope(Channel*);
+static uint8_t channel_key_code(Channel*);
+static void envelope_clock(YM2612*);
+static uint8_t operator_rate(Operator*, Channel*);
 
 // Global functions
 
@@ -49,7 +57,7 @@ void ym2612_initialize(YM2612* y) {
     y->genesis = g;
 }
 
-void ym2612_clock(YM2612* y) {
+static void ym2612_clock(YM2612* y) {
     for (int i=0; i < 6; ++i) {
         channel_clock(&y->channels[i]);
     }
@@ -60,13 +68,13 @@ void ym2612_run_cycles(YM2612* y, uint32_t cycles) {
 
     while (y->remaining_master_cycles > 0) {
         ym2612_clock(y);
-        y->remaining_master_cycles -= MASTER_CYCLES_PER_CLOCK;
+        y->remaining_master_cycles -= MASTER_CYCLES_PER_FM_CLOCK;
+    }
 
-        /* y->envelope_remaining_clocks += MASTER_CYCLES_PER_CLOCK; */
-        /* while (y->envelope_remaining_clocks > 0) { */
-        /*     envelope_clock(y); */
-        /*     y->envelope_remaining_clocks -= MASTER_CYCLES_PER_ENVELOPE_CLOCK; */
-        /* } */
+    y->envelope_remaining_master_cycles += cycles;
+    while (y->envelope_remaining_master_cycles > 0) {
+        envelope_clock(y);
+        y->envelope_remaining_master_cycles -= MASTER_CYCLES_PER_ENVELOPE_CLOCK;
     }
 }
 
@@ -81,11 +89,36 @@ int16_t ym2612_mix(YM2612* y) {
     return sample;
 }
 
-void envelope_clock(YM2612* y) {
+static void envelope_clock(YM2612* y) {
     // TODO:
+
+    //op->rate = operator_rate(op, &y->channels[channel]);
+
 }
 
-uint8_t detune_table[32][4] = {
+static uint8_t operator_rate(Operator* op, Channel* c) {
+    // r is the rate for the current ADSR phase of the operator
+    uint8_t r;
+    switch (op->adsr_phase) {
+    case ATTACK  : r = op->attack_rate; break;
+    case DECAY   : r = op->decay_rate; break;
+    case SUSTAIN : r = op->sustain_rate; break;
+        // Release rate is 4bit; treat it as a 5bit value with LSB set to 1
+    case RELEASE : r = (op->release_rate << 2) + 1; break;
+    }
+
+    if (r == 0) {
+        return 0;
+    }
+
+    // rks is the rate key scaling; see page 29 of the YM2608 manual.
+    // This alternative formula is in the Genesis manual.
+    uint8_t rks = channel_key_code(c) >> (3 - op->rate_scaling);
+
+    return (2 * r) + rks;
+}
+
+static uint8_t detune_table[32][4] = {
     {0, 0, 1, 2},   //0  (0x00)
     {0, 0, 1, 2},   //1  (0x01)
     {0, 0, 1, 2},   //2  (0x02)
@@ -120,23 +153,27 @@ uint8_t detune_table[32][4] = {
     {0, 8,16,22}    //31 (0x1F)
 };
 
-void channel_clock(Channel* c) {
+static uint8_t channel_key_code(Channel* c) {
+    uint16_t f = c->frequency.freq;
+    uint8_t n4 = BIT(f, 10);
+    uint8_t n3 = (BIT(f, 10) & (BIT(f, 9) | BIT(f, 8) | BIT(f, 7)))
+        | !(BIT(f, 10) & BIT(f, 9) & BIT(f, 8) & BIT(f, 7));
+
+    return (c->frequency.block << 2) | (n4 << 1) | n3;
+}
+
+static void channel_clock(Channel* c) {
     for (int i=0; i < 4; ++i) {
         uint32_t phase_increment = c->frequency.freq;
 
         // Shift by block
         if (c->frequency.block > 1) {
-            phase_increment <<= c->frequency.block;
+            phase_increment <<= c->frequency.block - 1;
         } else if (c->frequency.block == 0) {
             phase_increment >>= 1;
         }
 
-        uint16_t f = c->frequency.freq;
-        uint8_t n4 = BIT(f, 10);
-        uint8_t n3 = (BIT(f, 10) & (BIT(f, 9) | BIT(f, 8) | BIT(f, 7)))
-            | !(BIT(f, 10) & BIT(f, 9) & BIT(f, 8) & BIT(f, 7));
-
-        uint8_t key_code = (c->frequency.block << 2) | (n4 << 1) | n3;
+        uint8_t key_code = channel_key_code(c);
         uint8_t detune_adjust = detune_table[key_code][c->operators[i].detune & 0x3];
 
         // MSB of detune is the sign bit
@@ -157,84 +194,108 @@ void channel_clock(Channel* c) {
     }
 }
 
-double operator_phase(Operator* o) {
-    return ((double)(o->phase_counter >> 10)) / ((1 << 10) - 1);
-}
-
 #define TAU 6.283185307178586
 
-int16_t channel_output(Channel* c) {
+static int16_t operator_output(Operator* o, int16_t operator_input) {
+    // Convert input to 10bit modulation value
+    // FIXME: shifting by 5 is the only thing that sounds good, even though
+    // the doc says we should only shift by 1 here.
+    uint16_t phase_modulation = ((uint16_t)operator_input >> 5) & 0x3ff;
+
+    // Phase generator input is upper 10bit of the phase counter
+    uint16_t phase_input = o->phase_counter >> 10;
+
+    // Compute sine from phase (with overflow, clamp to 10bit)
+    uint16_t phase = (phase_input + phase_modulation) & 0x3ff;
+    double phase_normalized = (double)phase / 0x3ff;
+    double sin_result = sin(phase_normalized * TAU);
+
+    // TODO: attenuation from envelope generator
+    double power_linear = 1;
+
+    // Combine sine and attenuation
+    double result_normalized = sin_result * power_linear;
+
+    // Convert to 14bit operator output
+    int16_t max = (1 << (14 - 1)) - 1;
+    return result_normalized * max;
+}
+
+static int16_t channel_output(Channel* c) {
     // FIXME: use something faster than sin()
-    if (c->enabled) {
-        double output = 0;
+    if (c->enabled && !c->muted) {
+        int16_t output = 0;
+        Operator* ops = c->operators;
+
+        c->algorithm = 0;
+
         switch (c->algorithm) {
         case 0: {
-            double s1 = sin(TAU * operator_phase(&c->operators[0]));
-            double s2 = sin(s1 + TAU * operator_phase(&c->operators[1]));
-            double s3 = sin(s2 + TAU * operator_phase(&c->operators[2]));
-            double s4 = sin(s3 + TAU * operator_phase(&c->operators[3]));
+            int16_t s1 = operator_output(&ops[0], 0);
+            int16_t s2 = operator_output(&ops[1], s1);
+            int16_t s3 = operator_output(&ops[2], s2);
+            int16_t s4 = operator_output(&ops[3], s3);
             output = s4;
         } break;
 
         case 1: {
-            double s1 = sin(TAU * operator_phase(&c->operators[0]));
-            double s2 = sin(TAU * operator_phase(&c->operators[1]));
-            double s3 = sin(s1 + s2 + TAU * operator_phase(&c->operators[2]));
-            double s4 = sin(s3 + TAU * operator_phase(&c->operators[3]));
+            int16_t s1 = operator_output(&ops[0], 0);
+            int16_t s2 = operator_output(&ops[1], 0);
+            int16_t s3 = operator_output(&ops[2], s1 + s2);
+            int16_t s4 = operator_output(&ops[3], s3);
             output = s4;
         } break;
 
         case 2: {
-            double s1 = sin(TAU * operator_phase(&c->operators[0]));
-            double s2 = sin(TAU * operator_phase(&c->operators[1]));
-            double s3 = sin(s2 + TAU * operator_phase(&c->operators[2]));
-            double s4 = sin(s1 + s3 + TAU * operator_phase(&c->operators[3]));
+            int16_t s1 = operator_output(&ops[0], 0);
+            int16_t s2 = operator_output(&ops[1], 0);
+            int16_t s3 = operator_output(&ops[2], s2);
+            int16_t s4 = operator_output(&ops[3], s1 + s3);
             output = s4;
         } break;
 
         case 3: {
-            double s1 = sin(TAU * operator_phase(&c->operators[0]));
-            double s2 = sin(s1 + TAU * operator_phase(&c->operators[1]));
-            double s3 = sin(TAU * operator_phase(&c->operators[2]));
-            double s4 = sin(s2 + s3 + TAU * operator_phase(&c->operators[3]));
+            int16_t s1 = operator_output(&ops[0], 0);
+            int16_t s2 = operator_output(&ops[1], s1);
+            int16_t s3 = operator_output(&ops[2], 0);
+            int16_t s4 = operator_output(&ops[3], s2 + s3);
             output = s4;
         } break;
 
         case 4: {
-            double s1 = sin(TAU * operator_phase(&c->operators[0]));
-            double s2 = sin(s1 + TAU * operator_phase(&c->operators[1]));
-            double s3 = sin(TAU * operator_phase(&c->operators[2]));
-            double s4 = sin(s3 + TAU * operator_phase(&c->operators[3]));
-            output = (s2 + s4) / 2;
+            int16_t s1 = operator_output(&ops[0], 0);
+            int16_t s2 = operator_output(&ops[1], s1);
+            int16_t s3 = operator_output(&ops[2], 0);
+            int16_t s4 = operator_output(&ops[3], s3);
+            output = s2 + s4;
         } break;
 
         case 5: {
-            double s1 = sin(TAU * operator_phase(&c->operators[0]));
-            double s2 = sin(s1 + TAU * operator_phase(&c->operators[1]));
-            double s3 = sin(s1 + TAU * operator_phase(&c->operators[2]));
-            double s4 = sin(s1 + TAU * operator_phase(&c->operators[3]));
-            output = (s2 + s3 + s4) / 3;
+            int16_t s1 = operator_output(&ops[0], 0);
+            int16_t s2 = operator_output(&ops[1], s1);
+            int16_t s3 = operator_output(&ops[2], s1);
+            int16_t s4 = operator_output(&ops[3], s1);
+            output = s2 + s3 + s4;
         } break;
 
         case 6: {
-            double s1 = sin(TAU * operator_phase(&c->operators[0]));
-            double s2 = sin(s1 + TAU * operator_phase(&c->operators[1]));
-            double s3 = sin(TAU * operator_phase(&c->operators[2]));
-            double s4 = sin(TAU * operator_phase(&c->operators[3]));
-            output = (s2 + s3 + s4) / 3;
+            int16_t s1 = operator_output(&ops[0], 0);
+            int16_t s2 = operator_output(&ops[1], s1);
+            int16_t s3 = operator_output(&ops[2], 0);
+            int16_t s4 = operator_output(&ops[3], 0);
+            output = s2 + s3 + s4;
         } break;
 
         case 7:{
-            double s1 = sin(TAU * operator_phase(&c->operators[0]));
-            double s2 = sin(TAU * operator_phase(&c->operators[1]));
-            double s3 = sin(TAU * operator_phase(&c->operators[2]));
-            double s4 = sin(TAU * operator_phase(&c->operators[3]));
-            output = (s1 + s2 + s3 + s4) / 4;
+            int16_t s1 = operator_output(&ops[0], 0);
+            int16_t s2 = operator_output(&ops[1], 0);
+            int16_t s3 = operator_output(&ops[2], 0);
+            int16_t s4 = operator_output(&ops[3], 0);
+            output = s1 + s2 + s3 + s4;
         } break;
-
         }
 
-        return channel_envelope(c) * output;
+        return output;
     } else {
         return 0;
     }
@@ -252,11 +313,6 @@ float channel_frequency_in_hertz(Channel* c, uint32_t master_frequency) {
 
     note = note * master_frequency / (2 << 19) / 144;
     return note;
-}
-
-int16_t channel_envelope(Channel* c) {
-    // TODO: envelope
-    return 16422;
 }
 
 uint8_t ym2612_read(YM2612* y, uint32_t address) {
@@ -318,14 +374,33 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
             channel--;
         }
 
+        // FIXME: operators can be enabled invidually, but does it mean they do
+        // not output any frequency otherwise?
+        // Or is it just relevant for the envelope generator?
+
         if (operators == 0xf) {
             y->channels[channel].enabled = true;
         } else if (operators == 0) {
             y->channels[channel].enabled = false;
         } else {
-            // FIXME: operators can be enabled invidually, but
-            // does it mean they do not output any frequency otherwise?
             printf("Warning: YM2612 key on for individual operators: %x\n", operators);
+        }
+
+
+        // Update envelope on key on/off for individual operators
+        for (int i=0; i < 4; ++i) {
+            Operator* op = &y->channels[channel].operators[i];
+            if (BIT(operators, i)) {
+                // Key on
+                op->adsr_phase = ATTACK;
+                op->attenuation = 0;
+                y->envelope_counter = 0;
+                op->polarity = true;
+            } else {
+                // Key off
+                op->adsr_phase = RELEASE;
+                op->polarity = false;
+            }
         }
 
     } break;
