@@ -33,7 +33,6 @@ static const uint16_t MASTER_CYCLES_PER_ENVELOPE_CLOCK = 336; // 1008 / 3
 
 static void channel_clock(Channel*);
 static int16_t channel_output(Channel*);
-static int16_t channel_envelope(Channel*);
 static uint8_t channel_key_code(Channel*);
 static void envelope_clock(YM2612*);
 static uint8_t operator_rate(Operator*, Channel*);
@@ -89,11 +88,88 @@ int16_t ym2612_mix(YM2612* y) {
     return sample;
 }
 
+static const uint8_t counter_shift_table[64] = {
+    11, 11, 11, 11, // 0-3    (0x00-0x03)
+    10, 10, 10, 10, // 4-7    (0x04-0x07)
+    9,   9,  9,  9, // 8-11   (0x08-0x0B)
+    8,   8,  8,  8, // 12-15  (0x0C-0x0F)
+    7,   7,  7,  7, // 16-19  (0x10-0x13)
+    6,   6,  6,  6, // 20-23  (0x14-0x17)
+    5,   5,  5,  5, // 24-27  (0x18-0x1B)
+    4,   4,  4,  4, // 28-31  (0x1C-0x1F)
+    3,   3,  3,  3, // 32-35  (0x20-0x23)
+    2,   2,  2,  2, // 36-39  (0x24-0x27)
+    1,   1,  1,  1, // 40-43  (0x28-0x2B)
+    0,   0,  0,  0, // 44-47  (0x2C-0x2F)
+    0,   0,  0,  0, // 48-51  (0x30-0x33)
+    0,   0,  0,  0, // 52-55  (0x34-0x37)
+    0,   0,  0,  0, // 56-59  (0x38-0x3B)
+    0,   0,  0,  0, // 60-63  (0x3C-0x3F)
+};
+
+static const uint8_t attenuation_increment_table[64][8] = {
+    {0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0}, {0,1,0,1,0,1,0,1}, {0,1,0,1,0,1,0,1}, // 0-3    (0x00-0x03)
+    {0,1,0,1,0,1,0,1}, {0,1,0,1,0,1,0,1}, {0,1,1,1,0,1,1,1}, {0,1,1,1,0,1,1,1}, // 4-7    (0x04-0x07)
+    {0,1,0,1,0,1,0,1}, {0,1,0,1,1,1,0,1}, {0,1,1,1,0,1,1,1}, {0,1,1,1,1,1,1,1}, // 8-11   (0x08-0x0B)
+    {0,1,0,1,0,1,0,1}, {0,1,0,1,1,1,0,1}, {0,1,1,1,0,1,1,1}, {0,1,1,1,1,1,1,1}, // 12-15  (0x0C-0x0F)
+    {0,1,0,1,0,1,0,1}, {0,1,0,1,1,1,0,1}, {0,1,1,1,0,1,1,1}, {0,1,1,1,1,1,1,1}, // 16-19  (0x10-0x13)
+    {0,1,0,1,0,1,0,1}, {0,1,0,1,1,1,0,1}, {0,1,1,1,0,1,1,1}, {0,1,1,1,1,1,1,1}, // 20-23  (0x14-0x17)
+    {0,1,0,1,0,1,0,1}, {0,1,0,1,1,1,0,1}, {0,1,1,1,0,1,1,1}, {0,1,1,1,1,1,1,1}, // 24-27  (0x18-0x1B)
+    {0,1,0,1,0,1,0,1}, {0,1,0,1,1,1,0,1}, {0,1,1,1,0,1,1,1}, {0,1,1,1,1,1,1,1}, // 28-31  (0x1C-0x1F)
+    {0,1,0,1,0,1,0,1}, {0,1,0,1,1,1,0,1}, {0,1,1,1,0,1,1,1}, {0,1,1,1,1,1,1,1}, // 32-35  (0x20-0x23)
+    {0,1,0,1,0,1,0,1}, {0,1,0,1,1,1,0,1}, {0,1,1,1,0,1,1,1}, {0,1,1,1,1,1,1,1}, // 36-39  (0x24-0x27)
+    {0,1,0,1,0,1,0,1}, {0,1,0,1,1,1,0,1}, {0,1,1,1,0,1,1,1}, {0,1,1,1,1,1,1,1}, // 40-43  (0x28-0x2B)
+    {0,1,0,1,0,1,0,1}, {0,1,0,1,1,1,0,1}, {0,1,1,1,0,1,1,1}, {0,1,1,1,1,1,1,1}, // 44-47  (0x2C-0x2F)
+    {1,1,1,1,1,1,1,1}, {1,1,1,2,1,1,1,2}, {1,2,1,2,1,2,1,2}, {1,2,2,2,1,2,2,2}, // 48-51  (0x30-0x33)
+    {2,2,2,2,2,2,2,2}, {2,2,2,4,2,2,2,4}, {2,4,2,4,2,4,2,4}, {2,4,4,4,2,4,4,4}, // 52-55  (0x34-0x37)
+    {4,4,4,4,4,4,4,4}, {4,4,4,8,4,4,4,8}, {4,8,4,8,4,8,4,8}, {4,8,8,8,4,8,8,8}, // 56-59  (0x38-0x3B)
+    {8,8,8,8,8,8,8,8}, {8,8,8,8,8,8,8,8}, {8,8,8,8,8,8,8,8}, {8,8,8,8,8,8,8,8}, // 60-63  (0x3C-0x3F)
+};
+
 static void envelope_clock(YM2612* y) {
-    // TODO:
+    y->envelope_counter++;
 
-    //op->rate = operator_rate(op, &y->channels[channel]);
+    for (int i=0; i < 6; ++i) {
+        Channel* channel = &y->channels[i];
+        for (int j=0; j < 4; ++j) {
+            Operator* op = &channel->operators[j];
+            op->rate = operator_rate(op, channel);
+            uint8_t counter_shift_value = counter_shift_table[op->rate];
 
+            if ((y->envelope_counter % (1 << counter_shift_value)) == 0) {
+                uint8_t update_cycle = (y->envelope_counter >> counter_shift_value) & 0x7;
+                uint8_t attenuation_increment = attenuation_increment_table[op->rate][update_cycle];
+
+                switch (op->adsr_phase) {
+
+                case ATTACK: {
+                    op->attenuation += (~op->attenuation * attenuation_increment) >> 4;
+
+                    if (op->attenuation == 0) {
+                        op->adsr_phase = DECAY;
+                    }
+                } break;
+
+                case DECAY: {
+                    op->attenuation += attenuation_increment;
+
+                    if (op->attenuation >= op->sustain_level) {
+                        op->attenuation = op->sustain_level;
+                        op->adsr_phase = SUSTAIN;
+                    }
+                } break;
+
+                case SUSTAIN: {
+                    op->attenuation += attenuation_increment;
+                } break;
+
+                case RELEASE: {
+                    op->attenuation += attenuation_increment;
+                } break;
+                }
+            }
+        }
+    }
 }
 
 static uint8_t operator_rate(Operator* op, Channel* c) {
@@ -118,7 +194,7 @@ static uint8_t operator_rate(Operator* op, Channel* c) {
     return (2 * r) + rks;
 }
 
-static uint8_t detune_table[32][4] = {
+static const uint8_t detune_table[32][4] = {
     {0, 0, 1, 2},   //0  (0x00)
     {0, 0, 1, 2},   //1  (0x01)
     {0, 0, 1, 2},   //2  (0x02)
@@ -210,7 +286,18 @@ static int16_t operator_output(Operator* o, int16_t operator_input) {
     double phase_normalized = (double)phase / 0x3ff;
     double sin_result = sin(phase_normalized * TAU);
 
-    // TODO: attenuation from envelope generator
+    // Get attenuation from envelope generator
+    uint16_t attenuation = o->attenuation;
+    if (o->polarity) {
+        attenuation = ~attenuation;
+    }
+    //attenuation = (attenuation + o->total_level) & 0x3ff;
+
+    // Convert to Bels
+    double attenuation_weighting = 48.0 / (1 << 10);
+    double attenuation_in_bels = ((double)attenuation * attenuation_weighting) / 10.0;
+    //double power_linear = pow(10.0, -attenuation_in_bels);
+    // FIXME: envelope is not quite ready
     double power_linear = 1;
 
     // Combine sine and attenuation
@@ -393,13 +480,11 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
             if (BIT(operators, i)) {
                 // Key on
                 op->adsr_phase = ATTACK;
-                op->attenuation = 0;
+                op->attenuation = 0x3ff;
                 y->envelope_counter = 0;
-                op->polarity = true;
             } else {
                 // Key off
                 op->adsr_phase = RELEASE;
-                op->polarity = false;
             }
         }
 
