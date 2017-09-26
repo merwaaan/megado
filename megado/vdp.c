@@ -233,8 +233,12 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
     // TODO see https://sourceforge.net/p/dgen/dgen/ci/master/tree/vdp.cpp for cancelling commands
 
-    // Register write
-    if ((value & 0xC000) == 0x8000)
+    // Register write (most significant bits are 10)
+    //
+    // Not documented: it seems that words with this pattern are considered
+    // as the second half of a command word is a command is pending (behavior
+    // found in CrazyBus, which has an invalid plane B address if not handled)
+    if ((value & 0xC000) == 0x8000 && !v->pending_command)
     {
         uint8_t reg = FRAGMENT(value, 12, 8);
         uint8_t reg_value = WORD_LO(value);
