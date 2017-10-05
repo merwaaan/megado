@@ -15,8 +15,8 @@ BUILD_DIR := build
 CFLAGS += $(USER_FLAGS)
 
 # Submodule dependencies
-INCLUDES := -I./ -D_REENTRANT -Ideps/sdl2/install/include/SDL2
-LIBS := -lm -Ldeps/sdl2/install/lib -lSDL2
+INCLUDES := -I./ -D_REENTRANT -I/usr/include/SDL2
+LIBS := -lm -lSDL2
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
