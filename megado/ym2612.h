@@ -11,6 +11,10 @@ typedef enum {
     ATTACK, DECAY, SUSTAIN, RELEASE
 } ADSR;
 
+typedef enum {
+    PART_I, PART_II
+} Part;
+
 typedef struct Operator {
     // Frequency
     uint8_t detune                       : 3;
@@ -95,6 +99,7 @@ void ym2612_free(YM2612*);
 void ym2612_initialize(YM2612*);
 uint8_t ym2612_read(YM2612*, uint32_t address);
 void ym2612_write(YM2612*, uint32_t address, uint8_t value);
+void ym2612_write_register(YM2612*, uint8_t address, uint8_t value, Part);
 void ym2612_run_cycles(YM2612*, uint32_t);
 int16_t ym2612_mix(YM2612*);
 

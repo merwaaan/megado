@@ -412,10 +412,10 @@ uint8_t ym2612_read(YM2612* y, uint32_t address) {
   return 0x7;
 }
 
-void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2) {
+void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, Part part) {
     Channel* channels = y->channels;
     Frequency* additional_freqs = y->channel3_additional_frequencies;
-    if (part2) {
+    if (part == PART_II) {
         // Write to channels 4, 5 and 6 instead
         channels = &y->channels[3];
         additional_freqs = y->channel6_additional_frequencies;
@@ -439,7 +439,7 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
         break;
 
     case 0x27:
-        if (part2) {
+        if (part == PART_II) {
             y->channel6_mode = value >> 6;
         } else {
             y->channel3_mode = value >> 6;
@@ -595,7 +595,7 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, bool part2
 
     default:
         printf("Warning: unhandled write to YM2612 (%s): %x <- %x\n",
-               part2 ? "part II" : "part I", address, value);
+               part == PART_II ? "part II" : "part I", address, value);
     }
 }
 
@@ -609,7 +609,7 @@ void ym2612_write(YM2612* y, uint32_t address, uint8_t value) {
         break;
 
     case 0x4001:
-        ym2612_write_register(y, y->latched_address_part1, value, false);
+        ym2612_write_register(y, y->latched_address_part1, value, PART_I);
         break;
 
         // Part II: channels 4, 5 and 6
@@ -617,7 +617,7 @@ void ym2612_write(YM2612* y, uint32_t address, uint8_t value) {
         y->latched_address_part2 = value;
         break;
     case 0x4003:
-        ym2612_write_register(y, y->latched_address_part2, value, true);
+        ym2612_write_register(y, y->latched_address_part2, value, PART_II);
         break;
 
     default:
