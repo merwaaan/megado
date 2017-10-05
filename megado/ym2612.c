@@ -80,9 +80,17 @@ void ym2612_run_cycles(YM2612* y, uint32_t cycles) {
 int16_t ym2612_mix(YM2612* y) {
     int32_t sample = 0;
 
-    for (int i=0; i < 6; ++i) {
+    for (int i=0; i < 5; ++i) {
         sample += channel_output(&y->channels[i]);
     }
+
+    // If the DAC is enabled, the DAC data is output instead of channel 6
+    if (y->dac_enabled) {
+        sample += y->dac_data << 8; // bump to 16bit
+    } else {
+        sample += channel_output(&y->channels[5]);
+    }
+
     sample /= 6;
 
     return sample;
