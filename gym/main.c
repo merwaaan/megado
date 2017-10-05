@@ -29,6 +29,9 @@ void gym_play(uint8_t *data, uint64_t size) {
   YM2612 ym;
   PSG psg;
 
+  uint8_t dac_buffer[1024];
+  uint16_t dac_count = 0;
+
   ym2612_initialize(&ym);
   psg_initialize(&psg);
 
@@ -73,8 +76,25 @@ void gym_play(uint8_t *data, uint64_t size) {
       double sleep_period = (double)1/60;
       remaining_time += sleep_period;
 
+      int dac_index = 0;
+
+      int audio_samples_count = SAMPLE_RATE / 60;
+      double samples_per_dac = (double)dac_count / audio_samples_count;
+      double samples_this_dac = 0;
+
       // Emulate for that duration in slice of audio samples
       while (remaining_time > 0) {
+
+        // If we have some DAC samples, we need to feed them to the YM2612
+        if (dac_count > 0 && dac_index < dac_count) {
+          // Write the DAC samples evenly throughout the frame
+          samples_this_dac += samples_per_dac;
+          if (samples_this_dac > 1) {
+            ym2612_write_register(&ym, 0x2a, dac_buffer[dac_index++], PART_I);
+            samples_this_dac -= 1;
+          }
+        }
+
         ym2612_run_cycles(&ym, slice_cycles);
         psg_run_cycles(&psg, slice_cycles);
 
@@ -89,13 +109,30 @@ void gym_play(uint8_t *data, uint64_t size) {
         remaining_time -= time_slice;
       }
 
+      // All DAC samples should have been flushed this frame, so reset
+      dac_count = 0;
+
     } break;
 
       // Write to part I
     case 0x01: {
       uint8_t reg = data[pc++];
       uint8_t value = data[pc++];
-      ym2612_write_register(&ym, reg, value, PART_I);
+
+      // Multiple DAC writes often happen between two video frames, so we have
+      // to save them into a buffer in order to feed them to the YM2612 between
+      // audio samples.  Otherwise, only the last write will be taken into
+      // account by the YM2612.
+      if (reg == 0x2a) {
+        if (dac_count >= 1024) {
+          printf("Warning: DAC buffer overflow\n");
+        } else {
+          dac_buffer[dac_count++] = value;
+        }
+      } else {
+        ym2612_write_register(&ym, reg, value, PART_I);
+      }
+
     } break;
 
       // Write to part II
