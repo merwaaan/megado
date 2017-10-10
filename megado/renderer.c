@@ -1088,6 +1088,15 @@ static void build_ui(Renderer* r)
             uint16_t pattern_index, palette_index;
             bool priority, horizontal_flip, vertical_flip;
             vdp_get_plane_cell_data(r->genesis->vdp, r->selected_plane, cell_index, &pattern_index, &palette_index, &priority, &horizontal_flip, &vertical_flip);
+            
+            // Draw a border around the hovered cell
+
+            struct ImVec2 window = get_cursor();
+            struct ImVec2 top_left = { window.x + (int)(cell_pos.x / 8) * 8 + 1, window.y + (int)(cell_pos.y / 8) * 8 + 1};
+            struct ImVec2 bottom_right = { top_left.x + 8, top_left.y + 8 };
+
+            struct ImDrawList* draw_list = igGetWindowDrawList();
+            ImDrawList_AddRect(draw_list, top_left, bottom_right, igGetColorU32Vec(&color_accent), 0, 0, 1);
 
             // Draw a magnified version of the pattern
 
