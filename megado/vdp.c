@@ -582,29 +582,29 @@ void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width
         }
 }
 
-static void draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t* buffer, uint32_t buffer_width)
+static void draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t shade, uint8_t* buffer, uint32_t buffer_width)
 {
     // Top border
     uint32_t destination = (y * buffer_width + x) * 3;
     for (uint16_t px = x; px < x + w; ++px)
     {
         destination += 3;
-        buffer[destination] = 0xFF;
-        buffer[destination + 1] = 0xFF;
-        buffer[destination + 2] = 0xFF;
+        buffer[destination] = shade;
+        buffer[destination + 1] = shade;
+        buffer[destination + 2] = shade;
     }
 
     // Left & right borders
     for (uint16_t py = y; py < y + h; ++py)
     {
         destination = (py * buffer_width + x) * 3;
-        buffer[destination] = 0xFF;
-        buffer[destination + 1] = 0xFF;
-        buffer[destination + 2] = 0xFF;
+        buffer[destination] = shade;
+        buffer[destination + 1] = shade;
+        buffer[destination + 2] = shade;
         destination += w * 3;
-        buffer[destination] = 0xFF;
-        buffer[destination + 1] = 0xFF;
-        buffer[destination + 2] = 0xFF;
+        buffer[destination] = shade;
+        buffer[destination + 1] = shade;
+        buffer[destination + 2] = shade;
     }
 
     // Bottom borders
@@ -612,9 +612,9 @@ static void draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t* b
     for (uint16_t px = x; px < x + w; ++px)
     {
         destination += 3;
-        buffer[destination] = 0xFF;
-        buffer[destination + 1] = 0xFF;
-        buffer[destination + 2] = 0xFF;
+        buffer[destination] = shade;
+        buffer[destination + 1] = shade;
+        buffer[destination + 2] = shade;
     }
 }
 
@@ -633,6 +633,7 @@ void vdp_draw_sprites(Vdp* v, uint8_t* buffer, uint32_t buffer_width)
         uint8_t width = FRAGMENT(attributes[2], 3, 2) + 1;
         uint8_t height = FRAGMENT(attributes[2], 1, 0) + 1;
         uint16_t pattern_index = (attributes[4] & 7) << 8 | attributes[5];
+        bool priority = BIT(attributes[4], 7);
         uint8_t palette_index = FRAGMENT(attributes[4], 6, 5);
         bool vertical_flip = BIT(attributes[4], 4);
         bool horizontal_flip = BIT(attributes[4], 3);
@@ -649,7 +650,8 @@ void vdp_draw_sprites(Vdp* v, uint8_t* buffer, uint32_t buffer_width)
             }
 
         // Draw a border around the sprite
-        draw_rect(x, y, width * 8, height * 8, buffer, buffer_width);
+        // (brighter when the sprite has the priority)
+        draw_rect(x, y, width * 8, height * 8, priority ? 0xFF : 0x80, buffer, buffer_width);
 
         ++sprite_counter;
 
