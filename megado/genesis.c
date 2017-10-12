@@ -239,7 +239,7 @@ void genesis_update(Genesis* g)
 
     // Schedule the end of this frame from the previous frame time
     // (with some slack for overhead)
-    double max_time = now + dt - (dt / 10);
+    double max_time = now + dt - (dt / 15);
 
     if (g->status == Status_Running)
     {
@@ -273,6 +273,14 @@ void genesis_update(Genesis* g)
 
             // If we are taking longer than the allocated time, abort
             if (glfwGetTime() > max_time) {
+                // If we don't clear the remaining time, we will accumulate a
+                // debt in audio time, which, when the emulation speed scales
+                // down to something the machine can handle, will result in the
+                // audio buffer filling up for the lost time.  Except it won't
+                // account for the samples that should have been played when
+                // then queue was empty, so we'll end up with a large audio
+                // delay.
+                g->audio->remaining_time = 0;
                 break;
             }
         }
