@@ -2,10 +2,6 @@
 	path = deps/minunit
 	url = https://github.com/siu/minunit.git
 	ignore = untracked
-[submodule "deps/cimgui"]
-	path = deps/cimgui
-	url = https://github.com/merwaaan/cimgui.git
-	ignore = untracked
 [submodule "deps/glfw"]
 	path = deps/glfw
 	url = https://github.com/glfw/glfw.git
@@ -22,3 +18,7 @@
 	path = deps/sdl2
 	url = https://github.com/spurious/SDL-mirror.git
 	ignore = all
+[submodule "deps/cimgui"]
+	path = deps/cimgui
+	url = https://github.com/Extrawurst/cimgui.git
+	ignore = untracked
