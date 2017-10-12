@@ -132,27 +132,31 @@ uint32_t m68k_run_cycles(M68k* m, uint32_t cycles)
 
     while (m->remaining_master_cycles > 0)
     {
-        uint8_t c = m68k_step(m);
+        int16_t c = m68k_step(m);
 
-        // TODO temporary version for tracking non-timed instructions
-        if (c == 0)
-        {
-            //LOG_M68K("WARNING, instruction took ZERO CYCLES\n");
-            c = 10; // we don't want to block the execution
+        if (c >= 0) {
+            // TODO temporary version for tracking non-timed instructions
+            if (c == 0) {
+                //LOG_M68K("WARNING, instruction took ZERO CYCLES\n");
+                c = 10; // we don't want to block the execution
+            }
+
+            m->remaining_master_cycles -= c * MASTER_CYCLES_PER_CLOCK;
+            cycles_this_frame += c;
+        } else {
+            // Step exited early due to an error
+
+            // Exit early in case of a breakpoint
+            if (c == BREAKPOINT) {
+                break;
+            }
         }
-
-        m->remaining_master_cycles -= c * MASTER_CYCLES_PER_CLOCK;
-        cycles_this_frame += c;
-
-        // Exit early if the emulation has been paused
-        if (m->genesis->status != Status_Running)
-            break;
     }
 
     return cycles_this_frame;
 }
 
-uint8_t m68k_step(M68k* m)
+int16_t m68k_step(M68k* m)
 {
     assert(m->pc <= M68K_ADDRESS_WIDTH);
     assert(m->pc % 2 == 0);
@@ -165,9 +169,7 @@ uint8_t m68k_step(M68k* m)
         m->stopped = false;
 
     if (m->stopped)
-        return 1; // FIXME: not sure about how many cycles we should report when
-                  // stopped.  Using non-zero value to avoid infinite loops in
-                  // run_cycles.
+        return STOPPED;
 
     // Pause on breakpoints
     // TODO only in DEBUG builds? check perf
@@ -185,7 +187,7 @@ uint8_t m68k_step(M68k* m)
         {
             d->active_breakpoint = breakpoint;
             d->genesis->status = Status_Pause;
-            return 0;
+            return BREAKPOINT;
         }
     }
 
@@ -197,7 +199,7 @@ uint8_t m68k_step(M68k* m)
     if (instr == NULL)
     {
         printf("\tOpcode %#06X cannot be found in the opcode table\n", m->instruction_register);
-        return 0;
+        return INVALID_INSTRUCTION;
     }
 
 #ifdef DEBUG

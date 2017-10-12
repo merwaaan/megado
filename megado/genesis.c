@@ -184,10 +184,10 @@ uint32_t genesis_master_frequency(Genesis* g) {
 void genesis_step(Genesis* g)
 {
     // Run for one instruction
-    uint8_t cycles = m68k_step(g->m68k);
+    int16_t cycles = m68k_step(g->m68k);
 
     // If we hit a breakpoint or there was an error, just stop here
-    if (cycles == 0) {
+    if (cycles < 0) {
         return;
     }
 

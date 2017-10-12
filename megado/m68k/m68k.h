@@ -38,6 +38,12 @@ struct M68k;
 // Jump table that contains all the M68000 instructions
 extern struct Instruction** opcode_table;
 
+typedef enum {
+    INVALID_INSTRUCTION = -1,
+    STOPPED             = -2,
+    BREAKPOINT          = -3,
+} StepExit;
+
 typedef struct M68k
 {
     struct Genesis* genesis;
@@ -76,7 +82,7 @@ void m68k_free(M68k*);
 // Prepare the CPU for execution (setup stack pointer, program start, initial prefetch...)
 void m68k_initialize(M68k*);
 
-uint8_t m68k_step(M68k*); // Execute one instruction, return cycles taken
+int16_t m68k_step(M68k*); // Execute one instruction, return cycles taken
 uint32_t m68k_run_cycles(M68k*, uint32_t); // Execute n cycles worth of instructions, return cycles that were not consumed
 
 // Return the word currently under the program counter
