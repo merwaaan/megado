@@ -1222,7 +1222,11 @@ static void build_ui(Renderer* r)
         snprintf(buf, sizeof buf, "audio queue (samples)\navg: %.2f", r->audio_buffer_queue->avg);
         metric_plot(r->audio_buffer_queue, buf);
 
-        igTextColored(color_title, "Remaning master cycles");
+        igTextColored(color_title, "Remaining audio time: ");
+        igSameLine(0,0);
+        igText("%.6fms", r->genesis->audio->remaining_time * 1000);
+
+        igTextColored(color_title, "Remaining master cycles");
         igText("M68k:   %d", r->genesis->m68k->remaining_master_cycles);
         igText("Z80:    %d", r->genesis->z80->remaining_master_cycles);
         igText("PSG:    %d", r->genesis->psg->remaining_master_cycles);

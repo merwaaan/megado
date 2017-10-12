@@ -237,6 +237,10 @@ void genesis_update(Genesis* g)
     double dt = now - last_update;
     last_update = now;
 
+    // Schedule the end of this frame from the previous frame time
+    // (with some slack for overhead)
+    double max_time = now + dt - (dt / 10);
+
     if (g->status == Status_Running)
     {
         // Emulate by slices of audio sample
@@ -266,14 +270,11 @@ void genesis_update(Genesis* g)
             if (g->status != Status_Running) {
                 break;
             }
-        }
 
-        // Slow down emulation if the machine has troubles keeping up, otherwise
-        // we'll spiral to a crawl.
-        if (dt > 0.2) {
-            g->settings->emulation_speed /= 2;
-            printf("Warning: machine can't keep up, slowing down emulation speed to %.2f\n",
-                   g->settings->emulation_speed);
+            // If we are taking longer than the allocated time, abort
+            if (glfwGetTime() > max_time) {
+                break;
+            }
         }
     }
     else if (g->status == Status_Rewinding)
