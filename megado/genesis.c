@@ -183,10 +183,21 @@ uint32_t genesis_master_frequency(Genesis* g) {
 
 void genesis_step(Genesis* g)
 {
-    // FIXME: I think the better way of handling debugging should be to add an
-    // ephemereal breakpoint to the next M68k instruction and just run.  This
-    // way we always account for the cycles elapsed.
-    uint32_t cycles = m68k_step(g->m68k);
+    // Run for one instruction
+    uint8_t cycles = m68k_step(g->m68k);
+
+    // If we hit a breakpoint or there was an error, just stop here
+    if (cycles == 0) {
+        return;
+    }
+
+    // We don't need to touch m68k->remaining_master_cycles, because if we had
+    // wanted to run for exactly one instruction, we would have called
+    // m68k_run_cycles with `cycles * 7`, and the function would have consumed
+    // exactly that amount of cycles, so we remaining_master_cycles would not
+    // have been affected.
+
+    // Let other systems catch up
     uint32_t master_cycles = cycles * 7;
     z80_run_cycles(g->z80, master_cycles);
     psg_run_cycles(g->psg, master_cycles);
@@ -200,13 +211,21 @@ static void genesis_run_cycles(Genesis* g, double cycles) {
     g->remaining_cycles += cycles;
 
     while (g->remaining_cycles > 0) {
-        m68k_run_cycles(g->m68k, cycles);
-        z80_run_cycles(g->z80, cycles);
-        psg_run_cycles(g->psg, cycles);
-        ym2612_run_cycles(g->ym2612, cycles);
-        vdp_run_cycles(g->vdp, cycles);
+        // The m68k can halt prematurely due to breakpoint
+        uint32_t actual_cycles = m68k_run_cycles(g->m68k, cycles);
 
-        g->remaining_cycles -= cycles;
+        // Let the other systems catch up
+        z80_run_cycles(g->z80, actual_cycles);
+        psg_run_cycles(g->psg, actual_cycles);
+        ym2612_run_cycles(g->ym2612, actual_cycles);
+        vdp_run_cycles(g->vdp, actual_cycles);
+
+        g->remaining_cycles -= actual_cycles;
+
+        // If we hit a breakpoint, abort
+        if (g->status != Status_Running) {
+            break;
+        }
     }
 }
 
@@ -242,6 +261,11 @@ void genesis_update(Genesis* g)
             }
 
             g->audio->remaining_time -= time_slice;
+
+            // Exit early on breakpoint
+            if (g->status != Status_Running) {
+                break;
+            }
         }
 
         // Slow down emulation if the machine has troubles keeping up, otherwise
