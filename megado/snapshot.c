@@ -14,6 +14,8 @@ Snapshot* snapshot_take(struct Genesis* g)
     snapshot->m68k = *g->m68k;
     snapshot->z80 = *g->z80;
     snapshot->vdp = *g->vdp;
+    snapshot->psg = *g->psg;
+    snapshot->ym2612 = *g->ym2612;
     return snapshot;
 }
 
@@ -26,11 +28,15 @@ void snapshot_restore(struct Genesis* g, Snapshot* s)
     memcpy(g->m68k, &s->m68k, sizeof(M68k));
     memcpy(g->z80, &s->z80, sizeof(Z80));
     memcpy(g->vdp, &s->vdp, sizeof(Vdp));
+    memcpy(g->psg, &s->psg, sizeof(PSG));
+    memcpy(g->ym2612, &s->ym2612, sizeof(YM2612));
 
     // Rebind internal pointers
     g->m68k->genesis = g;
     g->vdp->genesis = g;
     g->vdp->output_buffer = vdp_buffer;
+    g->psg->genesis = g;
+    g->ym2612->genesis = g;
 }
 
 SnapshotMetadata* snapshot_save(struct Genesis* g, uint8_t slot)
