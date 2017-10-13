@@ -32,3 +32,10 @@ sh autogen.sh
 make -j2
 make install
 popd
+
+# SDL2
+pushd deps/sdl2
+./configure --prefix=$PWD/install --disable-mir-shared
+make -j2
+make install
+popd

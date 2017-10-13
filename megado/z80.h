@@ -8,7 +8,7 @@
 typedef struct Z80 {
     struct Genesis* genesis;
 
-    int32_t left_cycles;
+    int32_t remaining_master_cycles;
 
     // Registers
     struct {
@@ -89,7 +89,7 @@ void z80_free(Z80*);
 void z80_initialize(Z80*);
 
 uint8_t z80_step(Z80*);
-void z80_run_cycles(Z80*, int);
+void z80_run_cycles(Z80*, uint32_t);
 
 void z80_bus_req(Z80*, uint8_t);
 uint8_t z80_bus_ack(Z80*);

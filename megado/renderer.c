@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "audio.h"
 #include "genesis.h"
 #include "joypad.h"
 #include "metric.h"
@@ -507,6 +508,8 @@ static void build_ui(Renderer* r)
                 igEndMenu();
             }
             igSeparator();
+
+            igSliderFloat("Speed", &settings->emulation_speed, 0.2f, 3.0f, "%f", 1.0f);
 
             if (igMenuItem("Reset", NULL, false, true))
                 genesis_initialize(r->genesis);
@@ -1204,21 +1207,15 @@ static void build_ui(Renderer* r)
     double now = glfwGetTime();
     double dt = now - r->last_time;
     r->last_time = now;
-    float insn = r->genesis->m68k->instruction_count / 1000.0;
-    r->genesis->m68k->instruction_count = 0;
 
     metric_push(r->tpf, dt * 1000);
-    metric_push(r->ipf, insn);
-    r->instructions_this_second += insn;
+    metric_push(r->audio_buffer_queue, SDL_GetQueuedAudioSize(r->genesis->audio->device) / sizeof(int16_t));
 
     r->metrics_refresh_counter += dt;
     if (r->metrics_refresh_counter > 1) {
         r->metrics_refresh_counter = 0;
         metric_avg(r->tpf);
-        metric_avg(r->ipf);
-        metric_push(r->ips, r->instructions_this_second / 1000.0);
-        metric_avg(r->ips);
-        r->instructions_this_second = 0;
+        metric_avg(r->audio_buffer_queue);
     }
 
     if (settings->show_metrics) {
@@ -1231,12 +1228,18 @@ static void build_ui(Renderer* r)
         metric_plot(r->tpf, buf);
 
         // (M68k) instructions per frame, in kilos
-        snprintf(buf, sizeof buf, "ipf\navg: %.2fK", r->ipf->avg);
-        metric_plot(r->ipf, buf);
+        snprintf(buf, sizeof buf, "audio queue (samples)\navg: %.2f", r->audio_buffer_queue->avg);
+        metric_plot(r->audio_buffer_queue, buf);
 
-        // (M68k) instructions per seconds, in millions
-        snprintf(buf, sizeof buf, "ips\navg: %.2fM", r->ips->avg);
-        metric_plot(r->ips, buf);
+        igTextColored(color_title, "Remaining audio time: ");
+        igSameLine(0,0);
+        igText("%.6fms", r->genesis->audio->remaining_time * 1000);
+
+        igTextColored(color_title, "Remaining master cycles");
+        igText("M68k:   %d", r->genesis->m68k->remaining_master_cycles);
+        igText("Z80:    %d", r->genesis->z80->remaining_master_cycles);
+        igText("PSG:    %d", r->genesis->psg->remaining_master_cycles);
+        igText("YM2612: %d", r->genesis->ym2612->remaining_master_cycles);
 
         igEnd();
     }
@@ -1307,6 +1310,7 @@ static void build_ui(Renderer* r)
         struct ImVec2 dummy = { 0, 0 };  // Don't know what it does, but needed
                                          // as argument to IgSelectable
         igTextColored(color_title, "Channel");
+        igSelectable("enabled", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("freq number", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("frequency", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         igSelectable("feedback", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
@@ -1319,6 +1323,15 @@ static void build_ui(Renderer* r)
 
         for (int i=0; i < 6; ++i) {
             igTextColored(color_title, "%d", i + 1);
+
+            // FIXME: the checkbox is too tall for the line, shifting all the
+            // lines in the table after it.
+            igPushStyleColor(ImGuiCol_CheckMark, color_accent);
+            igSameLine(20,0);
+            char name_buffer[10];
+            sprintf(name_buffer, "##chan%d", i);
+            igCheckbox(name_buffer, &y->channels[i].muted);
+            igPopStyleColor(1);
 
             if ((i+1) % 3 == 0) {
                 uint8_t channel_mode = i == 3 ? y->channel3_mode : y->channel6_mode;
@@ -1334,8 +1347,9 @@ static void build_ui(Renderer* r)
                 igText(" (%s)", mode_string);
             }
 
+            igText("%d", y->channels[i].enabled);
             igText("%d:%d", y->channels[i].frequency.block, y->channels[i].frequency.freq);
-            igText("%.2fHz", channel_frequency_in_hertz(&y->channels[i]));
+            igText("%.2fHz", channel_frequency_in_hertz(&y->channels[i], genesis_master_frequency(r->genesis)));
             igText("%0X", y->channels[i].feedback);
             igText("%0X", y->channels[i].algorithm);
             igText("%s%s", y->channels[i].left_output ? "L" : " ", y->channels[i].right_output ? "R" : " ");
@@ -1667,8 +1681,7 @@ Renderer* renderer_make(Genesis* genesis)
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 
     r->tpf = metric_make(128);
-    r->ipf = metric_make(128);
-    r->ips = metric_make(16);
+    r->audio_buffer_queue = metric_make(128);
 
     init_ui_rendering(r);
     init_genesis_rendering(r);
@@ -1691,8 +1704,7 @@ void renderer_free(Renderer* r)
     free(r->plane_buffer);
     free(r->sprites_buffer);
     metric_free(r->tpf);
-    metric_free(r->ipf);
-    metric_free(r->ips);
+    metric_free(r->audio_buffer_queue);
 
     for (int i=0; i < SNAPSHOT_SLOTS; ++i) {
         snapshot_metadata_free(r->snapshots[i]);

@@ -8,7 +8,7 @@
 
 OPTIND=1 # Reset getopts (see https://stackoverflow.com/a/14203146 )
 
-ENV='LD_LIBRARY_PATH=deps/cimgui/cimgui:deps/glfw/build/src:deps/glew/build/lib:deps/json-c/lib'
+ENV='LD_LIBRARY_PATH=deps/cimgui/cimgui:deps/glfw/build/src:deps/glew/build/lib:deps/json-c/lib:deps/sdl2/install/lib'
 DEBUG_DIR='build/debug'
 RELEASE_DIR='build/release'
 

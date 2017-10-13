@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "genesis.h"
 #include "psg.h"
 
 void write_latch(PSG*, uint8_t);
@@ -9,23 +10,19 @@ void write_data(PSG*, uint8_t);
 void square_clock_frequency(SquareChannel*);
 void noise_clock_frequency(PSG*);
 
-// Divisor for the master clock frequency (actually, the frequency of the Z80)
-const uint8_t MASTER_CYCLES_PER_PSG_CLOCK = 16;
-const uint32_t SAMPLE_RATE = 44100;
-const uint32_t NTSC_FREQUENCY = 3579545;
+// Divisor for the master clock frequency
+static const uint8_t MASTER_CYCLES_PER_CLOCK = 240;
+static const uint32_t NTSC_FREQUENCY = 3579545;
 
-// FIXME: this is based on NTSC frequency
-// (double)NTSC_FREQUENCY / (double)MASTER_CYCLES_PER_PSG_CLOCK / (double)SAMPLE_RATE;
-// C doesn't have constexpr, so we have to hardcode this one:
-const double PSG_CLOCKS_PER_SAMPLE = 5.07305130385;
-
-const int16_t volume_table[16]= {
+static const int16_t volume_table[16]= {
     32767, 26028, 20675, 16422, 13045, 10362,  8231,  6568,
     5193,  4125,  3277,  2603,  2067,  1642,  1304,     0
 };
 
 PSG* psg_make(struct Genesis* g) {
-    return calloc(1, sizeof(PSG));
+    PSG* p = calloc(1, sizeof(PSG));
+    p->genesis = g;
+    return p;
 }
 
 void psg_free(PSG* p) {
@@ -33,8 +30,10 @@ void psg_free(PSG* p) {
 }
 
 void psg_initialize(PSG* p) {
-    // Reset
+    // Reset but save Genesis pointer
+    Genesis* g = p->genesis;
     memset(p, 0, sizeof(PSG));
+    p->genesis = g;
 
     // Mute all channels
     p->square[0].volume = 0xf;
@@ -54,30 +53,22 @@ void psg_write(PSG* p, uint8_t value) {
     }
 }
 
-// Called at NTSC_FREQUENCY
 void psg_clock(PSG* p) {
-    if (p->sample_counter > 0) {
-        p->sample_counter--;
-
-        for (int i=0; i < 3; ++i) {
-            square_clock_frequency(&p->square[i]);
-        }
-
-        noise_clock_frequency(p);
-    } else {
-        p->sample_counter += PSG_CLOCKS_PER_SAMPLE;
-        psg_emit_sample_cb(psg_mix(p));
+    for (int i=0; i < 3; ++i) {
+        square_clock_frequency(&p->square[i]);
     }
+
+    noise_clock_frequency(p);
 }
 
 // Entry point used by the rest of emulator
 // Cycles: number of master cycles to emulate
-void psg_run_cycles(PSG* p, uint16_t cycles) {
-    p->remaining_clocks += cycles;
+void psg_run_cycles(PSG* p, uint32_t cycles) {
+    p->remaining_master_cycles += cycles;
 
-    while (p->remaining_clocks > 0) {
+    while (p->remaining_master_cycles > 0) {
         psg_clock(p);
-        p->remaining_clocks -= MASTER_CYCLES_PER_PSG_CLOCK;
+        p->remaining_master_cycles -= MASTER_CYCLES_PER_CLOCK;
     }
 }
 
@@ -107,7 +98,7 @@ void square_clock_frequency(SquareChannel* s) {
 
 float square_tone_in_hertz(SquareChannel* s) {
     if (s->tone > 0) {
-    return (float)NTSC_FREQUENCY / (2.0f * (float)s->tone * (float)MASTER_CYCLES_PER_PSG_CLOCK);
+    return (float)NTSC_FREQUENCY / (2.0f * (float)s->tone * (float)MASTER_CYCLES_PER_CLOCK);
     } else {
         // FIXME: handle 0 tone
         return 0;
@@ -219,74 +210,4 @@ void write_data(PSG* p, uint8_t value) {
         }
         break;
     }
-}
-
-// Buffer of 100 seconds
-#define PSG_MAX_SAMPLES 4410000
-int16_t psg_samples[PSG_MAX_SAMPLES];
-uint32_t psg_samples_cursor = 0;
-
-// TEMP: move to a proper audio backend
-void psg_emit_sample_cb(int16_t sample) {
-    // Fill the buffer then stop
-    if (psg_samples_cursor < PSG_MAX_SAMPLES)
-        psg_samples[psg_samples_cursor++] = sample;
-    //samples_cursor = (samples_cursor + 1) % MAX_SAMPLES;
-}
-
-// TEMP: Write samples to a WAV file
-// src: https://codereview.stackexchange.com/q/105272
-
-#include <stdbool.h>
-
-const char fChunkID[]     = {'R', 'I', 'F', 'F'};
-const char fFormat[]      = {'W', 'A', 'V', 'E'};
-const char fSubchunk1ID[] = {'f', 'm', 't', ' '};
-const char fSubchunk2ID[] = {'d', 'a', 't', 'a'};
-
-const unsigned short N_CHANNELS = 1;
-const unsigned short BITS_PER_BYTE = 8;
-
-bool wav_write(const char* fileName, const void* samples, uint32_t samples_length) {
-    static const unsigned int fSubchunk1Size = 16;
-    static const unsigned short fAudioFormat = 1;
-    static const unsigned short fBitsPerSample = 16;
-
-    unsigned int fByteRate = SAMPLE_RATE * N_CHANNELS *
-                             fBitsPerSample / BITS_PER_BYTE;
-
-    unsigned short fBlockAlign = N_CHANNELS * fBitsPerSample / BITS_PER_BYTE;
-    unsigned int fSubchunk2Size;
-    unsigned int fChunkSize;
-
-    FILE* fout;
-
-    if (!fileName || !(fout = fopen( fileName, "w" ))) return false;
-
-    fSubchunk2Size = samples_length * N_CHANNELS * fBitsPerSample / BITS_PER_BYTE;
-    fChunkSize = 36 + fSubchunk2Size;
-
-    // Writing the RIFF header:
-    fwrite(&fChunkID, 1, sizeof(fChunkID),      fout);
-    fwrite(&fChunkSize,  sizeof(fChunkSize), 1, fout);
-    fwrite(&fFormat, 1,  sizeof(fFormat),       fout);
-
-    // "fmt" chunk:
-    fwrite(&fSubchunk1ID, 1, sizeof(fSubchunk1ID),      fout);
-    fwrite(&fSubchunk1Size,  sizeof(fSubchunk1Size), 1, fout);
-    fwrite(&fAudioFormat,    sizeof(fAudioFormat),   1, fout);
-    fwrite(&N_CHANNELS,      sizeof(N_CHANNELS),     1, fout);
-    fwrite(&SAMPLE_RATE,     sizeof(SAMPLE_RATE),    1, fout);
-    fwrite(&fByteRate,       sizeof(fByteRate),      1, fout);
-    fwrite(&fBlockAlign,     sizeof(fBlockAlign),    1, fout);
-    fwrite(&fBitsPerSample,  sizeof(fBitsPerSample), 1, fout);
-
-    /* "data" chunk: */
-    fwrite(&fSubchunk2ID, 1, sizeof(fSubchunk2ID),      fout);
-    fwrite(&fSubchunk2Size,  sizeof(fSubchunk2Size), 1, fout);
-
-    /* sound data: */
-    fwrite(samples, sizeof(int16_t), samples_length * N_CHANNELS, fout);
-    fclose(fout);
-    return true;
 }

@@ -10,12 +10,12 @@ addons:
     # Need to fetch from the source.  Here is the motherload:
     # https://github.com/travis-ci/apt-source-whitelist/blob/master/ubuntu.json
     sources:
-    - llvm-toolchain-trusty-4.0
+    - llvm-toolchain-trusty-5.0
     - ubuntu-toolchain-r-test
     packages:
     - xorg-dev                  # needed by GLFW
     - valgrind
-    - clang-4.0                 # bleeding edge
+    - clang-5.0                 # bleeding edge
     - gcc-7
 
 matrix:
@@ -27,38 +27,38 @@ matrix:
     - FLAGS="-Werror"
 
   # Latest clang build
-  - compiler: clang-4.0
+  - compiler: clang-5.0
     env:
     - FLAGS="-Werror"
 
   # Undefined behavior sanitizer
-  - compiler: clang-4.0
+  - compiler: clang-5.0
     env:
-    - FLAGS="-fsanitize=undefined -fno-sanitize-recover=undefined -g -DALL_WINDOWS -DTIMEOUT=100000000"
+    - FLAGS="-fsanitize=undefined -fno-sanitize-recover=undefined -g -DTRAVIS"
     - RUN=debug
 
   # Address sanitizer
-  - compiler: clang-4.0
+  - compiler: clang-5.0
     env:
-    - FLAGS="-fsanitize=address -O1 -fno-omit-frame-pointer -g -DALL_WINDOWS -DTIMEOUT=100000000"
+    - FLAGS="-fsanitize=address -O1 -fno-omit-frame-pointer -g -DTRAVIS"
     - RUN=debug
     - LSAN_OPTIONS="suppressions=lsan.supp"
     - ASAN_OPTIONS="fast_unwind_on_malloc=0"
 
   # Valgrind
-  - compiler: clang-4.0
+  - compiler: clang-5.0
     env:
     - RUN=valgrind
-    - FLAGS="-DALL_WINDOWS -DTIMEOUT=10000 -O1 -fno-omit-frame-pointer -g"
+    - FLAGS="-O1 -fno-omit-frame-pointer -g -DTRAVIS"
 
   # Valgrind can be killed by Travis because it consumes more than 3Gb of RAM
   # see https://docs.travis-ci.com/user/common-build-problems/#My-build-script-is-killed-without-any-error
   fast_finish: true
   allow_failures:
-  - compiler: clang-4.0
+  - compiler: clang-5.0
     env:
     - RUN=valgrind
-    - FLAGS="-DALL_WINDOWS -DTIMEOUT=10000 -O1 -fno-omit-frame-pointer -g"
+    - FLAGS="-O1 -fno-omit-frame-pointer -g -DTRAVIS"
 
 # Build and install deps/ locally
 install: ./install-deps.sh

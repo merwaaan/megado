@@ -4,8 +4,10 @@
 #include <time.h>
 
 #include "m68k/m68k.h"
-#include "z80.h"
+#include "psg.h"
 #include "vdp.h"
+#include "ym2612.h"
+#include "z80.h"
 
 struct Genesis;
 
@@ -31,6 +33,8 @@ typedef struct Snapshot
     M68k m68k; // TODO remove breakpoints
     Z80 z80;
     Vdp vdp;
+    PSG psg;
+    YM2612 ym2612;
 
 } Snapshot;
 

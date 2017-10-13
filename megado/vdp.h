@@ -58,6 +58,8 @@ typedef struct
 typedef struct Vdp
 { // TODO check types
     struct Genesis* genesis;
+    int32_t remaining_cycles;
+    uint32_t clock;
 
     uint8_t vram[0x10000];
     uint16_t vsram[0x40];
@@ -141,7 +143,7 @@ typedef struct Vdp
     int dma_type;
 
     // In practice, we extract the internal state changes from
-    // each write to the VDP's registers because they are more 
+    // each write to the VDP's registers because they are more
     // often used internally than overwritten by the program.
     // Still, keeping the raw values is handy for debugging purposes.
     uint8_t register_raw_values[0x18];
@@ -167,6 +169,8 @@ Vdp* vdp_make(struct Genesis* cpu);
 void vdp_free(Vdp*);
 
 void vdp_initialize(Vdp*);
+
+void vdp_run_cycles(Vdp*, uint32_t);
 
 uint16_t vdp_read_data(Vdp*);
 uint8_t vdp_read_data_hi(Vdp*);

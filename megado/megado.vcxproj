@@ -123,7 +123,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/;$(SolutionDir)/deps/sdl2/include/</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -134,7 +134,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/;$(SolutionDir)/deps/sdl2/include/</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;_MBCS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -145,7 +145,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/;$(SolutionDir)/deps/sdl2/include/</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -156,7 +156,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/;$(SolutionDir)/deps/sdl2/include/</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;_MBCS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -169,7 +169,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/;$(SolutionDir)/deps/sdl2/include/</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;_MBCS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -187,7 +187,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)/deps/glfw/include;$(SolutionDir)/deps/cimgui/;$(SolutionDir)/deps/json-c/include/;$(SolutionDir)/deps/json-c/;$(SolutionDir)/deps/glew/include/;$(SolutionDir)/deps/sdl2/include/</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;_MBCS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -199,6 +199,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="audio.c" />
     <ClCompile Include="debugger.c" />
     <ClCompile Include="genesis.c" />
     <ClCompile Include="joypad.c" />
@@ -229,6 +230,7 @@
     <ClCompile Include="z80.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="audio.h" />
     <ClInclude Include="debugger.h" />
     <ClInclude Include="genesis.h" />
     <ClInclude Include="joypad.h" />

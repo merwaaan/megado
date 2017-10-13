@@ -8,8 +8,12 @@
 // http://www.smspower.org/maxim/Documents/YM2612
 
 typedef enum {
-    ATTACK, DELAY, SUSTAIN, RELEASE
+    ATTACK, DECAY, SUSTAIN, RELEASE
 } ADSR;
+
+typedef enum {
+    PART_I, PART_II
+} Part;
 
 typedef struct Operator {
     // Frequency
@@ -28,10 +32,15 @@ typedef struct Operator {
 
     // uint8_t ssg_eg                    : 4;  // proprietary register, skipping
 
+    // Internal FM generator values
     uint32_t phase_counter : 20;
+
+    // Internal envelope values
     ADSR     adsr_phase;
     uint8_t  rate          : 6;
     uint16_t attenuation   : 10;
+
+    // For input inversion; used the SSG-EG
     bool     polarity;
 } Operator;
 
@@ -52,13 +61,16 @@ typedef struct Channel {
     uint8_t   frequency_modulation_sensitivity : 3;
 
     bool enabled;
+    bool muted;
 } Channel;
 
 typedef struct YM2612
 {
-    int16_t  remaining_clocks;
-    int16_t  envelope_remaining_clocks;
-    double   sample_counter;
+    struct Genesis* genesis;
+
+    int32_t  remaining_master_cycles;
+    int32_t  envelope_remaining_master_cycles;
+    uint16_t envelope_counter;
 
     uint8_t  latched_address_part1;
     uint8_t  latched_address_part2;
@@ -81,34 +93,14 @@ typedef struct YM2612
 
 } YM2612;
 
-
-static float lfo_frequencies[] = {
-    3.98,
-    5.56,
-    6.02,
-    6.37,
-    6.88,
-    9.63,
-    48.1,
-    72.2
-};
-
-YM2612* ym2612_make();
+YM2612* ym2612_make(struct Genesis*);
 void ym2612_free(YM2612*);
 
 void ym2612_initialize(YM2612*);
 uint8_t ym2612_read(YM2612*, uint32_t address);
 void ym2612_write(YM2612*, uint32_t address, uint8_t value);
-void ym2612_run_cycles(YM2612*, uint16_t);
+void ym2612_write_register(YM2612*, uint8_t address, uint8_t value, Part);
+void ym2612_run_cycles(YM2612*, uint32_t);
 int16_t ym2612_mix(YM2612*);
 
-int16_t channel_output(Channel*);
-int16_t channel_envelope(Channel*);
-uint16_t channel_frequency(Channel*);
-float channel_frequency_in_hertz(Channel*);
-
-extern int16_t ym2612_samples[];
-extern uint32_t ym2612_samples_cursor;
-
-// Callback function called by psg_clock whenever a sample is ready
-void ym2612_emit_sample_cb(int16_t);
+float channel_frequency_in_hertz(Channel*, uint32_t master_frequency);

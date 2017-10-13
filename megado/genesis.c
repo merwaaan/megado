@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "audio.h"
 #include "debugger.h"
 #include "genesis.h"
 #include "joypad.h"
@@ -15,6 +16,9 @@
 #include "psg.h"
 #include "utils.h"
 #include "ym2612.h"
+
+static const uint32_t NTSC_MASTER_FREQUENCY = 53693175;
+static const uint32_t PAL_MASTER_FREQUENCY  = 53203424;
 
 Genesis* genesis_make()
 {
@@ -30,6 +34,7 @@ Genesis* genesis_make()
     g->joypad1 = joypad_make();
     g->joypad2 = joypad_make();
     g->renderer = renderer_make(g);
+    g->audio = audio_make(g);
     g->debugger = debugger_make(g);
     g->status = Status_NoGameLoaded;
 
@@ -54,6 +59,7 @@ void genesis_free(Genesis* g)
     joypad_free(g->joypad2);
     settings_free(g->settings);
     renderer_free(g->renderer);
+    audio_free(g->audio);
     debugger_free(g->debugger);
 
     free(g->rom);
@@ -151,6 +157,8 @@ struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc)
 
 void genesis_initialize(Genesis* g)
 {
+    g->remaining_cycles = 0;
+
     // http://darkdust.net/writings/megadrive/initializing
     // http://md.squee.co/Howto:Initialise_a_Mega_Drive
 
@@ -164,68 +172,110 @@ void genesis_initialize(Genesis* g)
     psg_initialize(g->psg);
     ym2612_initialize(g->ym2612);
     debugger_initialize(g->debugger);
+    audio_initialize(g->audio);
 
     g->sram = calloc(g->sram_end - g->sram_start, sizeof(uint8_t));
 }
 
-void genesis_step(Genesis* g)
-{
-    uint32_t cycles = m68k_step(g->m68k);
-    // The Z80 runs at half the frequency of the M68K, so we run the Z80 only
-    // for half the cycles of the last M68K step.  Note that since we are
-    // dividing integers here, we might lose some accuracy if the number of
-    // cycles is odd.  But, from a cursory look at the cycles tables for the
-    // M68K, it appears they are all even, so we should be good.
-    z80_run_cycles(g->z80, cycles / 2);
-
-    // Catch up the audio
-    // The PSG runs at the Z80 frequency
-    psg_run_cycles(g->psg, cycles / 2);
-
-    ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
+uint32_t genesis_master_frequency(Genesis* g) {
+    return g->region == Region_Europe ? PAL_MASTER_FREQUENCY : NTSC_MASTER_FREQUENCY;
 }
 
-static void genesis_frame(Genesis* g)
+void genesis_step(Genesis* g)
 {
-    // The number of scanlines depends on the region
-    // http://forums.sonicretro.org/index.php?showtopic=5615
-    uint16_t lines = g->region == Region_Europe ? 312 : 262; // TODO not sure about these values
+    // Run for one instruction
+    int16_t cycles = m68k_step(g->m68k);
 
-    for (uint16_t line = 0; line < lines; ++line)
-    {
-        // Execute one scanline worth of instructions
-        uint32_t cycles = m68k_run_cycles(g->m68k, 488); // TODO not sure about that value
-        z80_run_cycles(g->z80, cycles / 2); // Z80 runs at half the frequency of M68
-        psg_run_cycles(g->psg, cycles / 2); // PSG runs at Z80 frequency
-        ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
-
-        // Draw the scanline
-        vdp_draw_scanline(g->vdp, line);
-
-        // Exit early if the emulation has been paused
-        if (g->status != Status_Running)
-            break;
-
-        g->vdp->hblank_in_progress = true;
-        cycles = m68k_run_cycles(g->m68k, 84); // http://gendev.spritesmind.net/forum/viewtopic.php?t=94#p1105
-        z80_run_cycles(g->z80, cycles / 2); // Z80 runs at half the frequency of M68
-        psg_run_cycles(g->psg, cycles / 2); // PSG runs at Z80 frequency
-        ym2612_run_cycles(g->ym2612, cycles); // TODO: check freq of YM2612
-        g->vdp->hblank_in_progress = false;
-
-        // Exit early if the emulation has been paused
-        if (g->status != Status_Running)
-            break;
+    // If we hit a breakpoint or there was an error, just stop here
+    if (cycles < 0) {
+        return;
     }
 
-    debugger_post_frame(g->debugger);
+    // We don't need to touch m68k->remaining_master_cycles, because if we had
+    // wanted to run for exactly one instruction, we would have called
+    // m68k_run_cycles with `cycles * 7`, and the function would have consumed
+    // exactly that amount of cycles, so we remaining_master_cycles would not
+    // have been affected.
+
+    // Let other systems catch up
+    uint32_t master_cycles = cycles * 7;
+    z80_run_cycles(g->z80, master_cycles);
+    psg_run_cycles(g->psg, master_cycles);
+    ym2612_run_cycles(g->ym2612, master_cycles);
+}
+
+// Run for a given number of master cycles
+static void genesis_run_cycles(Genesis* g, double cycles) {
+    // Master cycles can be fractional here, but subsystems only deal with the
+    // integral part, hence this loop.
+    g->remaining_cycles += cycles;
+
+    while (g->remaining_cycles > 0) {
+        // The m68k can halt prematurely due to breakpoint
+        uint32_t actual_cycles = m68k_run_cycles(g->m68k, cycles);
+
+        // Let the other systems catch up
+        z80_run_cycles(g->z80, actual_cycles);
+        psg_run_cycles(g->psg, actual_cycles);
+        ym2612_run_cycles(g->ym2612, actual_cycles);
+        vdp_run_cycles(g->vdp, actual_cycles);
+
+        g->remaining_cycles -= actual_cycles;
+
+        // If we hit a breakpoint, abort
+        if (g->status != Status_Running) {
+            break;
+        }
+    }
 }
 
 void genesis_update(Genesis* g)
 {
+    // dt is wall time in seconds elapsed since last update
+    static double last_update = 0;
+    double now = glfwGetTime();
+    double dt = now - last_update;
+    last_update = now;
+
+    // Schedule the end of this frame from the previous frame time
+    // (with some slack for overhead)
+    double max_time = now + dt - (dt / 10);
+
     if (g->status == Status_Running)
     {
-        genesis_frame(g);
+        // Emulate by slices of audio sample
+        g->audio->remaining_time += dt;
+        double time_slice = (double)1 / SAMPLE_RATE;
+
+        // How many Genesis seconds we need to emulate, depending on speed factor
+        double dt_genesis = time_slice * g->settings->emulation_speed;
+        // Convert the duration to master cycles
+        double d_cycles = dt_genesis * genesis_master_frequency(g);
+
+        while (g->audio->remaining_time > 0) {
+            // Emulate enough for one audio sample
+            genesis_run_cycles(g, d_cycles);
+
+            // Sample the audio units
+            // @Temporary: use left channel for PSG and right channel for YM2612
+            int16_t sample[2] = {psg_mix(g->psg), ym2612_mix(g->ym2612)};
+            // Queue samples to audio device
+            if (g->audio->device > 0 && SDL_QueueAudio(g->audio->device, sample, 2 * sizeof(int16_t)) != 0) {
+                fprintf(stderr, "Failed to queue audio: %s", SDL_GetError());
+            }
+
+            g->audio->remaining_time -= time_slice;
+
+            // Exit early on breakpoint
+            if (g->status != Status_Running) {
+                break;
+            }
+
+            // If we are taking longer than the allocated time, abort
+            if (glfwGetTime() > max_time) {
+                break;
+            }
+        }
     }
     else if (g->status == Status_Rewinding)
     {
@@ -237,6 +287,7 @@ void genesis_update(Genesis* g)
     }
 
     renderer_render(g->renderer);
+    audio_update(g->audio);
 }
 
 void genesis_get_rom_name(Genesis* g, char* name)

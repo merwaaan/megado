@@ -19,6 +19,10 @@ Debugger* debugger_make(Genesis* g)
 
 void debugger_free(Debugger* d)
 {
+    for (int i=0; i < REWIND_BUFFER_LENGTH; ++i) {
+        free(d->rewinding_snapshots[i]);
+    }
+
     free(d);
 }
 

@@ -18,10 +18,8 @@ typedef struct Renderer
 
     float last_time;
     float metrics_refresh_counter;
-    float instructions_this_second;
     struct Metric* tpf; // time per frame
-    struct Metric* ipf; // instructions per frame
-    struct Metric* ips; // instructions per second
+    struct Metric* audio_buffer_queue;
 
     enum Planes selected_plane;
     uint8_t* plane_buffer;

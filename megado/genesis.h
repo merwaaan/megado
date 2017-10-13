@@ -9,6 +9,7 @@ struct Joypad;
 struct M68k;
 struct Z80;
 struct Renderer;
+struct Audio;
 struct Settings;
 struct Vdp;
 struct PSG;
@@ -30,6 +31,8 @@ typedef enum {
 
 typedef struct Genesis
 {
+    double remaining_cycles;
+
     uint8_t* rom; // Typically 0x000000 - 0x3FFFFF
     uint8_t* ram; // Typically 0xFF0000 - 0xFFFFFF
     uint8_t* sram;
@@ -43,6 +46,7 @@ typedef struct Genesis
     struct YM2612* ym2612;
 
     struct Renderer* renderer;
+    struct Audio*    audio;
     struct Settings* settings;
     struct Debugger* debugger;
 
@@ -63,6 +67,8 @@ struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc);
 
 void genesis_update(Genesis* g);
 void genesis_step(Genesis* g);
+
+uint32_t genesis_master_frequency(Genesis*);
 
 // Return the name of the game currently being executed as
 // stored in the ROM header. The international name is looked
