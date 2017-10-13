@@ -17,7 +17,7 @@
 [submodule "deps/sdl2"]
 	path = deps/sdl2
 	url = https://github.com/spurious/SDL-mirror.git
-	ignore = all
+	ignore = dirty
 [submodule "deps/cimgui"]
 	path = deps/cimgui
 	url = https://github.com/Extrawurst/cimgui.git
