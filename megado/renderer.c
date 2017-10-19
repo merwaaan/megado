@@ -1008,6 +1008,7 @@ static void build_ui(Renderer* r)
 
                 Color color = r->genesis->vdp->cram[row * 16 + col];
                 ImDrawList_AddRectFilled(draw_list, cell_top_left, cell_bottom_right, 255u << 24 | color.b << 16 | color.g << 8 | color.r, 0, 0);
+
             }
 
         igEnd();

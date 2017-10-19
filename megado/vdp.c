@@ -666,7 +666,7 @@ void vdp_draw_sprites(Vdp* v, uint8_t* buffer, uint32_t buffer_width)
 
 typedef struct {
     bool drawn[BUFFER_WIDTH];
-    Color colors[BUFFER_WIDTH];
+    uint8_t colors[BUFFER_WIDTH]; // color indices
     bool priorities[BUFFER_WIDTH];
 } ScanlineData;
 
@@ -783,7 +783,7 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
             continue;
         }
 
-        data->colors[pixel] = v->cram[palette_index * 16 + color_index];
+        data->colors[pixel] = palette_index * 16 + color_index;
         data->drawn[pixel] = true;
     }
 }
@@ -860,7 +860,7 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
                     }
 
                     data->drawn[scanline_x] = true;
-                    data->colors[scanline_x] = v->cram[palette_index * 16 + color_index];
+                    data->colors[scanline_x] = palette_index * 16 + color_index;
                     data->priorities[scanline_x] = priority;
                 }
             }
@@ -882,6 +882,44 @@ void vdp_get_sprites_scanline(Vdp* v, int scanline, ScanlineData* data)
         );
 }
 
+// Adjust the color of the given pixel if Shadow/Highlight mode is enabled
+Color shadow_highlight(Vdp* v, ScanlineData plane_scanline, ScanlineData sprites_scanline, bool plane_priority, int pixel)
+{
+    Color color = v->cram[plane_scanline.colors[pixel]];
+
+    if (!v->shadow_highlight_enabled)
+        return color;
+
+    // An entry is shadowed if the priority bit of ALL planes is cleared
+    int shadow_highlight = plane_priority ? 1 : 0; // 0: shadow, 1: normal, 2: highlight
+
+    // TODO Plane B effect (over or under?)
+
+    // Sprites pixels with the last colors of the last palette
+    // will either shadow or highlight the underlying pixels
+    // TODO check priority
+    if (sprites_scanline.drawn[pixel])
+    {
+        if (sprites_scanline.colors[pixel] == 62)
+            ++shadow_highlight;
+        else if (sprites_scanline.colors[pixel] == 63)
+            --shadow_highlight;
+    }
+
+    // Shadowed: divide color by 2
+    if (shadow_highlight < 1)
+    {
+        color = COLOR_11_TO_STRUCT(COLOR_STRUCT_TO_11(color) >> 1);
+    }
+    // Highlighted: multiply color by 2
+    else if (shadow_highlight > 1)
+    {
+        color = COLOR_11_TO_STRUCT(COLOR_STRUCT_TO_11(color) | (0b100010001000));
+    }
+
+    return color;
+}
+
 void render_scanline(Vdp* v, int scanline)
 {
     Color background_color = v->cram[v->background_color_palette * 16 + v->background_color_entry];
@@ -901,23 +939,47 @@ void render_scanline(Vdp* v, int scanline)
 
         Color pixel_color;
 
-        if (plane_w_scanline.drawn[pixel] && plane_w_scanline.priorities[pixel]) // Window *
-            pixel_color = plane_w_scanline.colors[pixel];
-        else if (sprites_scanline.drawn[pixel] && sprites_scanline.priorities[pixel]) // Sprites *
-            pixel_color = sprites_scanline.colors[pixel];
-        else if (plane_a_scanline.drawn[pixel] && plane_a_scanline.priorities[pixel]) // A *
-            pixel_color = plane_a_scanline.colors[pixel];
-        else if (plane_b_scanline.drawn[pixel] && plane_b_scanline.priorities[pixel]) // B *
-            pixel_color = plane_b_scanline.colors[pixel];
-        else if (plane_w_scanline.drawn[pixel]) // Window
-            pixel_color = plane_w_scanline.colors[pixel];
-        else if (sprites_scanline.drawn[pixel]) // Sprites
-            pixel_color = sprites_scanline.colors[pixel];
-        else if (plane_a_scanline.drawn[pixel]) // A
-            pixel_color = plane_a_scanline.colors[pixel];
-        else if (plane_b_scanline.drawn[pixel]) // B
-            pixel_color = plane_b_scanline.colors[pixel];
-        else // Background
+        // For Shadow/Highlight mode: check if at least one plane has its priority set
+        bool plane_priority = v->shadow_highlight_enabled && (plane_a_scanline.priorities[pixel] || plane_b_scanline.priorities[pixel]);
+
+        // TODO can sprites be shadowed/highlighted?
+
+        // Window (priority)
+        if (plane_w_scanline.drawn[pixel] && plane_w_scanline.priorities[pixel]) 
+            pixel_color = v->cram[plane_w_scanline.colors[pixel]];
+        
+        // Sprites (priority)
+        else if (sprites_scanline.drawn[pixel] && sprites_scanline.priorities[pixel] &&
+                (!v->shadow_highlight_enabled || sprites_scanline.colors[pixel] < 62)) // Do not draw the sprite if it's used as a Shadow/Highlight mask            
+            pixel_color = v->cram[sprites_scanline.colors[pixel]];
+        
+        // A (priority)
+        else if (plane_a_scanline.drawn[pixel] && plane_a_scanline.priorities[pixel])
+            pixel_color = shadow_highlight(v, plane_a_scanline, plane_b_scanline, plane_priority, pixel);
+        
+        // B (priority)
+        else if (plane_b_scanline.drawn[pixel] && plane_b_scanline.priorities[pixel])
+            pixel_color = shadow_highlight(v, plane_b_scanline, plane_a_scanline, plane_priority, pixel);
+        
+        // Window
+        else if (plane_w_scanline.drawn[pixel]) 
+            pixel_color = shadow_highlight(v, plane_w_scanline, plane_b_scanline, plane_priority, pixel);
+
+        // Sprites
+        else if (sprites_scanline.drawn[pixel] &&
+                (!v->shadow_highlight_enabled || sprites_scanline.colors[pixel] < 62))
+                pixel_color = v->cram[sprites_scanline.colors[pixel]];
+
+        // A
+        else if (plane_a_scanline.drawn[pixel]) 
+            pixel_color = shadow_highlight(v, plane_a_scanline, sprites_scanline, plane_priority, pixel);
+        
+        // B
+        else if (plane_b_scanline.drawn[pixel])
+            pixel_color = shadow_highlight(v, plane_b_scanline, sprites_scanline, plane_priority, pixel);
+        
+        // Background
+        else
             pixel_color = background_color;
 
         uint32_t pixel_offset = (scanline * BUFFER_WIDTH + pixel) * 3;
