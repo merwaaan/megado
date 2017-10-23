@@ -909,12 +909,22 @@ Color shadow_highlight(Vdp* v, ScanlineData plane_scanline, ScanlineData sprites
     // Shadowed: divide color by 2
     if (shadow_highlight < 1)
     {
-        color = COLOR_11_TO_STRUCT(COLOR_STRUCT_TO_11(color) >> 1);
+        //color = COLOR_11_TO_STRUCT(COLOR_STRUCT_TO_11(color) >> 1);
+        color.r /= 2;
+        color.g /= 2;
+        color.b /= 2;
     }
     // Highlighted: multiply color by 2
     else if (shadow_highlight > 1)
     {
-        color = COLOR_11_TO_STRUCT(COLOR_STRUCT_TO_11(color) | (0b100010001000));
+        //color = COLOR_11_TO_STRUCT(COLOR_STRUCT_TO_11(color) | (0b100010001000));
+        color.r *= 2;
+        color.g *= 2;
+        color.b *= 2;
+    }
+    else
+    {
+        //color = (Color) { 0, 0, 255 };
     }
 
     return color;
@@ -955,11 +965,11 @@ void render_scanline(Vdp* v, int scanline)
         
         // A (priority)
         else if (plane_a_scanline.drawn[pixel] && plane_a_scanline.priorities[pixel])
-            pixel_color = shadow_highlight(v, plane_a_scanline, plane_b_scanline, plane_priority, pixel);
+            pixel_color = shadow_highlight(v, plane_a_scanline, sprites_scanline, plane_priority, pixel);
         
         // B (priority)
         else if (plane_b_scanline.drawn[pixel] && plane_b_scanline.priorities[pixel])
-            pixel_color = shadow_highlight(v, plane_b_scanline, plane_a_scanline, plane_priority, pixel);
+            pixel_color = shadow_highlight(v, plane_b_scanline, sprites_scanline, plane_priority, pixel);
         
         // Window
         else if (plane_w_scanline.drawn[pixel]) 
