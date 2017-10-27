@@ -907,24 +907,15 @@ Color shadow_highlight(Vdp* v, ScanlineData plane_scanline, ScanlineData sprites
     }
 
     // Shadowed: divide color by 2
+    // https://segaxtreme.net/threads/genesis-colour-specs.18573/
     if (shadow_highlight < 1)
     {
-        //color = COLOR_11_TO_STRUCT(COLOR_STRUCT_TO_11(color) >> 1);
-        color.r /= 2;
-        color.g /= 2;
-        color.b /= 2;
+        color = COLOR_11_TO_STRUCT((COLOR_STRUCT_TO_11(color) & 0xEEE) >> 1);
     }
-    // Highlighted: multiply color by 2
+    // Highlighted: divide color by 2 and add 0x888
     else if (shadow_highlight > 1)
     {
-        //color = COLOR_11_TO_STRUCT(COLOR_STRUCT_TO_11(color) | (0b100010001000));
-        color.r *= 2;
-        color.g *= 2;
-        color.b *= 2;
-    }
-    else
-    {
-        //color = (Color) { 0, 0, 255 };
+        color = COLOR_11_TO_STRUCT(((COLOR_STRUCT_TO_11(color) & 0xEEE) >> 1) | 0x888);
     }
 
     return color;
