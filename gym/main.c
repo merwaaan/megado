@@ -10,22 +10,27 @@
 #include "../megado/ym2612.h"
 #include "../megado/psg.h"
 
-struct GYMHeader {
-  char tag[4];
-  char song[32];
-  char game[32];
-  char copyright[32];
-  char emulator[32];
-  char dumper[32];
-  char comment[256];
-  uint32_t loop_start;
-  uint32_t packed_size;
+struct GYM {
+  uint8_t *data;
+  uint64_t size;
+
+  struct GYMHeader {
+    char tag[4];
+    char song[32];
+    char game[32];
+    char copyright[32];
+    char emulator[32];
+    char dumper[32];
+    char comment[256];
+    uint32_t loop_start;
+    uint32_t packed_size;
+  } *header;
 };
 
 static const uint32_t NTSC_MASTER_FREQUENCY = 53693175;
 static const uint32_t SAMPLE_RATE = 44100;
 
-void gym_play(uint8_t *data, uint64_t size) {
+void gym_play(struct GYM gym) {
   YM2612 ym;
   PSG psg;
 
@@ -62,8 +67,8 @@ void gym_play(uint8_t *data, uint64_t size) {
 
   SDL_PauseAudioDevice(audio_device, 0);
 
-  while (pc < size) {
-    opcode = data[pc++];
+  while (pc < gym.size) {
+    opcode = gym.data[pc++];
 
     switch (opcode) {
       // Sleep for 1/60th of a second
@@ -116,8 +121,8 @@ void gym_play(uint8_t *data, uint64_t size) {
 
       // Write to part I
     case 0x01: {
-      uint8_t reg = data[pc++];
-      uint8_t value = data[pc++];
+      uint8_t reg = gym.data[pc++];
+      uint8_t value = gym.data[pc++];
 
       // Multiple DAC writes often happen between two video frames, so we have
       // to save them into a buffer in order to feed them to the YM2612 between
@@ -137,14 +142,14 @@ void gym_play(uint8_t *data, uint64_t size) {
 
       // Write to part II
     case 0x02: {
-      uint8_t reg = data[pc++];
-      uint8_t value = data[pc++];
+      uint8_t reg = gym.data[pc++];
+      uint8_t value = gym.data[pc++];
       ym2612_write_register(&ym, reg, value, PART_II);
     } break;
 
       // Write to PSG
     case 0x03: {
-      uint8_t value = data[pc++];
+      uint8_t value = gym.data[pc++];
       psg_write(&psg, value);
     } break;
 
@@ -165,20 +170,7 @@ void gym_play(uint8_t *data, uint64_t size) {
   SDL_Quit();
 }
 
-int main(int argc, char **argv) {
-  if (argc < 2) {
-    printf("Usage: player GYM_FILE");
-    exit(1);
-  }
-
-  char *gym_file_path = argv[1];
-  FILE *gym_file;
-
-  if ((gym_file = fopen(gym_file_path, "rb")) == NULL) {
-    perror("Error opening GYM file");
-    exit(1);
-  }
-
+struct GYM read_gym(FILE *gym_file) {
   // Find out size of file
   struct stat gym_file_stat;
   fstat(fileno(gym_file), &gym_file_stat);
@@ -190,29 +182,47 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  // If the file begins GYMX, there's a 428 bytes header first
+  // If the file begins with GYMX, there's a 428 bytes header first
   struct GYMHeader *header = gym;
-  uint8_t *gym_data;
-  uint64_t gym_data_length;
+  struct GYM ret;
 
   if (strncmp(header->tag, "GYMX", 4) == 0) {
-    printf("song: %s\n", header->song);
-    printf("game: %s\n", header->game);
-    printf("copyright: %s\n", header->copyright);
-    printf("emulator: %s\n", header->emulator);
-    printf("dumper: %s\n", header->dumper);
-    printf("comment: %s\n", header->comment);
-    printf("loop_start: %u\n", header->loop_start);
+    printf("song       : %s\n", header->song);
+    printf("game       : %s\n", header->game);
+    printf("copyright  : %s\n", header->copyright);
+    printf("emulator   : %s\n", header->emulator);
+    printf("dumper     : %s\n", header->dumper);
+    printf("comment    : %s\n", header->comment);
+    printf("loop_start : %u\n", header->loop_start);
 
-    gym_data = gym + sizeof(struct GYMHeader);
-    gym_data_length = gym_file_stat.st_size - sizeof(struct GYMHeader);
+    ret.header = header;
+    ret.data = gym + sizeof(struct GYMHeader);
+    ret.size = gym_file_stat.st_size - sizeof(struct GYMHeader);
   } else {
     // Otherwise, the whole file is just data
-    gym_data = gym;
-    gym_data_length = gym_file_stat.st_size;
+    ret.header = NULL;
+    ret.data = gym;
+    ret.size = gym_file_stat.st_size;
   }
 
-  gym_play(gym_data, gym_data_length);
+  return ret;
+}
+
+int main(int argc, char **argv) {
+  if (argc < 2) {
+    printf("Usage: gym GYM_FILE");
+    exit(1);
+  }
+
+  char *gym_file_path = argv[1];
+  FILE *gym_file;
+
+  if ((gym_file = fopen(gym_file_path, "rb")) == NULL) {
+    perror("Error opening GYM file");
+    exit(1);
+  }
+
+  gym_play(read_gym(gym_file));
 
   return 0;
 }
