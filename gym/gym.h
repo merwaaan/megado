@@ -21,4 +21,5 @@ struct GYM {
 };
 
 void gym_play(struct GYM gym);
+void gym_stop();
 struct GYM read_gym(FILE *gym_file);

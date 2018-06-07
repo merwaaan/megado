@@ -1,11 +1,19 @@
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include <cimgui/cimgui.h>
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
+#include <pthread.h>
 #include <stdlib.h>
 
 #include "gym.h"
 #include "sdl_imgui.h"
 #include "ui.h"
+
+void *start_playing(void *arg) {
+  struct GYM *gym = (struct GYM*) arg;
+  gym_play(*gym);
+  return NULL;
+}
 
 int main(int argc, char **argv) {
   if (argc < 2) {
@@ -31,6 +39,9 @@ int main(int argc, char **argv) {
   //gym_play(read_gym(gym_file));
   struct GYM gym = read_gym(gym_file);
 
+  bool play_request = false;
+  pthread_t play_thread = 0;
+
   // Main loop
   bool done = false;
   while (!done) {
@@ -50,6 +61,15 @@ int main(int argc, char **argv) {
     sdl_imgui_new_frame(window);
 
     igBegin("Song", NULL, 0);
+
+    if (igCheckbox("playing", &play_request)) {
+      if (play_request && !play_thread) {
+        pthread_create(&play_thread, NULL, start_playing, &gym);
+      } else if (!play_request && play_thread) {
+        gym_stop();
+        play_thread = 0;
+      }
+    }
 
     igText("song       : %s\n", gym.header->song);
     igText("game       : %s\n", gym.header->game);

@@ -10,7 +10,15 @@
 static const uint32_t NTSC_MASTER_FREQUENCY = 53693175;
 static const uint32_t SAMPLE_RATE = 44100;
 
+static bool playing;
+
+void gym_stop() {
+  playing = false;
+}
+
 void gym_play(struct GYM gym) {
+  playing = true;
+
   YM2612 ym;
   PSG psg;
 
@@ -45,7 +53,7 @@ void gym_play(struct GYM gym) {
 
   SDL_PauseAudioDevice(audio_device, 0);
 
-  while (pc < gym.size) {
+  while (playing && pc < gym.size) {
     opcode = gym.data[pc++];
 
     switch (opcode) {
@@ -139,8 +147,8 @@ void gym_play(struct GYM gym) {
   printf("Emulation done.  Playing remaining audio\n");
 
   // Wait for the audio queue to empty before exiting
-  while (SDL_GetQueuedAudioSize(audio_device) > 0) {
-    sleep(1);
+  while (playing && SDL_GetQueuedAudioSize(audio_device) > 0) {
+    usleep(100);
   }
 
   // Destroy SDL

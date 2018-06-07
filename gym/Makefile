@@ -15,7 +15,7 @@ CFLAGS += $(USER_FLAGS)
 
 # Submodule dependencies
 INCLUDES := -I./ -D_REENTRANT -I/usr/include/SDL2 -I../deps/cimgui/
-LIBS := -lm -Ldeps/glew/build/lib -lGLEW -lGLU -lGL\
+LIBS := -lm -lpthread -Ldeps/glew/build/lib -lGLEW -lGLU -lGL\
         -L../deps/cimgui/cimgui -l:cimgui.so -lSDL2
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
