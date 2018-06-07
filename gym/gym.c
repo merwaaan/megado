@@ -27,8 +27,6 @@ void gym_play(struct GYM gym) {
   uint64_t pc = 0;
   uint8_t opcode;
 
-  // Init SDL audio
-  SDL_Init(SDL_INIT_AUDIO);
   SDL_AudioSpec want, have;
 
   SDL_memset(&want, 0, sizeof(want));
@@ -147,7 +145,6 @@ void gym_play(struct GYM gym) {
 
   // Destroy SDL
   SDL_CloseAudioDevice(audio_device);
-  SDL_Quit();
 }
 
 struct GYM read_gym(FILE *gym_file) {
@@ -167,14 +164,6 @@ struct GYM read_gym(FILE *gym_file) {
   struct GYM ret;
 
   if (strncmp(header->tag, "GYMX", 4) == 0) {
-    printf("song       : %s\n", header->song);
-    printf("game       : %s\n", header->game);
-    printf("copyright  : %s\n", header->copyright);
-    printf("emulator   : %s\n", header->emulator);
-    printf("dumper     : %s\n", header->dumper);
-    printf("comment    : %s\n", header->comment);
-    printf("loop_start : %u\n", header->loop_start);
-
     ret.header = header;
     ret.data = gym + sizeof(struct GYMHeader);
     ret.size = gym_file_stat.st_size - sizeof(struct GYMHeader);

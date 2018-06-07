@@ -6,8 +6,7 @@
 
 # Configurables
 CC := clang
-# Disable unused parameter warning since not everything is implemented yet
-CFLAGS := -O3 -std=gnu11 -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function
+CFLAGS := -O3 -std=gnu11 -Wall -Wextra
 BIN := gym
 BUILD_DIR := build
 
@@ -15,8 +14,9 @@ BUILD_DIR := build
 CFLAGS += $(USER_FLAGS)
 
 # Submodule dependencies
-INCLUDES := -I./ -D_REENTRANT -I/usr/include/SDL2
-LIBS := -lm -lSDL2
+INCLUDES := -I./ -D_REENTRANT -I/usr/include/SDL2 -I../deps/cimgui/
+LIBS := -lm -Ldeps/glew/build/lib -lGLEW -lGLU -lGL\
+        -L../deps/cimgui/cimgui -l:cimgui.so -lSDL2
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -44,3 +44,7 @@ $(BUILD_DIR)/%.o: %.c
 .PHONY: clean
 clean:
 	-rm --force $(BUILD_DIR)/$(BIN) $(OBJ) $(DEP)
+
+.PHONY: run
+run:
+	env $(ENV) $(BUILD_DIR)/$(BIN)
