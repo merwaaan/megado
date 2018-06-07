@@ -3,30 +3,33 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "../megado/ym2612.h"
-#include "../megado/psg.h"
 #include "gym.h"
 
 static const uint32_t NTSC_MASTER_FREQUENCY = 53693175;
 static const uint32_t SAMPLE_RATE = 44100;
 
-static bool playing;
+static bool g_playing = false;
+YM2612 *gym_ym2612;
+PSG *gym_psg;
 
 void gym_stop() {
-  playing = false;
+  g_playing = false;
 }
 
 void gym_play(struct GYM gym) {
-  playing = true;
+  g_playing = true;
 
   YM2612 ym;
   PSG psg;
 
-  uint8_t dac_buffer[1024];
-  uint16_t dac_count = 0;
-
   ym2612_initialize(&ym);
   psg_initialize(&psg);
+
+  gym_ym2612 = &ym;
+  gym_psg = &psg;
+
+  uint8_t dac_buffer[1024];
+  uint16_t dac_count = 0;
 
   double remaining_time = 0;
   double time_slice = (double)1 / SAMPLE_RATE;
@@ -53,7 +56,7 @@ void gym_play(struct GYM gym) {
 
   SDL_PauseAudioDevice(audio_device, 0);
 
-  while (playing && pc < gym.size) {
+  while (g_playing && pc < gym.size) {
     opcode = gym.data[pc++];
 
     switch (opcode) {
@@ -147,12 +150,16 @@ void gym_play(struct GYM gym) {
   printf("Emulation done.  Playing remaining audio\n");
 
   // Wait for the audio queue to empty before exiting
-  while (playing && SDL_GetQueuedAudioSize(audio_device) > 0) {
+  while (g_playing && SDL_GetQueuedAudioSize(audio_device) > 0) {
     usleep(100);
   }
 
   // Destroy SDL
   SDL_CloseAudioDevice(audio_device);
+
+  // Release pointers
+  gym_ym2612 = NULL;
+  gym_psg = NULL;
 }
 
 struct GYM read_gym(FILE *gym_file) {

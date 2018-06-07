@@ -9,6 +9,9 @@
 #include "sdl_imgui.h"
 #include "ui.h"
 
+static const struct ImVec4 color_title = { 0.0f, 0.68f, 0.71f, 1.0f };
+static const struct ImVec4 color_dimmed = { 0.5f, 0.5f, 0.5f, 1.0f };
+
 void *start_playing(void *arg) {
   struct GYM *gym = (struct GYM*) arg;
   gym_play(*gym);
@@ -60,26 +63,59 @@ int main(int argc, char **argv) {
     glClear(GL_COLOR_BUFFER_BIT);
     sdl_imgui_new_frame(window);
 
-    igBegin("Song", NULL, 0);
+    {
+      igBegin("Song", NULL, 0);
 
-    if (igCheckbox("playing", &play_request)) {
-      if (play_request && !play_thread) {
-        pthread_create(&play_thread, NULL, start_playing, &gym);
-      } else if (!play_request && play_thread) {
-        gym_stop();
-        play_thread = 0;
+      if (igCheckbox("playing", &play_request)) {
+        if (play_request && !play_thread) {
+          pthread_create(&play_thread, NULL, start_playing, &gym);
+        } else if (!play_request && play_thread) {
+          gym_stop();
+          play_thread = 0;
+        }
       }
+
+      igText("song       : %s\n", gym.header->song);
+      igText("game       : %s\n", gym.header->game);
+      igText("copyright  : %s\n", gym.header->copyright);
+      igText("emulator   : %s\n", gym.header->emulator);
+      igText("dumper     : %s\n", gym.header->dumper);
+      igText("comment    : %s\n", gym.header->comment);
+      igText("loop_start : %u\n", gym.header->loop_start);
+
+      igEnd();
     }
 
-    igText("song       : %s\n", gym.header->song);
-    igText("game       : %s\n", gym.header->game);
-    igText("copyright  : %s\n", gym.header->copyright);
-    igText("emulator   : %s\n", gym.header->emulator);
-    igText("dumper     : %s\n", gym.header->dumper);
-    igText("comment    : %s\n", gym.header->comment);
-    igText("loop_start : %u\n", gym.header->loop_start);
+    if (gym_psg) {
+      igBegin("PSG registers", NULL, 0);
 
-    igEnd();
+      PSG* p = gym_psg;
+
+      for (int i=0; i < 3; ++i) {
+        igTextColored(color_title, "Square %d", i);
+        if (p->square[i].volume == 0xF) {
+          igSameLine(0,0);
+          igTextColored(color_dimmed, " [silent]");
+        }
+        igText("volume:  %0X", p->square[i].volume);
+        igText("tone:    %0X [%.2fHz]", p->square[i].tone, square_tone_in_hertz(&p->square[i]));
+        igText("counter: %0X", p->square[i].counter);
+        igText("output:  %d", square_output(&p->square[i]));
+      }
+
+      igTextColored(color_title, "Noise");
+      if (p->noise.volume == 0xF) {
+        igSameLine(0,0);
+        igTextColored(color_dimmed, " [silent]");
+      }
+      igText("volume:     %0X", p->noise.volume);
+      igText("mode:       %0X [%s]", p->noise.mode, p->noise.mode ? "white" : "periodic");
+      igText("shift rate: %0X", p->noise.shift_rate);
+      igText("counter:    %0X", p->noise.counter);
+      igText("lfsr:       %0X", p->noise.lfsr);
+      igText("output:     %d", noise_output(&p->noise));
+      igEnd();
+    }
 
     igRender();
     SDL_GL_SwapWindow(window);

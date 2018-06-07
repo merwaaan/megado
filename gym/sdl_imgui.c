@@ -348,7 +348,7 @@ void sdl_imgui_new_frame(SDL_Window *window) {
     io->MouseWheel = g_MouseWheel;
     g_MouseWheel = 0.0f;
 
-     SDL_ShowCursor(io->MouseDrawCursor ? 0 : 1);
+    SDL_ShowCursor(io->MouseDrawCursor ? 0 : 1);
   }
 
   igNewFrame();

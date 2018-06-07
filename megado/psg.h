@@ -8,10 +8,10 @@
 struct Genesis;
 
 typedef struct SquareChannel {
-    uint8_t volume : 4;
-    uint16_t tone : 10;
+    uint8_t  volume  : 4;
+    uint16_t tone    : 10;
     uint16_t counter : 10;
-    uint8_t output : 1;
+    uint8_t  output  : 1;
 } SquareChannel;
 
 typedef struct NoiseChannel {

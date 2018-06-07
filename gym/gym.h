@@ -3,6 +3,12 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "../megado/ym2612.h"
+#include "../megado/psg.h"
+
+extern YM2612 *gym_ym2612;
+extern PSG *gym_psg;
+
 struct GYM {
   uint8_t *data;
   uint64_t size;
