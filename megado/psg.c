@@ -12,7 +12,7 @@ void noise_clock_frequency(PSG*);
 
 // Divisor for the master clock frequency
 static const uint8_t MASTER_CYCLES_PER_CLOCK = 240;
-static const uint32_t NTSC_FREQUENCY = 3579545;
+static const uint32_t NTSC_FREQUENCY = 53693175;
 
 static const int16_t volume_table[16]= {
     32767, 26028, 20675, 16422, 13045, 10362,  8231,  6568,
