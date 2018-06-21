@@ -322,8 +322,6 @@ static int16_t channel_output(Channel* c) {
         int16_t output = 0;
         Operator* ops = c->operators;
 
-        c->algorithm = 0;
-
         switch (c->algorithm) {
         case 0: {
             int16_t s1 = operator_output(&ops[0], 0);
