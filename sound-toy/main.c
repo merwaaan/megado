@@ -237,17 +237,14 @@ int main() {
           y->channels[i].enabled = true;
           for (int j=0; j < 4; ++j) {
             Operator* op = &y->channels[i].operators[j];
-            op->adsr_phase = ATTACK;
-            op->attenuation = 0x3ff;
-            y->envelope_counter = 0;
+            ym2612_key_on(op, &y->channels[i]);
           }
         }
 
         if (igSmallButton("Key off")) {
-          y->channels[i].enabled = false;
           for (int j=0; j < 4; ++j) {
             Operator* op = &y->channels[i].operators[j];
-            op->adsr_phase = RELEASE;
+            ym2612_key_off(op, &y->channels[i]);
           }
         }
 
@@ -286,70 +283,79 @@ int main() {
           igTextColored(color_title, "Operator");
           igText("detune");
           igText("multiple");
-          /* igText("total level"); */
-          /* igText("attack rate"); */
-          /* igText("decay rate"); */
-          /* igText("sustain level"); */
-          /* igText("sustain rate"); */
-          /* igText("release rate"); */
-          /* igText("rate scaling"); */
-          /* igText("amp modulation"); */
+          igText("total level");
+          igText("attack rate");
+          igText("decay rate");
+          igText("sustain level");
+          igText("sustain rate");
+          igText("release rate");
+          igText("rate scaling");
+          igText("amp modulation");
 
           igNextColumn();
 
           for (int j=0; j < 4; ++j) {
             igPushIdInt(j);
             igTextColored(color_title, "%d", j + 1);
+            Operator *op = &y->channels[i].operators[j];
 
-            v = y->channels[i].operators[j].detune;
+            igText("attenuation: %d", op->attenuation);
+            switch (op->adsr_phase) {
+            case ATTACK:  igText("attack"); break;
+            case DECAY:   igText("decay"); break;
+            case SUSTAIN: igText("sustain"); break;
+            case RELEASE: igText("release"); break;
+            }
+
+            v = op->detune;
             if (igSliderInt("##detune", &v, 0, 0x7, NULL)) {
-              y->channels[i].operators[j].detune = v;
+              op->detune = v;
             }
 
-            v = y->channels[i].operators[j].multiple;
+            v = op->multiple;
             if (igSliderInt("##multiple", &v, 0, 0xF, NULL)) {
-              y->channels[i].operators[j].multiple = v;
+              op->multiple = v;
             }
 
-            /* v = y->channels[i].operators[j].total_level; */
-            /* if (igSliderInt("##total_level", &v, 0, 0x7F, NULL)) { */
-            /*   y->channels[i].operators[j].total_level = v; */
-            /* } */
+            v = op->total_level;
+            if (igSliderInt("##total_level", &v, 0, 0x7F, NULL)) {
+              op->total_level = v;
+            }
 
-            /* v = y->channels[i].operators[j].attack_rate; */
-            /* if (igSliderInt("##attack_rate", &v, 0, 0x1F, NULL)) { */
-            /*   y->channels[i].operators[j].attack_rate = v; */
-            /* } */
+            v = op->attack_rate;
+            if (igSliderInt("##attack_rate", &v, 0, 0x1F, NULL)) {
+              op->attack_rate = v;
+            }
 
-            /* v = y->channels[i].operators[j].decay_rate; */
-            /* if (igSliderInt("##decay_rate", &v, 0, 0x1F, NULL)) { */
-            /*   y->channels[i].operators[j].decay_rate = v; */
-            /* } */
+            v = op->decay_rate;
+            if (igSliderInt("##decay_rate", &v, 0, 0x1F, NULL)) {
+              op->decay_rate = v;
+            }
 
-            /* v = y->channels[i].operators[j].sustain_level; */
-            /* if (igSliderInt("##sustain_level", &v, 0, 0xF, NULL)) { */
-            /*   y->channels[i].operators[j].sustain_level = v; */
-            /* } */
+            v = op->sustain_level;
+            if (igSliderInt("##sustain_level", &v, 0, 0xF, NULL)) {
+              op->sustain_level = v;
+            }
 
-            /* v = y->channels[i].operators[j].sustain_rate; */
-            /* if (igSliderInt("##sustain_rate", &v, 0, 0x1F, NULL)) { */
-            /*   y->channels[i].operators[j].sustain_rate = v; */
-            /* } */
+            v = op->sustain_rate;
+            if (igSliderInt("##sustain_rate", &v, 0, 0x1F, NULL)) {
+              op->sustain_rate = v;
+            }
 
-            /* v = y->channels[i].operators[j].release_rate; */
-            /* if (igSliderInt("##release_rate", &v, 0, 0xF, NULL)) { */
-            /*   y->channels[i].operators[j].release_rate = v; */
-            /* } */
+            v = op->release_rate;
+            if (igSliderInt("##release_rate", &v, 0, 0xF, NULL)) {
+              op->release_rate = v;
+            }
 
-            /* v = y->channels[i].operators[j].rate_scaling; */
-            /* if (igSliderInt("##rate_scaling", &v, 0, 0x3, NULL)) { */
-            /*   y->channels[i].operators[j].rate_scaling = v; */
-            /* } */
+            v = op->rate_scaling;
+            if (igSliderInt("##rate_scaling", &v, 0, 0x3, NULL)) {
+              op->rate_scaling = v;
+            }
 
-            /* bv = y->channels[i].operators[j].amplitude_modulation_enabled; */
-            /* if (igCheckbox("##amplitude_modulation_enabled", &bv)) { */
-            /*   y->channels[i].operators[j].amplitude_modulation_enabled = bv; */
-            /* } */
+            bv = op->amplitude_modulation_enabled;
+            if (igCheckbox("##amplitude_modulation_enabled", &bv)) {
+              op->amplitude_modulation_enabled = bv;
+            }
 
             igNextColumn();
             igPopId();

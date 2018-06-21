@@ -37,11 +37,10 @@ typedef struct Operator {
 
     // Internal envelope values
     ADSR     adsr_phase;
-    uint8_t  rate          : 6;
     uint16_t attenuation   : 10;
 
     // For input inversion; used the SSG-EG
-    bool     polarity;
+    bool polarity;
 } Operator;
 
 typedef struct Frequency {
@@ -102,5 +101,9 @@ void ym2612_write(YM2612*, uint32_t address, uint8_t value);
 void ym2612_write_register(YM2612*, uint8_t address, uint8_t value, Part);
 void ym2612_run_cycles(YM2612*, uint32_t);
 int16_t ym2612_mix(YM2612*);
+void ym2612_key_on(Operator*, Channel*);
+void ym2612_key_off(Operator*, Channel*);
 
 float channel_frequency_in_hertz(Channel*, uint32_t master_frequency);
+
+void operator_set_adsr(Operator*, ADSR, Channel*);

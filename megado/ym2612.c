@@ -134,6 +134,10 @@ static const uint8_t attenuation_increment_table[64][8] = {
     {8,8,8,8,8,8,8,8}, {8,8,8,8,8,8,8,8}, {8,8,8,8,8,8,8,8}, {8,8,8,8,8,8,8,8}, // 60-63  (0x3C-0x3F)
 };
 
+void operator_set_adsr(Operator* op, ADSR phase, Channel* channel) {
+    op->adsr_phase = phase;
+}
+
 static void envelope_clock(YM2612* y) {
     y->envelope_counter++;
 
@@ -141,40 +145,49 @@ static void envelope_clock(YM2612* y) {
         Channel* channel = &y->channels[i];
         for (int j=0; j < 4; ++j) {
             Operator* op = &channel->operators[j];
-            op->rate = operator_rate(op, channel);
-            uint8_t counter_shift_value = counter_shift_table[op->rate];
+            uint8_t rate = operator_rate(op, channel);
+            uint8_t counter_shift_value = counter_shift_table[rate];
 
             if ((y->envelope_counter % (1 << counter_shift_value)) == 0) {
                 uint8_t update_cycle = (y->envelope_counter >> counter_shift_value) & 0x7;
-                uint8_t attenuation_increment = attenuation_increment_table[op->rate][update_cycle];
+                uint8_t attenuation_increment = attenuation_increment_table[rate][update_cycle];
+                uint16_t new_attenuation = op->attenuation;
 
                 switch (op->adsr_phase) {
 
                 case ATTACK: {
-                    op->attenuation += (~op->attenuation * attenuation_increment) >> 4;
-
                     if (op->attenuation == 0) {
-                        op->adsr_phase = DECAY;
+                        operator_set_adsr(op, DECAY, channel);
+                    }
+
+                    if (rate < 62) {
+                        new_attenuation += (~op->attenuation * attenuation_increment) >> 4;
                     }
                 } break;
 
                 case DECAY: {
-                    op->attenuation += attenuation_increment;
+                    uint16_t sustain_as_attenuation = op->sustain_level == 0xf ?
+                        0x1f << 5 : op->sustain_level << 5;
 
-                    if (op->attenuation >= op->sustain_level) {
-                        op->attenuation = op->sustain_level;
-                        op->adsr_phase = SUSTAIN;
+                    if (op->attenuation >= sustain_as_attenuation) {
+                        operator_set_adsr(op, SUSTAIN, channel);
                     }
+
+                    new_attenuation += attenuation_increment;
                 } break;
 
-                case SUSTAIN: {
-                    op->attenuation += attenuation_increment;
-                } break;
-
-                case RELEASE: {
-                    op->attenuation += attenuation_increment;
-                } break;
+                case SUSTAIN:
+                case RELEASE:
+                    new_attenuation += attenuation_increment;
+                    break;
                 }
+
+                // Clamp attenuation to prevent overflow
+                if (new_attenuation > 0x3ff) {
+                    new_attenuation = 0x3ff;
+                }
+
+                op->attenuation = new_attenuation;
             }
         }
     }
@@ -188,7 +201,7 @@ static uint8_t operator_rate(Operator* op, Channel* c) {
     case DECAY   : r = op->decay_rate; break;
     case SUSTAIN : r = op->sustain_rate; break;
         // Release rate is 4bit; treat it as a 5bit value with LSB set to 1
-    case RELEASE : r = (op->release_rate << 2) + 1; break;
+    case RELEASE : r = (op->release_rate << 1) + 1; break;
     }
 
     if (r == 0) {
@@ -199,7 +212,14 @@ static uint8_t operator_rate(Operator* op, Channel* c) {
     // This alternative formula is in the Genesis manual.
     uint8_t rks = channel_key_code(c) >> (3 - op->rate_scaling);
 
-    return (2 * r) + rks;
+    uint8_t rate = (2 * r) + rks;
+
+    // Rate is capped at 63
+    if (rate > 63) {
+        rate = 63;
+    }
+
+    return rate;
 }
 
 static const uint8_t detune_table[32][4] = {
@@ -282,9 +302,7 @@ static void channel_clock(Channel* c) {
 
 static int16_t operator_output(Operator* o, int16_t operator_input) {
     // Convert input to 10bit modulation value
-    // FIXME: shifting by 5 is the only thing that sounds good, even though
-    // the doc says we should only shift by 1 here.
-    uint16_t phase_modulation = ((uint16_t)operator_input >> 5) & 0x3ff;
+    uint16_t phase_modulation = ((uint16_t)operator_input >> 1) & 0x3ff;
 
     // Phase generator input is upper 10bit of the phase counter
     uint16_t phase_input = o->phase_counter >> 10;
@@ -295,18 +313,15 @@ static int16_t operator_output(Operator* o, int16_t operator_input) {
     double sin_result = sin(phase_normalized * TAU);
 
     // Get attenuation from envelope generator
-    uint16_t attenuation = o->attenuation;
-    if (o->polarity) {
-        attenuation = ~attenuation;
-    }
-    //attenuation = (attenuation + o->total_level) & 0x3ff;
+    uint16_t attenuation = o->polarity ? ~o->attenuation : o->attenuation;
+    attenuation = (attenuation + (o->total_level << 3)) & 0x3ff;
 
     // Convert to Bels
     double attenuation_weighting = 48.0 / (1 << 10);
     double attenuation_in_bels = ((double)attenuation * attenuation_weighting) / 10.0;
-    //double power_linear = pow(10.0, -attenuation_in_bels);
+    double power_linear = pow(10.0, -attenuation_in_bels);
     // FIXME: envelope is not quite ready
-    double power_linear = 1;
+    //power_linear = 1;
 
     // Combine sine and attenuation
     double result_normalized = sin_result * power_linear;
@@ -418,6 +433,16 @@ uint8_t ym2612_read(YM2612* y, uint32_t address) {
   return 0x7;
 }
 
+void ym2612_key_on(Operator* op, Channel* channel) {
+    operator_set_adsr(op, ATTACK, channel);
+    op->attenuation = 0;
+    op->phase_counter = 0;
+}
+
+void ym2612_key_off(Operator* op, Channel* channel) {
+    operator_set_adsr(op, RELEASE, channel);
+}
+
 void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, Part part) {
     Channel* channels = y->channels;
     Frequency* additional_freqs = y->channel3_additional_frequencies;
@@ -474,7 +499,7 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, Part part)
         if (operators == 0xf) {
             y->channels[channel].enabled = true;
         } else if (operators == 0) {
-            y->channels[channel].enabled = false;
+            //y->channels[channel].enabled = false;
         } else {
             printf("Warning: YM2612 key on for individual operators: %x\n", operators);
         }
@@ -484,13 +509,9 @@ void ym2612_write_register(YM2612* y, uint8_t address, uint8_t value, Part part)
         for (int i=0; i < 4; ++i) {
             Operator* op = &y->channels[channel].operators[i];
             if (BIT(operators, i)) {
-                // Key on
-                op->adsr_phase = ATTACK;
-                op->attenuation = 0x3ff;
-                y->envelope_counter = 0;
+                ym2612_key_on(op, &y->channels[channel]);
             } else {
-                // Key off
-                op->adsr_phase = RELEASE;
+                ym2612_key_off(op, &y->channels[channel]);
             }
         }
 
