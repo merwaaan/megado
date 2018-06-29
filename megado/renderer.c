@@ -805,6 +805,7 @@ static void build_ui(Renderer* r)
         igColumns(4, NULL, false);
         igSetColumnOffset(1, 0);
         igSetColumnOffset(2, 60);
+        igSetColumnOffset(3, 250);
 
         igNextColumn();
         igText("Address");
