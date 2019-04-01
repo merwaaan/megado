@@ -215,7 +215,7 @@ static void genesis_run_cycles(Genesis* g, double cycles) {
         uint32_t actual_cycles = m68k_run_cycles(g->m68k, cycles);
 
         // Let the other systems catch up
-        z80_run_cycles(g->z80, actual_cycles);
+        //z80_run_cycles(g->z80, actual_cycles);
         psg_run_cycles(g->psg, actual_cycles);
         ym2612_run_cycles(g->ym2612, actual_cycles);
         vdp_run_cycles(g->vdp, actual_cycles);

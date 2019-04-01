@@ -10,6 +10,7 @@
 #include "operands.h"
 #include "../debugger.h"
 #include "../genesis.h"
+#include "../ym2612.h"
 
 #ifdef DEBUG
 #define LOG_M68K(...) printf(__VA_ARGS__)
@@ -143,6 +144,7 @@ uint32_t m68k_run_cycles(M68k* m, uint32_t cycles)
 
             m->remaining_master_cycles -= c * MASTER_CYCLES_PER_CLOCK;
             cycles_this_frame += c;
+            m->genesis->ym2612->remaining_master_cycles += c;
         } else {
             // Step exited early due to an error
 

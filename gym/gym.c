@@ -84,7 +84,7 @@ void gym_play(struct GYM gym) {
           // Write the DAC samples evenly throughout the frame
           samples_this_dac += samples_per_dac;
           if (samples_this_dac > 1) {
-            ym2612_write_register(&ym, 0x2a, dac_buffer[dac_index++], PART_I);
+            ym2612_write(&ym, 0x2a, dac_buffer[dac_index++]);
             samples_this_dac -= 1;
           }
         }
@@ -124,7 +124,7 @@ void gym_play(struct GYM gym) {
           dac_buffer[dac_count++] = value;
         }
       } else {
-        ym2612_write_register(&ym, reg, value, PART_I);
+        ym2612_write(&ym, reg, value);
       }
 
     } break;
@@ -133,7 +133,7 @@ void gym_play(struct GYM gym) {
     case 0x02: {
       uint8_t reg = gym.data[pc++];
       uint8_t value = gym.data[pc++];
-      ym2612_write_register(&ym, reg, value, PART_II);
+      ym2612_write(&ym, reg, value);
     } break;
 
       // Write to PSG

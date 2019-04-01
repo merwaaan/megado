@@ -232,7 +232,3 @@ void z80_write(Z80 *z, uint16_t address, uint8_t value) {
         psg_write(z->genesis->psg, value);
     }
 }
-
-uint8_t z80_op_nop(Z80 *z) {
-    return 4;
-}

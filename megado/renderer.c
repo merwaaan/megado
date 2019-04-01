@@ -1093,7 +1093,7 @@ static void build_ui(Renderer* r)
             uint16_t pattern_index, palette_index;
             bool priority, horizontal_flip, vertical_flip;
             vdp_get_plane_cell_data(r->genesis->vdp, r->selected_plane, cell_index, &pattern_index, &palette_index, &priority, &horizontal_flip, &vertical_flip);
-            
+
             // Draw a border around the hovered cell
 
             struct ImVec2 window = get_cursor();
@@ -1280,133 +1280,133 @@ static void build_ui(Renderer* r)
     }
 
     // YM2612 registers
-    if (settings->show_ym2612_registers)
-    {
-        igBegin("YM2612 registers", &settings->show_ym2612_registers, 0);
+    /* if (settings->show_ym2612_registers) */
+    /* { */
+    /*     igBegin("YM2612 registers", &settings->show_ym2612_registers, 0); */
 
-        YM2612* y = r->genesis->ym2612;
+    /*     YM2612* y = r->genesis->ym2612; */
 
-        // Global registers
-        igTextColored(color_title, "Global registers");
-        igColumns(3, NULL, false);
+    /*     // Global registers */
+    /*     igTextColored(color_title, "Global registers"); */
+    /*     igColumns(3, NULL, false); */
 
-        igText("LFO enabled:   %s", y->lfo_enabled ? "true" : "false");
-        igText("LFO frequency: %0X", y->lfo_frequency_index);
+    /*     igText("LFO enabled:   %s", y->lfo_enabled ? "true" : "false"); */
+    /*     igText("LFO frequency: %0X", y->lfo_frequency_index); */
 
-        igNextColumn();
+    /*     igNextColumn(); */
 
-        igText("timer A: %0X", y->timer_a);
-        igText("timer B: %0X", y->timer_b);
+    /*     igText("timer A: %0X", y->timer_a); */
+    /*     igText("timer B: %0X", y->timer_b); */
 
-        igNextColumn();
+    /*     igNextColumn(); */
 
-        igText("DAC enabled: %0X", y->dac_enabled);
-        igText("DAC data:    %0X", y->dac_data);
+    /*     igText("DAC enabled: %0X", y->dac_enabled); */
+    /*     igText("DAC data:    %0X", y->dac_data); */
 
-        igSeparator();
+    /*     igSeparator(); */
 
-        // Channels
+    /*     // Channels */
 
-        igColumns(7, NULL, false);
+    /*     igColumns(7, NULL, false); */
 
-        struct ImVec2 dummy = { 0, 0 };  // Don't know what it does, but needed
-                                         // as argument to IgSelectable
-        igTextColored(color_title, "Channel");
-        igSelectable("enabled", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-        igSelectable("freq number", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-        igSelectable("frequency", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-        igSelectable("feedback", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-        igSelectable("algorithm", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-        igSelectable("stereo", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-        igSelectable("amp modulation", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-        igSelectable("freq modulation", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+    /*     struct ImVec2 dummy = { 0, 0 };  // Don't know what it does, but needed */
+    /*                                      // as argument to IgSelectable */
+    /*     igTextColored(color_title, "Channel"); */
+    /*     igSelectable("enabled", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*     igSelectable("freq number", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*     igSelectable("frequency", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*     igSelectable("feedback", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*     igSelectable("algorithm", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*     igSelectable("stereo", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*     igSelectable("amp modulation", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*     igSelectable("freq modulation", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
 
-        igNextColumn();
+    /*     igNextColumn(); */
 
-        for (int i=0; i < 6; ++i) {
-            igTextColored(color_title, "%d", i + 1);
+    /*     for (int i=0; i < 6; ++i) { */
+    /*         igTextColored(color_title, "%d", i + 1); */
 
-            // FIXME: the checkbox is too tall for the line, shifting all the
-            // lines in the table after it.
-            igPushStyleColor(ImGuiCol_CheckMark, color_accent);
-            igSameLine(20,0);
-            char name_buffer[10];
-            sprintf(name_buffer, "##chan%d", i);
-            igCheckbox(name_buffer, &y->channels[i].muted);
-            igPopStyleColor(1);
+    /*         // FIXME: the checkbox is too tall for the line, shifting all the */
+    /*         // lines in the table after it. */
+    /*         igPushStyleColor(ImGuiCol_CheckMark, color_accent); */
+    /*         igSameLine(20,0); */
+    /*         char name_buffer[10]; */
+    /*         sprintf(name_buffer, "##chan%d", i); */
+    /*         igCheckbox(name_buffer, &y->channels[i].muted); */
+    /*         igPopStyleColor(1); */
 
-            if ((i+1) % 3 == 0) {
-                uint8_t channel_mode = i == 3 ? y->channel3_mode : y->channel6_mode;
+    /*         if ((i+1) % 3 == 0) { */
+    /*             uint8_t channel_mode = i == 3 ? y->channel3_mode : y->channel6_mode; */
 
-                char* mode_string = "normal";
-                switch (channel_mode) {
-                case 0: mode_string = "normal"; break;
-                case 1: mode_string = "special"; break;
-                default: mode_string = "illegal"; break;
-                }
+    /*             char* mode_string = "normal"; */
+    /*             switch (channel_mode) { */
+    /*             case 0: mode_string = "normal"; break; */
+    /*             case 1: mode_string = "special"; break; */
+    /*             default: mode_string = "illegal"; break; */
+    /*             } */
 
-                igSameLine(0,0);
-                igText(" (%s)", mode_string);
-            }
+    /*             igSameLine(0,0); */
+    /*             igText(" (%s)", mode_string); */
+    /*         } */
 
-            igText("%d", y->channels[i].enabled);
-            igText("%d:%d", y->channels[i].frequency.block, y->channels[i].frequency.freq);
-            igText("%.2fHz", channel_frequency_in_hertz(&y->channels[i], genesis_master_frequency(r->genesis)));
-            igText("%0X", y->channels[i].feedback);
-            igText("%0X", y->channels[i].algorithm);
-            igText("%s%s", y->channels[i].left_output ? "L" : " ", y->channels[i].right_output ? "R" : " ");
-            igText("%0X", y->channels[i].amplitude_modulation_sensitivity);
-            igText("%0X", y->channels[i].frequency_modulation_sensitivity);
+    /*         igText("%d", y->channels[i].enabled); */
+    /*         igText("%d:%d", y->channels[i].frequency.block, y->channels[i].frequency.freq); */
+    /*         igText("%.2fHz", channel_frequency_in_hertz(&y->channels[i], genesis_master_frequency(r->genesis))); */
+    /*         igText("%0X", y->channels[i].feedback); */
+    /*         igText("%0X", y->channels[i].algorithm); */
+    /*         igText("%s%s", y->channels[i].left_output ? "L" : " ", y->channels[i].right_output ? "R" : " "); */
+    /*         igText("%0X", y->channels[i].amplitude_modulation_sensitivity); */
+    /*         igText("%0X", y->channels[i].frequency_modulation_sensitivity); */
 
-            igNextColumn();
-        }
+    /*         igNextColumn(); */
+    /*     } */
 
-        igSeparator();
+    /*     igSeparator(); */
 
-        // Operators
-        for (int i=0; i < 6; ++i) {
-            igColumns(1, NULL, false);
-            if (igTreeNodePtr((void*)(intptr_t)i, "Operators for channel %d", i+1)) {
+    /*     // Operators */
+    /*     for (int i=0; i < 6; ++i) { */
+    /*         igColumns(1, NULL, false); */
+    /*         if (igTreeNodePtr((void*)(intptr_t)i, "Operators for channel %d", i+1)) { */
 
-                igColumns(5, NULL, false);
+    /*             igColumns(5, NULL, false); */
 
-                igTextColored(color_title, "Operator");
-                igSelectable("detune", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("multiple", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("total level", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("attack rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("decay rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("sustain level", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("sustain rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("release rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("rate scaling", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
-                igSelectable("amp modulation", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
+    /*             igTextColored(color_title, "Operator"); */
+    /*             igSelectable("detune", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*             igSelectable("multiple", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*             igSelectable("total level", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*             igSelectable("attack rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*             igSelectable("decay rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*             igSelectable("sustain level", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*             igSelectable("sustain rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*             igSelectable("release rate", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*             igSelectable("rate scaling", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
+    /*             igSelectable("amp modulation", false, ImGuiSelectableFlags_SpanAllColumns, dummy); */
 
-                igNextColumn();
+    /*             igNextColumn(); */
 
-                for (int j=0; j < 4; ++j) {
-                    igTextColored(color_title, "%d", j + 1);
+    /*             for (int j=0; j < 4; ++j) { */
+    /*                 igTextColored(color_title, "%d", j + 1); */
 
-                    igText("%0X", y->channels[i].operators[j].detune);
-                    igText("%0X", y->channels[i].operators[j].multiple);
-                    igText("%0X", y->channels[i].operators[j].total_level);
-                    igText("%0X", y->channels[i].operators[j].attack_rate);
-                    igText("%0X", y->channels[i].operators[j].decay_rate);
-                    igText("%0X", y->channels[i].operators[j].sustain_level);
-                    igText("%0X", y->channels[i].operators[j].sustain_rate);
-                    igText("%0X", y->channels[i].operators[j].release_rate);
-                    igText("%0X", y->channels[i].operators[j].rate_scaling);
-                    igText("%0X", y->channels[i].operators[j].amplitude_modulation_enabled);
+    /*                 igText("%0X", y->channels[i].operators[j].detune); */
+    /*                 igText("%0X", y->channels[i].operators[j].multiple); */
+    /*                 igText("%0X", y->channels[i].operators[j].total_level); */
+    /*                 igText("%0X", y->channels[i].operators[j].attack_rate); */
+    /*                 igText("%0X", y->channels[i].operators[j].decay_rate); */
+    /*                 igText("%0X", y->channels[i].operators[j].sustain_level); */
+    /*                 igText("%0X", y->channels[i].operators[j].sustain_rate); */
+    /*                 igText("%0X", y->channels[i].operators[j].release_rate); */
+    /*                 igText("%0X", y->channels[i].operators[j].rate_scaling); */
+    /*                 igText("%0X", y->channels[i].operators[j].amplitude_modulation_enabled); */
 
-                    igNextColumn();
-                }
+    /*                 igNextColumn(); */
+    /*             } */
 
-                igTreePop();
-            }
-        }
+    /*             igTreePop(); */
+    /*         } */
+    /*     } */
 
-        igEnd();
-    }
+    /*     igEnd(); */
+    /* } */
 
     // bool a = true;
     // igShowTestWindow(&a);
