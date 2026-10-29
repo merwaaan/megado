@@ -1,0 +1,43 @@
+{
+  "version": 5,
+  "configurePresets": [
+    {
+      "name": "default",
+      "binaryDir": "${sourceDir}/_build",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "web",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/_build_web",
+      "toolchainFile": "${sourceDir}/external/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+      "environment": {
+        "PATH": "${sourceDir}/external/emsdk/ninja/1.13.2_64bit${pathListSep}$penv{PATH}"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug", "configurePreset": "debug" },
+    { "name": "release", "configurePreset": "release" },
+    { "name": "web", "configurePreset": "web" }
+  ]
+}

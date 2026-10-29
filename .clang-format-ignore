@@ -1,0 +1,6 @@
+_build/**
+_build_web/**
+external/**
+megado_core/m68k/gen/**
+megado_core/z80_disasm_table_gen.h
+megado_web/app/**

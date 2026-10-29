@@ -1,0 +1,20 @@
+{
+  "name": "megado-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "format": "oxlint --fix && prettier --write ."
+  },
+  "devDependencies": {
+    "oxlint": "^1.90.0",
+    "prettier": "^3.9.10",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}

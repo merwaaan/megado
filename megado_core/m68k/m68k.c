@@ -1,0 +1,342 @@
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "../debugger.h"
+#include "../genesis.h"
+#include "bit_utils.h"
+#include "instruction.h"
+#include "m68k.h"
+#include "operands.h"
+
+#ifdef DEBUG
+#define LOG_M68K(...) printf(__VA_ARGS__)
+#else
+#define LOG_M68K(...)
+#endif
+
+static const uint32_t MASTER_CYCLES_PER_CLOCK = 7;
+
+Instruction** opcode_table;
+
+M68k* m68k_make(Genesis* g)
+{
+    if (opcode_table == NULL)
+    {
+        opcode_table = calloc(0x10000, sizeof(Instruction*));
+        for (int opcode = 0; opcode < 0x10000; ++opcode)
+        {
+            opcode_table[opcode] = instruction_generate(opcode);
+        }
+    }
+
+    M68k* m68k = calloc(1, sizeof(M68k));
+    m68k->genesis = g;
+    return m68k;
+}
+
+void m68k_free(M68k* m)
+{
+    if (opcode_table != NULL)
+    {
+        for (int opcode = 0; opcode < 0x10000; ++opcode)
+        {
+            instruction_free(opcode_table[opcode]);
+        }
+        free(opcode_table);
+        opcode_table = NULL;
+    }
+
+    free(m);
+}
+
+void m68k_initialize(M68k* m)
+{
+    m->status = 0x2700;
+    m->address_registers[7] = m68k_read_l(m, 0); // Stack pointer
+    m->pc = m68k_read_l(m, 4);                   // Program start
+
+    m->cycles = 0;
+    m->stopped = false;
+    m->remaining_master_cycles = 0;
+    m->pending_interrupt = -1;
+    m->prefetch_address = 0xFFFFFFFF; // Invalid value, will initiate the initial prefetch
+}
+
+DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
+{
+    DecodedInstruction* decoded = NULL;
+
+    // Save state that can be modified by instructions; will be restored on exit
+
+    uint32_t _pc = m->pc;
+    uint16_t _instruction_register = m->instruction_register;
+    uint32_t _instruction_address = m->instruction_address;
+
+    m->instruction_address = instr_address;
+    m->pc = instr_address;
+    uint16_t opcode = m68k_fetch(m);
+    m->instruction_register = opcode;
+
+    Instruction* instr = opcode_table[opcode];
+    if (instr == NULL)
+    {
+        LOG_M68K("Opcode %#06X cannot be found in the opcode table\n", opcode);
+        goto bail;
+    }
+
+    decoded = calloc(1, sizeof(DecodedInstruction));
+    decoded->mnemonics = calloc(100, sizeof(char));
+    decoded->length = 2;
+
+    int pos = sprintf(decoded->mnemonics, "%s", instr->name);
+
+    char* size_symbol;
+    switch (instr->size)
+    {
+    case Byte:
+        size_symbol = ".b";
+        break;
+    case Word:
+        size_symbol = ".w";
+        break;
+    case Long:
+        size_symbol = ".l";
+        break;
+    default:
+        size_symbol = " ";
+    }
+    pos += sprintf(decoded->mnemonics + pos, "%s ", size_symbol);
+
+    if (instr->src != NULL)
+    {
+        pos += operand_tostring(instr->src, m, decoded->mnemonics + pos);
+        decoded->length += operand_length(instr->src);
+    }
+
+    if (instr->src != NULL && instr->dst != NULL)
+    {
+        pos += sprintf(decoded->mnemonics + pos, ", ");
+    }
+
+    if (instr->dst != NULL)
+    {
+        pos += operand_tostring(instr->dst, m, decoded->mnemonics + pos);
+        decoded->length += operand_length(instr->dst);
+    }
+
+    decoded->mnemonics[pos] = '\0';
+
+bail:
+    // Restore overriden context state
+
+    m->pc = _pc;
+    m->instruction_register = _instruction_register;
+    m->instruction_address = _instruction_address;
+
+    return decoded;
+}
+
+void decoded_instruction_free(DecodedInstruction* decoded)
+{
+    if (decoded == NULL)
+    {
+        return;
+    }
+
+    free(decoded->mnemonics);
+    free(decoded);
+}
+
+uint32_t m68k_run_cycles(M68k* m, uint32_t cycles)
+{
+    uint64_t cycles_this_frame = 0;
+    m->remaining_master_cycles += cycles;
+
+    while (m->remaining_master_cycles > 0)
+    {
+        int16_t c = m68k_step(m);
+
+        if (c >= 0)
+        {
+            // TODO temporary version for tracking non-timed instructions
+            if (c == 0)
+            {
+                // LOG_M68K("WARNING, instruction took ZERO CYCLES\n");
+                c = 10; // we don't want to block the execution
+            }
+
+            m->remaining_master_cycles -= c * MASTER_CYCLES_PER_CLOCK;
+            cycles_this_frame += c;
+        }
+        else
+        {
+            // Step exited early due to an error
+
+            // Exit early in case of a breakpoint
+
+            if (c == BREAKPOINT)
+            {
+                break;
+            }
+        }
+    }
+
+    return cycles_this_frame;
+}
+
+int16_t m68k_step(M68k* m)
+{
+    assert(m->pc <= M68K_ADDRESS_WIDTH);
+    assert(m->pc % 2 == 0);
+    assert(m->address_registers[7] % 2 == 0);
+
+    // Handle pending interrupts
+    // (also causes the processor to wake up if stopped)
+
+    bool interrupted = m68k_handle_interrupt(m);
+    if (interrupted && m->stopped)
+    {
+        m->stopped = false;
+    }
+
+    if (m->stopped)
+    {
+        return STOPPED;
+    }
+
+    // Pause on breakpoints
+    // TODO only in DEBUG builds? check perf
+
+    Breakpoint* breakpoint = debugger_get_breakpoint(m->genesis->debugger, m->pc);
+    if (breakpoint != NULL)
+    {
+        Debugger* d = m->genesis->debugger;
+
+        // If the breakpoint has already been touched, do not pause again
+
+        if (breakpoint == d->active_breakpoint)
+        {
+            d->active_breakpoint = NULL;
+        }
+        else
+        {
+            d->active_breakpoint = breakpoint;
+            d->genesis->status = Status_Pause;
+            return BREAKPOINT;
+        }
+    }
+
+    // Fetch the instruction
+
+    m->instruction_address = m->pc;
+    m->instruction_register = m68k_fetch(m);
+    Instruction* instr = opcode_table[m->instruction_register];
+
+    if (instr == NULL)
+    {
+        printf("\tOpcode %#06X cannot be found in the opcode table\n", m->instruction_register);
+        return INVALID_INSTRUCTION;
+    }
+
+#ifdef DEBUG
+    DecodedInstruction* d = m68k_decode(m, m->instruction_address);
+
+    if (d != NULL)
+    {
+        printf("%#06X [%0X] %s\n", // %0X %0X %0X %0X %0X %0X %0X | A %0X %0X %0X %0X %0X %0X %0X %0X %0X\n",
+               m->pc - 2, m->instruction_register, d->mnemonics);
+    }
+    // m->data_registers[0], m->data_registers[1], m->data_registers[2], m->data_registers[3], m->data_registers[4], m->data_registers[5], m->data_registers[6], m->data_registers[7],
+    // m->address_registers[0], m->address_registers[1], m->address_registers[2], m->address_registers[3], m->address_registers[4], m->address_registers[5], m->address_registers[6], m->address_registers[7]);
+
+    decoded_instruction_free(d);
+#endif
+
+    m->instruction_count += 1;
+
+    // if (m->instruction_callback != NULL)
+    //     m->instruction_callback(m);
+
+    uint8_t cycles = instruction_execute(instr, m);
+    m->cycles += cycles;
+
+    debugger_post_m68k(m->genesis->debugger);
+
+    return cycles;
+}
+
+inline uint16_t m68k_fetch(M68k* m)
+{
+    // If the PC jumped, discard the prefetch queue
+
+    if (m->pc != m->prefetch_address)
+    {
+        uint16_t word = m68k_read_w(m, m->pc);
+        m->pc = m->prefetch_address = (m->pc + 2) & M68K_ADDRESS_WIDTH;
+
+        m->prefetch_queue[0] = m68k_read_w(m, m->pc);
+        m->prefetch_queue[1] = m68k_read_w(m, m->pc + 2);
+
+        return word;
+    }
+
+    // Otherwise, shift the prefetch queue
+
+    uint16_t word = m->prefetch_queue[0];
+    m->prefetch_queue[0] = m->prefetch_queue[1];
+    m->pc = m->prefetch_address = (m->pc + 2) & M68K_ADDRESS_WIDTH;
+    m->prefetch_queue[1] = m68k_read_w(m, m->pc + 2);
+    return word;
+}
+
+#define IRQ_VECTOR_OFFSET 96
+
+// TODO filter/record interrupt but only service it on the next step
+
+void m68k_request_interrupt(M68k* m, uint8_t level)
+{
+    LOG_M68K("Interrupt %d requested\n", level);
+
+    // Ignore low-priority interrupts (except for level 7, which is non-maskable)
+    if (level <= STATUS_INTERRUPT_MASK(m) && level != 7)
+    {
+        LOG_M68K("\tInterrupt ignored, current interrupt mask: %d\n", STATUS_INTERRUPT_MASK(m));
+
+        return;
+    }
+
+    m->pending_interrupt = level;
+}
+
+bool m68k_handle_interrupt(M68k* m)
+{
+    if (m->pending_interrupt < 0)
+    {
+        return false;
+    }
+
+    LOG_M68K("Interrupt %d handled\n", m->pending_interrupt);
+
+    // Push the current PC onto the stack
+
+    m->address_registers[7] -= 4;
+    m68k_write_l(m, m->address_registers[7], m->pc);
+
+    // Push the status register onto the stack
+
+    m->address_registers[7] -= 2;
+    m68k_write_w(m, m->address_registers[7], m->status);
+
+    // Update the interrupt mask
+
+    m->status = (m->status & 0xF8FF) | m->pending_interrupt << 8;
+
+    m->pc = m68k_read_l(m, IRQ_VECTOR_OFFSET + m->pending_interrupt * 4) & M68K_ADDRESS_WIDTH;
+
+    m->pending_interrupt = -1;
+
+    return true;
+}

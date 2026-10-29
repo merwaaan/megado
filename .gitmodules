@@ -1,24 +1,6 @@
-[submodule "deps/minunit"]
-	path = deps/minunit
-	url = https://github.com/siu/minunit.git
-	ignore = untracked
-[submodule "deps/glfw"]
-	path = deps/glfw
-	url = https://github.com/glfw/glfw.git
-	ignore = untracked
-[submodule "deps/json-c"]
-	path = deps/json-c
-	url = https://github.com/json-c/json-c.git
-	ignore = untracked
-[submodule "deps/glew"]
-	path = deps/glew
-	url = https://github.com/nigels-com/glew.git
-	ignore = untracked
-[submodule "deps/sdl2"]
-	path = deps/sdl2
-	url = https://github.com/spurious/SDL-mirror.git
-	ignore = dirty
-[submodule "deps/cimgui"]
-	path = deps/cimgui
-	url = https://github.com/Extrawurst/cimgui.git
-	ignore = untracked
+[submodule "external/vcpkg"]
+	path = external/vcpkg
+	url = https://github.com/microsoft/vcpkg.git
+[submodule "external/emsdk"]
+	path = external/emsdk
+	url = https://github.com/emscripten-core/emsdk

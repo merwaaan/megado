@@ -1,0 +1,61 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  desktop:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: lukka/get-cmake@latest
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/AppData/Local/vcpkg/archives
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'ports/**') }}
+          restore-keys: vcpkg-${{ runner.os }}-
+
+      - name: Build
+        shell: bash
+        run: bash scripts/build.sh
+
+      - name: Test
+        run: ctest --test-dir _build -C Debug --output-on-failure
+
+  web:
+    runs-on: ubuntu-latest
+
+    env:
+      EMSCRIPTEN_VERSION: 6.0.13
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: lukka/get-cmake@latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: megado_web/app/package-lock.json
+
+      - name: Install Emscripten
+        run: |
+          ./external/emsdk/emsdk install $EMSCRIPTEN_VERSION ninja-1.13.2-64bit
+          ./external/emsdk/emsdk activate --embedded $EMSCRIPTEN_VERSION ninja-1.13.2-64bit
+
+      - name: Install web dependencies
+        working-directory: megado_web/app
+        run: npm ci
+
+      - name: Build
+        run: bash scripts/build-web.sh
