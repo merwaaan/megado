@@ -840,11 +840,13 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
         uint8_t patterns_buffer[PATTERNS_COUNT * 64 * 3]; // n patterns * 64 pixels * 3 color components
 
+        Color* patterns_palette = patterns_palette_index < 0 ? debug_palette : genesis->vdp->cram + patterns_palette_index * 16;
+
         for (int pattern = 0; pattern < PATTERNS_COUNT; ++pattern)
         {
             int x = pattern % PATTERNS_COLUMNS * 8;
             int y = pattern / PATTERNS_COLUMNS * 8;
-            vdp_draw_pattern(genesis->vdp, pattern, debug_palette, patterns_buffer, patterns_width, x, y, false, false);
+            vdp_draw_pattern(genesis->vdp, pattern, patterns_palette, patterns_buffer, patterns_width, x, y, false, false);
         }
 
         glBindTexture(GL_TEXTURE_2D, patterns_texture);
@@ -853,13 +855,14 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
         ImGui::ImageWithBg((ImTextureID)patterns_texture, ImVec2(patterns_width, patterns_height), vec_zero, vec_one, color_black, color_white);
 
         // If a pattern is hovered, show a tooltip with a magnified view
+
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_None))
         {
             ImVec2 pattern_pos = get_window_cursor();
             uint16_t pattern_index = (int)pattern_pos.y / 8 * PATTERNS_COLUMNS + (int)pattern_pos.x / 8;
 
             uint8_t magnified_pattern_buffer[64 * 3];
-            vdp_draw_pattern(genesis->vdp, pattern_index, debug_palette, magnified_pattern_buffer, 8, 0, 0, false, false);
+            vdp_draw_pattern(genesis->vdp, pattern_index, patterns_palette, magnified_pattern_buffer, 8, 0, 0, false, false);
 
             glBindTexture(GL_TEXTURE_2D, magnified_pattern_texture);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 8, 8, 0, GL_RGB, GL_UNSIGNED_BYTE, magnified_pattern_buffer);
@@ -868,6 +871,18 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
             ImGui::Text("Pattern #%d", pattern_index);
             ImGui::ImageWithBg((ImTextureID)magnified_pattern_texture, ImVec2(8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR), vec_zero, vec_one, color_white, color_white);
             ImGui::EndTooltip();
+        }
+
+        // Palette picker
+
+        ImGui::RadioButton("Grayscale", &patterns_palette_index, -1);
+
+        for (int palette = 0; palette < 4; ++palette)
+        {
+            char radio_name[32];
+            snprintf(radio_name, sizeof(radio_name), "%d##patterns_palette", palette);
+            ImGui::SameLine();
+            ImGui::RadioButton(radio_name, &patterns_palette_index, palette);
         }
 
         ImGui::End();

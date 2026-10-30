@@ -46,6 +46,7 @@ private:
     uint32_t vram_target_address = 0;
 
     // Graphics debug
+    int patterns_palette_index = -1;
     enum Planes selected_plane = Plane_A;
     std::vector<uint8_t> plane_buffer;
     std::vector<uint8_t> sprites_buffer;
