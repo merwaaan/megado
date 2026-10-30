@@ -1,19 +1,19 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstddef>
+#include <vector>
 
 // Ring buffer of recorded values, used to compute a moving average of a metric
-typedef struct Metric
+class Metric
 {
-    float* values;
-    unsigned int values_length;
+public:
+    explicit Metric(size_t length);
 
-    unsigned int index;
+    void push(float value);
+    void compute_average();
 
-    float average;
-} Metric;
+    std::vector<float> values;
+    size_t index = 0;
 
-Metric* metric_make();
-void metric_free(Metric*);
-void metric_push(Metric*, float);
-void metric_average(Metric*);
+    float average = 0.0f;
+};

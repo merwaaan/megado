@@ -1,6 +1,6 @@
 [![Build](https://github.com/merwaaan/megado/actions/workflows/build.yml/badge.svg)](https://github.com/merwaaan/megado/actions/workflows/build.yml)
 
-A Genesis/Megadrive emulator in C, with desktop and web versions.
+A Genesis/Megadrive emulator in C, with a C++ desktop frontend and a TypeScript web frontend.
 
 ## Build
 

@@ -1,45 +1,58 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
+#include <optional>
+#include <vector>
 
+#include "core.h"
+#include "metric.h"
 #include "snapshot.h"
-#include "vdp.h"
 
-struct Audio;
-struct Genesis;
-struct Settings;
+class Audio;
+class Settings;
 
-typedef enum
+struct UiEvents
 {
-    UiAction_None = 0,
-    UiAction_TogglePause = 1 << 0,
-    UiAction_Step = 1 << 1,
-    UiAction_ToggleFullScreen = 1 << 2
-} UiAction;
+    bool reset = false;
+    bool toggle_pause = false;
+    bool step = false;
+    bool toggle_full_screen = false;
+    std::optional<uint8_t> save_snapshot;
+    std::optional<uint8_t> load_snapshot;
+};
 
-typedef struct Ui
+class Ui
 {
-    struct SnapshotMetadata* snapshots[SNAPSHOT_SLOTS];
+public:
+    Ui();
+    ~Ui();
 
-    float last_time;
-    float metrics_refresh_counter;
-    struct Metric* tpf; // time per frame
-    struct Metric* audio_buffer_queue;
+    Ui(const Ui&) = delete;
+    Ui& operator=(const Ui&) = delete;
 
-    enum Planes selected_plane;
-    uint8_t* plane_buffer;
-    uint8_t* sprites_buffer;
+    UiEvents draw(Genesis* genesis, Settings& settings, const Audio& audio, const SnapshotSlots& snapshot_slots, double remaining_time);
 
-    uint32_t rom_target_address;
-    uint32_t ram_target_address;
-    uint32_t vram_target_address;
+private:
+    float last_time = 0;
 
-    // Textures for debug UI views (ImGui draws via imgui_impl)
-    unsigned int patterns_texture, magnified_pattern_texture, planes_texture, sprites_texture;
-} Ui;
+    // Metrics
+    float metrics_refresh_counter = 0;
+    Metric time_per_frame{128};
+    Metric audio_buffer_queue{128};
 
-Ui* ui_make();
-void ui_free(Ui*);
+    // Inspected memory addresses
+    uint32_t rom_target_address = 0;
+    uint32_t ram_target_address = 0;
+    uint32_t vram_target_address = 0;
 
-void ui_load_snapshots(Ui*, struct Genesis*);
-int ui_draw(Ui*, struct Genesis*, struct Settings*, struct Audio*);
+    // Graphics debug
+    enum Planes selected_plane = Plane_A;
+    std::vector<uint8_t> plane_buffer;
+    std::vector<uint8_t> sprites_buffer;
+
+    // Textures for debug UI views
+    unsigned int patterns_texture = 0;
+    unsigned int magnified_pattern_texture = 0;
+    unsigned int planes_texture = 0;
+    unsigned int sprites_texture = 0;
+};

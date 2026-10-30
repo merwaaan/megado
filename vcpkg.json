@@ -2,17 +2,15 @@
   "name": "megado",
   "version-string": "0.1.0",
   "dependencies": [
-    "cimgui",
-    "glfw3",
     "glew",
+    "glfw3",
     "greatest",
-    "json-c",
+    {
+      "name": "imgui",
+      "features": ["glfw-binding", "opengl2-binding"]
+    },
+    "nlohmann-json",
     "sdl2"
   ],
-  "builtin-baseline": "6fad4fa784ab2506e35144a7c3d64738976445ea",
-  "vcpkg-configuration": {
-    "overlay-ports": [
-      "./ports"
-    ]
-  }
+  "builtin-baseline": "6fad4fa784ab2506e35144a7c3d64738976445ea"
 }

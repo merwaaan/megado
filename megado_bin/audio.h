@@ -1,19 +1,24 @@
 #pragma once
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <cstdint>
+#include <span>
 
-extern const uint32_t SAMPLE_RATE;
-
-typedef struct Audio
+class Audio
 {
-    uint32_t device;
-    double remaining_time;
-} Audio;
+public:
+    static constexpr uint32_t SAMPLE_RATE = 44100;
 
-Audio* audio_make();
-void audio_free(Audio*);
-void audio_initialize(Audio*);
-void audio_set_paused(Audio*, bool paused);
-void audio_queue(Audio*, int16_t* samples, uint32_t count);
-uint32_t audio_queued_samples(Audio*);
+    Audio();
+    ~Audio();
+
+    Audio(const Audio&) = delete;
+    Audio& operator=(const Audio&) = delete;
+
+    void reset();
+    void set_paused(bool paused);
+    void queue_samples(std::span<const int16_t> samples);
+    uint32_t queued_samples() const;
+
+private:
+    uint32_t device = 0;
+};

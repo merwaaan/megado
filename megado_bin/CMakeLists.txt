@@ -1,31 +1,40 @@
-find_package(cimgui CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
-find_package(GLEW CONFIG REQUIRED)
-find_package(SDL2 CONFIG REQUIRED)
-find_package(json-c CONFIG REQUIRED)
-
 add_executable(megado_bin
-    audio.c
+    app.cpp
+    app.h
+    audio.cpp
     audio.h
-    main.c
-    metric.c
+    core.h
+    main.cpp
+    metric.cpp
     metric.h
-    settings.c
+    settings.cpp
     settings.h
-    snapshot.c
+    snapshot.cpp
     snapshot.h
-    ui.c
+    ui.cpp
     ui.h
-    video.c
+    video.cpp
     video.h
 )
+
+find_package(glfw3 CONFIG REQUIRED)
+find_package(GLEW CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
 
 target_link_libraries(megado_bin
     PRIVATE
         megado_core
-        cimgui::cimgui
+        imgui::imgui
         glfw
         GLEW::GLEW
         SDL2::SDL2
-        json-c::json-c
+        nlohmann_json::nlohmann_json
+)
+
+# Prevent GLFW from including gl.h, GL functions come from GLEW
+target_compile_definitions(megado_bin
+    PRIVATE
+        GLFW_INCLUDE_NONE
 )

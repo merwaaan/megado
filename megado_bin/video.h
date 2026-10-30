@@ -1,39 +1,52 @@
 #pragma once
 
+#include <cstdint>
+#include <functional>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <span>
 
-typedef struct VideoCallbacks
+struct VideoCallbacks
 {
-    void* app_ptr;
-    void (*key)(void* app_ptr, int key, int action);
-    void (*drop)(void* app_ptr, const char* path);
-    void (*resize)(void* app_ptr, int width, int height);
-    void (*close)(void* app_ptr);
-} VideoCallbacks;
+    std::function<void(int key, int action)> key;
+    std::function<void(const char* path)> drop;
+    std::function<void(int width, int height)> resize;
+    std::function<void()> close;
+};
 
-typedef struct Video
+class Video
 {
-    VideoCallbacks callbacks;
+public:
+    Video(int width, int height, VideoCallbacks callbacks);
+    ~Video();
 
-    GLFWwindow* window;
+    Video(const Video&) = delete;
+    Video& operator=(const Video&) = delete;
+
+    void set_full_screen(bool full_screen);
+
+    void begin_frame();
+    void draw(std::span<const uint8_t> pixels, uint16_t width, uint16_t height, uint32_t pitch, float scale);
+    void end_frame();
+
+private:
+    void init_rendering();
+
+    GLFWwindow* window = nullptr;
 
     // Window dimensions to be restored when leaving full screen
-    int window_previous_width, window_previous_height;
+    int window_previous_width = 0, window_previous_height = 0;
 
     // Rendering resources
-    GLuint shader;
-    GLuint texture;
-    GLuint vertex_array_object, vertex_buffer_object;
-    GLint shader_projection_loc;
-} Video;
+    GLuint shader = 0;
+    GLuint texture = 0;
+    GLuint vertex_array_object = 0, vertex_buffer_object = 0;
+    GLint shader_projection_loc = 0;
 
-Video* video_make(int width, int height, VideoCallbacks callbacks);
-void video_free(Video*);
+    static void key_callback(GLFWwindow* window, int key, int scancode, int action, int modifiers);
+    static void drop_callback(GLFWwindow* window, int path_count, const char** paths);
+    static void window_resize_callback(GLFWwindow* window, int width, int height);
+    static void window_close_callback(GLFWwindow* window);
 
-void video_set_full_screen(Video*, bool full_screen);
-
-void video_begin_frame(Video*);
-void video_draw(Video*, const uint8_t* pixels, uint16_t width, uint16_t height, uint32_t pitch, float scale);
-void video_end_frame(Video*);
+    VideoCallbacks callbacks;
+};
