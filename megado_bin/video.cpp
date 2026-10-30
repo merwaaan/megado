@@ -84,7 +84,7 @@ static GLuint create_shader_program(const GLchar* vertex_shader_source, const GL
     return program;
 }
 
-static const GLchar* vertex_shader_source = R"(#version 120
+static const GLchar* VERTEX_SHADER_SOURCE = R"(#version 120
 uniform mat4 projection_matrix;
 
 attribute vec3 vertex_position;
@@ -99,7 +99,7 @@ void main()
 }
 )";
 
-static const GLchar* fragment_shader_source = R"(#version 120
+static const GLchar* FRAGMENT_SHADER_SOURCE = R"(#version 120
 uniform sampler2D sampler;
 
 varying vec2 texcoord;
@@ -222,7 +222,7 @@ void Video::init_rendering()
 
     // Shader
 
-    shader = create_shader_program(vertex_shader_source, fragment_shader_source);
+    shader = create_shader_program(VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE);
 
     shader_projection_loc = glGetUniformLocation(shader, "projection_matrix");
 

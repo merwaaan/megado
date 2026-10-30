@@ -25,7 +25,7 @@ using namespace std;
 #define GREYSCALE(g) {g, g, g}
 
 // Black & white debug palette
-static Color debug_palette[16] = {
+static Color GRAY_PALETTE[16] = {
     GREYSCALE(0),
     GREYSCALE(17),
     GREYSCALE(34),
@@ -51,17 +51,17 @@ static void gen_texture(GLuint* texture)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
-static const ImVec4 color_black = {0.0f, 0.0f, 0.0f, 1.0f};
-static const ImVec4 color_white = {1.0f, 1.0f, 1.0f, 1.0f};
-static const ImVec4 color_dimmed = {0.5f, 0.5f, 0.5f, 1.0f};
-static const ImVec4 color_disabled = {0.25f, 0.25f, 0.25f, 1.0f};
-static const ImVec4 color_accent = {1.0f, 0.07f, 0.57f, 1.0f};
-static const ImVec4 color_success = {0.0f, 1.0f, 0.0f, 1.0f};
-static const ImVec4 color_error = {1.0f, 0.0f, 0.0f, 1.0f};
-static const ImVec4 color_title = {0.0f, 0.68f, 0.71f, 1.0f};
+static const ImVec4 COLOR_BLACK = {0.0f, 0.0f, 0.0f, 1.0f};
+static const ImVec4 COLOR_WHITE = {1.0f, 1.0f, 1.0f, 1.0f};
+static const ImVec4 COLOR_DIMMED = {0.5f, 0.5f, 0.5f, 1.0f};
+static const ImVec4 COLOR_DISABLED = {0.25f, 0.25f, 0.25f, 1.0f};
+static const ImVec4 COLOR_ACCENT = {1.0f, 0.07f, 0.57f, 1.0f};
+static const ImVec4 COLOR_SUCCESS = {0.0f, 1.0f, 0.0f, 1.0f};
+static const ImVec4 COLOR_ERROR = {1.0f, 0.0f, 0.0f, 1.0f};
+static const ImVec4 COLOR_TITLE = {0.0f, 0.68f, 0.71f, 1.0f};
 
-static const ImVec2 vec_zero = {0.0f, 0.0f};
-static const ImVec2 vec_one = {1.0f, 1.0f};
+static const ImVec2 VEC_ZERO = {0.0f, 0.0f};
+static const ImVec2 VEC_ONE = {1.0f, 1.0f};
 
 static void memory_viewer(const char* name, bool* opened, void* data, Size data_size, uint32_t data_length, uint32_t* target_address)
 {
@@ -150,7 +150,7 @@ static void text_on_off(bool state, const char* format, ...)
     va_end(args);
 
     ImGui::SameLine(0, 5);
-    ImGui::TextColored(state ? color_accent : color_dimmed, state ? "on" : "off");
+    ImGui::TextColored(state ? COLOR_ACCENT : COLOR_DIMMED, state ? "on" : "off");
 }
 
 static void plot_metric(const Metric& m, const char* title)
@@ -183,13 +183,13 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
                     if (!snapshot_slots[slot])
                     {
-                        ImGui::TextColored(color_dimmed, "       empty       ");
+                        ImGui::TextColored(COLOR_DIMMED, "       empty       ");
                     }
                     else
                     {
                         char date[30];
                         strftime(date, 30, "%Y-%m-%d %H:%M:%S", localtime(&snapshot_slots[slot]->date));
-                        ImGui::TextColored(color_accent, "%s", date);
+                        ImGui::TextColored(COLOR_ACCENT, "%s", date);
                     }
 
                     ImGui::SameLine(0, 10);
@@ -205,10 +205,10 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
                     if (!snapshot_slots[slot])
                     {
-                        ImGui::PushStyleColor(ImGuiCol_Button, color_disabled);
-                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color_disabled);
-                        ImGui::PushStyleColor(ImGuiCol_ButtonActive, color_disabled);
-                        ImGui::PushStyleColor(ImGuiCol_Text, color_black);
+                        ImGui::PushStyleColor(ImGuiCol_Button, COLOR_DISABLED);
+                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, COLOR_DISABLED);
+                        ImGui::PushStyleColor(ImGuiCol_ButtonActive, COLOR_DISABLED);
+                        ImGui::PushStyleColor(ImGuiCol_Text, COLOR_BLACK);
                         ImGui::Button("load", ImVec2(50, 20));
                         ImGui::PopStyleColor(4);
                     }
@@ -371,7 +371,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
         bool overflow = OVERFLOW(genesis->m68k);
         bool carry = CARRY(genesis->m68k);
 
-        ImGui::PushStyleColor(ImGuiCol_CheckMark, color_accent);
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, COLOR_ACCENT);
         ImGui::Columns(5, nullptr, false);
         STATUS_BIT("X", extended);
         STATUS_BIT("N", negative);
@@ -418,7 +418,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
             if (instr == nullptr)
             {
                 ImGui::Columns(1, nullptr, false);
-                ImGui::TextColored(color_dimmed, "Cannot decode opcode at %06X", address);
+                ImGui::TextColored(COLOR_DIMMED, "Cannot decode opcode at %06X", address);
 
                 // Fill the disassembler with empty lines to keep the same height
                 for (int j = i + 1; j < DISASSEMBLY_LENGTH; ++j)
@@ -438,14 +438,14 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
                 ImVec2 cursor = ImGui::GetCursorPos();
                 ImVec2 bubble = ImVec2(window.x + cursor.x + 5, window.y + cursor.y + 7);
 
-                draw_list->AddCircleFilled(bubble, 4, ImGui::GetColorU32(color_accent), 32);
+                draw_list->AddCircleFilled(bubble, 4, ImGui::GetColorU32(COLOR_ACCENT), 32);
             }
             ImGui::NextColumn();
 
-            ImGui::TextColored(i == 0 ? color_accent : color_white, "%06X", address);
+            ImGui::TextColored(i == 0 ? COLOR_ACCENT : COLOR_WHITE, "%06X", address);
             ImGui::NextColumn();
 
-            ImGui::TextColored(i == 0 ? color_accent : color_white, instr->mnemonics);
+            ImGui::TextColored(i == 0 ? COLOR_ACCENT : COLOR_WHITE, instr->mnemonics);
 
             // Toggle breakpoint when the instruction is clicked
             // TODO would be nice to have a hover feedback
@@ -460,7 +460,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
             for (int byte = 0; byte < instr->length; ++byte)
             {
-                ImGui::TextColored(color_dimmed, "%02X ", m68k_read_b(genesis->m68k, address + byte));
+                ImGui::TextColored(COLOR_DIMMED, "%02X ", m68k_read_b(genesis->m68k, address + byte));
                 ImGui::SameLine(0, 0);
             }
             ImGui::NextColumn();
@@ -523,7 +523,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
         ImGui::Columns(1, nullptr, false);
         ImGui::Separator();
 
-        ImGui::PushStyleColor(ImGuiCol_CheckMark, color_accent);
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, COLOR_ACCENT);
         ImGui::Columns(2, nullptr, false);
         READ_ONLY_CHECKBOX("running", z->running);
         ImGui::NextColumn();
@@ -608,7 +608,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
             if (instr == nullptr)
             {
                 ImGui::Columns(1, nullptr, false);
-                ImGui::TextColored(color_dimmed, "Cannot decode opcode at %04X", address);
+                ImGui::TextColored(COLOR_DIMMED, "Cannot decode opcode at %04X", address);
 
                 // Fill the disassembler with empty lines to keep the same height
 
@@ -621,15 +621,15 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
             }
             ImGui::NextColumn();
 
-            ImGui::TextColored(i == 0 ? color_accent : color_white, "%04X", address);
+            ImGui::TextColored(i == 0 ? COLOR_ACCENT : COLOR_WHITE, "%04X", address);
             ImGui::NextColumn();
 
-            ImGui::TextColored(i == 0 ? color_accent : color_white, instr->mnemonics);
+            ImGui::TextColored(i == 0 ? COLOR_ACCENT : COLOR_WHITE, instr->mnemonics);
             ImGui::NextColumn();
 
             for (int byte = 0; byte < instr->length; ++byte)
             {
-                ImGui::TextColored(color_dimmed, "%02X ", z80_read(genesis->z80, address + byte));
+                ImGui::TextColored(COLOR_DIMMED, "%02X ", z80_read(genesis->z80, address + byte));
                 ImGui::SameLine(0, 0);
             }
             ImGui::NextColumn();
@@ -684,9 +684,9 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
         Vdp* vdp = genesis->vdp;
 
-#define REGISTER_SECTION(reg) ImGui::TextColored(color_title, "Register %0X [%02X]", reg, vdp->register_raw_values[reg])
+#define REGISTER_SECTION(reg) ImGui::TextColored(COLOR_TITLE, "Register %0X [%02X]", reg, vdp->register_raw_values[reg])
 
-        ImGui::BeginChild("column1", vec_zero, ImGuiChildFlags_None, 0);
+        ImGui::BeginChild("column1", VEC_ZERO, ImGuiChildFlags_None, 0);
 
         REGISTER_SECTION(0);
         ImGui::Bullet();
@@ -727,7 +727,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
         ImGui::EndChild();
         ImGui::NextColumn();
-        ImGui::BeginChild("column2", vec_zero, ImGuiChildFlags_None, 0);
+        ImGui::BeginChild("column2", VEC_ZERO, ImGuiChildFlags_None, 0);
 
         REGISTER_SECTION(7);
         ImGui::Bullet();
@@ -769,7 +769,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
         ImGui::EndChild();
         ImGui::NextColumn();
-        ImGui::BeginChild("column3", vec_zero, ImGuiChildFlags_None, 0);
+        ImGui::BeginChild("column3", VEC_ZERO, ImGuiChildFlags_None, 0);
 
         REGISTER_SECTION(0x10);
         ImGui::Bullet();
@@ -813,7 +813,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
     if (settings.show_vdp_palettes)
     {
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, vec_zero);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, VEC_ZERO);
         ImGui::Begin("VDP palettes", &settings.show_vdp_palettes, ImGuiWindowFlags_AlwaysAutoResize);
 
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -849,14 +849,14 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
         uint16_t patterns_width = PATTERNS_COLUMNS * 8;
         uint16_t patterns_height = PATTERNS_COUNT / PATTERNS_COLUMNS * 8;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, vec_zero);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, VEC_ZERO);
         ImGui::Begin("VDP patterns", &settings.show_vdp_patterns, ImGuiWindowFlags_AlwaysAutoResize);
 
         // Update the pattern texture with the VRAM contents
 
         uint8_t patterns_buffer[PATTERNS_COUNT * 64 * 3]; // n patterns * 64 pixels * 3 color components
 
-        Color* patterns_palette = patterns_palette_index < 0 ? debug_palette : genesis->vdp->cram + patterns_palette_index * 16;
+        Color* patterns_palette = patterns_palette_index < 0 ? GRAY_PALETTE : genesis->vdp->cram + patterns_palette_index * 16;
 
         for (int pattern = 0; pattern < PATTERNS_COUNT; ++pattern)
         {
@@ -868,7 +868,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
         glBindTexture(GL_TEXTURE_2D, patterns_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, patterns_width, patterns_height, 0, GL_RGB, GL_UNSIGNED_BYTE, patterns_buffer);
 
-        ImGui::ImageWithBg((ImTextureID)patterns_texture, ImVec2(patterns_width, patterns_height), vec_zero, vec_one, color_black, color_white);
+        ImGui::ImageWithBg((ImTextureID)patterns_texture, ImVec2(patterns_width, patterns_height), VEC_ZERO, VEC_ONE, COLOR_BLACK, COLOR_WHITE);
 
         // If a pattern is hovered, show a tooltip with a magnified view
 
@@ -885,7 +885,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
             ImGui::BeginTooltip();
             ImGui::Text("Pattern #%d", pattern_index);
-            ImGui::ImageWithBg((ImTextureID)magnified_pattern_texture, ImVec2(8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR), vec_zero, vec_one, color_white, color_white);
+            ImGui::ImageWithBg((ImTextureID)magnified_pattern_texture, ImVec2(8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR), VEC_ZERO, VEC_ONE, COLOR_WHITE, COLOR_WHITE);
             ImGui::EndTooltip();
         }
 
@@ -912,7 +912,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
         uint16_t plane_width = 64 * 8;
         uint16_t plane_height = 64 * 8;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, vec_zero);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, VEC_ZERO);
         ImGui::Begin("VDP planes", &settings.show_vdp_planes, ImGuiWindowFlags_AlwaysAutoResize);
 
         // Update the plane texture with the selected plane
@@ -923,7 +923,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
         glBindTexture(GL_TEXTURE_2D, planes_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, plane_width, plane_height, 0, GL_RGB, GL_UNSIGNED_BYTE, plane_buffer.data());
 
-        ImGui::ImageWithBg((ImTextureID)planes_texture, ImVec2(plane_width, plane_height), vec_zero, vec_one, color_black, color_white);
+        ImGui::ImageWithBg((ImTextureID)planes_texture, ImVec2(plane_width, plane_height), VEC_ZERO, VEC_ONE, COLOR_BLACK, COLOR_WHITE);
 
         // If a cell is hovered, show a tooltip with details
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_None))
@@ -944,7 +944,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
             ImVec2 bottom_right = {top_left.x + 8, top_left.y + 8};
 
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
-            draw_list->AddRect(top_left, bottom_right, ImGui::GetColorU32(color_accent));
+            draw_list->AddRect(top_left, bottom_right, ImGui::GetColorU32(COLOR_ACCENT));
 
             // Draw a magnified version of the pattern
 
@@ -962,17 +962,17 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
             ImGui::Text("%-18s", "Horizontal flip: ");
             ImGui::SameLine(0, 0);
-            ImGui::TextColored(horizontal_flip ? color_accent : color_dimmed, horizontal_flip ? "on" : "off");
+            ImGui::TextColored(horizontal_flip ? COLOR_ACCENT : COLOR_DIMMED, horizontal_flip ? "on" : "off");
 
             ImGui::Text("%-18s", "Vertical flip: ");
             ImGui::SameLine(0, 0);
-            ImGui::TextColored(vertical_flip ? color_accent : color_dimmed, vertical_flip ? "on" : "off");
+            ImGui::TextColored(vertical_flip ? COLOR_ACCENT : COLOR_DIMMED, vertical_flip ? "on" : "off");
 
             ImGui::Text("%-18s", "Priority: ");
             ImGui::SameLine(0, 0);
-            ImGui::TextColored(priority ? color_accent : color_dimmed, priority ? "on" : "off");
+            ImGui::TextColored(priority ? COLOR_ACCENT : COLOR_DIMMED, priority ? "on" : "off");
 
-            ImGui::ImageWithBg((ImTextureID)magnified_pattern_texture, ImVec2(8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR), vec_zero, vec_one, color_white, color_white);
+            ImGui::ImageWithBg((ImTextureID)magnified_pattern_texture, ImVec2(8 * PATTERN_MAGNIFICATION_FACTOR, 8 * PATTERN_MAGNIFICATION_FACTOR), VEC_ZERO, VEC_ONE, COLOR_WHITE, COLOR_WHITE);
             ImGui::EndTooltip();
         }
 
@@ -992,7 +992,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
     if (settings.show_vdp_sprites)
     {
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, vec_zero);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, VEC_ZERO);
         ImGui::Begin("VDP sprites", &settings.show_vdp_sprites, ImGuiWindowFlags_AlwaysAutoResize);
 
         ImVec2 pos = get_screen_cursor();
@@ -1005,7 +1005,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
         glBindTexture(GL_TEXTURE_2D, sprites_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 552, 552, 0, GL_RGB, GL_UNSIGNED_BYTE, sprites_buffer.data());
 
-        ImGui::ImageWithBg((ImTextureID)sprites_texture, ImVec2(552, 552), vec_zero, vec_one, color_black, color_white);
+        ImGui::ImageWithBg((ImTextureID)sprites_texture, ImVec2(552, 552), VEC_ZERO, VEC_ONE, COLOR_BLACK, COLOR_WHITE);
 
         // Draw the screen border
 
@@ -1013,7 +1013,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
         ImVec2 b = {a.x + genesis->vdp->display_width * 8, a.y + genesis->vdp->display_height * 8};
 
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        draw_list->AddRect(a, b, ImGui::GetColorU32(color_accent));
+        draw_list->AddRect(a, b, ImGui::GetColorU32(COLOR_ACCENT));
 
         ImGui::End();
         ImGui::PopStyleVar(1);
@@ -1056,7 +1056,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
         ImGui::SetNextWindowPos(ImVec2(10, 50), ImGuiCond_None, ImVec2(0, 0));
         ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(1.0f, 1.0f, 1.0f, 0.10f));
         ImGui::Begin("Example: Fixed Overlay", &dummy_flag, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
-        ImGui::TextColored(color_accent, genesis->status == Status_Pause ? "Paused" : "Rewinding");
+        ImGui::TextColored(COLOR_ACCENT, genesis->status == Status_Pause ? "Paused" : "Rewinding");
         ImGui::End();
         ImGui::PopStyleColor(1);
     }
@@ -1093,11 +1093,11 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
         snprintf(buf, sizeof buf, "audio queue (samples)\navg: %.2f", audio_buffer_queue.average);
         plot_metric(audio_buffer_queue, buf);
 
-        ImGui::TextColored(color_title, "Remaining audio time: ");
+        ImGui::TextColored(COLOR_TITLE, "Remaining audio time: ");
         ImGui::SameLine(0, 0);
         ImGui::Text("%.6fms", remaining_time * 1000);
 
-        ImGui::TextColored(color_title, "Remaining master cycles");
+        ImGui::TextColored(COLOR_TITLE, "Remaining master cycles");
         ImGui::Text("M68k:   %d", genesis->m68k->remaining_master_cycles);
         ImGui::Text("Z80:    %d", genesis->z80->remaining_master_cycles);
         ImGui::Text("PSG:    %d", genesis->psg->remaining_master_cycles);
@@ -1116,11 +1116,11 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
         for (int i = 0; i < 3; ++i)
         {
-            ImGui::TextColored(color_title, "Square %d", i);
+            ImGui::TextColored(COLOR_TITLE, "Square %d", i);
             if (p->square[i].volume == 0xF)
             {
                 ImGui::SameLine(0, 0);
-                ImGui::TextColored(color_dimmed, " [silent]");
+                ImGui::TextColored(COLOR_DIMMED, " [silent]");
             }
             ImGui::Text("volume:  %0X", p->square[i].volume);
             ImGui::Text("tone:    %0X [%.2fHz]", p->square[i].tone, square_tone_in_hertz(&p->square[i]));
@@ -1128,11 +1128,11 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
             ImGui::Text("output:  %d", square_output(&p->square[i]));
         }
 
-        ImGui::TextColored(color_title, "Noise");
+        ImGui::TextColored(COLOR_TITLE, "Noise");
         if (p->noise.volume == 0xF)
         {
             ImGui::SameLine(0, 0);
-            ImGui::TextColored(color_dimmed, " [silent]");
+            ImGui::TextColored(COLOR_DIMMED, " [silent]");
         }
         ImGui::Text("volume:     %0X", p->noise.volume);
         ImGui::Text("mode:       %0X [%s]", p->noise.mode, p->noise.mode ? "white" : "periodic");
@@ -1154,7 +1154,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
         // Global registers
 
-        ImGui::TextColored(color_title, "Global registers");
+        ImGui::TextColored(COLOR_TITLE, "Global registers");
         ImGui::Columns(3, nullptr, false);
 
         ImGui::Text("LFO enabled:   %s", y->lfo_enabled ? "true" : "false");
@@ -1178,7 +1178,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
         ImVec2 dummy = {0, 0}; // Don't know what it does, but needed
                                // as argument to IgSelectable
-        ImGui::TextColored(color_title, "Channel");
+        ImGui::TextColored(COLOR_TITLE, "Channel");
         ImGui::Selectable("enabled", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         ImGui::Selectable("freq number", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
         ImGui::Selectable("frequency", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
@@ -1192,11 +1192,11 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
         for (int i = 0; i < 6; ++i)
         {
-            ImGui::TextColored(color_title, "%d", i + 1);
+            ImGui::TextColored(COLOR_TITLE, "%d", i + 1);
 
             // FIXME: the checkbox is too tall for the line, shifting all the
             // lines in the table after it.
-            ImGui::PushStyleColor(ImGuiCol_CheckMark, color_accent);
+            ImGui::PushStyleColor(ImGuiCol_CheckMark, COLOR_ACCENT);
             ImGui::SameLine(20, 0);
             char name_buffer[10];
             sprintf(name_buffer, "##chan%d", i);
@@ -1249,7 +1249,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
                 ImGui::Columns(5, nullptr, false);
 
-                ImGui::TextColored(color_title, "Operator");
+                ImGui::TextColored(COLOR_TITLE, "Operator");
                 ImGui::Selectable("detune", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
                 ImGui::Selectable("multiple", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
                 ImGui::Selectable("total level", false, ImGuiSelectableFlags_SpanAllColumns, dummy);
@@ -1265,7 +1265,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
                 for (int j = 0; j < 4; ++j)
                 {
-                    ImGui::TextColored(color_title, "%d", j + 1);
+                    ImGui::TextColored(COLOR_TITLE, "%d", j + 1);
 
                     ImGui::Text("%0X", y->channels[i].operators[j].detune);
                     ImGui::Text("%0X", y->channels[i].operators[j].multiple);
