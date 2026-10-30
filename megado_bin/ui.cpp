@@ -322,6 +322,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
     }
 
     // M68K registers
+
     if (settings.show_m68k_registers)
     {
         ImGui::SetNextWindowSize(ImVec2(440, 270), ImGuiCond_FirstUseEver);
@@ -348,9 +349,20 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
         ImGui::Text("Status: %04X", genesis->m68k->status);
 
-#define STATUS_BIT(label, bit)         \
-    ImGui::Text(label);                \
-    ImGui::Checkbox("##" label, &bit); \
+#define READ_ONLY_CHECKBOX(label, value)                        \
+    do                                                          \
+    {                                                           \
+        bool read_only_value = value;                           \
+        ImGui::PushStyleVar(ImGuiStyleVar_DisabledAlpha, 1.0f); \
+        ImGui::BeginDisabled();                                 \
+        ImGui::Checkbox(label, &read_only_value);               \
+        ImGui::EndDisabled();                                   \
+        ImGui::PopStyleVar(1);                                  \
+    } while (0)
+
+#define STATUS_BIT(label, bit)           \
+    ImGui::Text(label);                  \
+    READ_ONLY_CHECKBOX("##" label, bit); \
     ImGui::NextColumn()
 
         bool extended = EXTENDED(genesis->m68k);
@@ -378,6 +390,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
     }
 
     // M68K disassembly
+
     if (settings.show_m68k_disassembly)
     {
         ImGui::SetNextWindowSize(ImVec2(520, 320), ImGuiCond_FirstUseEver);
@@ -480,6 +493,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
     }
 
     // Z80 registers
+
     if (settings.show_z80_registers)
     {
         Z80* z = genesis->z80;
@@ -511,9 +525,9 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
         ImGui::PushStyleColor(ImGuiCol_CheckMark, color_accent);
         ImGui::Columns(2, nullptr, false);
-        ImGui::Checkbox("running", &z->running);
+        READ_ONLY_CHECKBOX("running", z->running);
         ImGui::NextColumn();
-        ImGui::Checkbox("resetting", &z->resetting);
+        READ_ONLY_CHECKBOX("resetting", z->resetting);
         ImGui::NextColumn();
 
         bool sf = z->sf;
@@ -540,6 +554,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
     }
 
     // M68K program log
+
     if (settings.show_m68k_log)
     {
         ImGui::SetNextWindowSize(ImVec2(380, 460), ImGuiCond_FirstUseEver);
@@ -563,6 +578,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
     }
 
     // Z80 disassembly
+
     if (settings.show_z80_disassembly)
     {
         ImGui::SetNextWindowSize(ImVec2(400, 230), ImGuiCond_FirstUseEver);
@@ -1271,9 +1287,6 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
         ImGui::End();
     }
-
-    // bool a = true;
-    // ImGui::ShowTestWindow(&a);
 
     return events;
 }
