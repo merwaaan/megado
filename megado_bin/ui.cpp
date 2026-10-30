@@ -226,7 +226,19 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
             ImGui::Separator();
 
+            // Emulation speed (with reset button when != 1)
+
             ImGui::SliderFloat("Speed", &settings.emulation_speed, 0.2f, 3.0f, "%f");
+
+            if (settings.emulation_speed != 1.0f)
+            {
+                ImGui::SameLine();
+
+                if (ImGui::SmallButton("Reset##speed"))
+                {
+                    settings.emulation_speed = 1.0f;
+                }
+            }
 
             if (ImGui::MenuItem("Reset", nullptr, false, true))
             {
