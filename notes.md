@@ -1,15 +1,16 @@
 # Game-specific bugs
 
+- Sonic: Sonic appears in front of the title on the intro screen
+
 - Columns:
   - score overflows its box (looks like the most significant digit is a repeat
     of the least-significant one, when it should be zero; the bogus digit is
     written to the VDP @ 63AA)
 
-- The Simpsons - Bart's Nightmare: 
+- The Simpsons - Bart's Nightmare:
   - Bart's sprite is not visible
-  
 - Splatterhouse 2: waits for a DMA transfer (bit 1 of VDP status) but we do those in a single step
-so the flag is always cleared.
+  so the flag is always cleared.
 
 - Quackshot: The plane's sprite is scrambled
 
@@ -29,22 +30,20 @@ so the flag is always cleared.
   - frozen during intro
 
 - Blades of Vengeance:
-    - copyright screen blitted twice with an offset (might be the Window plane that should not be enabled but is still drawn)
-    - the menu screen does not respond.
-	
+  - copyright screen blitted twice with an offset (might be the Window plane that should not be enabled but is still drawn)
+  - the menu screen does not respond.
 - Ristar: goes to the next level when grabbing an enemy.
 
 - Contra:
-    - character fires his weapon backward!
-	- no watery animation of the game logo
-	- the intro sequence of the first level is a mess
+  - character fires his weapon backward!
+  - no watery animation of the game logo
+  - the intro sequence of the first level is a mess
 
 - Zombies Ate My Neighbors:
-	- the film roll on the character select screen must be transparent (how is this done?)
-	- plane scrolling is visible at the right of the screen
-	
+  - the film roll on the character select screen must be transparent (how is this done?)
+  - plane scrolling is visible at the right of the screen
 - Another World: scanlines are drawn out. This game might very sensible to timing accuracy since
-it implements its own polygon rasterizer.
+  it implements its own polygon rasterizer.
 
 - Jurassic Park: infinite loop in the first level.
 

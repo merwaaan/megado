@@ -19,6 +19,13 @@
 #define MEM_CHECK_W(a, x) CHECK(x, m68k_read_w(m, a))
 #define MEM_CHECK_L(a, x) CHECK(x, m68k_read_l(m, a))
 
+#define STATUS_SET(x, n, z, v, c) \
+    EXTENDED_SET(m, x);           \
+    NEGATIVE_SET(m, n);           \
+    ZERO_SET(m, z);               \
+    OVERFLOW_SET(m, v);           \
+    CARRY_SET(m, c)
+
 #define STATUS_CHECK(x, n, z, v, c) \
     CHECK(x, EXTENDED(m));          \
     CHECK(n, NEGATIVE(m));          \

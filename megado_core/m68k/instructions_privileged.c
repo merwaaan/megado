@@ -6,7 +6,7 @@
 
 uint8_t andi_sr(Instruction* i, M68k* ctx)
 {
-    ctx->status &= FETCH_EA_AND_GET(i->src, ctx);
+    ctx->status &= FETCH_EA_AND_GET(i->src, ctx) & STATUS_MASK;
 
     return 0;
 }
@@ -21,7 +21,7 @@ Instruction* gen_andi_sr(uint16_t opcode)
 
 uint8_t eori_sr(Instruction* i, M68k* ctx)
 {
-    ctx->status ^= FETCH_EA_AND_GET(i->src, ctx);
+    ctx->status ^= FETCH_EA_AND_GET(i->src, ctx) & STATUS_MASK;
 
     return 0;
 }
@@ -36,7 +36,7 @@ Instruction* gen_eori_sr(uint16_t opcode)
 
 uint8_t ori_sr(Instruction* i, M68k* ctx)
 {
-    ctx->status |= FETCH_EA_AND_GET(i->src, ctx);
+    ctx->status |= FETCH_EA_AND_GET(i->src, ctx) & STATUS_MASK;
 
     return 0;
 }
@@ -67,7 +67,7 @@ Instruction* gen_move_from_sr(uint16_t opcode)
 
 uint8_t move_to_sr(Instruction* i, M68k* ctx)
 {
-    ctx->status = FETCH_EA_AND_GET(i->src, ctx);
+    ctx->status = FETCH_EA_AND_GET(i->src, ctx) & STATUS_MASK;
 
     return 0;
 }
@@ -131,7 +131,7 @@ Instruction* gen_reset(uint16_t opcode)
 
 uint8_t rte(Instruction* i, M68k* ctx)
 {
-    ctx->status = m68k_read_w(ctx, ctx->address_registers[7]);
+    ctx->status = m68k_read_w(ctx, ctx->address_registers[7]) & STATUS_MASK;
     ctx->address_registers[7] += 2;
     ctx->pc = m68k_read_l(ctx, ctx->address_registers[7]) & M68K_ADDRESS_WIDTH;
     ctx->address_registers[7] += 4;

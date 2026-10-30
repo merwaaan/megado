@@ -23,7 +23,7 @@ static void teardown_addressing_modes(void* data)
     teardown(data);
 }
 
-TEST test_data_b(void)
+TEST test_data_b()
 {
     Operand* o = operand_make_data_register(1, instr);
     o->instruction->size = Byte;
@@ -42,7 +42,7 @@ TEST test_data_b(void)
     PASS();
 }
 
-TEST test_data_w(void)
+TEST test_data_w()
 {
     Operand* o = operand_make_data_register(1, instr);
     o->instruction->size = Word;
@@ -61,7 +61,7 @@ TEST test_data_w(void)
     PASS();
 }
 
-TEST test_data_l(void)
+TEST test_data_l()
 {
     Operand* o = operand_make_data_register(1, instr);
     o->instruction->size = Long;
@@ -74,7 +74,7 @@ TEST test_data_l(void)
     PASS();
 }
 
-TEST test_address_b(void)
+TEST test_address_b()
 {
     Operand* o = operand_make_address_register(3, instr);
     o->instruction->size = Byte;
@@ -93,7 +93,7 @@ TEST test_address_b(void)
     PASS();
 }
 
-TEST test_address_w(void)
+TEST test_address_w()
 {
     Operand* o = operand_make_address_register(3, instr);
     o->instruction->size = Word;
@@ -112,7 +112,7 @@ TEST test_address_w(void)
     PASS();
 }
 
-TEST test_address_l(void)
+TEST test_address_l()
 {
     Operand* o = operand_make_address_register(3, instr);
     o->instruction->size = Long;
@@ -125,7 +125,7 @@ TEST test_address_l(void)
     PASS();
 }
 
-TEST test_address_indirect_b(void)
+TEST test_address_indirect_b()
 {
     Operand* o = operand_make_address_register_indirect(5, instr);
     o->instruction->size = Byte;
@@ -145,7 +145,7 @@ TEST test_address_indirect_b(void)
     PASS();
 }
 
-TEST test_address_indirect_w(void)
+TEST test_address_indirect_w()
 {
     Operand* o = operand_make_address_register_indirect(5, instr);
     o->instruction->size = Word;
@@ -165,7 +165,7 @@ TEST test_address_indirect_w(void)
     PASS();
 }
 
-TEST test_address_indirect_l(void)
+TEST test_address_indirect_l()
 {
     Operand* o = operand_make_address_register_indirect(5, instr);
     o->instruction->size = Long;

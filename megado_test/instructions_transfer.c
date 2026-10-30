@@ -2,7 +2,7 @@
 
 #include "globals.h"
 
-TEST test_exg_data_data(void)
+TEST test_exg_data_data()
 {
     DATA(3, 0x12345678);
     DATA(6, 0xA0A0A0A0);
@@ -12,7 +12,7 @@ TEST test_exg_data_data(void)
     PASS();
 }
 
-TEST test_exg_address_address(void)
+TEST test_exg_address_address()
 {
     ADDR(0, 0x12345678);
     ADDR(2, 0xA0A0A0A0);
@@ -22,7 +22,7 @@ TEST test_exg_address_address(void)
     PASS();
 }
 
-TEST test_exg_data_address(void)
+TEST test_exg_data_address()
 {
     DATA(4, 0x12345678);
     ADDR(0, 0xA0A0A0A0);
@@ -32,7 +32,7 @@ TEST test_exg_data_address(void)
     PASS();
 }
 
-TEST test_lea(void)
+TEST test_lea()
 {
     ADDR(1, 0xF0F0);
     ADDR(0, 0xFFFF0000);
@@ -41,12 +41,12 @@ TEST test_lea(void)
     PASS();
 }
 
-TEST test_move(void)
+TEST test_move()
 {
     SKIPm("not implemented");
 }
 
-TEST test_movem_mem_to_reg(void)
+TEST test_movem_mem_to_reg()
 {
     ADDR(5, 0x294);
     MEM_W(0x294, 0x8000);

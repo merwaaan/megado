@@ -4,7 +4,7 @@
 
 #include "globals.h"
 
-TEST test_bit(void)
+TEST test_bit()
 {
     CHECK(0, BIT(0, 0));
     CHECK(0, BIT(0, 5));
@@ -18,7 +18,7 @@ TEST test_bit(void)
     PASS();
 }
 
-TEST test_bit_set(void)
+TEST test_bit_set()
 {
     CHECK(1, BIT_SET(0, 0));
     CHECK(1, BIT_SET(1, 0));
@@ -28,7 +28,7 @@ TEST test_bit_set(void)
     PASS();
 }
 
-TEST test_bit_clr(void)
+TEST test_bit_clr()
 {
     CHECK(0, BIT_CLR(0, 0));
     CHECK(0, BIT_CLR(1, 0));
@@ -40,7 +40,7 @@ TEST test_bit_clr(void)
     PASS();
 }
 
-TEST test_bit_chg(void)
+TEST test_bit_chg()
 {
     CHECK(0, BIT_CHG(0, 0, 0));
     CHECK(1, BIT_CHG(0, 0, 1));
@@ -54,7 +54,7 @@ TEST test_bit_chg(void)
     PASS();
 }
 
-TEST test_fragment(void)
+TEST test_fragment()
 {
     CHECK(0, FRAGMENT(0, 0, 0));
     CHECK(0, FRAGMENT(0, 7, 0));
@@ -81,7 +81,7 @@ TEST test_fragment(void)
     PASS();
 }
 
-TEST test_mask_below(void)
+TEST test_mask_below()
 {
     CHECK(0, MASK_BELOW(0, 0));
     CHECK(1, MASK_BELOW(1, 0));
@@ -92,7 +92,7 @@ TEST test_mask_below(void)
     PASS();
 }
 
-TEST test_mask_below_inc(void)
+TEST test_mask_below_inc()
 {
     CHECK(0, MASK_BELOW_INC(0, 0));
     CHECK(0, MASK_BELOW_INC(1, 0));
@@ -103,7 +103,7 @@ TEST test_mask_below_inc(void)
     PASS();
 }
 
-TEST test_mask_above(void)
+TEST test_mask_above()
 {
     CHECK(0, MASK_ABOVE(0, 0));
     CHECK(1, MASK_ABOVE(1, 0));
@@ -114,7 +114,7 @@ TEST test_mask_above(void)
     PASS();
 }
 
-TEST test_mask_above_inc(void)
+TEST test_mask_above_inc()
 {
     CHECK(0, MASK_ABOVE_INC(0, 0));
     CHECK(0, MASK_ABOVE_INC(1, 0));
@@ -125,7 +125,7 @@ TEST test_mask_above_inc(void)
     PASS();
 }
 
-TEST test_sign_bit(void)
+TEST test_sign_bit()
 {
     CHECK(0, SIGN_BIT(0, Byte));
     CHECK(0, SIGN_BIT(1, Byte));
@@ -150,7 +150,7 @@ TEST test_sign_bit(void)
     PASS();
 }
 
-TEST test_carry_add(void)
+TEST test_carry_add()
 {
     CHECK(false, CHECK_CARRY_ADD(0, 0, Byte));
     CHECK(false, CHECK_CARRY_ADD(0xFF, 0, Byte));
@@ -175,7 +175,7 @@ TEST test_carry_add(void)
     PASS();
 }
 
-TEST test_carry_sub(void)
+TEST test_carry_sub()
 {
     CHECK(false, CHECK_CARRY_SUB(0, 0, Byte));
     CHECK(false, CHECK_CARRY_SUB(0xFF, 0, Byte));
@@ -206,7 +206,7 @@ TEST test_carry_sub(void)
     PASS();
 }
 
-TEST test_overflow_add(void)
+TEST test_overflow_add()
 {
     CHECK(false, CHECK_OVERFLOW_ADD(0, 0, Byte));
     CHECK(false, CHECK_OVERFLOW_ADD(0, 0x50, Byte));
@@ -237,7 +237,7 @@ TEST test_overflow_add(void)
     PASS();
 }
 
-TEST test_overflow_sub(void)
+TEST test_overflow_sub()
 {
     CHECK(false, CHECK_OVERFLOW_SUB(0, 0, Byte));
     CHECK(false, CHECK_OVERFLOW_SUB(0, 0x50, Byte));
@@ -272,7 +272,7 @@ TEST test_overflow_sub(void)
     PASS();
 }
 
-TEST test_bin_parse(void)
+TEST test_bin_parse()
 {
     CHECK(0, bin_parse("0"));
     CHECK(0, bin_parse("000"));
@@ -292,7 +292,7 @@ TEST test_bin_parse(void)
     PASS();
 }
 
-TEST test_bin_tostring(void)
+TEST test_bin_tostring()
 {
     char buffer[100];
     ASSERT_STR_EQ("0", bin_tostring(0, buffer));

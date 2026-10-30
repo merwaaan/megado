@@ -27,6 +27,8 @@
 #define STATUS_SUPERVISOR_MODE(context) BIT((context)->status, 13)
 #define STATUS_INTERRUPT_MASK(context) FRAGMENT((context)->status, 10, 8)
 
+#define STATUS_MASK 0xA71F
+
 // The M68000 has a 24-bit address bus
 #define M68K_ADDRESS_WIDTH 0xFFFFFF
 

@@ -3,7 +3,7 @@
 
 #include "globals.h"
 
-TEST test_bchg_set(void)
+TEST test_bchg_set()
 {
     DATA(1, 2);
     DATA(5, 0xFFFF);
@@ -12,7 +12,7 @@ TEST test_bchg_set(void)
     PASS();
 }
 
-TEST test_bchg_cleared(void)
+TEST test_bchg_cleared()
 {
     DATA(1, 2);
     DATA(5, 0xFFFB);
@@ -21,7 +21,7 @@ TEST test_bchg_cleared(void)
     PASS();
 }
 
-TEST test_bclr(void)
+TEST test_bclr()
 {
     DATA(1, 2);
     DATA(0, 5);
@@ -30,7 +30,7 @@ TEST test_bclr(void)
     PASS();
 }
 
-TEST test_bset(void)
+TEST test_bset()
 {
     DATA(0, 2);
     DATA(5, 0);
@@ -39,7 +39,7 @@ TEST test_bset(void)
     PASS();
 }
 
-TEST test_btst_true(void)
+TEST test_btst_true()
 {
     DATA(6, 5);
     DATA(7, 0x1A0);
@@ -48,7 +48,7 @@ TEST test_btst_true(void)
     PASS();
 }
 
-TEST test_btst_false(void)
+TEST test_btst_false()
 {
     DATA(6, 2);
     DATA(7, 0x1A0);

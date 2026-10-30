@@ -3,7 +3,7 @@
 
 #include "globals.h"
 
-TEST test_lsl(void) // refactor with asl
+TEST test_lsl() // refactor with asl
 {
     DATA(7, 1);
 
@@ -75,7 +75,7 @@ TEST test_lsl(void) // refactor with asl
     PASS();
 }
 
-TEST test_lsr(void)
+TEST test_lsr()
 {
     DATA(7, 1);
 
@@ -118,7 +118,7 @@ TEST test_lsr(void)
     PASS();
 }
 
-TEST test_asl(void)
+TEST test_asl()
 {
     DATA(7, 1);
 
@@ -190,7 +190,7 @@ TEST test_asl(void)
     PASS();
 }
 
-TEST test_asr(void)
+TEST test_asr()
 {
     DATA(2, 3);
 
@@ -270,7 +270,7 @@ TEST test_asr(void)
     PASS();
 }
 
-TEST test_rol(void)
+TEST test_rol()
 {
     DATA(6, 1);
 
@@ -338,12 +338,12 @@ TEST test_rol(void)
     PASS();
 }
 
-TEST test_ror(void) // TODO
+TEST test_ror() // TODO
 {
     SKIPm("not implemented");
 }
 
-TEST test_roxl(void)
+TEST test_roxl()
 {
     DATA(6, 0);
 
@@ -473,12 +473,12 @@ TEST test_roxl(void)
     PASS();
 }
 
-TEST test_roxr(void) // TODO
+TEST test_roxr() // TODO
 {
     SKIPm("not implemented");
 }
 
-TEST test_swap(void)
+TEST test_swap()
 {
     DATA(4, 0x1234ABCD);
     RUN("0100100001000 100"); // SWAP D4
