@@ -1,26 +1,21 @@
-export type Snapshot = {
+export type SaveState = {
   version: number;
   date: number;
   data: Uint8Array;
 };
 
-export async function saveSnapshot(
-  game: string,
-  snapshot: Snapshot,
-): Promise<void> {
-  await transaction("readwrite", (store) => store.put(snapshot, game));
+export async function saveState(game: string, state: SaveState): Promise<void> {
+  await transaction("readwrite", (store) => store.put(state, game));
 }
 
-export async function loadSnapshot(
-  game: string,
-): Promise<Snapshot | undefined> {
-  return transaction<Snapshot | undefined>("readonly", (store) =>
+export async function loadState(game: string): Promise<SaveState | undefined> {
+  return transaction<SaveState | undefined>("readonly", (store) =>
     store.get(game),
   );
 }
 
 const DATABASE = "megado";
-const STORE = "snapshots";
+const STORE = "states";
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {

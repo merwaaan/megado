@@ -11,6 +11,7 @@ if(EMSCRIPTEN)
         _megado_create
         _megado_destroy
         _megado_load_rom
+        _megado_reset
         _megado_rom_name
         _megado_status
         _megado_run_samples

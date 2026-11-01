@@ -31,6 +31,11 @@ void megado_load_rom(const uint8_t* data, uint32_t size)
     genesis_load_rom(genesis, data, size);
 }
 
+void megado_reset(void)
+{
+    genesis_initialize(genesis);
+}
+
 const char* megado_rom_name(void)
 {
     genesis_get_rom_name(genesis, rom_name);

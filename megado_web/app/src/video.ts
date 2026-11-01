@@ -15,6 +15,31 @@ export class Video {
     this.image = context.createImageData(canvas.width, canvas.height);
   }
 
+  clear(): void {
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  capture(): ImageData {
+    return new ImageData(
+      new Uint8ClampedArray(this.image.data),
+      this.image.width,
+      this.image.height,
+    );
+  }
+
+  show(picture: ImageData): void {
+    if (
+      picture.width !== this.canvas.width ||
+      picture.height !== this.canvas.height
+    ) {
+      this.canvas.width = picture.width;
+      this.canvas.height = picture.height;
+      this.image = this.context.createImageData(picture.width, picture.height);
+    }
+
+    this.context.putImageData(picture, 0, 0);
+  }
+
   draw(frame: Frame): void {
     // Resize if needed
 

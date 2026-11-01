@@ -49,6 +49,10 @@ export class Emulator {
     this.module._free(pointer);
   }
 
+  reset(): void {
+    this.module._megado_reset();
+  }
+
   runSamples(count: number, sampleDuration: number): Int16Array {
     const produced = this.module._megado_run_samples(count, sampleDuration);
     const pointer = this.module._megado_samples();
