@@ -380,23 +380,25 @@ Instruction* gen_ext(uint16_t opcode)
     return i;
 }
 
-uint8_t mul(Instruction* i, M68k* ctx)
+uint8_t mulu(Instruction* i, M68k* ctx)
 {
-    // All 32 bits of the product are stored in the destination register
-    ctx->data_registers[i->dst->n] = FETCH_EA_AND_GET(i->src, ctx) * (ctx->data_registers[i->dst->n] & 0xFFFF);
+    uint16_t a = FETCH_EA_AND_GET(i->src, ctx);
+    uint16_t b = ctx->data_registers[i->dst->n];
+    uint32_t result = (uint32_t)a * (uint32_t)b;
 
-    uint32_t result = GET(i->dst, ctx);
+    ctx->data_registers[i->dst->n] = result;
+
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
     ZERO_SET(ctx, result == 0);
-    NEGATIVE_SET(ctx, BIT(result, i->size - 1));
+    NEGATIVE_SET(ctx, BIT(result, 31));
 
     return 0;
 }
 
-Instruction* gen_muls(uint16_t opcode)
+Instruction* gen_mulu(uint16_t opcode)
 {
-    Instruction* i = instruction_make("MULS", mul);
+    Instruction* i = instruction_make("MULU", mulu);
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
@@ -404,9 +406,25 @@ Instruction* gen_muls(uint16_t opcode)
     return i;
 }
 
-Instruction* gen_mulu(uint16_t opcode)
+uint8_t muls(Instruction* i, M68k* ctx)
 {
-    Instruction* i = instruction_make("MULU", mul);
+    int16_t a = FETCH_EA_AND_GET(i->src, ctx);
+    int16_t b = ctx->data_registers[i->dst->n];
+    uint32_t result = (uint32_t)((int32_t)a * (int32_t)b);
+
+    ctx->data_registers[i->dst->n] = result;
+
+    CARRY_SET(ctx, false);
+    OVERFLOW_SET(ctx, false);
+    ZERO_SET(ctx, result == 0);
+    NEGATIVE_SET(ctx, BIT(result, 31));
+
+    return 0;
+}
+
+Instruction* gen_muls(uint16_t opcode)
+{
+    Instruction* i = instruction_make("MULS", muls);
     i->size = Word;
     i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
     i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);

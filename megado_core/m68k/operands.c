@@ -669,12 +669,15 @@ uint32_t operand_fetch_ea_and_get(Operand* operand, M68k* ctx)
         FATAL("fetch_ea_func is null (opcode: %04X, name: %s)\n",
               operand->instruction->opcode, operand->instruction->name);
     }
+
     operand->last_ea = operand->fetch_ea_func(operand, ctx);
+
     if (operand->get_value_func == NULL)
     {
         FATAL("get_value_func is null (opcode: %04X, name: %s)\n",
               operand->instruction->opcode, operand->instruction->name);
     }
+
     return operand->get_value_func(operand, ctx);
 }
 
@@ -685,11 +688,14 @@ void operand_fetch_ea_and_set(Operand* operand, M68k* ctx, uint32_t value)
         FATAL("fetch_ea_func is null (opcode: %04X, name: %s)\n",
               operand->instruction->opcode, operand->instruction->name);
     }
+
     operand->last_ea = operand->fetch_ea_func(operand, ctx);
+
     if (operand->set_value_func == NULL)
     {
         FATAL("set_value_func is null (opcode: %04X, name: %s)\n",
               operand->instruction->opcode, operand->instruction->name);
     }
+
     operand->set_value_func(operand, ctx, value);
 }
