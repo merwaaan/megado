@@ -26,9 +26,9 @@ void megado_destroy(void)
     samples_capacity = 0;
 }
 
-void megado_load_rom(const uint8_t* data, uint32_t size)
+bool megado_load_rom(const uint8_t* data, uint32_t size)
 {
-    genesis_load_rom(genesis, data, size);
+    return genesis_load_rom(genesis, data, size);
 }
 
 void megado_reset(void)

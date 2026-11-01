@@ -2,15 +2,32 @@
   "name": "megado",
   "version-string": "0.1.0",
   "dependencies": [
-    "glew",
-    "glfw3",
-    "greatest",
+    {
+      "name": "glew",
+      "platform": "!emscripten"
+    },
+    {
+      "name": "glfw3",
+      "platform": "!emscripten"
+    },
+    {
+      "name": "greatest",
+      "platform": "!emscripten"
+    },
     {
       "name": "imgui",
-      "features": ["glfw-binding", "opengl2-binding"]
+      "features": ["glfw-binding", "opengl2-binding"],
+      "platform": "!emscripten"
     },
-    "nlohmann-json",
-    "sdl2"
+    "miniz",
+    {
+      "name": "nlohmann-json",
+      "platform": "!emscripten"
+    },
+    {
+      "name": "sdl2",
+      "platform": "!emscripten"
+    }
   ],
   "builtin-baseline": "6fad4fa784ab2506e35144a7c3d64738976445ea"
 }

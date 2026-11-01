@@ -57,7 +57,7 @@ typedef struct Genesis
 Genesis* genesis_make();
 void genesis_free(Genesis*);
 
-void genesis_load_rom(Genesis* g, const uint8_t* data, size_t size);
+bool genesis_load_rom(Genesis* g, const uint8_t* data, size_t size);
 void genesis_initialize(Genesis* g);
 
 struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc);

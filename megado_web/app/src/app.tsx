@@ -50,7 +50,10 @@ export function App({ runtime }: Props) {
       return;
     }
 
-    await runtime.openRom(file);
+    if (!(await runtime.openRom(file))) {
+      notifications.show({ message: "Could not load ROM", color: "red" });
+      return;
+    }
 
     setRomName(runtime.romName || file.name);
     setPaused(false);
@@ -97,7 +100,7 @@ export function App({ runtime }: Props) {
           </Group>
 
           <Group gap="md">
-            <FileButton onChange={openRom}>
+            <FileButton onChange={openRom} accept=".md,.gen,.zip">
               {(props) => <Button {...props}>Open ROM</Button>}
             </FileButton>
 

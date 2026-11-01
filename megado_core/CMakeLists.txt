@@ -47,3 +47,10 @@ target_include_directories(megado_core
         "${PROJECT_SOURCE_DIR}"
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )
+
+find_package(miniz CONFIG REQUIRED)
+
+target_link_libraries(megado_core
+    PRIVATE
+        miniz::miniz
+)

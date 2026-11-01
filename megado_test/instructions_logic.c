@@ -90,7 +90,7 @@ TEST test_andi_b()
     DATA(0, 0x12345678);
     STATUS_SET(1, 1, 1, 1, 1);
     MEM_W(2, 0x000F);
-    RUN("00000010 00 000000"); // ANDI.b #$0F, D0
+    RUN("00000010 00 000000"); // ANDI.b #0x0F, D0
     DATA_CHECK(0, 0x12345608);
     STATUS_CHECK(1, 0, 0, 0, 0);
     PASS();
@@ -101,7 +101,7 @@ TEST test_andi_w()
     DATA(0, 0x1234F678);
     STATUS_SET(1, 0, 1, 1, 1);
     MEM_W(2, 0x8F00);
-    RUN("00000010 01 000000"); // ANDI.w #$8F00, D0
+    RUN("00000010 01 000000"); // ANDI.w #0x8F00, D0
     DATA_CHECK(0, 0x12348600);
     STATUS_CHECK(1, 1, 0, 0, 0);
     PASS();
@@ -112,7 +112,7 @@ TEST test_andi_l()
     DATA(0, 0x12345678);
     STATUS_SET(1, 1, 0, 1, 1);
     MEM_L(2, 0xEDCBA987);
-    RUN("00000010 10 000000"); // ANDI.l #$EDCBA987, D0
+    RUN("00000010 10 000000"); // ANDI.l #0xEDCBA987, D0
     DATA_CHECK(0, 0);
     STATUS_CHECK(1, 0, 1, 0, 0);
     PASS();
@@ -124,7 +124,7 @@ TEST test_andi_indirect()
     MEM_W(0x1000, 0x1234);
     STATUS_SET(1, 1, 1, 1, 1);
     MEM_W(2, 0xFF00);
-    RUN("00000010 01 010001"); // ANDI.w #$FF00, (A1)
+    RUN("00000010 01 010001"); // ANDI.w #0xFF00, (A1)
     MEM_CHECK_W(0x1000, 0x1200);
     ADDR_CHECK(1, 0x1000);
     STATUS_CHECK(1, 0, 0, 0, 0);
@@ -137,7 +137,7 @@ TEST test_andi_absolute_short()
     STATUS_SET(1, 1, 1, 1, 1);
     MEM_W(2, 0x00F0);
     MEM_W(4, 0x2000);
-    RUN("00000010 00 111000"); // ANDI.b #$F0, ($2000).w
+    RUN("00000010 00 111000"); // ANDI.b #0xF0, ($2000).w
     MEM_CHECK(0x2000, 0x50);
     CHECK(6, m->pc);
     STATUS_CHECK(1, 0, 0, 0, 0);
@@ -148,7 +148,7 @@ TEST test_andi_ccr()
 {
     m->status = 0x271F;
     MEM_W(2, 0x0015);
-    RUN("0000001000111100"); // ANDI #$15, CCR
+    RUN("0000001000111100"); // ANDI #0x15, CCR
     CHECK(0x2715, m->status);
     PASS();
 }
@@ -157,7 +157,7 @@ TEST test_andi_sr()
 {
     m->status = 0x2715;
     MEM_W(2, 0xF8FF);
-    RUN("0000001001111100"); // ANDI #$F8FF, SR
+    RUN("0000001001111100"); // ANDI #0xF8FF, SR
     CHECK(0x2015, m->status);
     PASS();
 }
@@ -167,7 +167,7 @@ TEST test_ori_b()
     DATA(1, 0x12345600);
     STATUS_SET(1, 0, 1, 1, 1);
     MEM_W(2, 0x0081);
-    RUN("00000000 00 000001"); // ORI.b #$81, D1
+    RUN("00000000 00 000001"); // ORI.b #0x81, D1
     DATA_CHECK(1, 0x12345681);
     STATUS_CHECK(1, 1, 0, 0, 0);
     PASS();
@@ -178,7 +178,7 @@ TEST test_ori_w()
     DATA(1, 0xFFFF0000);
     STATUS_SET(1, 1, 0, 1, 1);
     MEM_W(2, 0x0000);
-    RUN("00000000 01 000001"); // ORI.w #$0000, D1
+    RUN("00000000 01 000001"); // ORI.w #0, D1
     DATA_CHECK(1, 0xFFFF0000);
     STATUS_CHECK(1, 0, 1, 0, 0);
     PASS();
@@ -189,7 +189,7 @@ TEST test_ori_l()
     DATA(1, 0x01020304);
     STATUS_SET(1, 1, 1, 1, 1);
     MEM_L(2, 0x10203040);
-    RUN("00000000 10 000001"); // ORI.l #$10203040, D1
+    RUN("00000000 10 000001"); // ORI.l #0x10203040, D1
     DATA_CHECK(1, 0x11223344);
     STATUS_CHECK(1, 0, 0, 0, 0);
     PASS();
@@ -201,7 +201,7 @@ TEST test_ori_predec()
     MEM_L(0x1000, 0x12340000);
     STATUS_SET(1, 1, 1, 1, 1);
     MEM_L(2, 0x0000FFFF);
-    RUN("00000000 10 100010"); // ORI.l #$0000FFFF, -(A2)
+    RUN("00000000 10 100010"); // ORI.l #0x0000FFFF, -(A2)
     MEM_CHECK_L(0x1000, 0x1234FFFF);
     ADDR_CHECK(2, 0x1000);
     STATUS_CHECK(1, 0, 0, 0, 0);
@@ -212,7 +212,7 @@ TEST test_ori_ccr()
 {
     m->status = 0x2700;
     MEM_W(2, 0x000A);
-    RUN("0000000000111100"); // ORI #$0A, CCR
+    RUN("0000000000111100"); // ORI #0x0A, CCR
     CHECK(0x270A, m->status);
     PASS();
 }
@@ -221,7 +221,7 @@ TEST test_ori_sr()
 {
     m->status = 0x2015;
     MEM_W(2, 0x0700);
-    RUN("0000000001111100"); // ORI #$0700, SR
+    RUN("0000000001111100"); // ORI #0x0700, SR
     CHECK(0x2715, m->status);
     PASS();
 }
@@ -230,7 +230,7 @@ TEST test_ori_sr_unused_bits()
 {
     m->status = 0x2700;
     MEM_W(2, 0xFFFF);
-    RUN("0000000001111100"); // ORI #$FFFF, SR
+    RUN("0000000001111100"); // ORI #0xFFFF, SR
     CHECK(0xA71F, m->status);
     PASS();
 }
@@ -240,7 +240,7 @@ TEST test_eori_b()
     DATA(2, 0x123456FF);
     STATUS_SET(1, 1, 0, 1, 1);
     MEM_W(2, 0x00FF);
-    RUN("00001010 00 000010"); // EORI.b #$FF, D2
+    RUN("00001010 00 000010"); // EORI.b #0xFF, D2
     DATA_CHECK(2, 0x12345600);
     STATUS_CHECK(1, 0, 1, 0, 0);
     PASS();
@@ -251,7 +251,7 @@ TEST test_eori_w()
     DATA(2, 0x12345678);
     STATUS_SET(1, 0, 1, 1, 1);
     MEM_W(2, 0xFFFF);
-    RUN("00001010 01 000010"); // EORI.w #$FFFF, D2
+    RUN("00001010 01 000010"); // EORI.w #0xFFFF, D2
     DATA_CHECK(2, 0x1234A987);
     STATUS_CHECK(1, 1, 0, 0, 0);
     PASS();
@@ -262,7 +262,7 @@ TEST test_eori_l()
     DATA(2, 0x12345678);
     STATUS_SET(1, 0, 1, 1, 1);
     MEM_L(2, 0xF0F0F0F0);
-    RUN("00001010 10 000010"); // EORI.l #$F0F0F0F0, D2
+    RUN("00001010 10 000010"); // EORI.l #0xF0F0F0F0, D2
     DATA_CHECK(2, 0xE2C4A688);
     STATUS_CHECK(1, 1, 0, 0, 0);
     PASS();
@@ -274,7 +274,7 @@ TEST test_eori_postinc()
     MEM(0x1000, 0x0F);
     STATUS_SET(1, 0, 1, 1, 1);
     MEM_W(2, 0x00FF);
-    RUN("00001010 00 011011"); // EORI.b #$FF, (A3)+
+    RUN("00001010 00 011011"); // EORI.b #0xFF, (A3)+
     MEM_CHECK(0x1000, 0xF0);
     ADDR_CHECK(3, 0x1001);
     STATUS_CHECK(1, 1, 0, 0, 0);
@@ -285,7 +285,7 @@ TEST test_eori_ccr()
 {
     m->status = 0x2715;
     MEM_W(2, 0x001F);
-    RUN("0000101000111100"); // EORI #$1F, CCR
+    RUN("0000101000111100"); // EORI #0x1F, CCR
     CHECK(0x270A, m->status);
     PASS();
 }
@@ -294,7 +294,7 @@ TEST test_eori_sr()
 {
     m->status = 0x2700;
     MEM_W(2, 0x0011);
-    RUN("0000101001111100"); // EORI #$0011, SR
+    RUN("0000101001111100"); // EORI #0x0011, SR
     CHECK(0x2711, m->status);
     PASS();
 }

@@ -172,7 +172,11 @@ void App::load_rom_file(const filesystem::path& path)
 
     vector<uint8_t> data(istreambuf_iterator<char>(file), {});
 
-    genesis_load_rom(genesis, data.data(), data.size());
+    if (!genesis_load_rom(genesis, data.data(), data.size()))
+    {
+        println(stderr, "Cannot load ROM from \"{}\"", path.string());
+        return;
+    }
 
     // Reset audio
 

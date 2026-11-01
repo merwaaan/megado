@@ -67,13 +67,17 @@ export class Runtime {
     this.video = new Video(canvas);
   }
 
-  async openRom(file: File): Promise<void> {
-    this.emulator.loadRom(new Uint8Array(await file.arrayBuffer()));
+  async openRom(file: File): Promise<boolean> {
+    if (!this.emulator.loadRom(new Uint8Array(await file.arrayBuffer()))) {
+      return false;
+    }
 
     this.loaded = true;
 
     this.clearRewind();
     this.setPaused(false);
+
+    return true;
   }
 
   setPaused(value: boolean): void {

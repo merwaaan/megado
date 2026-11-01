@@ -1,3 +1,6 @@
+// miniz defines zlib-compatible names (Byte, ...) that clash with ours
+#define MINIZ_NO_ZLIB_COMPATIBLE_NAMES
+#include <miniz.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,7 +67,7 @@ static void print_header_info(char* label, uint8_t* data, uint8_t length)
     free(string);
 }
 
-void genesis_load_rom(Genesis* g, const uint8_t* data, size_t size)
+static void load_rom_data(Genesis* g, const uint8_t* data, size_t size)
 {
     if (size > 0x400000)
     {
@@ -136,6 +139,72 @@ void genesis_load_rom(Genesis* g, const uint8_t* data, size_t size)
     }
 
     g->status = Status_Running;
+}
+
+static bool is_zip(const uint8_t* data, size_t size)
+{
+    return size >= 4 && memcmp(data, "PK\x03\x04", 4) == 0;
+}
+
+bool genesis_load_rom(Genesis* g, const uint8_t* data, size_t size)
+{
+    // Not a zip: load the ROM directly
+
+    if (!is_zip(data, size))
+    {
+        load_rom_data(g, data, size);
+        return true;
+    }
+
+    // Zip: extract and load the ROM
+    // (archives often bundle extra files next to the ROM so we pick the largest file)
+
+    mz_zip_archive zip = {0};
+
+    if (!mz_zip_reader_init_mem(&zip, data, size, 0))
+    {
+        printf("Cannot open zip archive\n");
+        return false;
+    }
+
+
+    int rom_index = -1;
+    mz_uint64 rom_size = 0;
+
+    for (mz_uint i = 0; i < mz_zip_reader_get_num_files(&zip); i++)
+    {
+        mz_zip_archive_file_stat stat;
+
+        if (mz_zip_reader_file_stat(&zip, i, &stat) && !stat.m_is_directory && stat.m_uncomp_size > rom_size)
+        {
+            rom_index = (int)i;
+            rom_size = stat.m_uncomp_size;
+        }
+    }
+
+    if (rom_index < 0)
+    {
+        printf("No ROM found in zip archive\n");
+        mz_zip_reader_end(&zip);
+        return false;
+    }
+
+    size_t rom_data_size;
+    void* rom_data = mz_zip_reader_extract_to_heap(&zip, rom_index, &rom_data_size, 0);
+
+    mz_zip_reader_end(&zip);
+
+    if (rom_data == NULL)
+    {
+        printf("Cannot extract ROM from zip archive\n");
+        return false;
+    }
+
+    load_rom_data(g, rom_data, rom_data_size);
+
+    mz_free(rom_data);
+
+    return true;
 }
 
 struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc)

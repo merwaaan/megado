@@ -26,12 +26,15 @@
       "name": "web",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/_build_web",
-      "toolchainFile": "${sourceDir}/external/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
       "environment": {
+        "EMSDK": "${sourceDir}/external/emsdk",
         "PATH": "${sourceDir}/external/emsdk/ninja/1.13.2_64bit${pathListSep}$penv{PATH}"
       },
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/external/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        "VCPKG_TARGET_TRIPLET": "wasm32-emscripten"
       }
     }
   ],

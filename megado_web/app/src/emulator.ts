@@ -43,10 +43,12 @@ export class Emulator {
     return this.module.UTF8ToString(this.module._megado_rom_name());
   }
 
-  loadRom(data: Uint8Array): void {
+  loadRom(data: Uint8Array): boolean {
     const pointer = this.copyInModule(data);
-    this.module._megado_load_rom(pointer, data.length);
+    const loaded = this.module._megado_load_rom(pointer, data.length);
     this.module._free(pointer);
+
+    return Boolean(loaded);
   }
 
   reset(): void {
