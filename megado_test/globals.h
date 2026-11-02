@@ -3,6 +3,7 @@
 #include <genesis.h>
 #include <greatest.h>
 #include <m68k/m68k.h>
+#include <m68k/map.h>
 
 #define CHECK(a, b) ASSERT_EQ_FMT((unsigned int)(a), (unsigned int)(b), "%#010X")
 
@@ -12,12 +13,12 @@
 #define ADDR(n, x) m->address_registers[n] = x
 #define ADDR_CHECK(n, x) CHECK(x, m->address_registers[n])
 
-#define MEM(a, x) m68k_write_b(m, a, x);
-#define MEM_W(a, x) m68k_write_w(m, a, x);
-#define MEM_L(a, x) m68k_write_l(m, a, x);
-#define MEM_CHECK(a, x) CHECK(x, m68k_read_b(m, a))
-#define MEM_CHECK_W(a, x) CHECK(x, m68k_read_w(m, a))
-#define MEM_CHECK_L(a, x) CHECK(x, m68k_read_l(m, a))
+#define MEM(a, x) map_write_b(g->map, a, x);
+#define MEM_W(a, x) map_write_w(g->map, a, x);
+#define MEM_L(a, x) map_write_l(g->map, a, x);
+#define MEM_CHECK(a, x) CHECK(x, map_read_b(g->map, a))
+#define MEM_CHECK_W(a, x) CHECK(x, map_read_w(g->map, a))
+#define MEM_CHECK_L(a, x) CHECK(x, map_read_l(g->map, a))
 
 #define STATUS_SET(x, n, z, v, c) \
     EXTENDED_SET(m, x);           \
@@ -33,9 +34,9 @@
     CHECK(v, OVERFLOW(m));          \
     CHECK(c, CARRY(m))
 
-#define RUN(opcode)                        \
-    m->pc = 0;                             \
-    m68k_write_w(m, 0, bin_parse(opcode)); \
+#define RUN(opcode)                            \
+    m->pc = 0;                                 \
+    map_write_w(g->map, 0, bin_parse(opcode)); \
     m68k_step(m)
 
 extern Genesis* g;
@@ -44,3 +45,5 @@ extern uint8_t* memory;
 
 void setup(void* data);
 void teardown(void* data);
+
+void test_map_init(Map*);

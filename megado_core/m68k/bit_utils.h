@@ -34,6 +34,10 @@
 #define WORD_LO(b) ((b) & 0xFFFF)
 #define WORD_HI(b) (((b) & 0xFFFF0000) >> 16)
 
+// Read a big-endian word/long from a byte pointer
+#define READ_BE_W(p) ((uint16_t)((p)[0] << 8 | (p)[1]))
+#define READ_BE_L(p) ((uint32_t)(p)[0] << 24 | (uint32_t)(p)[1] << 16 | (uint32_t)(p)[2] << 8 | (uint32_t)(p)[3])
+
 #define MAX_VALUE(size) ((size) == Byte ? 0xFF : ((size) == Word ? 0xFFFF : 0xFFFFFFFF))
 
 #define SIGN_BIT(x, size) BIT(x, size - 1)

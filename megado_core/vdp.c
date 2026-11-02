@@ -6,6 +6,7 @@
 #include "debugger.h"
 #include "genesis.h"
 #include "m68k/m68k.h"
+#include "m68k/map.h"
 #include "vdp.h"
 
 #ifdef DEBUG
@@ -80,7 +81,7 @@ uint16_t vdp_read_data(Vdp* v)
 
         LOG_VDP("Reading VRAM @ %04x\n", v->access_address);
 
-        value = v->vram[v->access_address] << 8 | v->vram[v->access_address + 1];
+        value = READ_BE_W(v->vram + v->access_address);
         break;
 
     case 8: // CRAM read
@@ -440,7 +441,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
                         do
                         {
-                            uint16_t value = m68k_read_w(v->genesis->m68k, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
+                            uint16_t value = map_read_w(v->genesis->map, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
                             v->vram[v->access_address] = BYTE_HI(value);
                             v->vram[v->access_address ^ 1] = BYTE_LO(value);
 
@@ -461,7 +462,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
                             /*if (v->access_address > 0x7F)
                             break;*/
 
-                            uint16_t value = m68k_read_w(v->genesis->m68k, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
+                            uint16_t value = map_read_w(v->genesis->map, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
                             Color color = COLOR_11_TO_STRUCT(value);
                             v->cram[v->access_address >> 1 & 0x3F] = color;
 
@@ -476,7 +477,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
                         do
                         {
-                            v->vsram[v->access_address >> 1 & 0x3F] = m68k_read_w(v->genesis->m68k, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
+                            v->vsram[v->access_address >> 1 & 0x3F] = map_read_w(v->genesis->map, (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1);
 
                             ++v->dma_source_address_lo;
                             v->access_address += v->auto_increment;
@@ -761,7 +762,7 @@ void vdp_get_plane_scanline(Vdp* v, Planes plane, int scanline, ScanlineData* da
             horizontal_scroll_offset += scanline * 4 + (plane == Plane_A ? 0 : 2); // TODO use y before or after vertical scrolling?!
         }
 
-        horizontal_scroll = (horizontal_scroll_offset[0] << 8 | horizontal_scroll_offset[1]) & 0x3FF;
+        horizontal_scroll = READ_BE_W(horizontal_scroll_offset) & 0x3FF;
     }
 
     // The size of planes A and B is defined by register 0x10.

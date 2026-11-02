@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../genesis.h"
 #include "../utils.h"
 #include "bit_utils.h"
 #include "cycles.h"
 #include "instruction.h"
 #include "m68k.h"
+#include "map.h"
 #include "operands.h"
 
 uint8_t exg(Instruction* i, M68k* ctx)
@@ -79,7 +81,7 @@ uint8_t link(Instruction* i, M68k* ctx)
     // Push the address register onto the stack
 
     ctx->address_registers[7] -= 4;
-    m68k_write_l(ctx, ctx->address_registers[7], ctx->address_registers[i->src->n]);
+    map_write_l(ctx->genesis->map, ctx->address_registers[7], ctx->address_registers[i->src->n]);
 
     // Place the new stack pointer in the address register
 
@@ -148,7 +150,7 @@ uint8_t movem(Instruction* i, M68k* ctx)
             {
                 uint32_t* reg = ea->type == AddressRegisterIndirectPreDec ? MOVEM_PREDEC_ORDER(m) : MOVEM_POSTINC_ORDER(m);
 
-                *reg = m68k_read(ctx, i->size, offset);
+                *reg = map_read(ctx->genesis->map, i->size, offset);
 
                 if (i->size == Word)
                 {
@@ -165,7 +167,7 @@ uint8_t movem(Instruction* i, M68k* ctx)
                     *reg = SIGN_EXTEND_W(*reg);
                 }
 
-                m68k_write(ctx, i->size, offset, *reg);
+                map_write(ctx->genesis->map, i->size, offset, *reg);
             }
 
             if (ea->type == AddressRegisterIndirectPreDec)
@@ -273,15 +275,15 @@ uint8_t movep(Instruction* i, M68k* ctx)
     {
         if (i->size == Word)
         {
-            m68k_write_b(ctx, i->dst->last_ea, (value & 0xFF00) >> 8);
-            m68k_write_b(ctx, i->dst->last_ea + 2, value & 0xFF);
+            map_write_b(ctx->genesis->map, i->dst->last_ea, (value & 0xFF00) >> 8);
+            map_write_b(ctx->genesis->map, i->dst->last_ea + 2, value & 0xFF);
         }
         else
         {
-            m68k_write_b(ctx, i->dst->last_ea, (value & 0xFF000000) >> 24);
-            m68k_write_b(ctx, i->dst->last_ea + 2, (value & 0xFF0000) >> 16);
-            m68k_write_b(ctx, i->dst->last_ea + 4, (value & 0xFF00) >> 8);
-            m68k_write_b(ctx, i->dst->last_ea + 6, value & 0xFF);
+            map_write_b(ctx->genesis->map, i->dst->last_ea, (value & 0xFF000000) >> 24);
+            map_write_b(ctx->genesis->map, i->dst->last_ea + 2, (value & 0xFF0000) >> 16);
+            map_write_b(ctx->genesis->map, i->dst->last_ea + 4, (value & 0xFF00) >> 8);
+            map_write_b(ctx->genesis->map, i->dst->last_ea + 6, value & 0xFF);
         }
     }
     else if (i->dst->type == DataRegister)
@@ -289,16 +291,16 @@ uint8_t movep(Instruction* i, M68k* ctx)
         if (i->size == Word)
         {
             ctx->data_registers[i->dst->n] =
-                m68k_read_b(ctx, i->src->last_ea) << 8 |
-                m68k_read_b(ctx, i->src->last_ea + 2);
+                map_read_b(ctx->genesis->map, i->src->last_ea) << 8 |
+                map_read_b(ctx->genesis->map, i->src->last_ea + 2);
         }
         else
         {
             ctx->data_registers[i->dst->n] =
-                m68k_read_b(ctx, i->src->last_ea) << 24 |
-                m68k_read_b(ctx, i->src->last_ea + 2) << 16 |
-                m68k_read_b(ctx, i->src->last_ea + 4) << 8 |
-                m68k_read_b(ctx, i->src->last_ea + 6);
+                map_read_b(ctx->genesis->map, i->src->last_ea) << 24 |
+                map_read_b(ctx->genesis->map, i->src->last_ea + 2) << 16 |
+                map_read_b(ctx->genesis->map, i->src->last_ea + 4) << 8 |
+                map_read_b(ctx->genesis->map, i->src->last_ea + 6);
         }
     }
     else
@@ -371,7 +373,7 @@ Instruction* gen_move_to_ccr(uint16_t opcode)
 uint8_t pea(Instruction* i, M68k* ctx)
 {
     ctx->address_registers[7] -= 4;
-    m68k_write_l(ctx, ctx->address_registers[7], FETCH_EA(i->src, ctx));
+    map_write_l(ctx->genesis->map, ctx->address_registers[7], FETCH_EA(i->src, ctx));
 
     return 0;
 }
@@ -392,7 +394,7 @@ uint8_t unlk(Instruction* i, M68k* ctx)
 
     // Load the address register with the long word at the top of the stack
 
-    ctx->address_registers[i->src->n] = m68k_read_l(ctx, ctx->address_registers[7]);
+    ctx->address_registers[i->src->n] = map_read_l(ctx->genesis->map, ctx->address_registers[7]);
     ctx->address_registers[7] += 4;
 
     return 0;

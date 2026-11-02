@@ -460,7 +460,7 @@ UiEvents Ui::draw(Genesis* genesis, Settings& settings, const Audio& audio, cons
 
             for (int byte = 0; byte < instr->length; ++byte)
             {
-                ImGui::TextColored(COLOR_DIMMED, "%02X ", m68k_read_b(genesis->m68k, address + byte));
+                ImGui::TextColored(COLOR_DIMMED, "%02X ", map_read_b(genesis->map, address + byte));
                 ImGui::SameLine(0, 0);
             }
             ImGui::NextColumn();

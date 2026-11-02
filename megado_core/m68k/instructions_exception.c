@@ -1,5 +1,7 @@
+#include "../genesis.h"
 #include "instruction.h"
 #include "m68k.h"
+#include "map.h"
 #include "operands.h"
 
 Instruction* gen_chk(uint16_t opcode)
@@ -19,14 +21,14 @@ uint8_t trap(Instruction* i, M68k* ctx)
     // Push the current PC onto the stack
 
     ctx->address_registers[7] -= 4;
-    m68k_write_l(ctx, ctx->address_registers[7], ctx->pc);
+    map_write_l(ctx->genesis->map, ctx->address_registers[7], ctx->pc);
 
     // Push the status register onto the stack
 
     ctx->address_registers[7] -= 2;
-    m68k_write_w(ctx, ctx->address_registers[7], ctx->status);
+    map_write_w(ctx->genesis->map, ctx->address_registers[7], ctx->status);
 
-    ctx->pc = m68k_read_l(ctx, 0x80 + i->src->n * 4) & M68K_ADDRESS_WIDTH;
+    ctx->pc = map_read_l(ctx->genesis->map, 0x80 + i->src->n * 4) & M68K_ADDRESS_WIDTH;
 
     return 0;
 }

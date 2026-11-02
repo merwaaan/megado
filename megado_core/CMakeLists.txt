@@ -37,7 +37,8 @@ add_library(megado_core STATIC
     m68k/instructions_transfer.c
     m68k/m68k.c
     m68k/m68k.h
-    m68k/m68k_io.c
+    m68k/map.c
+    m68k/map.h
     m68k/operands.c
     m68k/operands.h
 )

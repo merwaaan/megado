@@ -1,10 +1,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "../genesis.h"
 #include "bit_utils.h"
 #include "conditions.h"
 #include "instruction.h"
 #include "m68k.h"
+#include "map.h"
 #include "operands.h"
 
 uint8_t bcc(Instruction* i, M68k* ctx)
@@ -86,7 +88,7 @@ uint8_t bsr(Instruction* i, M68k* ctx)
     // Push the address that follows the instruction on the stack
 
     ctx->address_registers[7] -= 4;
-    m68k_write_l(ctx, ctx->address_registers[7], ctx->pc);
+    map_write_l(ctx->genesis->map, ctx->address_registers[7], ctx->pc);
 
     // Jump from (instruction address + 2)
 
@@ -180,7 +182,7 @@ uint8_t jsr(Instruction* i, M68k* ctx)
     // Push the address following the instruction onto the stack
 
     ctx->address_registers[7] -= 4;
-    m68k_write_l(ctx, ctx->address_registers[7], ctx->pc);
+    map_write_l(ctx->genesis->map, ctx->address_registers[7], ctx->pc);
 
     // Jump to the location specified by ea
 
@@ -217,10 +219,10 @@ Instruction* gen_rtd(uint16_t opcode)
 
 uint8_t rtr(Instruction* i, M68k* ctx)
 {
-    uint8_t ccr = m68k_read_w(ctx, ctx->address_registers[7]);
+    uint8_t ccr = map_read_w(ctx->genesis->map, ctx->address_registers[7]);
     ctx->status = (ctx->status & 0xFFE0) | (ccr & 0x1F);
 
-    uint32_t pc = m68k_read_l(ctx, ctx->address_registers[7] + 2) & M68K_ADDRESS_WIDTH;
+    uint32_t pc = map_read_l(ctx->genesis->map, ctx->address_registers[7] + 2) & M68K_ADDRESS_WIDTH;
     ctx->pc = pc;
 
     ctx->address_registers[7] += 6;
@@ -237,7 +239,7 @@ Instruction* gen_rtr(uint16_t opcode)
 
 uint8_t rts(Instruction* i, M68k* ctx)
 {
-    ctx->pc = m68k_read_l(ctx, ctx->address_registers[7]) & M68K_ADDRESS_WIDTH;
+    ctx->pc = map_read_l(ctx->genesis->map, ctx->address_registers[7]) & M68K_ADDRESS_WIDTH;
     ctx->address_registers[7] += 4;
 
     return 0;

@@ -9,6 +9,7 @@
 #include "bit_utils.h"
 #include "instruction.h"
 #include "m68k.h"
+#include "map.h"
 #include "operands.h"
 
 #ifdef DEBUG
@@ -55,8 +56,8 @@ void m68k_free(M68k* m)
 void m68k_initialize(M68k* m)
 {
     m->status = 0x2700;
-    m->address_registers[7] = m68k_read_l(m, 0); // Stack pointer
-    m->pc = m68k_read_l(m, 4);                   // Program start
+    m->address_registers[7] = map_read_l(m->genesis->map, 0); // Stack pointer
+    m->pc = map_read_l(m->genesis->map, 4);                   // Program start
 
     m->cycles = 0;
     m->stopped = false;
@@ -274,11 +275,11 @@ inline uint16_t m68k_fetch(M68k* m)
 
     if (m->pc != m->prefetch_address)
     {
-        uint16_t word = m68k_read_w(m, m->pc);
+        uint16_t word = map_read_w(m->genesis->map, m->pc);
         m->pc = m->prefetch_address = (m->pc + 2) & M68K_ADDRESS_WIDTH;
 
-        m->prefetch_queue[0] = m68k_read_w(m, m->pc);
-        m->prefetch_queue[1] = m68k_read_w(m, m->pc + 2);
+        m->prefetch_queue[0] = map_read_w(m->genesis->map, m->pc);
+        m->prefetch_queue[1] = map_read_w(m->genesis->map, m->pc + 2);
 
         return word;
     }
@@ -288,7 +289,7 @@ inline uint16_t m68k_fetch(M68k* m)
     uint16_t word = m->prefetch_queue[0];
     m->prefetch_queue[0] = m->prefetch_queue[1];
     m->pc = m->prefetch_address = (m->pc + 2) & M68K_ADDRESS_WIDTH;
-    m->prefetch_queue[1] = m68k_read_w(m, m->pc + 2);
+    m->prefetch_queue[1] = map_read_w(m->genesis->map, m->pc + 2);
     return word;
 }
 
@@ -323,18 +324,18 @@ bool m68k_handle_interrupt(M68k* m)
     // Push the current PC onto the stack
 
     m->address_registers[7] -= 4;
-    m68k_write_l(m, m->address_registers[7], m->pc);
+    map_write_l(m->genesis->map, m->address_registers[7], m->pc);
 
     // Push the status register onto the stack
 
     m->address_registers[7] -= 2;
-    m68k_write_w(m, m->address_registers[7], m->status);
+    map_write_w(m->genesis->map, m->address_registers[7], m->status);
 
     // Update the interrupt mask
 
     m->status = (m->status & 0xF8FF) | m->pending_interrupt << 8;
 
-    m->pc = m68k_read_l(m, IRQ_VECTOR_OFFSET + m->pending_interrupt * 4) & M68K_ADDRESS_WIDTH;
+    m->pc = map_read_l(m->genesis->map, IRQ_VECTOR_OFFSET + m->pending_interrupt * 4) & M68K_ADDRESS_WIDTH;
 
     m->pending_interrupt = -1;
 

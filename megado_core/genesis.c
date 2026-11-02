@@ -9,6 +9,7 @@
 #include "genesis.h"
 #include "joypad.h"
 #include "m68k/m68k.h"
+#include "m68k/map.h"
 #include "psg.h"
 #include "vdp.h"
 #include "ym2612.h"
@@ -20,6 +21,7 @@ static const uint32_t PAL_MASTER_FREQUENCY = 53203424;
 Genesis* genesis_make()
 {
     Genesis* g = calloc(1, sizeof(Genesis));
+
     g->rom = calloc(0x400000, sizeof(uint8_t));
     g->ram = calloc(0x10000, sizeof(uint8_t));
     g->m68k = m68k_make(g);
@@ -29,7 +31,10 @@ Genesis* genesis_make()
     g->ym2612 = ym2612_make(g);
     g->joypad1 = joypad_make();
     g->joypad2 = joypad_make();
+    g->map = map_make(g->rom, g->ram, g->z80, g->vdp, g->psg, g->joypad1, g->joypad2);
+
     g->debugger = debugger_make(g);
+
     g->status = Status_NoGameLoaded;
 
     return g;
@@ -42,19 +47,63 @@ void genesis_free(Genesis* g)
         return;
     }
 
-    m68k_free(g->m68k);
-    z80_free(g->z80);
-    vdp_free(g->vdp);
-    psg_free(g->psg);
-    ym2612_free(g->ym2612);
-    joypad_free(g->joypad1);
-    joypad_free(g->joypad2);
     debugger_free(g->debugger);
-    free(g->rom);
-    free(g->ram);
+
+    map_free(g->map);
+    joypad_free(g->joypad2);
+    joypad_free(g->joypad1);
+    ym2612_free(g->ym2612);
+    psg_free(g->psg);
+    vdp_free(g->vdp);
+    z80_free(g->z80);
+    m68k_free(g->m68k);
     free(g->sram);
+    free(g->ram);
+    free(g->rom);
 
     free(g);
+}
+
+void genesis_initialize(Genesis* g)
+{
+    g->remaining_cycles = 0;
+
+    // http://darkdust.net/writings/megadrive/initializing
+    // http://md.squee.co/Howto:Initialise_a_Mega_Drive
+
+    g->rom_end = READ_BE_L(g->rom + 0x1a4);
+
+    // Reset the SRAM
+
+    free(g->sram);
+    g->sram = NULL;
+    g->sram_start = 0;
+    g->sram_end = 0;
+
+    // Initialize the SRAM if the ROM supports it
+
+    if (g->rom[0x1b0] == 'R' && g->rom[0x1b1] == 'A')
+    {
+        g->sram_start = READ_BE_L(g->rom + 0x1b4);
+        g->sram_end = READ_BE_L(g->rom + 0x1b8);
+
+        if (g->sram_end >= g->sram_start && g->sram_end - g->sram_start < 0x10000)
+        {
+            g->sram = calloc(g->sram_end - g->sram_start + 1, sizeof(uint8_t));
+        }
+    }
+
+    // Initialize the components
+
+    map_init(g->map, g->sram, g->sram_start, g->sram_end, g->region); // map first, other components depend on it
+
+    m68k_initialize(g->m68k);
+    z80_initialize(g->z80);
+    vdp_initialize(g->vdp);
+    psg_initialize(g->psg);
+    ym2612_initialize(g->ym2612);
+
+    debugger_initialize(g->debugger);
 }
 
 static void print_header_info(char* label, uint8_t* data, uint8_t length)
@@ -77,27 +126,11 @@ static void load_rom_data(Genesis* g, const uint8_t* data, size_t size)
     memset(g->rom, 0, 0x400000);
     memcpy(g->rom, data, size);
 
-    genesis_initialize(g);
-
-    // Display info from the ROM header
-
-    printf("----------------\n");
-    print_header_info("", g->rom + 0x100, 16);
-    print_header_info("", g->rom + 0x110, 16);
-    print_header_info("[Domestic title]", g->rom + 0x120, 48);
-    print_header_info("[International title]", g->rom + 0x150, 48);
-    print_header_info("[Serial number]", g->rom + 0x180, 14);
-    print_header_info("[Country]", g->rom + 0x1F0, 8);
-    printf("%06x - %06x                                  [ROM]\n", 0, g->rom_end);
-    printf("%06x - %06x                                  [SRAM]\n", g->sram_start, g->sram_end);
-    printf("----------------\n");
-
     // Set the system region depending on the country code of the game
 
     uint8_t* country_codes = g->rom + 0x1F0;
     switch (country_codes[0])
     {
-
         // Initially, the country code was either 'J', 'U' or 'E'
         // (some games have multiple country codes, we only consider the first one)
 
@@ -138,6 +171,21 @@ static void load_rom_data(Genesis* g, const uint8_t* data, size_t size)
     }
     }
 
+    genesis_initialize(g);
+
+    // Display info from the ROM header
+
+    printf("----------------\n");
+    print_header_info("", g->rom + 0x100, 16);
+    print_header_info("", g->rom + 0x110, 16);
+    print_header_info("[Domestic title]", g->rom + 0x120, 48);
+    print_header_info("[International title]", g->rom + 0x150, 48);
+    print_header_info("[Serial number]", g->rom + 0x180, 14);
+    print_header_info("[Country]", g->rom + 0x1F0, 8);
+    printf("%06x - %06x                                  [ROM]\n", 0, g->rom_end);
+    printf("%06x - %06x                                  [SRAM]\n", g->sram_start, g->sram_end);
+    printf("----------------\n");
+
     g->status = Status_Running;
 }
 
@@ -166,7 +214,6 @@ bool genesis_load_rom(Genesis* g, const uint8_t* data, size_t size)
         printf("Cannot open zip archive\n");
         return false;
     }
-
 
     int rom_index = -1;
     mz_uint64 rom_size = 0;
@@ -211,42 +258,6 @@ struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc)
 {
     printf(".%p %p.\n", g, g->m68k);
     return m68k_decode(g->m68k, pc);
-}
-
-#define WORD(x) ((x)[0] << 8 | (x)[1])
-#define LONG(x) ((x)[0] << 24 | (x)[1] << 16 | (x)[2] << 8 | (x)[3])
-
-void genesis_initialize(Genesis* g)
-{
-    g->remaining_cycles = 0;
-
-    // http://darkdust.net/writings/megadrive/initializing
-    // http://md.squee.co/Howto:Initialise_a_Mega_Drive
-
-    g->rom_end = LONG(g->rom + 0x1a4);
-
-    free(g->sram);
-    g->sram = NULL;
-    g->sram_start = 0;
-    g->sram_end = 0;
-
-    if (g->rom[0x1b0] == 'R' && g->rom[0x1b1] == 'A')
-    {
-        g->sram_start = LONG(g->rom + 0x1b4);
-        g->sram_end = LONG(g->rom + 0x1b8);
-
-        if (g->sram_end >= g->sram_start && g->sram_end - g->sram_start < 0x10000)
-        {
-            g->sram = calloc(g->sram_end - g->sram_start + 1, sizeof(uint8_t));
-        }
-    }
-
-    m68k_initialize(g->m68k);
-    z80_initialize(g->z80);
-    vdp_initialize(g->vdp);
-    psg_initialize(g->psg);
-    ym2612_initialize(g->ym2612);
-    debugger_initialize(g->debugger);
 }
 
 uint32_t genesis_master_frequency(Genesis* g)

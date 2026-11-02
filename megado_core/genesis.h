@@ -7,6 +7,7 @@
 struct Debugger;
 struct DecodedInstruction;
 struct Joypad;
+struct Map;
 struct M68k;
 struct Z80;
 struct Vdp;
@@ -40,11 +41,11 @@ typedef struct Genesis
     struct M68k* m68k;
     struct Z80* z80;
     struct Vdp* vdp;
-    struct Joypad* joypad1;
-    struct Joypad* joypad2;
     struct PSG* psg;
     struct YM2612* ym2612;
-
+    struct Joypad* joypad1; // TODO 2-ite marray?
+    struct Joypad* joypad2;
+    struct Map* map;
     struct Debugger* debugger;
 
     Status status;

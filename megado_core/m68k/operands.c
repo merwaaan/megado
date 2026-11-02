@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../genesis.h"
 #include "../utils.h"
 #include "instruction.h"
 #include "m68k.h"
+#include "map.h"
 #include "operands.h"
 
 Operand* operand_make(uint16_t pattern, Instruction* instr)
@@ -195,12 +197,12 @@ void noop(Operand* o, M68k* ctx, uint32_t value)
 
 uint32_t get_from_ea(Operand* o, M68k* ctx)
 {
-    return m68k_read(ctx, o->instruction->size, o->last_ea);
+    return map_read(ctx->genesis->map, o->instruction->size, o->last_ea);
 }
 
 void set_from_ea(Operand* o, M68k* ctx, uint32_t value)
 {
-    m68k_write(ctx, o->instruction->size, o->last_ea, value);
+    map_write(ctx->genesis->map, o->instruction->size, o->last_ea, value);
 }
 
 // Placeholder function for addressing modes that do not have effective address to compute
@@ -439,17 +441,17 @@ uint32_t immediate_long_ea(Operand* o, M68k* ctx)
 
 uint32_t immediate_byte_get(Operand* o, M68k* ctx)
 {
-    return MASK_ABOVE_INC(m68k_read_w(ctx, o->last_ea), 8);
+    return MASK_ABOVE_INC(map_read_w(ctx->genesis->map, o->last_ea), 8);
 }
 
 uint32_t immediate_word_get(Operand* o, M68k* ctx)
 {
-    return m68k_read_w(ctx, o->last_ea);
+    return map_read_w(ctx->genesis->map, o->last_ea);
 }
 
 uint32_t immediate_long_get(Operand* o, M68k* ctx)
 {
-    return m68k_read_l(ctx, o->last_ea);
+    return map_read_l(ctx->genesis->map, o->last_ea);
 }
 
 Operand* operand_make_immediate_value(Size size, Instruction* instr)
@@ -605,7 +607,7 @@ uint32_t branching_offset_byte_get(Operand* o, M68k* ctx)
 
 uint32_t branching_offset_word_get(Operand* o, M68k* ctx)
 {
-    return m68k_read_w(ctx, ctx->instruction_address + 2);
+    return map_read_w(ctx->genesis->map, ctx->instruction_address + 2);
 }
 
 Operand* operand_make_branching_offset(Instruction* instr, Size size)

@@ -106,18 +106,6 @@ uint16_t m68k_fetch(M68k* m);
 void m68k_request_interrupt(M68k* m, uint8_t level);
 bool m68k_handle_interrupt(M68k* m);
 
-// I/O functions
-
-uint32_t m68k_read(M68k*, Size size, uint32_t address);
-uint8_t m68k_read_b(M68k*, uint32_t address);
-uint16_t m68k_read_w(M68k*, uint32_t address);
-uint32_t m68k_read_l(M68k*, uint32_t address);
-
-void m68k_write(M68k*, Size size, uint32_t address, uint32_t value);
-void m68k_write_b(M68k*, uint32_t address, uint8_t value);
-void m68k_write_w(M68k*, uint32_t address, uint16_t value);
-void m68k_write_l(M68k*, uint32_t address, uint32_t value);
-
 // Instruction disassembly
 
 typedef struct DecodedInstruction

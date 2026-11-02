@@ -1,7 +1,9 @@
 #include <stdlib.h>
 
+#include "../genesis.h"
 #include "instruction.h"
 #include "m68k.h"
+#include "map.h"
 #include "operands.h"
 
 uint8_t andi_sr(Instruction* i, M68k* ctx)
@@ -131,9 +133,9 @@ Instruction* gen_reset(uint16_t opcode)
 
 uint8_t rte(Instruction* i, M68k* ctx)
 {
-    ctx->status = m68k_read_w(ctx, ctx->address_registers[7]) & STATUS_MASK;
+    ctx->status = map_read_w(ctx->genesis->map, ctx->address_registers[7]) & STATUS_MASK;
     ctx->address_registers[7] += 2;
-    ctx->pc = m68k_read_l(ctx, ctx->address_registers[7]) & M68K_ADDRESS_WIDTH;
+    ctx->pc = map_read_l(ctx->genesis->map, ctx->address_registers[7]) & M68K_ADDRESS_WIDTH;
     ctx->address_registers[7] += 4;
 
     return 0;

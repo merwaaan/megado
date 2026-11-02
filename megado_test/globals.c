@@ -11,6 +11,7 @@ void setup(void* data)
     memory = calloc(0x1000000, sizeof(uint8_t));
     g = genesis_make();
     m = g->m68k;
+    test_map_init(g->map);
     m68k_initialize(m);
 }
 
