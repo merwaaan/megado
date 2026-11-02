@@ -4,16 +4,14 @@
 #include "map.h"
 #include "operands.h"
 
-Instruction* gen_chk(uint16_t opcode)
+void gen_chk(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("CHK", not_implemented);
-    return i;
+    instruction_init(i, "CHK", not_implemented);
 }
 
-Instruction* gen_illegal(uint16_t opcode)
+void gen_illegal(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("ILLEGAL", not_implemented);
-    return i;
+    instruction_init(i, "ILLEGAL", not_implemented);
 }
 
 uint8_t trap(Instruction* i, M68k* ctx)
@@ -28,21 +26,19 @@ uint8_t trap(Instruction* i, M68k* ctx)
     ctx->address_registers[7] -= 2;
     map_write_w(ctx->genesis->map, ctx->address_registers[7], ctx->status);
 
-    ctx->pc = map_read_l(ctx->genesis->map, 0x80 + i->src->n * 4) & M68K_ADDRESS_WIDTH;
+    ctx->pc = map_read_l(ctx->genesis->map, 0x80 + i->src.n * 4) & M68K_ADDRESS_WIDTH;
 
     return 0;
 }
 
-Instruction* gen_trap(uint16_t opcode)
+void gen_trap(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("TRAP", trap);
-    i->src = operand_make_value(FRAGMENT(opcode, 3, 0), i);
-    return i;
+    instruction_init(i, "TRAP", trap);
+    operand_make_value(&i->src, FRAGMENT(opcode, 3, 0), i);
 }
 
-Instruction* gen_trapv(uint16_t opcode)
+void gen_trapv(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("TRAPV", not_implemented);
+    instruction_init(i, "TRAPV", not_implemented);
     i->base_cycles = 4;
-    return i;
 }

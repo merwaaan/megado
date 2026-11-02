@@ -57,7 +57,8 @@ typedef enum
     Value, // TODO unclear, rename to Quick?
     BranchingOffset,
 
-    Unsupported
+    // Operands are stored by value in instructions, so this is used to represent inexistant operands
+    NoOperand
 } OperandType;
 
 typedef struct Operand
@@ -85,20 +86,20 @@ typedef struct Operand
 
 int operand_tostring(Operand* operand, struct M68k*, char* buffer);
 
-Operand* operand_make_data_register(int n, struct Instruction*); // TODO put instr first to be consistent with the order modules
-Operand* operand_make_address_register(int n, struct Instruction*);
-Operand* operand_make_address_register_indirect(int n, struct Instruction*);
-Operand* operand_make_address_register_indirect_predec(int n, struct Instruction*);
-Operand* operand_make_address_register_indirect_postinc(int n, struct Instruction*);
-Operand* operand_make_address_register_indirect_displacement(int n, struct Instruction*);
-Operand* operand_make_address_register_indirect_index(int n, struct Instruction*);
-Operand* operand_make_immediate_value(Size, struct Instruction*);
-Operand* operand_make_absolute_short(struct Instruction*);
-Operand* operand_make_absolute_long(struct Instruction*);
-Operand* operand_make_pc_displacement(struct Instruction*);
-Operand* operand_make_pc_index(struct Instruction*);
-Operand* operand_make_value(int value, struct Instruction*);
-Operand* operand_make_branching_offset(struct Instruction*, Size size);
+void operand_make_data_register(Operand*, int n, struct Instruction*); 
+void operand_make_address_register(Operand*, int n, struct Instruction*);
+void operand_make_address_register_indirect(Operand*, int n, struct Instruction*);
+void operand_make_address_register_indirect_predec(Operand*, int n, struct Instruction*);
+void operand_make_address_register_indirect_postinc(Operand*, int n, struct Instruction*);
+void operand_make_address_register_indirect_displacement(Operand*, int n, struct Instruction*);
+void operand_make_address_register_indirect_index(Operand*, int n, struct Instruction*);
+void operand_make_immediate_value(Operand*, Size, struct Instruction*);
+void operand_make_absolute_short(Operand*, struct Instruction*);
+void operand_make_absolute_long(Operand*, struct Instruction*);
+void operand_make_pc_displacement(Operand*, struct Instruction*);
+void operand_make_pc_index(Operand*, struct Instruction*);
+void operand_make_value(Operand*, int value, struct Instruction*);
+void operand_make_branching_offset(Operand*, struct Instruction*, Size size);
 
 Size operand_size(uint8_t pattern);
 Size operand_size2(uint8_t pattern);
@@ -108,11 +109,7 @@ uint8_t operand_sign_extension(uint8_t pattern);
 
 int operand_length(Operand*);
 
-// Return the number of cycles required to compute an effective address
-int operand_get_cycles(Operand*);
-
-Operand* operand_make(uint16_t pattern, struct Instruction* instr);
-void operand_free(Operand* instr);
+void operand_make(Operand*, uint16_t pattern, struct Instruction* instr);
 
 uint32_t operand_fetch_ea_and_get(Operand*, struct M68k*);
 void operand_fetch_ea_and_set(Operand*, struct M68k*, uint32_t);

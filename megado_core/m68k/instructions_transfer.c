@@ -13,16 +13,16 @@
 
 uint8_t exg(Instruction* i, M68k* ctx)
 {
-    int32_t dst = GET(i->dst, ctx);
-    SET(i->dst, ctx, GET(i->src, ctx));
-    SET(i->src, ctx, dst);
+    int32_t dst = GET(&i->dst, ctx);
+    SET(&i->dst, ctx, GET(&i->src, ctx));
+    SET(&i->src, ctx, dst);
 
     return 0;
 }
 
-Instruction* gen_exg(uint16_t opcode)
+void gen_exg(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("EXG", exg);
+    instruction_init(i, "EXG", exg);
     i->size = Long;
     i->base_cycles = 6;
 
@@ -30,16 +30,16 @@ Instruction* gen_exg(uint16_t opcode)
     switch (mode)
     {
     case 8:
-        i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-        i->dst = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
+        operand_make_data_register(&i->src, FRAGMENT(opcode, 11, 9), i);
+        operand_make_data_register(&i->dst, FRAGMENT(opcode, 2, 0), i);
         break;
     case 9:
-        i->src = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
-        i->dst = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
+        operand_make_address_register(&i->src, FRAGMENT(opcode, 11, 9), i);
+        operand_make_address_register(&i->dst, FRAGMENT(opcode, 2, 0), i);
         break;
     case 17:
-        i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-        i->dst = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
+        operand_make_data_register(&i->src, FRAGMENT(opcode, 11, 9), i);
+        operand_make_address_register(&i->dst, FRAGMENT(opcode, 2, 0), i);
         break;
     default:
         FATAL("Invalid mode %x", mode);
@@ -47,33 +47,30 @@ Instruction* gen_exg(uint16_t opcode)
     }
 
     i->base_cycles = 6;
-
-    return i;
 }
 
 uint8_t lea(Instruction* i, M68k* ctx)
 {
-    uint32_t ea = FETCH_EA(i->src, ctx);
+    uint32_t ea = FETCH_EA(&i->src, ctx);
 
     // TODO not documented but Regen does this, need to check other emulators
 
-    if (i->src->type == AbsoluteShort)
+    if (i->src.type == AbsoluteShort)
     {
         ea = SIGN_EXTEND_W(ea);
     }
 
-    SET(i->dst, ctx, ea);
+    SET(&i->dst, ctx, ea);
 
     return 0;
 }
 
-Instruction* gen_lea(uint16_t opcode)
+void gen_lea(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("LEA", lea);
+    instruction_init(i, "LEA", lea);
     i->size = Long;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
-    return i;
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make_address_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
 }
 
 uint8_t link(Instruction* i, M68k* ctx)
@@ -81,33 +78,32 @@ uint8_t link(Instruction* i, M68k* ctx)
     // Push the address register onto the stack
 
     ctx->address_registers[7] -= 4;
-    map_write_l(ctx->genesis->map, ctx->address_registers[7], ctx->address_registers[i->src->n]);
+    map_write_l(ctx->genesis->map, ctx->address_registers[7], ctx->address_registers[i->src.n]);
 
     // Place the new stack pointer in the address register
 
-    ctx->address_registers[i->src->n] = ctx->address_registers[7];
+    ctx->address_registers[i->src.n] = ctx->address_registers[7];
 
     // Add the offset to the stack pointer
 
-    ctx->address_registers[7] += (int16_t)FETCH_EA_AND_GET(i->dst, ctx);
+    ctx->address_registers[7] += (int16_t)FETCH_EA_AND_GET(&i->dst, ctx);
 
     return 0;
 }
 
-Instruction* gen_link(uint16_t opcode)
+void gen_link(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("LINK", link);
+    instruction_init(i, "LINK", link);
     i->size = Long;
-    i->src = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
-    i->dst = operand_make_immediate_value(Word, i);
+    operand_make_address_register(&i->src, FRAGMENT(opcode, 2, 0), i);
+    operand_make_immediate_value(&i->dst, Word, i);
     i->base_cycles = 16;
-    return i;
 }
 
 uint8_t move(Instruction* i, M68k* ctx)
 {
-    uint32_t value = FETCH_EA_AND_GET(i->src, ctx);
-    FETCH_EA_AND_SET(i->dst, ctx, value);
+    uint32_t value = FETCH_EA_AND_GET(&i->src, ctx);
+    FETCH_EA_AND_SET(&i->dst, ctx, value);
 
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
@@ -117,14 +113,13 @@ uint8_t move(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_move(uint16_t opcode)
+void gen_move(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("MOVE", move);
+    instruction_init(i, "MOVE", move);
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
-    i->dst = operand_make(FRAGMENT(opcode, 11, 9) | FRAGMENT(opcode, 8, 6) << 3, i);
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->base_cycles = cycles_move_table[i->size == Long][i->src->type][i->dst->type];
-    return i;
+    operand_make(&i->dst, FRAGMENT(opcode, 11, 9) | FRAGMENT(opcode, 8, 6) << 3, i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    i->base_cycles = cycles_move_table[i->size == Long][i->src.type][i->dst.type];
 }
 
 // Computer pointers to the nth register in post-inc or pre-dec order
@@ -137,7 +132,7 @@ uint8_t movem(Instruction* i, M68k* ctx)
     // TODO bug: when disassembling, first fetch confused with operand
     uint16_t mask = m68k_fetch(ctx);
 
-    Operand* ea = i->src != NULL ? i->src : i->dst;
+    Operand* ea = i->src.type != NoOperand ? &i->src : &i->dst;
     uint32_t offset = FETCH_EA(ea, ctx);
 
     int moved = 0;
@@ -146,7 +141,7 @@ uint8_t movem(Instruction* i, M68k* ctx)
         if (BIT(mask, m))
         {
             // memory -> register
-            if (i->src != NULL)
+            if (i->src.type != NoOperand)
             {
                 uint32_t* reg = ea->type == AddressRegisterIndirectPreDec ? MOVEM_PREDEC_ORDER(m) : MOVEM_POSTINC_ORDER(m);
 
@@ -200,30 +195,26 @@ uint8_t movem(Instruction* i, M68k* ctx)
     return 4 * moved;
 }
 
-Instruction* gen_movem(uint16_t opcode)
+void gen_movem(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("MOVEM", movem);
+    instruction_init(i, "MOVEM", movem);
     i->size = operand_size3(BIT(opcode, 6));
-
-    Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     int direction = BIT(opcode, 10);
     if (direction)
     {
-        i->src = ea;
+        operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
     }
     else
     {
-        i->dst = ea;
+        operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
     }
-
-    return i;
 }
 
 uint8_t moveq(Instruction* i, M68k* ctx)
 {
-    int32_t value = SIGN_EXTEND_B_L(GET(i->src, ctx));
-    SET(i->dst, ctx, value);
+    int32_t value = SIGN_EXTEND_B_L(GET(&i->src, ctx));
+    SET(&i->dst, ctx, value);
 
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
@@ -233,74 +224,72 @@ uint8_t moveq(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_moveq(uint16_t opcode)
+void gen_moveq(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("MOVEQ", moveq);
+    instruction_init(i, "MOVEQ", moveq);
     i->size = Long;
-    i->src = operand_make_value(BYTE_LO(opcode), i);
-    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    operand_make_value(&i->src, BYTE_LO(opcode), i);
+    operand_make_data_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
     i->base_cycles = cycles_immediate_instruction(i, 4, 0, 0);
-    return i;
 }
 
 uint8_t movea(Instruction* i, M68k* ctx)
 {
-    int32_t value = FETCH_EA_AND_GET(i->src, ctx);
+    int32_t value = FETCH_EA_AND_GET(&i->src, ctx);
 
     if (i->size == Word)
     {
         value = SIGN_EXTEND_W(value);
     }
 
-    ctx->address_registers[i->dst->n] = value;
+    ctx->address_registers[i->dst.n] = value;
 
     return 0;
 }
 
-Instruction* gen_movea(uint16_t opcode)
+void gen_movea(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("MOVEA", movea);
+    instruction_init(i, "MOVEA", movea);
     i->size = operand_size2(FRAGMENT(opcode, 13, 12));
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
-    return i;
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make_address_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
 }
 
 uint8_t movep(Instruction* i, M68k* ctx)
 {
-    int32_t value = FETCH_EA_AND_GET(i->src, ctx);
-    FETCH_EA(i->dst, ctx);
+    int32_t value = FETCH_EA_AND_GET(&i->src, ctx);
+    FETCH_EA(&i->dst, ctx);
 
-    if (i->dst->type == AddressRegisterIndirectDisplacement)
+    if (i->dst.type == AddressRegisterIndirectDisplacement)
     {
         if (i->size == Word)
         {
-            map_write_b(ctx->genesis->map, i->dst->last_ea, (value & 0xFF00) >> 8);
-            map_write_b(ctx->genesis->map, i->dst->last_ea + 2, value & 0xFF);
+            map_write_b(ctx->genesis->map, i->dst.last_ea, (value & 0xFF00) >> 8);
+            map_write_b(ctx->genesis->map, i->dst.last_ea + 2, value & 0xFF);
         }
         else
         {
-            map_write_b(ctx->genesis->map, i->dst->last_ea, (value & 0xFF000000) >> 24);
-            map_write_b(ctx->genesis->map, i->dst->last_ea + 2, (value & 0xFF0000) >> 16);
-            map_write_b(ctx->genesis->map, i->dst->last_ea + 4, (value & 0xFF00) >> 8);
-            map_write_b(ctx->genesis->map, i->dst->last_ea + 6, value & 0xFF);
+            map_write_b(ctx->genesis->map, i->dst.last_ea, (value & 0xFF000000) >> 24);
+            map_write_b(ctx->genesis->map, i->dst.last_ea + 2, (value & 0xFF0000) >> 16);
+            map_write_b(ctx->genesis->map, i->dst.last_ea + 4, (value & 0xFF00) >> 8);
+            map_write_b(ctx->genesis->map, i->dst.last_ea + 6, value & 0xFF);
         }
     }
-    else if (i->dst->type == DataRegister)
+    else if (i->dst.type == DataRegister)
     {
         if (i->size == Word)
         {
-            ctx->data_registers[i->dst->n] =
-                map_read_b(ctx->genesis->map, i->src->last_ea) << 8 |
-                map_read_b(ctx->genesis->map, i->src->last_ea + 2);
+            ctx->data_registers[i->dst.n] =
+                map_read_b(ctx->genesis->map, i->src.last_ea) << 8 |
+                map_read_b(ctx->genesis->map, i->src.last_ea + 2);
         }
         else
         {
-            ctx->data_registers[i->dst->n] =
-                map_read_b(ctx->genesis->map, i->src->last_ea) << 24 |
-                map_read_b(ctx->genesis->map, i->src->last_ea + 2) << 16 |
-                map_read_b(ctx->genesis->map, i->src->last_ea + 4) << 8 |
-                map_read_b(ctx->genesis->map, i->src->last_ea + 6);
+            ctx->data_registers[i->dst.n] =
+                map_read_b(ctx->genesis->map, i->src.last_ea) << 24 |
+                map_read_b(ctx->genesis->map, i->src.last_ea + 2) << 16 |
+                map_read_b(ctx->genesis->map, i->src.last_ea + 4) << 8 |
+                map_read_b(ctx->genesis->map, i->src.last_ea + 6);
         }
     }
     else
@@ -312,99 +301,93 @@ uint8_t movep(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_movep(uint16_t opcode)
+void gen_movep(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("MOVEP", movep);
+    instruction_init(i, "MOVEP", movep);
     i->size = BIT(opcode, 6) ? Long : Word;
     i->base_cycles = 0; // TODO
 
     bool register_to_memory = BIT(opcode, 7);
     if (register_to_memory)
     {
-        i->src = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-        i->dst = operand_make_address_register_indirect_displacement(FRAGMENT(opcode, 2, 0), i);
+        operand_make_data_register(&i->src, FRAGMENT(opcode, 11, 9), i);
+        operand_make_address_register_indirect_displacement(&i->dst, FRAGMENT(opcode, 2, 0), i);
     }
     else
     {
-        i->src = operand_make_address_register_indirect_displacement(FRAGMENT(opcode, 2, 0), i);
-        i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+        operand_make_address_register_indirect_displacement(&i->src, FRAGMENT(opcode, 2, 0), i);
+        operand_make_data_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
     }
-
-    return i;
 }
 
 uint8_t move_from_ccr(Instruction* i, M68k* ctx)
 {
     // Only update the CCR segment of the status register
 
-    uint16_t value = FETCH_EA_AND_GET(i->dst, ctx);
-    SET(i->dst, ctx, (value & 0xFF00) | (ctx->status & 0x1F));
+    uint16_t value = FETCH_EA_AND_GET(&i->dst, ctx);
+    SET(&i->dst, ctx, (value & 0xFF00) | (ctx->status & 0x1F));
 
     return 0;
 }
 
-Instruction* gen_move_from_ccr(uint16_t opcode)
+void gen_move_from_ccr(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("MOVE from CCR", move_from_ccr);
+    instruction_init(i, "MOVE from CCR", move_from_ccr);
     i->size = Word;
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
     i->base_cycles = 6; // TODO not sure about that, any doc?
-    return i;
 }
 
 uint8_t move_to_ccr(Instruction* i, M68k* ctx)
 {
     // Only update the CCR segment of the status register
 
-    ctx->status = (ctx->status & 0xFFE0) | (FETCH_EA_AND_GET(i->src, ctx) & 0x1F);
+    ctx->status = (ctx->status & 0xFFE0) | (FETCH_EA_AND_GET(&i->src, ctx) & 0x1F);
 
     return 0;
 }
 
-Instruction* gen_move_to_ccr(uint16_t opcode)
+void gen_move_to_ccr(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("MOVE to CCR", move_to_ccr);
+    instruction_init(i, "MOVE to CCR", move_to_ccr);
     i->size = Word;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
     i->base_cycles = 12;
-    return i;
 }
 
 uint8_t pea(Instruction* i, M68k* ctx)
 {
     ctx->address_registers[7] -= 4;
-    map_write_l(ctx->genesis->map, ctx->address_registers[7], FETCH_EA(i->src, ctx));
+    map_write_l(ctx->genesis->map, ctx->address_registers[7], FETCH_EA(&i->src, ctx));
 
     return 0;
 }
 
-Instruction* gen_pea(uint16_t opcode)
+void gen_pea(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("PEA", pea);
+    instruction_init(i, "PEA", pea);
     i->size = Long;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    return i;
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
 }
 
 uint8_t unlk(Instruction* i, M68k* ctx)
 {
     // Load the stack pointer with the address register
 
-    ctx->address_registers[7] = ctx->address_registers[i->src->n];
+    ctx->address_registers[7] = ctx->address_registers[i->src.n];
 
     // Load the address register with the long word at the top of the stack
 
-    ctx->address_registers[i->src->n] = map_read_l(ctx->genesis->map, ctx->address_registers[7]);
+    ctx->address_registers[i->src.n] = map_read_l(ctx->genesis->map, ctx->address_registers[7]);
     ctx->address_registers[7] += 4;
 
     return 0;
 }
 
-Instruction* gen_unlk(uint16_t opcode)
+void gen_unlk(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("UNLK", unlk);
+    instruction_init(i, "UNLK", unlk);
     i->size = Long;
-    i->src = operand_make_address_register(FRAGMENT(opcode, 2, 0), i);
+    operand_make_address_register(&i->src, FRAGMENT(opcode, 2, 0), i);
     i->base_cycles = 12;
-    return i;
 }

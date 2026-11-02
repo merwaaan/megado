@@ -9,11 +9,11 @@
 
 uint8_t add(Instruction* i, M68k* ctx)
 {
-    uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
-    uint32_t a = FETCH_EA_AND_GET(i->dst, ctx);
-    SET(i->dst, ctx, a + b);
+    uint32_t b = FETCH_EA_AND_GET(&i->src, ctx);
+    uint32_t a = FETCH_EA_AND_GET(&i->dst, ctx);
+    SET(&i->dst, ctx, a + b);
 
-    uint32_t result = GET(i->dst, ctx);
+    uint32_t result = GET(&i->dst, ctx);
     CARRY_SET(ctx, CHECK_CARRY_ADD(a, b, i->size));
     OVERFLOW_SET(ctx, CHECK_OVERFLOW_ADD(a, b, i->size));
     ZERO_SET(ctx, result == 0);
@@ -23,89 +23,80 @@ uint8_t add(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_add(uint16_t opcode)
+void gen_add(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("ADD", add);
+    instruction_init(i, "ADD", add);
 
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-
-    Operand* reg = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-    Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     int direction = BIT(opcode, 8);
     if (direction == 0)
     {
-        i->src = ea;
-        i->dst = reg;
+        operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+        operand_make_data_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
     }
     else
     {
-        i->src = reg;
-        i->dst = ea;
+        operand_make_data_register(&i->src, FRAGMENT(opcode, 11, 9), i);
+        operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
     }
 
     i->base_cycles = i->size == Long ? cycles_standard_instruction(i, 8, 4, 8) : cycles_standard_instruction(i, 6, 6, 12); // TODO increased to eight?
-
-    return i;
 }
 
 uint8_t adda(Instruction* i, M68k* ctx)
 {
-    uint32_t a = FETCH_EA_AND_GET(i->src, ctx);
+    uint32_t a = FETCH_EA_AND_GET(&i->src, ctx);
 
     if (i->size == Word)
     {
         a = SIGN_EXTEND_W(a);
     }
 
-    SET(i->dst, ctx, GET(i->dst, ctx) + a);
+    SET(&i->dst, ctx, GET(&i->dst, ctx) + a);
 
     return 0;
 }
 
-Instruction* gen_adda(uint16_t opcode)
+void gen_adda(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("ADDA", adda);
+    instruction_init(i, "ADDA", adda);
     i->size = BIT(opcode, 8) ? Long : Word;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make_address_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
 
     i->base_cycles = i->size == Long ? cycles_standard_instruction(i, 8, 4, 8) : cycles_standard_instruction(i, 6, 6, 12); // TODO increased to eight?
-
-    return i;
 }
 
-Instruction* gen_addi(uint16_t opcode)
+void gen_addi(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("ADDI", add);
+    instruction_init(i, "ADDI", add);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make_immediate_value(i->size, i);
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    operand_make_immediate_value(&i->src, i->size, i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_immediate_instruction(i, 16, 0, 20) : cycles_immediate_instruction(i, 8, 0, 12);
-
-    return i;
 }
 
 uint8_t addq(Instruction* i, M68k* ctx)
 {
     // Extract the quick value, 0 represents 8
 
-    uint32_t quick = GET(i->src, ctx);
+    uint32_t quick = GET(&i->src, ctx);
 
     if (quick == 0)
     {
         quick = 8;
     }
 
-    uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
-    SET(i->dst, ctx, initial + quick);
+    uint32_t initial = FETCH_EA_AND_GET(&i->dst, ctx);
+    SET(&i->dst, ctx, initial + quick);
 
     // The condition codes are not altered when subtracting from address registers
 
-    if (i->dst->type != AddressRegister)
+    if (i->dst.type != AddressRegister)
     {
-        uint32_t result = GET(i->dst, ctx);
+        uint32_t result = GET(&i->dst, ctx);
         CARRY_SET(ctx, CHECK_CARRY_ADD(initial, quick, i->size));
         OVERFLOW_SET(ctx, CHECK_OVERFLOW_ADD(initial, quick, i->size));
         ZERO_SET(ctx, result == 0);
@@ -115,33 +106,31 @@ uint8_t addq(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_addq(uint16_t opcode)
+void gen_addq(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("ADDQ", addq);
+    instruction_init(i, "ADDQ", addq);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    operand_make_value(&i->src, FRAGMENT(opcode, 11, 9), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_immediate_instruction(i, 8, 8, 12) : cycles_immediate_instruction(i, 4, 4, 8);
 
     // For address registers, the entire register is used regardless of the instruction's size
 
-    if (i->dst->type == AddressRegister)
+    if (i->dst.type == AddressRegister)
     {
         i->size = Long;
     }
-
-    return i;
 }
 
 uint8_t addx(Instruction* i, M68k* ctx)
 {
-    uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
-    uint32_t a = FETCH_EA_AND_GET(i->dst, ctx);
+    uint32_t b = FETCH_EA_AND_GET(&i->src, ctx);
+    uint32_t a = FETCH_EA_AND_GET(&i->dst, ctx);
     bool extended = EXTENDED(ctx);
-    SET(i->dst, ctx, a + b + extended);
+    SET(&i->dst, ctx, a + b + extended);
 
-    uint32_t result = GET(i->dst, ctx);
+    uint32_t result = GET(&i->dst, ctx);
     CARRY_SET(ctx, CHECK_CARRY_ADD(a, b + extended, i->size)); // TODO does this work?
     OVERFLOW_SET(ctx, CHECK_OVERFLOW_ADD(a, b + extended, i->size));
     ZERO_SET(ctx, result == 0);
@@ -151,29 +140,27 @@ uint8_t addx(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_addx(uint16_t opcode)
+void gen_addx(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("ADDX", addx);
+    instruction_init(i, "ADDX", addx);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
     bool data_register = BIT(opcode, 3);
     if (data_register)
     {
-        i->src = operand_make_address_register_indirect_predec(FRAGMENT(opcode, 2, 0), i);
-        i->dst = operand_make_address_register_indirect_predec(FRAGMENT(opcode, 11, 9), i);
+        operand_make_address_register_indirect_predec(&i->src, FRAGMENT(opcode, 2, 0), i);
+        operand_make_address_register_indirect_predec(&i->dst, FRAGMENT(opcode, 11, 9), i);
     }
     else
     {
-        i->src = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
-        i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+        operand_make_data_register(&i->src, FRAGMENT(opcode, 2, 0), i);
+        operand_make_data_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
     }
-
-    return i;
 }
 
 uint8_t clr(Instruction* i, M68k* ctx)
 {
-    FETCH_EA_AND_SET(i->src, ctx, 0);
+    FETCH_EA_AND_SET(&i->src, ctx, 0);
 
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
@@ -183,21 +170,19 @@ uint8_t clr(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_clr(uint16_t opcode)
+void gen_clr(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("CLR", clr);
+    instruction_init(i, "CLR", clr);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_single_operand_instruction(i, 6, 12) : cycles_single_operand_instruction(i, 4, 8);
-
-    return i;
 }
 
 uint8_t cmp(Instruction* i, M68k* ctx)
 {
-    uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
-    uint32_t a = FETCH_EA_AND_GET(i->dst, ctx);
+    uint32_t b = FETCH_EA_AND_GET(&i->src, ctx);
+    uint32_t a = FETCH_EA_AND_GET(&i->dst, ctx);
 
     CARRY_SET(ctx, CHECK_CARRY_SUB(a, b, i->size));
     OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(a, b, i->size));
@@ -207,27 +192,25 @@ uint8_t cmp(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_cmp(uint16_t opcode)
+void gen_cmp(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("CMP", cmp);
+    instruction_init(i, "CMP", cmp);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make_data_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
 
     i->base_cycles = i->size == Long ? cycles_standard_instruction(i, 6, 6, 0) : cycles_standard_instruction(i, 6, 4, 0);
-
-    return i;
 }
 
 uint8_t cmpa(Instruction* i, M68k* ctx)
 {
-    uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
+    uint32_t b = FETCH_EA_AND_GET(&i->src, ctx);
     if (i->size == Word)
     {
         b = SIGN_EXTEND_W(b);
     }
 
-    uint32_t a = ctx->address_registers[i->dst->n];
+    uint32_t a = ctx->address_registers[i->dst.n];
 
     CARRY_SET(ctx, CHECK_CARRY_SUB(a, b, i->size));
     OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(a, b, i->size));
@@ -237,43 +220,38 @@ uint8_t cmpa(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_cmpa(uint16_t opcode)
+void gen_cmpa(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("CMPA", cmpa);
+    instruction_init(i, "CMPA", cmpa);
     i->size = BIT(opcode, 8) ? Long : Word;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make_address_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
 
     i->base_cycles = i->size == Long ? cycles_standard_instruction(i, 6, 6, 0) : cycles_standard_instruction(i, 6, 4, 0);
-
-    return i;
 }
 
-Instruction* gen_cmpi(uint16_t opcode)
+void gen_cmpi(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("CMPI", cmp);
+    instruction_init(i, "CMPI", cmp);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make_immediate_value(i->size, i);
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    operand_make_immediate_value(&i->src, i->size, i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_immediate_instruction(i, 14, 0, 12) : cycles_immediate_instruction(i, 8, 0, 8);
-
-    return i;
 }
 
-Instruction* gen_cmpm(uint16_t opcode)
+void gen_cmpm(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("CMPM", cmp);
+    instruction_init(i, "CMPM", cmp);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make_address_register_indirect_postinc(FRAGMENT(opcode, 2, 0), i);
-    i->dst = operand_make_address_register_indirect_postinc(FRAGMENT(opcode, 11, 9), i);
-    return i;
+    operand_make_address_register_indirect_postinc(&i->src, FRAGMENT(opcode, 2, 0), i);
+    operand_make_address_register_indirect_postinc(&i->dst, FRAGMENT(opcode, 11, 9), i);
 }
 
 uint8_t divu(Instruction* i, M68k* ctx)
 {
-    uint16_t a = FETCH_EA_AND_GET(i->src, ctx);
-    uint32_t b = ctx->data_registers[i->dst->n];
+    uint16_t a = FETCH_EA_AND_GET(&i->src, ctx);
+    uint32_t b = ctx->data_registers[i->dst.n];
 
     if (a == 0)
     {
@@ -285,7 +263,7 @@ uint8_t divu(Instruction* i, M68k* ctx)
     {
         uint32_t quotient = b / a;
         uint16_t remainder = b % a;
-        ctx->data_registers[i->dst->n] = remainder << 16 | (quotient & 0xFFFF);
+        ctx->data_registers[i->dst.n] = remainder << 16 | (quotient & 0xFFFF);
 
         CARRY_SET(ctx, false);
         OVERFLOW_SET(ctx, (quotient & 0xFFFF0000) > 0);
@@ -300,8 +278,8 @@ uint8_t divs(Instruction* i, M68k* ctx)
 {
     // Same as DIVU, but assuming signed operands
 
-    int16_t a = FETCH_EA_AND_GET(i->src, ctx);
-    int32_t b = ctx->data_registers[i->dst->n];
+    int16_t a = FETCH_EA_AND_GET(&i->src, ctx);
+    int32_t b = ctx->data_registers[i->dst.n];
 
     if (a == 0)
     {
@@ -313,7 +291,7 @@ uint8_t divs(Instruction* i, M68k* ctx)
     {
         int32_t quotient = b / a;
         uint32_t remainder = b % a;
-        ctx->data_registers[i->dst->n] = remainder << 16 | (quotient & 0xFFFF);
+        ctx->data_registers[i->dst.n] = remainder << 16 | (quotient & 0xFFFF);
 
         CARRY_SET(ctx, false);
         OVERFLOW_SET(ctx, (quotient & 0xFFFF0000) > 0);
@@ -324,29 +302,27 @@ uint8_t divs(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_divs(uint16_t opcode)
+void gen_divs(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("DIVS", divs);
+    instruction_init(i, "DIVS", divs);
     i->size = Word;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make_data_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
     i->base_cycles = cycles_standard_instruction(i, 0, 158, 0);
-    return i;
 }
 
-Instruction* gen_divu(uint16_t opcode)
+void gen_divu(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("DIVU", divu);
+    instruction_init(i, "DIVU", divu);
     i->size = Word;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make_data_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
     i->base_cycles = cycles_standard_instruction(i, 0, 140, 0);
-    return i;
 }
 
 uint8_t ext(Instruction* i, M68k* ctx)
 {
-    int x = GET(i->src, ctx);
+    int x = GET(&i->src, ctx);
 
     uint32_t extended;
     switch (i->size)
@@ -361,7 +337,7 @@ uint8_t ext(Instruction* i, M68k* ctx)
         FATAL("Invalid size %x", i->size);
     }
 
-    SET(i->src, ctx, extended);
+    SET(&i->src, ctx, extended);
 
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
@@ -371,22 +347,21 @@ uint8_t ext(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_ext(uint16_t opcode)
+void gen_ext(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("EXT", ext);
+    instruction_init(i, "EXT", ext);
     i->size = operand_sign_extension(FRAGMENT(opcode, 8, 6));
-    i->src = operand_make_data_register(FRAGMENT(opcode, 3, 0), i);
+    operand_make_data_register(&i->src, FRAGMENT(opcode, 3, 0), i);
     i->base_cycles = 4;
-    return i;
 }
 
 uint8_t mulu(Instruction* i, M68k* ctx)
 {
-    uint16_t a = FETCH_EA_AND_GET(i->src, ctx);
-    uint16_t b = ctx->data_registers[i->dst->n];
+    uint16_t a = FETCH_EA_AND_GET(&i->src, ctx);
+    uint16_t b = ctx->data_registers[i->dst.n];
     uint32_t result = (uint32_t)a * (uint32_t)b;
 
-    ctx->data_registers[i->dst->n] = result;
+    ctx->data_registers[i->dst.n] = result;
 
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
@@ -396,23 +371,22 @@ uint8_t mulu(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_mulu(uint16_t opcode)
+void gen_mulu(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("MULU", mulu);
+    instruction_init(i, "MULU", mulu);
     i->size = Word;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make_data_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
     i->base_cycles = cycles_standard_instruction(i, 0, 70, 0);
-    return i;
 }
 
 uint8_t muls(Instruction* i, M68k* ctx)
 {
-    int16_t a = FETCH_EA_AND_GET(i->src, ctx);
-    int16_t b = ctx->data_registers[i->dst->n];
+    int16_t a = FETCH_EA_AND_GET(&i->src, ctx);
+    int16_t b = ctx->data_registers[i->dst.n];
     uint32_t result = (uint32_t)((int32_t)a * (int32_t)b);
 
-    ctx->data_registers[i->dst->n] = result;
+    ctx->data_registers[i->dst.n] = result;
 
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
@@ -422,22 +396,21 @@ uint8_t muls(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_muls(uint16_t opcode)
+void gen_muls(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("MULS", muls);
+    instruction_init(i, "MULS", muls);
     i->size = Word;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make_data_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
     i->base_cycles = cycles_standard_instruction(i, 0, 70, 0);
-    return i;
 }
 
 uint8_t neg(Instruction* i, M68k* ctx)
 {
-    uint32_t value = FETCH_EA_AND_GET(i->src, ctx);
-    SET(i->src, ctx, 0 - value);
+    uint32_t value = FETCH_EA_AND_GET(&i->src, ctx);
+    SET(&i->src, ctx, 0 - value);
 
-    uint32_t result = GET(i->src, ctx);
+    uint32_t result = GET(&i->src, ctx);
     CARRY_SET(ctx, CHECK_CARRY_SUB(0, value, i->size));
     OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(0, value, i->size));
     ZERO_SET(ctx, result == 0);
@@ -447,23 +420,21 @@ uint8_t neg(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_neg(uint16_t opcode)
+void gen_neg(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("NEG", neg);
+    instruction_init(i, "NEG", neg);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_single_operand_instruction(i, 6, 12) : cycles_single_operand_instruction(i, 4, 8);
-
-    return i;
 }
 
 uint8_t negx(Instruction* i, M68k* ctx)
 {
-    uint32_t value = FETCH_EA_AND_GET(i->src, ctx) + EXTENDED(ctx);
-    SET(i->src, ctx, 0 - value);
+    uint32_t value = FETCH_EA_AND_GET(&i->src, ctx) + EXTENDED(ctx);
+    SET(&i->src, ctx, 0 - value);
 
-    uint32_t result = GET(i->src, ctx);
+    uint32_t result = GET(&i->src, ctx);
     CARRY_SET(ctx, CHECK_CARRY_SUB(0, value, i->size));
     OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(0, value, i->size));
     ZERO_SET(ctx, result == 0);
@@ -473,22 +444,20 @@ uint8_t negx(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_negx(uint16_t opcode)
+void gen_negx(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("NEGX", negx);
+    instruction_init(i, "NEGX", negx);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_single_operand_instruction(i, 6, 12) : cycles_single_operand_instruction(i, 4, 8);
-
-    return i;
 }
 
 uint8_t sub(Instruction* i, M68k* ctx)
 {
-    uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
-    uint32_t a = FETCH_EA_AND_GET(i->dst, ctx);
-    SET(i->dst, ctx, a - b);
+    uint32_t b = FETCH_EA_AND_GET(&i->src, ctx);
+    uint32_t a = FETCH_EA_AND_GET(&i->dst, ctx);
+    SET(&i->dst, ctx, a - b);
 
     CARRY_SET(ctx, CHECK_CARRY_SUB(a, b, i->size));
     OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(a, b, i->size));
@@ -499,82 +468,74 @@ uint8_t sub(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_sub(uint16_t opcode)
+void gen_sub(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("SUB", sub);
+    instruction_init(i, "SUB", sub);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-
-    Operand* reg = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
-    Operand* ea = operand_make(FRAGMENT(opcode, 5, 0), i);
 
     int direction = BIT(opcode, 8);
     if (direction == 0)
     {
-        i->src = ea;
-        i->dst = reg;
+        operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+        operand_make_data_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
     }
     else
     {
-        i->src = reg;
-        i->dst = ea;
+        operand_make_data_register(&i->src, FRAGMENT(opcode, 11, 9), i);
+        operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
     }
 
     i->base_cycles = i->size == Long ? cycles_standard_instruction(i, 8, 4, 8) : cycles_standard_instruction(i, 6, 6, 12); // TODO increase to eight?!
-
-    return i;
 }
 
 uint8_t suba(Instruction* i, M68k* ctx)
 {
-    uint32_t a = FETCH_EA_AND_GET(i->src, ctx);
+    uint32_t a = FETCH_EA_AND_GET(&i->src, ctx);
 
     if (i->size == Word)
     {
         a = SIGN_EXTEND_W(a);
     }
 
-    SET(i->dst, ctx, GET(i->dst, ctx) - a);
+    SET(&i->dst, ctx, GET(&i->dst, ctx) - a);
 
     return 0;
 }
 
-Instruction* gen_suba(uint16_t opcode)
+void gen_suba(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("SUBA", suba);
+    instruction_init(i, "SUBA", suba);
     i->size = BIT(opcode, 8) ? Long : Word;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
-    i->dst = operand_make_address_register(FRAGMENT(opcode, 11, 9), i);
-    return i;
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make_address_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
 }
 
-Instruction* gen_subi(uint16_t opcode)
+void gen_subi(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("SUBI", sub);
+    instruction_init(i, "SUBI", sub);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make_immediate_value(i->size, i);
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    operand_make_immediate_value(&i->src, i->size, i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_immediate_instruction(i, 16, 0, 20) : cycles_immediate_instruction(i, 8, 0, 12);
-
-    return i;
 }
 
 uint8_t subq(Instruction* i, M68k* ctx)
 {
     // Extract the quick value, 0 represents 8
 
-    uint32_t quick = GET(i->src, ctx);
+    uint32_t quick = GET(&i->src, ctx);
     if (quick == 0)
     {
         quick = 8;
     }
 
-    uint32_t initial = FETCH_EA_AND_GET(i->dst, ctx);
-    SET(i->dst, ctx, initial - quick);
+    uint32_t initial = FETCH_EA_AND_GET(&i->dst, ctx);
+    SET(&i->dst, ctx, initial - quick);
 
     // The condition codes are not altered when subtracting from address registers
 
-    if (i->dst->type != AddressRegister)
+    if (i->dst.type != AddressRegister)
     {
         CARRY_SET(ctx, CHECK_CARRY_SUB(initial, quick, i->size));
         OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(initial, quick, i->size));
@@ -586,33 +547,31 @@ uint8_t subq(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_subq(uint16_t opcode)
+void gen_subq(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("SUBQ", subq);
+    instruction_init(i, "SUBQ", subq);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    i->src = operand_make_value(FRAGMENT(opcode, 11, 9), i);
-    i->dst = operand_make(FRAGMENT(opcode, 5, 0), i);
+    operand_make_value(&i->src, FRAGMENT(opcode, 11, 9), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_immediate_instruction(i, 8, 8, 12) : cycles_immediate_instruction(i, 4, 8, 8);
 
     // For address registers, the entire register is used regardless of the instruction's size
 
-    if (i->dst->type == AddressRegister)
+    if (i->dst.type == AddressRegister)
     {
         i->size = Long;
     }
-
-    return i;
 }
 
 uint8_t subx(Instruction* i, M68k* ctx)
 {
-    uint32_t b = FETCH_EA_AND_GET(i->src, ctx);
-    uint32_t a = FETCH_EA_AND_GET(i->dst, ctx);
+    uint32_t b = FETCH_EA_AND_GET(&i->src, ctx);
+    uint32_t a = FETCH_EA_AND_GET(&i->dst, ctx);
     bool extended = EXTENDED(ctx);
-    SET(i->dst, ctx, a - b - extended);
+    SET(&i->dst, ctx, a - b - extended);
 
-    uint32_t result = GET(i->dst, ctx);
+    uint32_t result = GET(&i->dst, ctx);
     CARRY_SET(ctx, CHECK_CARRY_SUB(a, b + extended, i->size)); // TODO does this work?
     OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(a, b + extended, i->size));
     ZERO_SET(ctx, result == 0);
@@ -622,37 +581,35 @@ uint8_t subx(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_subx(uint16_t opcode)
+void gen_subx(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("SUBX", subx);
+    instruction_init(i, "SUBX", subx);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
 
     bool data_register = BIT(opcode, 3);
     if (data_register)
     {
-        i->src = operand_make_address_register_indirect_predec(FRAGMENT(opcode, 2, 0), i);
-        i->dst = operand_make_address_register_indirect_predec(FRAGMENT(opcode, 11, 9), i);
+        operand_make_address_register_indirect_predec(&i->src, FRAGMENT(opcode, 2, 0), i);
+        operand_make_address_register_indirect_predec(&i->dst, FRAGMENT(opcode, 11, 9), i);
     }
     else
     {
-        i->src = operand_make_data_register(FRAGMENT(opcode, 2, 0), i);
-        i->dst = operand_make_data_register(FRAGMENT(opcode, 11, 9), i);
+        operand_make_data_register(&i->src, FRAGMENT(opcode, 2, 0), i);
+        operand_make_data_register(&i->dst, FRAGMENT(opcode, 11, 9), i);
     }
-
-    return i;
 }
 
 uint8_t tas(Instruction* i, M68k* ctx)
 {
-    uint32_t value = FETCH_EA_AND_GET(i->src, ctx);
+    uint32_t value = FETCH_EA_AND_GET(&i->src, ctx);
 
     // TAS should set the high-order bit but this only works
     // for direct register access due to a bug in the Genesis
     // https://board.byuu.org/viewtopic.php?p=44353#p44353
 
-    if (i->src->type == DataRegister)
+    if (i->src.type == DataRegister)
     {
-        SET(i->src, ctx, value | 0x80);
+        SET(&i->src, ctx, value | 0x80);
     }
 
     CARRY_SET(ctx, false);
@@ -663,11 +620,10 @@ uint8_t tas(Instruction* i, M68k* ctx)
     return 0;
 }
 
-Instruction* gen_tas(uint16_t opcode)
+void gen_tas(Instruction* i, uint16_t opcode)
 {
-    Instruction* i = instruction_make("TAS", tas);
+    instruction_init(i, "TAS", tas);
     i->size = Byte;
-    i->src = operand_make(FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
     i->base_cycles = cycles_single_operand_instruction(i, 4, 14);
-    return i;
 }

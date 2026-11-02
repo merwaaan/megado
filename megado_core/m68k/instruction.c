@@ -8,7 +8,7 @@
 #include "m68k.h"
 #include "operands.h"
 
-#define DECLARE_INSTR(name) Instruction* gen_##name(uint16_t opcode)
+#define DECLARE_INSTR(name) void gen_##name(Instruction* i, uint16_t opcode)
 
 // Bit-wise operations
 DECLARE_INSTR(bchg);
@@ -126,7 +126,7 @@ uint8_t not_implemented(Instruction* i, M68k* ctx)
 }
 
 // Generator function
-typedef struct Instruction*(GenFunc)(uint16_t opcode);
+typedef void(GenFunc)(struct Instruction*, uint16_t opcode);
 
 // Metadata to generate the M68000's instruction set.
 // http://goldencrystal.free.fr/M68kOpcodes-v2.3.pdf
@@ -372,7 +372,7 @@ static bool pattern_match(Pattern* pattern, uint16_t opcode)
     return true;
 }
 
-Instruction* instruction_generate(uint16_t opcode)
+void instruction_generate(Instruction* instr, uint16_t opcode)
 {
     uint8_t pattern_count = sizeof(instruction_patterns) / sizeof(Pattern);
 
@@ -382,41 +382,24 @@ Instruction* instruction_generate(uint16_t opcode)
 
         if (pattern_match(pattern, opcode))
         {
-            Instruction* instr = pattern->generator(opcode);
-            instr->opcode = opcode;
-            return instr;
+            pattern->generator(instr, opcode);
+            return;
         }
     }
-
-    return NULL;
 }
 
-Instruction* instruction_make(char* name, InstructionFunc func)
+void instruction_init(Instruction* i, char* name, InstructionFunc func)
 {
-    Instruction* i = calloc(1, sizeof(Instruction));
+    memset(i, 0, sizeof(Instruction));
     i->func = func;
     i->base_cycles = 0;
+    i->src.type = NoOperand;
+    i->dst.type = NoOperand;
 
-    // Dynamically allocate memory for the instruction's name and copy the name argument whatever its source
+    // Copy the name argument whatever its source
     // in order to handle string literals and dynamic strings similarly
 
-    i->name = calloc(20, sizeof(char));
     strcpy(i->name, name);
-
-    return i;
-}
-
-void instruction_free(Instruction* instr)
-{
-    if (instr == NULL)
-    {
-        return;
-    }
-
-    free(instr->name);
-    free(instr->src);
-    free(instr->dst);
-    free(instr);
 }
 
 uint8_t instruction_execute(Instruction* instr, M68k* ctx)
@@ -424,28 +407,28 @@ uint8_t instruction_execute(Instruction* instr, M68k* ctx)
     // TODO compare w inline noop
     // Pre-execution actions
 
-    if (instr->src != NULL && instr->src->pre_func != NULL)
+    if (instr->src.pre_func != NULL)
     {
-        instr->src->pre_func(instr->src, ctx);
+        instr->src.pre_func(&instr->src, ctx);
     }
 
-    if (instr->dst != NULL && instr->dst->pre_func != NULL)
+    if (instr->dst.pre_func != NULL)
     {
-        instr->dst->pre_func(instr->dst, ctx);
+        instr->dst.pre_func(&instr->dst, ctx);
     }
 
     uint8_t additional_cycles = instr->func(instr, ctx);
 
     // Post-execution actions
 
-    if (instr->src != NULL && instr->src->post_func != NULL)
+    if (instr->src.post_func != NULL)
     {
-        instr->src->post_func(instr->src, ctx);
+        instr->src.post_func(&instr->src, ctx);
     }
 
-    if (instr->dst != NULL && instr->dst->post_func != NULL)
+    if (instr->dst.post_func != NULL)
     {
-        instr->dst->post_func(instr->dst, ctx);
+        instr->dst.post_func(&instr->dst, ctx);
     }
 
     return instr->base_cycles + additional_cycles;

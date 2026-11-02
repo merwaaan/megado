@@ -38,7 +38,7 @@ struct Genesis;
 struct M68k;
 
 // Jump table that contains all the M68000 instructions
-extern struct Instruction** opcode_table;
+extern struct Instruction* opcode_table;
 
 typedef enum
 {

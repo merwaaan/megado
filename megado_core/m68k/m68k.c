@@ -20,16 +20,16 @@
 
 static const uint32_t MASTER_CYCLES_PER_CLOCK = 7;
 
-Instruction** opcode_table;
+Instruction* opcode_table;
 
 M68k* m68k_make(Genesis* g)
 {
     if (opcode_table == NULL)
     {
-        opcode_table = calloc(0x10000, sizeof(Instruction*));
+        opcode_table = calloc(0x10000, sizeof(Instruction));
         for (int opcode = 0; opcode < 0x10000; ++opcode)
         {
-            opcode_table[opcode] = instruction_generate(opcode);
+            instruction_generate(&opcode_table[opcode], opcode);
         }
     }
 
@@ -40,15 +40,8 @@ M68k* m68k_make(Genesis* g)
 
 void m68k_free(M68k* m)
 {
-    if (opcode_table != NULL)
-    {
-        for (int opcode = 0; opcode < 0x10000; ++opcode)
-        {
-            instruction_free(opcode_table[opcode]);
-        }
-        free(opcode_table);
-        opcode_table = NULL;
-    }
+    free(opcode_table);
+    opcode_table = NULL;
 
     free(m);
 }
@@ -81,8 +74,8 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     uint16_t opcode = m68k_fetch(m);
     m->instruction_register = opcode;
 
-    Instruction* instr = opcode_table[opcode];
-    if (instr == NULL)
+    Instruction* instr = &opcode_table[opcode];
+    if (instr->func == NULL)
     {
         LOG_M68K("Opcode %#06X cannot be found in the opcode table\n", opcode);
         goto bail;
@@ -111,21 +104,21 @@ DecodedInstruction* m68k_decode(M68k* m, uint32_t instr_address)
     }
     pos += sprintf(decoded->mnemonics + pos, "%s ", size_symbol);
 
-    if (instr->src != NULL)
+    if (instr->src.type != NoOperand)
     {
-        pos += operand_tostring(instr->src, m, decoded->mnemonics + pos);
-        decoded->length += operand_length(instr->src);
+        pos += operand_tostring(&instr->src, m, decoded->mnemonics + pos);
+        decoded->length += operand_length(&instr->src);
     }
 
-    if (instr->src != NULL && instr->dst != NULL)
+    if (instr->src.type != NoOperand && instr->dst.type != NoOperand)
     {
         pos += sprintf(decoded->mnemonics + pos, ", ");
     }
 
-    if (instr->dst != NULL)
+    if (instr->dst.type != NoOperand)
     {
-        pos += operand_tostring(instr->dst, m, decoded->mnemonics + pos);
-        decoded->length += operand_length(instr->dst);
+        pos += operand_tostring(&instr->dst, m, decoded->mnemonics + pos);
+        decoded->length += operand_length(&instr->dst);
     }
 
     decoded->mnemonics[pos] = '\0';
@@ -234,9 +227,9 @@ int16_t m68k_step(M68k* m)
 
     m->instruction_address = m->pc;
     m->instruction_register = m68k_fetch(m);
-    Instruction* instr = opcode_table[m->instruction_register];
+    Instruction* instr = &opcode_table[m->instruction_register];
 
-    if (instr == NULL)
+    if (instr->func == NULL)
     {
         printf("\tOpcode %#06X cannot be found in the opcode table\n", m->instruction_register);
         return INVALID_INSTRUCTION;

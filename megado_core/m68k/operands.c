@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "../genesis.h"
 #include "../utils.h"
@@ -8,51 +9,53 @@
 #include "map.h"
 #include "operands.h"
 
-Operand* operand_make(uint16_t pattern, Instruction* instr)
+void operand_make(Operand* op, uint16_t pattern, Instruction* instr)
 {
     switch (pattern & 0x38)
     {
     case 0:
-        return operand_make_data_register(pattern & 7, instr);
+        operand_make_data_register(op, pattern & 7, instr);
+        return;
     case 0x8:
-        return operand_make_address_register(pattern & 7, instr);
+        operand_make_address_register(op, pattern & 7, instr);
+        return;
     case 0x10:
-        return operand_make_address_register_indirect(pattern & 7, instr);
+        operand_make_address_register_indirect(op, pattern & 7, instr);
+        return;
     case 0x18:
-        return operand_make_address_register_indirect_postinc(pattern & 7, instr);
+        operand_make_address_register_indirect_postinc(op, pattern & 7, instr);
+        return;
     case 0x20:
-        return operand_make_address_register_indirect_predec(pattern & 7, instr);
+        operand_make_address_register_indirect_predec(op, pattern & 7, instr);
+        return;
     case 0x28:
-        return operand_make_address_register_indirect_displacement(pattern & 7, instr);
+        operand_make_address_register_indirect_displacement(op, pattern & 7, instr);
+        return;
     case 0x30:
-        return operand_make_address_register_indirect_index(pattern & 7, instr);
+        operand_make_address_register_indirect_index(op, pattern & 7, instr);
+        return;
     case 0x38:
         switch (pattern & 7)
         {
         case 0:
-            return operand_make_absolute_short(instr);
+            operand_make_absolute_short(op, instr);
+            return;
         case 1:
-            return operand_make_absolute_long(instr);
+            operand_make_absolute_long(op, instr);
+            return;
         case 2:
-            return operand_make_pc_displacement(instr);
+            operand_make_pc_displacement(op, instr);
+            return;
         case 3:
-            return operand_make_pc_index(instr);
+            operand_make_pc_index(op, instr);
+            return;
         case 4:
-            return operand_make_immediate_value(instr->size, instr);
+            operand_make_immediate_value(op, instr->size, instr);
+            return;
         }
     default:
-    {
-        Operand* op = calloc(1, sizeof(Operand));
-        op->instruction = instr;
-        op->type = Unsupported;
-        return op;
+        FATAL("Invalid addressing mode %x", pattern);
     }
-    }
-}
-
-void operand_free(Operand* operand)
-{
-    free(operand);
 }
 
 int operand_tostring(Operand* operand, M68k* ctx, char* buffer)
@@ -166,29 +169,6 @@ uint8_t operand_sign_extension(uint8_t pattern)
     }
 }
 
-// Cycles required to compute an effective address.
-// The first value is for Byte/Word operation, the second is for Long operations.
-// The order of the entries must match the AddressingMode enum.
-int address_calculation_cycles[12][2] =
-    {
-        {0, 0},
-        {0, 0},
-        {4, 8},
-        {6, 10},
-        {4, 8},
-        {8, 12},
-        {10, 14},
-        {8, 12},
-        {10, 14},
-        {4, 8},
-        {8, 12},
-        {10, 14}};
-
-int operand_get_cycles(Operand* o)
-{
-    return address_calculation_cycles[o->type][o->instruction->size == Long];
-}
-
 void noop(Operand* o, M68k* ctx, uint32_t value)
 {
 }
@@ -232,16 +212,15 @@ void data_register_set(Operand* o, M68k* ctx, uint32_t value)
         MASK_ABOVE_INC(value, o->instruction->size);
 }
 
-Operand* operand_make_data_register(int n, Instruction* instr)
+void operand_make_data_register(Operand* op, int n, Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = DataRegister;
     op->fetch_ea_func = data_register_ea;
     op->get_value_func = data_register_get;
     op->set_value_func = data_register_set;
     op->n = n;
-    return op;
 }
 
 /*
@@ -265,16 +244,15 @@ void address_register_set(Operand* o, M68k* ctx, uint32_t value)
         MASK_ABOVE_INC(value, o->instruction->size);
 }
 
-Operand* operand_make_address_register(int n, Instruction* instr)
+void operand_make_address_register(Operand* op, int n, Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegister;
     op->fetch_ea_func = address_register_ea;
     op->get_value_func = address_register_get;
     op->set_value_func = address_register_set;
     op->n = n;
-    return op;
 }
 
 /*
@@ -288,16 +266,15 @@ uint32_t address_indirect_ea(Operand* o, M68k* ctx)
     return ctx->address_registers[o->n] & M68K_ADDRESS_WIDTH;
 }
 
-Operand* operand_make_address_register_indirect(int n, Instruction* instr)
+void operand_make_address_register_indirect(Operand* op, int n, Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirect;
     op->fetch_ea_func = address_indirect_ea;
     op->get_value_func = get_from_ea;
     op->set_value_func = set_from_ea;
     op->n = n;
-    return op;
 }
 
 /*
@@ -322,9 +299,9 @@ void address_inc(Operand* o, M68k* ctx)
     }
 }
 
-Operand* operand_make_address_register_indirect_postinc(int n, struct Instruction* instr)
+void operand_make_address_register_indirect_postinc(Operand* op, int n, struct Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirectPostInc;
     op->fetch_ea_func = address_indirect_ea;
@@ -332,7 +309,6 @@ Operand* operand_make_address_register_indirect_postinc(int n, struct Instructio
     op->set_value_func = set_from_ea;
     op->post_func = address_inc;
     op->n = n;
-    return op;
 }
 
 /*
@@ -357,9 +333,9 @@ void address_dec(Operand* o, M68k* ctx)
     }
 }
 
-Operand* operand_make_address_register_indirect_predec(int n, struct Instruction* instr)
+void operand_make_address_register_indirect_predec(Operand* op, int n, struct Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirectPreDec;
     op->fetch_ea_func = address_indirect_ea;
@@ -367,7 +343,6 @@ Operand* operand_make_address_register_indirect_predec(int n, struct Instruction
     op->set_value_func = set_from_ea;
     op->pre_func = address_dec;
     op->n = n;
-    return op;
 }
 
 // Address indirect with displacement
@@ -385,16 +360,15 @@ uint32_t address_indirect_displacement_ea(Operand* o, M68k* ctx)
     return ctx->address_registers[o->n] + displacement;
 }
 
-Operand* operand_make_address_register_indirect_displacement(int n, struct Instruction* instr)
+void operand_make_address_register_indirect_displacement(Operand* op, int n, struct Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirectDisplacement;
     op->fetch_ea_func = address_indirect_displacement_ea;
     op->get_value_func = get_from_ea;
     op->set_value_func = set_from_ea;
     op->n = n;
-    return op;
 }
 
 /*
@@ -410,16 +384,15 @@ uint32_t address_indirect_index_ea(Operand* o, M68k* ctx)
     return m->address_registers[o->n] + (int8_t)INDEX_DISPLACEMENT(ext) + (int32_t)index;
 }
 
-Operand* operand_make_address_register_indirect_index(int n, struct Instruction* instr)
+void operand_make_address_register_indirect_index(Operand* op, int n, struct Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = AddressRegisterIndirectIndexed;
     op->fetch_ea_func = address_indirect_index_ea;
     op->get_value_func = get_from_ea;
     op->set_value_func = set_from_ea;
     op->n = n;
-    return op;
 }
 
 /*
@@ -454,9 +427,9 @@ uint32_t immediate_long_get(Operand* o, M68k* ctx)
     return map_read_l(ctx->genesis->map, o->last_ea);
 }
 
-Operand* operand_make_immediate_value(Size size, Instruction* instr)
+void operand_make_immediate_value(Operand* op, Size size, Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = Immediate;
 
@@ -477,8 +450,6 @@ Operand* operand_make_immediate_value(Size size, Instruction* instr)
     case InvalidSize:
         FATAL("Invalid operand size %x", size);
     }
-
-    return op;
 }
 
 /*
@@ -491,15 +462,14 @@ uint32_t absolute_short_ea(Operand* o, M68k* ctx)
     return SIGN_EXTEND_W(address);
 }
 
-Operand* operand_make_absolute_short(Instruction* instr)
+void operand_make_absolute_short(Operand* op, Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = AbsoluteShort;
     op->fetch_ea_func = absolute_short_ea;
     op->get_value_func = get_from_ea;
     op->set_value_func = set_from_ea;
-    return op;
 }
 
 uint32_t absolute_long_ea(Operand* o, M68k* ctx)
@@ -508,15 +478,14 @@ uint32_t absolute_long_ea(Operand* o, M68k* ctx)
     // TODO not sure about w.l
 }
 
-Operand* operand_make_absolute_long(Instruction* instr)
+void operand_make_absolute_long(Operand* op, Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = AbsoluteLong;
     op->fetch_ea_func = absolute_long_ea;
     op->get_value_func = get_from_ea;
     op->set_value_func = set_from_ea;
-    return op;
 }
 
 /*
@@ -530,15 +499,14 @@ uint32_t pc_displacement_word_ea(Operand* o, M68k* ctx)
     return pc + displacement;
 }
 
-Operand* operand_make_pc_displacement(Instruction* instr)
+void operand_make_pc_displacement(Operand* op, Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->type = ProgramCounterDisplacement;
     op->instruction = instr;
     op->fetch_ea_func = pc_displacement_word_ea;
     op->get_value_func = get_from_ea;
     op->set_value_func = set_from_ea;
-    return op;
 }
 
 /*
@@ -559,15 +527,14 @@ uint32_t pc_index_ea(Operand* o, M68k* ctx)
     return pc + (int8_t)INDEX_DISPLACEMENT(ext) + (int32_t)index;
 }
 
-Operand* operand_make_pc_index(struct Instruction* instr)
+void operand_make_pc_index(Operand* op, struct Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = ProgramCounterIndexed;
     op->fetch_ea_func = pc_index_ea;
     op->get_value_func = get_from_ea;
     op->set_value_func = set_from_ea;
-    return op;
 }
 
 /*
@@ -579,15 +546,14 @@ uint32_t value_get(Operand* o, M68k* ctx)
     return o->n;
 }
 
-Operand* operand_make_value(int value, struct Instruction* instr)
+void operand_make_value(Operand* op, int value, struct Instruction* instr)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->type = Value;
     op->instruction = instr;
     op->n = value;
     op->fetch_ea_func = fetch_no_ea;
     op->get_value_func = value_get;
-    return op;
 }
 
 /*
@@ -610,9 +576,9 @@ uint32_t branching_offset_word_get(Operand* o, M68k* ctx)
     return map_read_w(ctx->genesis->map, ctx->instruction_address + 2);
 }
 
-Operand* operand_make_branching_offset(Instruction* instr, Size size)
+void operand_make_branching_offset(Operand* op, Instruction* instr, Size size)
 {
-    Operand* op = calloc(1, sizeof(Operand));
+    memset(op, 0, sizeof(Operand));
     op->instruction = instr;
     op->type = BranchingOffset;
 
@@ -629,11 +595,8 @@ Operand* operand_make_branching_offset(Instruction* instr, Size size)
         op->get_value_func = branching_offset_word_get;
         break;
     default: // The 68000 does not support long branching offsets
-        free(op);
         FATAL("Invalid size %x", size);
     }
-
-    return op;
 }
 
 int operand_length(Operand* operand)
@@ -669,7 +632,7 @@ uint32_t operand_fetch_ea_and_get(Operand* operand, M68k* ctx)
     if (operand->fetch_ea_func == NULL)
     {
         FATAL("fetch_ea_func is null (opcode: %04X, name: %s)\n",
-              operand->instruction->opcode, operand->instruction->name);
+              ctx->instruction_register, operand->instruction->name);
     }
 
     operand->last_ea = operand->fetch_ea_func(operand, ctx);
@@ -677,7 +640,7 @@ uint32_t operand_fetch_ea_and_get(Operand* operand, M68k* ctx)
     if (operand->get_value_func == NULL)
     {
         FATAL("get_value_func is null (opcode: %04X, name: %s)\n",
-              operand->instruction->opcode, operand->instruction->name);
+              ctx->instruction_register, operand->instruction->name);
     }
 
     return operand->get_value_func(operand, ctx);
@@ -688,7 +651,7 @@ void operand_fetch_ea_and_set(Operand* operand, M68k* ctx, uint32_t value)
     if (operand->fetch_ea_func == NULL)
     {
         FATAL("fetch_ea_func is null (opcode: %04X, name: %s)\n",
-              operand->instruction->opcode, operand->instruction->name);
+              ctx->instruction_register, operand->instruction->name);
     }
 
     operand->last_ea = operand->fetch_ea_func(operand, ctx);
@@ -696,7 +659,7 @@ void operand_fetch_ea_and_set(Operand* operand, M68k* ctx, uint32_t value)
     if (operand->set_value_func == NULL)
     {
         FATAL("set_value_func is null (opcode: %04X, name: %s)\n",
-              operand->instruction->opcode, operand->instruction->name);
+              ctx->instruction_register, operand->instruction->name);
     }
 
     operand->set_value_func(operand, ctx, value);

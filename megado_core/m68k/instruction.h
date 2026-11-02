@@ -4,26 +4,25 @@
 #include <stdint.h>
 
 #include "bit_utils.h"
+#include "operands.h"
 
 struct Condition;
 struct Instruction;
 struct M68k;
-struct Operand;
 
 // Instruction implementations are passed the instruction's data and the CPU context
 typedef uint8_t(InstructionFunc)(struct Instruction*, struct M68k*);
 
 typedef struct Instruction
 {
-    char* name;
-    uint16_t opcode;
+    char name[16];
 
     // Implementation
     InstructionFunc* func;
 
     // Operands
-    struct Operand* src;
-    struct Operand* dst;
+    Operand src;
+    Operand dst;
 
     // Size of the operation (byte, word, long)
     Size size;
@@ -46,11 +45,10 @@ typedef struct Instruction
     };
 } Instruction;
 
-Instruction* instruction_make(char* name, InstructionFunc func);
-void instruction_free(Instruction*);
+void instruction_init(Instruction*, char* name, InstructionFunc func);
 
 // Generates the appropriate instruction from an opcode.
-Instruction* instruction_generate(uint16_t opcode);
+void instruction_generate(Instruction*, uint16_t opcode);
 
 // Executes the given instruction and returns the elapsed cycles.
 uint8_t instruction_execute(Instruction*, struct M68k*);
