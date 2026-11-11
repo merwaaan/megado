@@ -161,10 +161,10 @@ void gen_ori_ccr(Instruction* i, uint16_t opcode)
 
 uint8_t not(Instruction * i, M68k* ctx)
 {
-    FETCH_EA(&i->src, ctx);
-    SET(&i->src, ctx, ~GET(&i->src, ctx));
+    FETCH_EA(&i->dst, ctx);
+    SET(&i->dst, ctx, ~GET(&i->dst, ctx));
 
-    uint32_t result = GET(&i->src, ctx);
+    uint32_t result = GET(&i->dst, ctx);
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
     ZERO_SET(ctx, result == 0);
@@ -177,14 +177,14 @@ void gen_not(Instruction* i, uint16_t opcode)
 {
     instruction_init(i, "NOT", not);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_single_operand_instruction(i, 6, 12) : cycles_single_operand_instruction(i, 4, 8);
 }
 
 uint8_t scc(Instruction* i, M68k* ctx)
 {
-    FETCH_EA_AND_SET(&i->src, ctx, i->condition->func(ctx) ? 0xFF : 0);
+    FETCH_EA_AND_SET(&i->dst, ctx, i->condition->func(ctx) ? 0xFF : 0);
 
     return 0;
 }
@@ -201,14 +201,14 @@ void gen_scc(Instruction* i, uint16_t opcode)
     instruction_init(i, name, scc);
     i->size = Byte;
     i->condition = condition;
-    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_single_operand_instruction(i, 6, 8) : cycles_single_operand_instruction(i, 4, 8);
 }
 
 uint8_t tst(Instruction* i, M68k* ctx)
 {
-    uint32_t value = FETCH_EA_AND_GET(&i->src, ctx);
+    uint32_t value = FETCH_EA_AND_GET(&i->dst, ctx);
 
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
@@ -222,6 +222,6 @@ void gen_tst(Instruction* i, uint16_t opcode)
 {
     instruction_init(i, "TST", tst);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
     i->base_cycles = cycles_single_operand_instruction(i, 4, 4);
 }

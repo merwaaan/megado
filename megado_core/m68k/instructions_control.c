@@ -150,7 +150,7 @@ void gen_dbcc(Instruction* i, uint16_t opcode)
 
 uint8_t jmp(Instruction* i, M68k* ctx)
 {
-    ctx->pc = FETCH_EA(&i->src, ctx) & M68K_ADDRESS_WIDTH;
+    ctx->pc = FETCH_EA(&i->dst, ctx) & M68K_ADDRESS_WIDTH;
     ;
 
     return 0;
@@ -159,14 +159,14 @@ uint8_t jmp(Instruction* i, M68k* ctx)
 void gen_jmp(Instruction* i, uint16_t opcode)
 {
     instruction_init(i, "JMP", jmp);
-    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
 }
 
 uint8_t jsr(Instruction* i, M68k* ctx)
 {
-    uint32_t ea = FETCH_EA(&i->src, ctx);
+    uint32_t ea = FETCH_EA(&i->dst, ctx);
 
-    if (i->src.type == AbsoluteShort)
+    if (i->dst.type == AbsoluteShort)
     {
         ea = SIGN_EXTEND_W(ea);
     }
@@ -186,7 +186,7 @@ uint8_t jsr(Instruction* i, M68k* ctx)
 void gen_jsr(Instruction* i, uint16_t opcode)
 {
     instruction_init(i, "JSR", jsr);
-    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
     i->size = Long;
 }
 

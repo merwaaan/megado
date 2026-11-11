@@ -160,7 +160,7 @@ void gen_addx(Instruction* i, uint16_t opcode)
 
 uint8_t clr(Instruction* i, M68k* ctx)
 {
-    FETCH_EA_AND_SET(&i->src, ctx, 0);
+    FETCH_EA_AND_SET(&i->dst, ctx, 0);
 
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
@@ -174,7 +174,7 @@ void gen_clr(Instruction* i, uint16_t opcode)
 {
     instruction_init(i, "CLR", clr);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_single_operand_instruction(i, 6, 12) : cycles_single_operand_instruction(i, 4, 8);
 }
@@ -322,7 +322,7 @@ void gen_divu(Instruction* i, uint16_t opcode)
 
 uint8_t ext(Instruction* i, M68k* ctx)
 {
-    int x = GET(&i->src, ctx);
+    int x = GET(&i->dst, ctx);
 
     uint32_t extended;
     switch (i->size)
@@ -337,7 +337,7 @@ uint8_t ext(Instruction* i, M68k* ctx)
         FATAL("Invalid size %x", i->size);
     }
 
-    SET(&i->src, ctx, extended);
+    SET(&i->dst, ctx, extended);
 
     CARRY_SET(ctx, false);
     OVERFLOW_SET(ctx, false);
@@ -351,7 +351,7 @@ void gen_ext(Instruction* i, uint16_t opcode)
 {
     instruction_init(i, "EXT", ext);
     i->size = operand_sign_extension(FRAGMENT(opcode, 8, 6));
-    operand_make_data_register(&i->src, FRAGMENT(opcode, 3, 0), i);
+    operand_make_data_register(&i->dst, FRAGMENT(opcode, 3, 0), i);
     i->base_cycles = 4;
 }
 
@@ -407,10 +407,10 @@ void gen_muls(Instruction* i, uint16_t opcode)
 
 uint8_t neg(Instruction* i, M68k* ctx)
 {
-    uint32_t value = FETCH_EA_AND_GET(&i->src, ctx);
-    SET(&i->src, ctx, 0 - value);
+    uint32_t value = FETCH_EA_AND_GET(&i->dst, ctx);
+    SET(&i->dst, ctx, 0 - value);
 
-    uint32_t result = GET(&i->src, ctx);
+    uint32_t result = GET(&i->dst, ctx);
     CARRY_SET(ctx, CHECK_CARRY_SUB(0, value, i->size));
     OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(0, value, i->size));
     ZERO_SET(ctx, result == 0);
@@ -424,17 +424,17 @@ void gen_neg(Instruction* i, uint16_t opcode)
 {
     instruction_init(i, "NEG", neg);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_single_operand_instruction(i, 6, 12) : cycles_single_operand_instruction(i, 4, 8);
 }
 
 uint8_t negx(Instruction* i, M68k* ctx)
 {
-    uint32_t value = FETCH_EA_AND_GET(&i->src, ctx) + EXTENDED(ctx);
-    SET(&i->src, ctx, 0 - value);
+    uint32_t value = FETCH_EA_AND_GET(&i->dst, ctx) + EXTENDED(ctx);
+    SET(&i->dst, ctx, 0 - value);
 
-    uint32_t result = GET(&i->src, ctx);
+    uint32_t result = GET(&i->dst, ctx);
     CARRY_SET(ctx, CHECK_CARRY_SUB(0, value, i->size));
     OVERFLOW_SET(ctx, CHECK_OVERFLOW_SUB(0, value, i->size));
     ZERO_SET(ctx, result == 0);
@@ -448,7 +448,7 @@ void gen_negx(Instruction* i, uint16_t opcode)
 {
     instruction_init(i, "NEGX", negx);
     i->size = operand_size(FRAGMENT(opcode, 7, 6));
-    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
 
     i->base_cycles = i->size == Long ? cycles_single_operand_instruction(i, 6, 12) : cycles_single_operand_instruction(i, 4, 8);
 }
@@ -601,15 +601,15 @@ void gen_subx(Instruction* i, uint16_t opcode)
 
 uint8_t tas(Instruction* i, M68k* ctx)
 {
-    uint32_t value = FETCH_EA_AND_GET(&i->src, ctx);
+    uint32_t value = FETCH_EA_AND_GET(&i->dst, ctx);
 
     // TAS should set the high-order bit but this only works
     // for direct register access due to a bug in the Genesis
     // https://board.byuu.org/viewtopic.php?p=44353#p44353
 
-    if (i->src.type == DataRegister)
+    if (i->dst.type == DataRegister)
     {
-        SET(&i->src, ctx, value | 0x80);
+        SET(&i->dst, ctx, value | 0x80);
     }
 
     CARRY_SET(ctx, false);
@@ -624,6 +624,6 @@ void gen_tas(Instruction* i, uint16_t opcode)
 {
     instruction_init(i, "TAS", tas);
     i->size = Byte;
-    operand_make(&i->src, FRAGMENT(opcode, 5, 0), i);
+    operand_make(&i->dst, FRAGMENT(opcode, 5, 0), i);
     i->base_cycles = cycles_single_operand_instruction(i, 4, 14);
 }
