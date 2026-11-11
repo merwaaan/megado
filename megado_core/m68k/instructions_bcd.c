@@ -1,3 +1,4 @@
+#include "cycles.h"
 #include "instruction.h"
 #include "m68k.h"
 #include "operands.h"
