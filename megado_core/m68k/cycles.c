@@ -130,12 +130,16 @@ uint8_t cycles_immediate_instruction(struct Instruction* i, uint8_t dn_cycles, u
 
 uint8_t cycles_single_operand_instruction(Instruction* i, uint8_t register_cycles, uint8_t memory_cycles)
 {
-    if (i->src.type == DataRegister || i->src.type == AddressRegister)
+    // The single operand being src or dst depends on the instruction
+
+    Operand* op = i->src.type != NoOperand ? &i->src : &i->dst;
+
+    if (op->type == DataRegister || op->type == AddressRegister)
     {
         return register_cycles;
     }
 
-    return memory_cycles + lookup_cycles_ea(i->size, i->src.type);
+    return memory_cycles + lookup_cycles_ea(i->size, op->type);
 }
 
 uint8_t cycles_bit_manipulation_instruction(struct Instruction* i, uint8_t register_cycles, uint8_t memory_cycles)

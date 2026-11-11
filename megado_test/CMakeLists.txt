@@ -6,6 +6,7 @@ add_executable(megado_test
     globals.c
     globals.h
     instructions_arithmetic.c
+    instructions_bcd.c
     instructions_bit.c
     instructions_logic.c
     instructions_shift.c
