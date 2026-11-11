@@ -82,6 +82,7 @@ uint16_t vdp_read_data(Vdp* v)
         LOG_VDP("Reading VRAM @ %04x\n", v->access_address);
 
         value = READ_BE_W(v->vram + v->access_address);
+
         break;
 
     case 8: // CRAM read
@@ -89,6 +90,7 @@ uint16_t vdp_read_data(Vdp* v)
         LOG_VDP("Reading CRAM @ %02x\n", v->access_address >> 1);
 
         value = COLOR_STRUCT_TO_11(v->cram[v->access_address >> 1 & 0x3F]);
+
         break;
 
     case 4: // VSRAM read
@@ -96,6 +98,7 @@ uint16_t vdp_read_data(Vdp* v)
         LOG_VDP("Reading VSRAM @ %02x\n", v->access_address >> 1);
 
         value = v->vsram[v->access_address >> 1 & 0x3F];
+
         break;
 
     default:
@@ -122,6 +125,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
         v->vram[v->access_address] = BYTE_HI(value); // TODO sure about that?
         v->vram[v->access_address ^ 1] = BYTE_LO(value);
         v->access_address += v->auto_increment;
+
         break;
 
     case 3: // CRAM write
@@ -131,6 +135,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
         Color color = COLOR_11_TO_STRUCT(value);
         v->cram[v->access_address >> 1 & 0x3F] = color;
         v->access_address += v->auto_increment;
+
         break;
 
     case 5: // VSRAM write
@@ -139,6 +144,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
 
         v->vsram[v->access_address >> 1 & 0x3F] = value;
         v->access_address += v->auto_increment;
+
         break;
 
     default:
@@ -146,6 +152,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
     }
 
     // Handle pending DMA fills
+
     if (v->dma_enabled && v->pending_dma_fill)
     {
         v->pending_dma_fill = false;
@@ -194,6 +201,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
                 ++v->dma_source_address_lo;
 
             } while (--v->dma_length);
+
             break;
 
         case 5: // VSRAM fill
@@ -208,6 +216,7 @@ void vdp_write_data(Vdp* v, uint16_t value)
                 ++v->dma_source_address_lo;
 
             } while (--v->dma_length);
+
             break;
 
         default:
@@ -245,6 +254,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
     // Not documented: it seems that words with this pattern are considered
     // as the second half of a command word is a command is pending (behavior
     // found in CrazyBus, which has an invalid plane B address if not handled)
+
     if ((value & 0xC000) == 0x8000 && !v->pending_command)
     {
         uint8_t reg = FRAGMENT(value, 12, 8);
@@ -259,9 +269,11 @@ void vdp_write_control(Vdp* v, uint16_t value)
         LOG_VDP("\tRegister %02X, value %02X\n", reg, reg_value);
 
         // Store the raw value
+
         v->register_raw_values[reg] = reg_value;
 
         // Update the internal state of the VDP
+
         switch (reg)
         {
         case 0:
@@ -271,6 +283,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             // Bit 0 tells the VDP if the display is enabled or not. The difference with bit 6 of register 1 is unclear.
 
             LOG_VDP("\t\tH-blank interrupt %d, HV-counter latched %d\n", v->hblank_interrupt_enabled, v->hv_counter_latched);
+
             return;
 
         case 1:
@@ -280,30 +293,37 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->display_height = display_height_values[BIT(reg_value, 3)];
 
             LOG_VDP("\t\tDisplay enabled %d, V-blank interrupt %d, DMA enabled %d, Display mode %d\n", v->display_enabled, v->vblank_interrupt_enabled, v->dma_enabled, v->display_height);
+
             return;
 
         case 2:
             v->plane_a_nametable = (reg_value & 0x38) * 0x400;
 
             LOG_VDP("\t\tPlane A nametable %04x\n", v->plane_a_nametable);
+
             return;
 
         case 3:
             v->window_nametable = (reg_value & 0x3E) * 0x400;
+
             // TODO WD11 is ignored if the display resolution is 320px wide (H40), which limits the Window nametable address to multiples of $1000
+
             LOG_VDP("\t\tWindow nametable %04x\n", v->window_nametable);
+
             return;
 
         case 4:
             v->plane_b_nametable = ((reg_value & 7) << 3) * 0x400;
 
             LOG_VDP("\t\tPlane B nametable %04x\n", v->plane_b_nametable);
+
             return;
 
         case 5:
             v->sprites_attribute_table = FRAGMENT(reg_value, 6, 0) * 0x200;
 
             LOG_VDP("\t\tSprites attribute table %04x\n", v->sprites_attribute_table);
+
             return;
 
         case 7:
@@ -311,12 +331,14 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->background_color_entry = FRAGMENT(reg_value, 3, 0);
 
             LOG_VDP("\t\tBackground palette %d, entry %d\n", v->background_color_palette, v->background_color_entry);
+
             return;
 
         case 0xA:
             v->hblank_line = reg_value;
 
             LOG_VDP("\t\tH-blank counter %04x\n", v->hblank_line);
+
             return;
 
         case 0xB:
@@ -324,6 +346,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->horizontal_scrolling_mode = FRAGMENT(reg_value, 1, 0);
 
             LOG_VDP("\t\tVertical scrolling %d, Horizontal scrolling %d\n", v->vertical_scrolling_mode, v->horizontal_scrolling_mode);
+
             return;
 
         case 0xC:
@@ -332,22 +355,26 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->interlace_mode = FRAGMENT(reg_value, 2, 1);
 
             LOG_VDP("\t\tDisplay width %d, Shadow/Highlight enabled %d, Interlace mode  %d\n", v->display_height, v->shadow_highlight_enabled, v->interlace_mode);
+
             if (v->interlace_mode != 0)
             {
                 printf("WARNING interlace mode not supported!");
             }
+
             return;
 
         case 0xD:
             v->horizontal_scrolltable = FRAGMENT(reg_value, 5, 0) * 0x400;
 
             LOG_VDP("\t\tHorizontal scrolltable %d\n", v->horizontal_scrolltable);
+
             return;
 
         case 0xF:
             v->auto_increment = reg_value;
 
             LOG_VDP("\t\tAuto-increment %d\n", v->auto_increment);
+
             return;
 
         case 0x10:
@@ -355,6 +382,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->plane_height = plane_size_values[FRAGMENT(reg_value, 1, 0)];
 
             LOG_VDP("\t\tVertical plane size %d, Horizontal plane size %d\n", v->plane_width, v->plane_height);
+
             return;
 
         case 0x11:
@@ -362,6 +390,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->window_plane_horizontal_offset = FRAGMENT(reg_value, 4, 0);
 
             LOG_VDP("\t\tHorizontal Window plane direction %d, Window plane offset %d\n", v->window_plane_horizontal_direction, v->window_plane_horizontal_offset);
+
             return;
 
         case 0x12:
@@ -369,29 +398,37 @@ void vdp_write_control(Vdp* v, uint16_t value)
             v->window_plane_vertical_offset = FRAGMENT(reg_value, 4, 0);
 
             LOG_VDP("\t\tVertical window plane direction %d, Window plane offset %d\n", v->window_plane_vertical_offset, v->window_plane_vertical_offset);
+
             return;
 
         case 0x13:
             v->dma_length = (v->dma_length & 0xFF00) | reg_value;
 
             LOG_VDP("\t\tDMA length low %02x (%04x)\n", reg_value, v->dma_length);
+
             return;
+
         case 0x14:
             v->dma_length = (v->dma_length & 0x00FF) | (reg_value << 8);
 
             LOG_VDP("\t\tDMA length high %02x (%04x)\n", reg_value, v->dma_length);
+
             return;
 
         case 0x15:
             v->dma_source_address_lo = (v->dma_source_address_lo & 0xFF00) | reg_value;
 
             LOG_VDP("\t\tDMA source address low %02x (%08x)\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo);
+
             return;
+
         case 0x16:
             v->dma_source_address_lo = (v->dma_source_address_lo & 0x00FF) | (reg_value << 8);
 
             LOG_VDP("\t\tDMA source address med %02x (%08x)\n", reg_value, v->dma_source_address_hi << 16 | v->dma_source_address_lo);
+
             return;
+
         case 0x17:
             v->dma_type = FRAGMENT(reg_value, 7, 6); // TODO convert
 
@@ -403,6 +440,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
         default:
             LOG_VDP("\t\tUnhandled register %02X\n", reg);
+
             return;
         }
     }
@@ -431,12 +469,14 @@ void vdp_write_control(Vdp* v, uint16_t value)
             if (v->dma_enabled && v->access_mode & 0x20)
             {
                 // Memory to...
+
                 if (v->dma_type < 2)
                 {
                     switch (v->access_mode & 0xF)
                     {
                     case 1:
                         // ... VRAM
+
                         LOG_VDP("\tDMA transfer from %08x to VRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do
@@ -453,6 +493,7 @@ void vdp_write_control(Vdp* v, uint16_t value)
 
                     case 3:
                         // ... CRAM
+
                         LOG_VDP("\tDMA transfer from %04x to CRAM @ %04x, length %04x, auto increment %04x\n", (v->dma_source_address_hi << 16 | v->dma_source_address_lo) << 1, v->access_address, v->dma_length, v->auto_increment);
 
                         do
@@ -543,7 +584,7 @@ void vdp_get_plane_cell_data(Vdp* v, Planes plane, uint16_t cell_index, uint16_t
     *pattern_index = FRAGMENT(pattern_data, 10, 0);
 }
 
-static Color color_black = {0, 0, 0};
+static const Color COLOR_BLACK = {0, 0, 0};
 
 void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, Color* palette, uint8_t* buffer, uint32_t buffer_width, uint32_t x, uint32_t y, bool horizontal_flip, bool vertical_flip)
 {
@@ -554,21 +595,24 @@ void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, Color* palette, uint8_t* b
         for (uint8_t px = 0; px < 8; ++px)
         {
             // Handle flipping
+
             uint8_t flipped_px = horizontal_flip ? 7 - px : px;
             uint8_t flipped_py = vertical_flip ? 7 - py : py;
 
             uint32_t destination_offset = ((y + flipped_py) * buffer_width + x + flipped_px) * 3;
 
             // 1 byte holds the color data of 2 pixels
+
             uint8_t color_indexes = v->vram[pattern_offset + py * 4 + px / 2];
 
             uint8_t color_index = px % 2 == 0 ? (color_indexes & 0xF0) >> 4 : (color_indexes & 0x0F);
+
             if (color_index == 0)
             {
                 continue;
             }
 
-            Color color = color_index > 0 ? palette[color_index] : color_black;
+            Color color = palette[color_index];
             buffer[destination_offset] = color.r;
             buffer[destination_offset + 1] = color.g;
             buffer[destination_offset + 2] = color.b;
@@ -579,6 +623,7 @@ void vdp_draw_pattern(Vdp* v, uint16_t pattern_index, Color* palette, uint8_t* b
 void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width)
 {
     uint8_t* plane_offset = v->vram;
+
     switch (plane)
     {
     case Plane_A:
@@ -615,7 +660,9 @@ void vdp_draw_plane(Vdp* v, Planes plane, uint8_t* buffer, uint32_t buffer_width
 static void draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t shade, uint8_t* buffer, uint32_t buffer_width)
 {
     // Top border
+
     uint32_t destination = (y * buffer_width + x) * 3;
+
     for (uint16_t px = x; px < x + w; ++px)
     {
         destination += 3;
@@ -625,12 +672,14 @@ static void draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t sh
     }
 
     // Left & right borders
+
     for (uint16_t py = y; py < y + h; ++py)
     {
         destination = (py * buffer_width + x) * 3;
         buffer[destination] = shade;
         buffer[destination + 1] = shade;
         buffer[destination + 2] = shade;
+
         destination += w * 3;
         buffer[destination] = shade;
         buffer[destination + 1] = shade;
@@ -638,7 +687,9 @@ static void draw_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t sh
     }
 
     // Bottom borders
+
     destination = ((y + h) * buffer_width + x) * 3;
+
     for (uint16_t px = x; px < x + w; ++px)
     {
         destination += 3;
@@ -700,7 +751,7 @@ typedef struct
     bool priorities[BUFFER_WIDTH];
 } ScanlineData;
 
-static ScanlineData plane_a_scanline;
+static ScanlineData plane_a_scanline; // TODO why static?
 static ScanlineData plane_b_scanline;
 static ScanlineData plane_w_scanline;
 static ScanlineData sprites_scanline;

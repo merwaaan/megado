@@ -146,9 +146,8 @@ typedef struct Vdp
     uint8_t dma_source_address_hi;
     int dma_type;
 
-    // In practice, we extract the internal state changes from
-    // each write to the VDP's registers because they are more
-    // often used internally than overwritten by the program.
+    // In practice, we extract the internal state changes from each write to the VDP's registers
+    // because they are more often used internally than overwritten by the program.
     // Still, keeping the raw values is handy for debugging purposes.
     uint8_t register_raw_values[0x18];
 

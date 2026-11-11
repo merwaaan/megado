@@ -15,8 +15,8 @@
 #include "ym2612.h"
 #include "z80.h"
 
-static const uint32_t NTSC_MASTER_FREQUENCY = 53693175;
-static const uint32_t PAL_MASTER_FREQUENCY = 53203424;
+static const uint32_t MASTER_FREQUENCY_NTSC = 53693175;
+static const uint32_t MASTER_FREQUENCY_PAL = 53203424;
 
 Genesis* genesis_make()
 {
@@ -262,7 +262,7 @@ struct DecodedInstruction* genesis_decode(Genesis* g, uint32_t pc)
 
 uint32_t genesis_master_frequency(Genesis* g)
 {
-    return g->region == Region_Europe ? PAL_MASTER_FREQUENCY : NTSC_MASTER_FREQUENCY;
+    return g->region == Region_Europe ? MASTER_FREQUENCY_PAL : MASTER_FREQUENCY_NTSC;
 }
 
 void genesis_step(Genesis* g)
@@ -280,17 +280,16 @@ void genesis_step(Genesis* g)
 
     // We don't need to touch m68k->remaining_master_cycles, because if we had
     // wanted to run for exactly one instruction, we would have called
-    // m68k_run_cycles with `cycles * 7`, and the function would have consumed
-    // exactly that amount of cycles, so we remaining_master_cycles would not
+    // m68k_run_cycles with `cycles`, and the function would have consumed
+    // exactly that amount of cycles, so the remaining_master_cycles would not
     // have been affected.
 
     // Let other systems catch up
 
-    uint32_t master_cycles = cycles * 7;
-
-    z80_run_cycles(g->z80, master_cycles);
-    psg_run_cycles(g->psg, master_cycles);
-    ym2612_run_cycles(g->ym2612, master_cycles);
+    z80_run_cycles(g->z80, cycles);
+    psg_run_cycles(g->psg, cycles);
+    ym2612_run_cycles(g->ym2612, cycles);
+    vdp_run_cycles(g->vdp, cycles);
 }
 
 // Run for a given number of master cycles

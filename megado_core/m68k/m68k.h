@@ -85,8 +85,11 @@ void m68k_free(M68k*);
 // Prepare the CPU for execution (setup stack pointer, program start, initial prefetch...)
 void m68k_initialize(M68k*);
 
-int16_t m68k_step(M68k*);                  // Execute one instruction, return cycles taken
-uint32_t m68k_run_cycles(M68k*, uint32_t); // Execute n cycles worth of instructions, return cycles that were not consumed
+// Execute one instruction, return master cycles taken
+int16_t m68k_step(M68k*);
+
+// Execute n master cycles worth of instructions, return master cycles actually taken
+uint32_t m68k_run_cycles(M68k*, uint32_t master_cycles);
 
 // Return the word currently under the program counter
 // and make it advance.

@@ -144,26 +144,26 @@ void decoded_instruction_free(DecodedInstruction* decoded)
     free(decoded);
 }
 
-uint32_t m68k_run_cycles(M68k* m, uint32_t cycles)
+uint32_t m68k_run_cycles(M68k* m, uint32_t master_cycles)
 {
-    uint64_t cycles_this_frame = 0;
-    m->remaining_master_cycles += cycles;
+    uint32_t cycles_run = 0;
+    m->remaining_master_cycles += master_cycles;
 
     while (m->remaining_master_cycles > 0)
     {
-        int16_t c = m68k_step(m);
+        int16_t step_cycles = m68k_step(m);
 
-        if (c >= 0)
+        if (step_cycles >= 0)
         {
             // TODO temporary version for tracking non-timed instructions
-            if (c == 0)
+            if (step_cycles == 0)
             {
                 // LOG_M68K("WARNING, instruction took ZERO CYCLES\n");
-                c = 10; // we don't want to block the execution
+                step_cycles = 10 * MASTER_CYCLES_PER_CLOCK; // we don't want to block the execution
             }
 
-            m->remaining_master_cycles -= c * MASTER_CYCLES_PER_CLOCK;
-            cycles_this_frame += c;
+            m->remaining_master_cycles -= step_cycles;
+            cycles_run += step_cycles;
         }
         else
         {
@@ -171,14 +171,16 @@ uint32_t m68k_run_cycles(M68k* m, uint32_t cycles)
 
             // Exit early in case of a breakpoint
 
-            if (c == BREAKPOINT)
+            if (step_cycles == BREAKPOINT)
             {
                 break;
             }
+
+            // TODO handle INVALID_INSTRUCTION/STOPPED?
         }
     }
 
-    return cycles_this_frame;
+    return cycles_run;
 }
 
 int16_t m68k_step(M68k* m)
@@ -259,7 +261,9 @@ int16_t m68k_step(M68k* m)
 
     debugger_post_m68k(m->genesis->debugger);
 
-    return cycles;
+    // Return master cycles
+
+    return cycles * MASTER_CYCLES_PER_CLOCK;
 }
 
 inline uint16_t m68k_fetch(M68k* m)
